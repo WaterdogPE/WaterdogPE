@@ -16,8 +16,6 @@
 
 package pe.waterdog.network.downstream;
 
-import com.nukkitx.protocol.bedrock.BedrockClientSession;
-
 import java.net.InetSocketAddress;
 
 public class ServerInfo {
@@ -25,19 +23,9 @@ public class ServerInfo {
     private final String serverName;
     private final InetSocketAddress address;
 
-    private BedrockClientSession downstreamClient;
-
     public ServerInfo(String serverName, InetSocketAddress address){
         this.serverName = serverName;
         this.address = address;
-    }
-
-    public BedrockClientSession getDownstreamClient() {
-        return downstreamClient;
-    }
-
-    public void setDownstreamClient(BedrockClientSession downstreamClient) {
-        this.downstreamClient = downstreamClient;
     }
 
     public String getServerName() {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package pe.waterdog.utils;
+package pe.waterdog.player;
 
 import com.nimbusds.jose.*;
 import com.nukkitx.protocol.bedrock.BedrockSession;

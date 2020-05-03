@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package pe.waterdog.network;
+package pe.waterdog.network.bridge;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.NetworkStackLatencyPacket;
 import io.netty.buffer.ByteBuf;
-import pe.waterdog.logger.Logger;
+import pe.waterdog.player.ProxiedPlayer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,23 +30,27 @@ import java.util.List;
 public class ProxyBatchBridge implements BatchHandler {
 
     private final BedrockSession session;
+    private final ProxiedPlayer player;
 
-    public ProxyBatchBridge(BedrockSession session){
+    public ProxyBatchBridge(ProxiedPlayer player, BedrockSession session){
         this.session = session;
+        this.player = player;
     }
 
     @Override
     public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
         List<BedrockPacket> unhandledPackets =  new ArrayList<>();
+        BedrockPacketHandler handler = session.getPacketHandler();
         boolean wrapperHandled = false;
 
         for (BedrockPacket packet : packets){
-            BedrockPacketHandler handler = session.getPacketHandler();
+            this.player.getEntityMap().doRewrite(packet);
 
-            if (!(packet instanceof NetworkStackLatencyPacket)) {
-                //Logger.getLogger().info(session.getAddress() +" <-> "+packet);
-            }
+            /*if (!(packet instanceof NetworkStackLatencyPacket)) {
+                Logger.getLogger().info(session.getAddress() +" <-> "+packet);
+            }*/
 
+            /*We do send handled packets*/
             if (handler != null && packet.handle(handler)){
                 wrapperHandled = true;
                 continue;

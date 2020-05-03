@@ -22,8 +22,9 @@ import com.nukkitx.protocol.bedrock.packet.ClientToServerHandshakePacket;
 import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
+import pe.waterdog.network.upstream.UpstreamHandler;
 import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.utils.PlayerRewriteData;
+import pe.waterdog.player.PlayerRewriteData;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -47,13 +48,13 @@ public class InitialHandler implements BedrockPacketHandler {
             ECPublicKey serverKey = EncryptionUtils.generateKey(x5u.toASCIIString());
             SecretKey key = EncryptionUtils.getSecretKey(player.getKeyPair().getPrivate(), serverKey,
                     Base64.getDecoder().decode(saltJwt.getJWTClaimsSet().getStringClaim("salt")));
-            player.getConnection().getDownstreamClient().enableEncryption(key);
+            player.getDownstream().enableEncryption(key);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
-        player.getConnection().getDownstreamClient().sendPacketImmediately(clientToServerHandshake);
+        player.getDownstream().sendPacketImmediately(clientToServerHandshake);
         return true;
     }
 
@@ -61,13 +62,18 @@ public class InitialHandler implements BedrockPacketHandler {
     public boolean handle(StartGamePacket packet) {
         PlayerRewriteData rewrite = new PlayerRewriteData(
                 ThreadLocalRandom.current().nextInt(10000, 15000),
+                packet.getRuntimeEntityId(),
                 packet.getBlockPalette(),
                 packet.getGamerules()
         );
 
-        this.player.setRewriteData(rewrite);
-
+        packet.setRuntimeEntityId(rewrite.getEntityId());
         packet.setUniqueEntityId(rewrite.getEntityId());
-        return true;
+
+        this.player.setRewriteData(rewrite);
+        this.player.getEntityMap().setRewriteData(rewrite);
+        this.player.getDownstream().setPacketHandler(new ConnectedHandler(this.player, this.player.getServerInfo()));
+        this.player.getUpstream().setPacketHandler(new UpstreamHandler(this.player, this.player.getUpstream()));
+        return false;
     }
 }

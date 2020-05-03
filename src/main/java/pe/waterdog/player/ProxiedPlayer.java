@@ -16,47 +16,46 @@
 
 package pe.waterdog.player;
 
-import com.nimbusds.jwt.SignedJWT;
-import com.nukkitx.network.raknet.EncapsulatedPacket;
 import com.nukkitx.protocol.bedrock.BedrockClient;
+import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.ClientToServerHandshakePacket;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
-import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.logger.Logger;
-import pe.waterdog.network.ProxyBatchBridge;
+import pe.waterdog.network.bridge.ProxyBatchBridge;
+import pe.waterdog.network.bridge.ProxyBatchTransferBridge;
 import pe.waterdog.network.downstream.ConnectedHandler;
 import pe.waterdog.network.downstream.InitialHandler;
 import pe.waterdog.network.downstream.ServerInfo;
+import pe.waterdog.network.entitymap.EntityMap;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.session.LoginData;
-import pe.waterdog.network.upstream.UpstreamHandler;
-import pe.waterdog.utils.PlayerRewriteData;
 
-import javax.crypto.SecretKey;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.security.KeyPair;
-import java.security.interfaces.ECPublicKey;
-import java.util.Base64;
 import java.util.UUID;
 
 public class ProxiedPlayer {
 
     private final ProxyServer server;
     private final ProtocolConstants.Protocol protocol;
+
+    private BedrockClient client;
     private final BedrockServerSession session;
+    private BedrockClientSession connection;
+    private BedrockClientSession pendingConnection;
 
     private final KeyPair keyPair;
     private final LoginPacket loginPacket;
     private final LoginData loginData;
     private PlayerRewriteData rewriteData;
 
-    private BedrockClient client;
-    private ServerInfo connection;
+    private final EntityMap entityMap;
+    private ServerInfo serverInfo;
+
+
 
     public ProxiedPlayer(ProxyServer server, BedrockServerSession session, ProtocolConstants.Protocol protocol, KeyPair keyPair, LoginPacket loginPacket, LoginData loginData){
         this.server = server;
@@ -65,54 +64,69 @@ public class ProxiedPlayer {
         this.keyPair = keyPair;
         this.loginPacket = loginPacket;
         this.loginData = loginData;
+        this.entityMap = new EntityMap(this);
     }
 
     public void initialConnect(){
         //TODO: login event
         //TODO: get server from handler
-        this.session.setPacketHandler(new UpstreamHandler(this, this.session));
         this.session.addDisconnectHandler((reason) -> {
             this.disconnect();
         });
 
-        ServerInfo serverInfo = new ServerInfo("lobby", new InetSocketAddress("192.168.0.50", 19134));
+        ServerInfo serverInfo = new ServerInfo("lobby", new InetSocketAddress("192.168.0.50", 19133));
         this.connect(serverInfo);
     }
 
     public void connect(ServerInfo serverInfo){
-        ServerInfo connection = new ServerInfo(serverInfo.getServerName(), serverInfo.getAddress());
         final BedrockPacketHandler handler;
-
-        //First connection
         if (this.connection == null){
             handler = new InitialHandler(this);
         }else {
-            handler = new ConnectedHandler(this);
+            handler = new ConnectedHandler(this, serverInfo);
+
+            if (this.serverInfo.getServerName().equals(serverInfo.getServerName())){
+                //Already connected
+                return;
+            }
+        }
+
+        if (this.pendingConnection != null){
+            //Already connecting
+            return;
         }
 
         //TODO: ServerSwitch event
 
         this.client = this.server.getPlayerManager().bindClient();
-        this.client.connect(connection.getAddress()).whenComplete((downstream, throwable)->{
+        client.connect(serverInfo.getAddress()).whenComplete((downstream, throwable)->{
             if (throwable != null){
                 this.getLogger().error("["+this.session.getAddress()+"|"+this.getName()+"] Unable to connect to downstream "+serverInfo.getServerName(), throwable);
+                this.pendingConnection = null;
                 return;
             }
 
-            if (this.connection != null){
-                this.connection.getDownstreamClient().disconnect();
+            downstream.setPacketCodec(this.protocol.getCodec());
+
+            if (this.connection == null){
+                this.connection = downstream;
+                this.session.setBatchedHandler(new ProxyBatchBridge(this, downstream));
+                downstream.setBatchedHandler(new ProxyBatchBridge(this, this.session));
+
+                this.serverInfo = serverInfo;
+            }else {
+                //Server switch
+                this.pendingConnection = downstream;
+                downstream.setBatchedHandler(new ProxyBatchTransferBridge());
             }
 
-            downstream.setPacketCodec(this.protocol.getCodec());
-            this.session.setBatchedHandler(new ProxyBatchBridge(downstream));
-
-            this.connection = connection;
-            this.connection.setDownstreamClient(downstream);
-
             downstream.setPacketHandler(handler);
-            downstream.setBatchedHandler(new ProxyBatchBridge(this.session));
             downstream.sendPacketImmediately(this.loginPacket);
             downstream.setLogging(true);
+
+            downstream.addDisconnectHandler((reason) -> {
+                this.getLogger().info("["+downstream.getAddress()+"|"+this.getName()+"] -> Downstream ["+serverInfo.getServerName()+"] has disconnected");
+            });
             this.session.addDisconnectHandler((reason) -> {
                 if (!downstream.isClosed()) downstream.disconnect();
             });
@@ -121,6 +135,19 @@ public class ProxiedPlayer {
         });
 
     }
+
+    public void finishTransfer(ServerInfo serverInfo){
+        if (this.pendingConnection == null || this.pendingConnection.isClosed()) return;
+        this.connection.disconnect();
+
+        this.connection = this.pendingConnection;
+        this.pendingConnection = null;
+        this.serverInfo = serverInfo;
+
+        this.session.setBatchedHandler(new ProxyBatchBridge(this, this.connection));
+        this.connection.setBatchedHandler(new ProxyBatchBridge(this, this.session));
+    }
+
     public void disconnect(){
         this.disconnect(null);
     }
@@ -138,17 +165,39 @@ public class ProxiedPlayer {
     }
 
     public void putPacket(BedrockPacket packet){
-        if (this.session == null) return;
-
+        if (this.session == null || this.session.isClosed()) return;
         this.session.sendPacket(packet);
     }
 
-    public ServerInfo getConnection() {
-        return connection;
+    public ServerInfo getServerInfo() {
+        return this.serverInfo;
     }
 
     public BedrockServerSession getUpstream() {
         return this.session;
+    }
+
+    public BedrockClientSession getConnection() {
+        return this.connection;
+    }
+
+    /**
+     * Alias to getConnection()
+     */
+    public BedrockClientSession getDownstream() {
+        return this.connection;
+    }
+
+    public BedrockClientSession getPendingConnection() {
+        return this.pendingConnection;
+    }
+
+    public void setPendingConnection(BedrockClientSession pendingConnection) {
+        this.pendingConnection = pendingConnection;
+    }
+
+    public EntityMap getEntityMap() {
+        return entityMap;
     }
 
     public UUID getUniqueId() {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package pe.waterdog.utils;
+package pe.waterdog.player;
 
 import com.nukkitx.nbt.tag.CompoundTag;
 import com.nukkitx.nbt.tag.ListTag;
@@ -25,18 +25,27 @@ import java.util.List;
 public class PlayerRewriteData {
 
     private final long entityId;
+    private long originalEntityId;
     private final ListTag<CompoundTag> blockPallete;
-
     private List<GameRuleData<?>> gameRules;
 
-    public PlayerRewriteData(long entityId, ListTag<CompoundTag> blockPallete, List<GameRuleData<?>> gameRules){
+    public PlayerRewriteData(long entityId, long originalEntityId, ListTag<CompoundTag> blockPallete, List<GameRuleData<?>> gameRules){
         this.entityId = entityId;
+        this.originalEntityId = originalEntityId;
         this.blockPallete = blockPallete;
         this.gameRules = gameRules;
     }
 
     public long getEntityId() {
         return this.entityId;
+    }
+
+    public long getOriginalEntityId() {
+        return this.originalEntityId;
+    }
+
+    public void setOriginalEntityId(long originalEntityId) {
+        this.originalEntityId = originalEntityId;
     }
 
     public ListTag<CompoundTag> getBlockPallete() {

@@ -57,8 +57,7 @@ public class PlayerManager {
         if (previousSession != null && !previousSession.getUpstream().isClosed()){
             success = false;
 
-            previousSession.getUpstream().disconnect("disconnectionScreen.loggedinOtherLocation");
-            player.getUpstream().disconnect("disconnectionScreen.loggedinOtherLocation");
+            previousSession.disconnect("disconnectionScreen.loggedinOtherLocation");
         }
 
         this.adjustPoolSize();

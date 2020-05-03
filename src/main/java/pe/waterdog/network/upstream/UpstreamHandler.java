@@ -18,7 +18,7 @@ package pe.waterdog.network.upstream;
 
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.TextPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import pe.waterdog.network.downstream.ServerInfo;
 import pe.waterdog.player.ProxiedPlayer;
 
@@ -37,7 +37,10 @@ public class UpstreamHandler implements BedrockPacketHandler {
     @Override
     public boolean handle(TextPacket packet) {
 
-        player.connect(new ServerInfo("lobby2", new InetSocketAddress("192.168.0.50", 19134)));
+        if (packet.getMessage().equals("server")){
+            player.connect(new ServerInfo("lobby2", new InetSocketAddress("192.168.0.50", 19134)));
+        }
         return true;
     }
+
 }

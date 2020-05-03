@@ -33,7 +33,7 @@ import pe.waterdog.VersionInfo;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.session.LoginData;
 import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.utils.HandshakeUtils;
+import pe.waterdog.player.HandshakeUtils;
 
 import java.security.KeyPair;
 import java.util.Collections;
