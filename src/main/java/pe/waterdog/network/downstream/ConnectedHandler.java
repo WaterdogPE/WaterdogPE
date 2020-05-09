@@ -17,12 +17,17 @@
 package pe.waterdog.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
+import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
+import lombok.SneakyThrows;
+import pe.waterdog.logger.Logger;
+import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.PlayerRewriteData;
 import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -59,6 +64,7 @@ public class ConnectedHandler implements BedrockPacketHandler {
         return true;
     }
 
+    @SneakyThrows
     @Override
     public boolean handle(PlayStatusPacket packet) {
         String kickReason = null;
@@ -69,19 +75,21 @@ public class ConnectedHandler implements BedrockPacketHandler {
             case FAILED_SERVER:
                 kickReason = "outdatedServer";
                 break;
-            case FAILED_EDU_VANILLA:
+            case FAILED_SERVER_FULL:
                 kickReason = "serverFull";
                 break;
+            case FAILED_EDU_VANILLA:
+            case FAILED_VANILLA_EDU:
+            case FAILED_INVALID_TENANT:
+                break;
+            default:
+                return true;
         }
 
-        if (kickReason != null){
-            //TODO: Player send message
+        //TODO: Player send message
 
-            if (!this.player.getPendingConnection().isClosed()) this.player.getPendingConnection().disconnect();
-            this.player.setPendingConnection(null);
-            return true;
-        }
-
+        if (!this.player.getPendingConnection().isClosed()) this.player.getPendingConnection().disconnect();
+        this.player.setPendingConnection(null);
         return true;
     }
 
@@ -89,8 +97,7 @@ public class ConnectedHandler implements BedrockPacketHandler {
     public boolean handle(ResourcePacksInfoPacket packet) {
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.HAVE_ALL_PACKS);
-
-        this.player.getPendingConnection().sendPacketImmediately(response);
+        this.player.getPendingConnection().sendPacket(response);
         return true;
     }
 
@@ -98,26 +105,27 @@ public class ConnectedHandler implements BedrockPacketHandler {
     public boolean handle(ResourcePackStackPacket packet) {
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.COMPLETED);
-
-        this.player.getPendingConnection().sendPacketImmediately(response);
+        this.player.getPendingConnection().sendPacket(response);
         return true;
     }
 
     @Override
     public boolean handle(StartGamePacket packet) {
         //Rebridge connections
-        this.player.finishTransfer(serverInfo);
         this.player.getRewriteData().setGameRules(packet.getGamerules());
         this.rewrite.setOriginalEntityId(packet.getRuntimeEntityId());
 
-
-        //PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), packet.getDimensionId(), packet.getDefaultSpawn());
+        PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), packet.getDimensionId());
         PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getDefaultSpawn());
         PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGamemode());
 
-        /*SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
+        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
-        this.player.getUpstream().sendPacket(initializedPacket);*/
+        this.player.getPendingConnection().sendPacket(initializedPacket);
+
+        synchronized (this){
+            this.player.finishTransfer(serverInfo);
+        }
         return true;
     }
 }

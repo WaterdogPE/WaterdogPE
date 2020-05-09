@@ -17,6 +17,7 @@
 package pe.waterdog.utils;
 
 import pe.waterdog.logger.Logger;
+import pe.waterdog.network.ServerInfo;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
@@ -75,6 +76,15 @@ public class ProxyConfig extends YamlConfig{
             }
 
             if (address != null) servers.put(server, address);
+        }
+
+        return servers;
+    }
+
+    public Map<String, ServerInfo> buildServerMap(){
+        Map<String, ServerInfo> servers = new HashMap<>();
+        for (Map.Entry<String, InetSocketAddress> entry : this.servers.entrySet()){
+            servers.put(entry.getKey().toLowerCase(), new ServerInfo(entry.getKey(), entry.getValue()));
         }
 
         return servers;

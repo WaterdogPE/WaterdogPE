@@ -16,21 +16,29 @@
 
 package pe.waterdog.player;
 
+import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.packet.ChangeDimensionPacket;
 import com.nukkitx.protocol.bedrock.packet.NetworkChunkPublisherUpdatePacket;
+import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.SetPlayerGameTypePacket;
 
 public class PlayerRewriteUtils {
 
-    public static void injectDimensionChange(BedrockSession session, int dimension, Vector3i defaultSpawn){
+    public static void injectDimensionChange(BedrockSession session, int dimension){
         if (session.isClosed()) return;
 
         ChangeDimensionPacket packet = new ChangeDimensionPacket();
         packet.setDimension(dimension);
-        packet.setPosition(defaultSpawn.toFloat());
+        packet.setPosition(Vector3f.from(0, 300, 0));
         packet.setRespawn(true);
+        session.sendPacket(packet);
+    }
+
+    public static void injectStatusChange(BedrockSession session, PlayStatusPacket.Status status){
+        PlayStatusPacket packet = new PlayStatusPacket();
+        packet.setStatus(status);
         session.sendPacket(packet);
     }
 

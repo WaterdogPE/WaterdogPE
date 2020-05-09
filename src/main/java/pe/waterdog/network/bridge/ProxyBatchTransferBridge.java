@@ -32,7 +32,11 @@ public class ProxyBatchTransferBridge implements BatchHandler {
         if (handler == null) return;
 
         for (BedrockPacket packet : packets){
-            packet.handle(handler);
+            try {
+                packet.handle(handler);
+            }catch (Exception e){
+                //ignore
+            }
         }
     }
 }

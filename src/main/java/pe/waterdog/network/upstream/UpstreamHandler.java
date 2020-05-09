@@ -19,10 +19,11 @@ package pe.waterdog.network.upstream;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
-import pe.waterdog.network.downstream.ServerInfo;
+import lombok.SneakyThrows;
+import pe.waterdog.ProxyServer;
+import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.ProxiedPlayer;
-
-import java.net.InetSocketAddress;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 
 public class UpstreamHandler implements BedrockPacketHandler {
 
@@ -34,12 +35,20 @@ public class UpstreamHandler implements BedrockPacketHandler {
         this.session = session;
     }
 
+    @SneakyThrows
     @Override
     public boolean handle(TextPacket packet) {
+        if (!packet.getMessage().startsWith("server")) return true;
 
-        if (packet.getMessage().equals("server")){
-            player.connect(new ServerInfo("lobby2", new InetSocketAddress("192.168.0.50", 19134)));
+        String[] args = packet.getMessage().split(" ");
+        if (args.length <= 1) return true;
+
+        ServerInfo serverInfo = ProxyServer.getInstance().getServer(args[1]);
+        if (serverInfo != null){
+            player.connect(serverInfo);
+            //throw CancelSignalException.CANCEL;
         }
+
         return true;
     }
 

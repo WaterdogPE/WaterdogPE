@@ -14,18 +14,33 @@
  * limitations under the License.
  */
 
-package pe.waterdog.network.downstream;
+package pe.waterdog.network;
+
+import pe.waterdog.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ServerInfo {
 
     private final String serverName;
     private final InetSocketAddress address;
 
+    private List<ProxiedPlayer> players = new ArrayList<>();
+
     public ServerInfo(String serverName, InetSocketAddress address){
         this.serverName = serverName;
         this.address = address;
+    }
+
+    public void addPlayer(ProxiedPlayer player){
+        if (player == null) return;
+        this.players.add(player);
+    }
+
+    public List<ProxiedPlayer> getPlayers() {
+        return players;
     }
 
     public String getServerName() {

@@ -62,6 +62,12 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.nukkitx.protocol</groupId>
             <artifactId>bedrock-v390</artifactId>
             <version>2.5.6</version>

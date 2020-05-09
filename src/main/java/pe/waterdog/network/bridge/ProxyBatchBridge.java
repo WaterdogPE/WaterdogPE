@@ -20,8 +20,11 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.PacketHeader;
 import io.netty.buffer.ByteBuf;
+import pe.waterdog.logger.Logger;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,10 +53,17 @@ public class ProxyBatchBridge implements BatchHandler {
                 Logger.getLogger().info(session.getAddress() +" <-> "+packet);
             }*/
 
-            /*We do send handled packets*/
-            if (handler != null && packet.handle(handler)){
-                wrapperHandled = true;
-                continue;
+            try {
+                /*Send original buffer when packet was handled*/
+                if (handler != null && packet.handle(handler)){
+                    wrapperHandled = true;
+                    continue;
+                }
+            }catch (Exception e){
+                if (e instanceof CancelSignalException){ //Use SneakyThrow to cancel sending packet
+                    wrapperHandled = false;
+                    continue;
+                }
             }
 
             unhandledPackets.add(packet);

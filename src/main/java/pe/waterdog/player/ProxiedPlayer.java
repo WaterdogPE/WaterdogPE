@@ -28,13 +28,13 @@ import pe.waterdog.network.bridge.ProxyBatchBridge;
 import pe.waterdog.network.bridge.ProxyBatchTransferBridge;
 import pe.waterdog.network.downstream.ConnectedHandler;
 import pe.waterdog.network.downstream.InitialHandler;
-import pe.waterdog.network.downstream.ServerInfo;
+import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.entitymap.EntityMap;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.session.LoginData;
 
-import java.net.InetSocketAddress;
 import java.security.KeyPair;
+import java.util.List;
 import java.util.UUID;
 
 public class ProxiedPlayer {
@@ -55,7 +55,8 @@ public class ProxiedPlayer {
     private final EntityMap entityMap;
     private ServerInfo serverInfo;
 
-
+    private List<Long> entities;
+    private List<Long> players;
 
     public ProxiedPlayer(ProxyServer server, BedrockServerSession session, ProtocolConstants.Protocol protocol, KeyPair keyPair, LoginPacket loginPacket, LoginData loginData){
         this.server = server;
@@ -74,26 +75,27 @@ public class ProxiedPlayer {
             this.disconnect();
         });
 
-        ServerInfo serverInfo = new ServerInfo("lobby", new InetSocketAddress("192.168.0.50", 19133));
-        this.connect(serverInfo);
+
+        String server = this.server.getConfiguration().getPriorities().get(0);
+        this.connect(this.server.getServer(server));
     }
 
     public void connect(ServerInfo serverInfo){
+        if (serverInfo == null) return;
+
+        if (this.serverInfo == serverInfo){
+            //Already connected
+            return;
+        }
+
+
         final BedrockPacketHandler handler;
         if (this.connection == null){
             handler = new InitialHandler(this);
+            this.serverInfo = serverInfo;
         }else {
             handler = new ConnectedHandler(this, serverInfo);
 
-            if (this.serverInfo.getServerName().equals(serverInfo.getServerName())){
-                //Already connected
-                return;
-            }
-        }
-
-        if (this.pendingConnection != null){
-            //Already connecting
-            return;
         }
 
         //TODO: ServerSwitch event
@@ -101,7 +103,10 @@ public class ProxiedPlayer {
         this.client = this.server.getPlayerManager().bindClient();
         client.connect(serverInfo.getAddress()).whenComplete((downstream, throwable)->{
             if (throwable != null){
+                //TODO: remove this debug
                 this.getLogger().error("["+this.session.getAddress()+"|"+this.getName()+"] Unable to connect to downstream "+serverInfo.getServerName(), throwable);
+
+                //TODO: fallback listener
                 this.pendingConnection = null;
                 return;
             }
@@ -112,8 +117,6 @@ public class ProxiedPlayer {
                 this.connection = downstream;
                 this.session.setBatchedHandler(new ProxyBatchBridge(this, downstream));
                 downstream.setBatchedHandler(new ProxyBatchBridge(this, this.session));
-
-                this.serverInfo = serverInfo;
             }else {
                 //Server switch
                 this.pendingConnection = downstream;
@@ -138,11 +141,12 @@ public class ProxiedPlayer {
 
     public void finishTransfer(ServerInfo serverInfo){
         if (this.pendingConnection == null || this.pendingConnection.isClosed()) return;
-        this.connection.disconnect();
-
-        this.connection = this.pendingConnection;
-        this.pendingConnection = null;
         this.serverInfo = serverInfo;
+
+        this.connection.disconnect();
+        this.connection = this.pendingConnection;
+
+        this.pendingConnection = null;
 
         this.session.setBatchedHandler(new ProxyBatchBridge(this, this.connection));
         this.connection.setBatchedHandler(new ProxyBatchBridge(this, this.session));

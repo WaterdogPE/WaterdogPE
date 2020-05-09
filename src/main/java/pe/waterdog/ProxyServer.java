@@ -16,12 +16,11 @@
 
 package pe.waterdog;
 
-import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import pe.waterdog.command.CommandReader;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.network.ProxyListener;
-import pe.waterdog.network.protocol.ProtocolConstants;
+import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.ConfigurationManager;
@@ -31,7 +30,6 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class ProxyServer {
 
@@ -51,6 +49,8 @@ public class ProxyServer {
 
     private boolean shutdown = false;
 
+    private Map<String, ServerInfo> serverInfoMap;
+
     public ProxyServer(Logger logger, String filePath, String pluginPath){
         instance = this;
         this.logger = logger;
@@ -68,6 +68,8 @@ public class ProxyServer {
 
        this.configurationManager = new ConfigurationManager(this);
        configurationManager.loadProxyConfig();
+
+       this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
 
        this.playerManager = new PlayerManager(this);
 
@@ -132,5 +134,14 @@ public class ProxyServer {
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
         return this.playerManager.getPlayers();
+    }
+
+    public ServerInfo getServer(String serverName){
+        return this.serverInfoMap.get(serverName.toLowerCase());
+    }
+
+    public boolean registerServerInfo(ServerInfo serverInfo){
+        if (serverInfo == null) return false;
+        return this.serverInfoMap.putIfAbsent(serverInfo.getServerName().toLowerCase(), serverInfo) == null;
     }
 }

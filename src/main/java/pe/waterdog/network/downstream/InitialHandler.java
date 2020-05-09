@@ -19,12 +19,16 @@ package pe.waterdog.network.downstream;
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.ClientToServerHandshakePacket;
+import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
+import lombok.SneakyThrows;
 import pe.waterdog.network.upstream.UpstreamHandler;
+import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.player.PlayerRewriteData;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -58,6 +62,7 @@ public class InitialHandler implements BedrockPacketHandler {
         return true;
     }
 
+    @SneakyThrows
     @Override
     public boolean handle(StartGamePacket packet) {
         PlayerRewriteData rewrite = new PlayerRewriteData(
@@ -72,8 +77,15 @@ public class InitialHandler implements BedrockPacketHandler {
 
         this.player.setRewriteData(rewrite);
         this.player.getEntityMap().setRewriteData(rewrite);
-        this.player.getDownstream().setPacketHandler(new ConnectedHandler(this.player, this.player.getServerInfo()));
         this.player.getUpstream().setPacketHandler(new UpstreamHandler(this.player, this.player.getUpstream()));
+        return false;
+    }
+
+    public boolean handle(PlayStatusPacket packet) {
+        if (packet.getStatus() == PlayStatusPacket.Status.PLAYER_SPAWN){
+            this.player.getDownstream().setPacketHandler(new ConnectedHandler(this.player, this.player.getServerInfo()));
+        }
+
         return false;
     }
 }
