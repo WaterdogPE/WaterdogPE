@@ -60,8 +60,8 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
         if (protocolVersion != VersionInfo.LATEST_PROTOCOL_VERSION && protocol == null) {
             PlayStatusPacket status = new PlayStatusPacket();
             status.setStatus((protocolVersion > VersionInfo.LATEST_PROTOCOL_VERSION?
-                    PlayStatusPacket.Status.FAILED_SERVER :
-                    PlayStatusPacket.Status.FAILED_CLIENT));
+                    PlayStatusPacket.Status.LOGIN_FAILED_SERVER_OLD :
+                    PlayStatusPacket.Status.LOGIN_FAILED_CLIENT_OLD));
 
             session.sendPacket(status);
             return true;
@@ -110,6 +110,10 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
             if (!this.server.getPlayerManager().registerPlayer(player)){
                 return true;
             }
+
+            PlayStatusPacket status = new PlayStatusPacket();
+            status.setStatus(PlayStatusPacket.Status.LOGIN_SUCCESS);
+            this.session.sendPacket(status);
 
             player.initialConnect();
         } catch (Exception e) {

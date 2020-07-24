@@ -27,7 +27,7 @@ import pe.waterdog.utils.exceptions.CancelSignalException;
 
 import java.util.*;
 
-public class ProxyBatchBridge implements BatchHandler {
+public class ProxyBatchBridgeOld implements BatchHandler {
 
     private final BedrockSession session;
     private final ProxiedPlayer player;
@@ -35,7 +35,7 @@ public class ProxyBatchBridge implements BatchHandler {
     protected final Queue<ByteBuf> queue = new ArrayDeque<>(42);
     protected boolean isLocked = false;
 
-    public ProxyBatchBridge(ProxiedPlayer player, BedrockSession session){
+    public ProxyBatchBridgeOld(ProxiedPlayer player, BedrockSession session){
         this.session = session;
         this.player = player;
     }
@@ -46,6 +46,10 @@ public class ProxyBatchBridge implements BatchHandler {
         BedrockPacketHandler handler = session.getPacketHandler();
         boolean wrapperHandled = false;
 
+        if (isLocked){
+            queue.add(buf);
+            return;
+        }
 
         for (BedrockPacket packet : packets){
             this.player.getEntityMap().doRewrite(packet);
@@ -70,8 +74,6 @@ public class ProxyBatchBridge implements BatchHandler {
             unhandledPackets.add(packet);
         }
 
-        if (this.checkLock(buf)) return;
-
         if (!wrapperHandled){
             this.session.sendWrapped(unhandledPackets, true);
             return;
@@ -81,20 +83,7 @@ public class ProxyBatchBridge implements BatchHandler {
         this.session.sendWrapped(buf, this.session.isEncrypted());
     }
 
-    protected boolean checkLock(ByteBuf buf){
-        if (!this.isLocked) return false;
-
-        this.queue.add(buf);
-
-        if (this.queue.size() > 8192){
-            Logger.getLogger().warning("PEDimSwitchLock: queue got too large, resuming...");
-            doUnlock();
-        }
-
-        return true;
-    }
-
-    protected void doUnlock(){
+    private void doUnlock(){
         while (!queue.isEmpty() && !this.isLocked){
             ByteBuf buf = queue.remove();
             buf.readerIndex(1);
@@ -104,7 +93,7 @@ public class ProxyBatchBridge implements BatchHandler {
 
     public void setLocked(boolean locked) {
         this.isLocked = locked;
-        Logger.getLogger().info("§eSet lock: "+locked);
+        Logger.getLogger().info("Set lock: "+locked);
         if (!locked) this.doUnlock();
     }
 

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <description>Brand new Minecraft: Bedrock Edition proxy created by authors of well-known Waterdog proxy</description>
     <groupId>pe.waterdog</groupId>
-    <artifactId>waterdog_pe</artifactId>
+    <artifactId>waterdog</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -69,8 +69,8 @@
         </dependency>
         <dependency>
             <groupId>com.nukkitx.protocol</groupId>
-            <artifactId>bedrock-v390</artifactId>
-            <version>2.5.6</version>
+            <artifactId>bedrock-v407</artifactId>
+            <version>2.6.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

@@ -17,10 +17,10 @@
 package pe.waterdog.network.entitymap;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
-import com.nukkitx.protocol.bedrock.data.EntityLink;
+import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
-import pe.waterdog.player.PlayerRewriteData;
+import pe.waterdog.network.session.RewriteData;
 import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
 
@@ -30,13 +30,13 @@ import java.util.List;
 public class EntityMap implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
-    private PlayerRewriteData rewrite;
+    private RewriteData rewrite;
 
     public EntityMap(ProxiedPlayer player){
         this.player = player;
     }
 
-    public void setRewriteData(PlayerRewriteData rewrite) {
+    public void setRewriteData(RewriteData rewrite) {
         this.rewrite = rewrite;
     }
 
@@ -166,11 +166,11 @@ public class EntityMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(SetEntityLinkPacket packet) {
-        EntityLink entityLink = packet.getEntityLink();
+        EntityLinkData entityLink = packet.getEntityLink();
         long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), rewrite.getEntityId(), rewrite.getOriginalEntityId());
         long to = PlayerRewriteUtils.rewriteId(entityLink.getTo(), rewrite.getEntityId(), rewrite.getOriginalEntityId());
 
-        packet.setEntityLink(new EntityLink(from, to, entityLink.getType(), entityLink.isImmediate()));
+        packet.setEntityLink(new EntityLinkData(from, to, entityLink.getType(), entityLink.isImmediate()));
         return true;
     }
 

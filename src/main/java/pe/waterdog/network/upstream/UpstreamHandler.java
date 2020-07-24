@@ -22,8 +22,9 @@ import com.nukkitx.protocol.bedrock.packet.*;
 import lombok.SneakyThrows;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.ServerInfo;
+import pe.waterdog.network.bridge.ProxyBatchBridge;
+import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.utils.exceptions.CancelSignalException;
 
 public class UpstreamHandler implements BedrockPacketHandler {
 
@@ -52,4 +53,12 @@ public class UpstreamHandler implements BedrockPacketHandler {
         return true;
     }
 
+    @Override
+    public boolean handle(PlayerActionPacket packet) {
+        if (packet.getAction() != PlayerActionPacket.Action.DIMENSION_CHANGE_SUCCESS || !this.player.isDimensionChange()) return true;
+
+        PlayerRewriteUtils.injectDimensionChange(player.getUpstream(), player.getRewriteData().getDimension());
+        this.player.setDimensionChange(false);
+        return true;
+    }
 }

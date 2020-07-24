@@ -18,13 +18,46 @@ package pe.waterdog.player;
 
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.math.vector.Vector3i;
+import com.nukkitx.network.VarInts;
+import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
-import com.nukkitx.protocol.bedrock.packet.ChangeDimensionPacket;
-import com.nukkitx.protocol.bedrock.packet.NetworkChunkPublisherUpdatePacket;
-import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
-import com.nukkitx.protocol.bedrock.packet.SetPlayerGameTypePacket;
+import com.nukkitx.protocol.bedrock.data.GameType;
+import com.nukkitx.protocol.bedrock.packet.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class PlayerRewriteUtils {
+
+    private static final int PLAYER_ACTION_ID = 36;
+    protected static final int DIM_SWITCH_ACK_ID = -100;
+    protected static final int DIMENSION_CHANGE_ACK = 14;
+
+    private static final byte[] fakePEChunkData;
+    
+    static {
+        final ByteBuf serializer = Unpooled.buffer();
+        final ByteBuf chunkdata = Unpooled.buffer();
+
+        chunkdata.writeByte(1); //1 section
+        chunkdata.writeByte(8); //New subchunk version!
+        chunkdata.writeByte(1); //Zero blockstorages :O
+        chunkdata.writeByte((1 << 1) | 1);  //Runtimeflag and palette id.
+        chunkdata.writeZero(512);
+        VarInts.writeUnsignedInt(chunkdata, 1); //Palette size
+        VarInts.writeUnsignedInt(chunkdata, 0); //Air
+        chunkdata.writeZero(512); //heightmap.
+        chunkdata.writeZero(256); //Biomedata.
+        chunkdata.writeByte(0); //borders
+
+        //chunks
+        chunkdata.markReaderIndex();
+        VarInts.writeInt(serializer, chunkdata.readUnsignedByte());
+        serializer.writeByte(0);
+        VarInts.writeInt(serializer, chunkdata.readableBytes());
+        serializer.writeBytes(chunkdata);
+        fakePEChunkData = new byte[serializer.readableBytes()];
+        serializer.readBytes(fakePEChunkData);
+    }
 
     public static void injectDimensionChange(BedrockSession session, int dimension){
         if (session.isClosed()) return;
@@ -33,13 +66,28 @@ public class PlayerRewriteUtils {
         packet.setDimension(dimension);
         packet.setPosition(Vector3f.from(0, 300, 0));
         packet.setRespawn(true);
-        session.sendPacket(packet);
+        session.sendPacketImmediately(packet);
+
+        forceDimensionChange(session);
+    }
+
+    public static void forceDimensionChange(BedrockSession session){
+        injectChunkPublisherUpdate(session, Vector3i.from(0, 0, 0));
+        for (int x = -4; x <= 4; x++) {
+            for (int z = -4; z <= 4; z++) {
+                LevelChunkPacket chunkPacket = new LevelChunkPacket();
+                chunkPacket.setChunkX(x);
+                chunkPacket.setChunkZ(z);
+                chunkPacket.setData(fakePEChunkData);
+                session.sendPacketImmediately(chunkPacket);
+            }
+        }
     }
 
     public static void injectStatusChange(BedrockSession session, PlayStatusPacket.Status status){
         PlayStatusPacket packet = new PlayStatusPacket();
         packet.setStatus(status);
-        session.sendPacket(packet);
+        session.sendPacketImmediately(packet);
     }
 
     public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn){
@@ -48,14 +96,14 @@ public class PlayerRewriteUtils {
         NetworkChunkPublisherUpdatePacket packet = new NetworkChunkPublisherUpdatePacket();
         packet.setPosition(defaultSpawn);
         packet.setRadius(160);
-        session.sendPacket(packet);
+        session.sendPacketImmediately(packet);
     }
 
-    public static void injectGameMode(BedrockSession session, int gameMode){
+    public static void injectGameMode(BedrockSession session, GameType gameMode){
         if (session.isClosed()) return;
 
         SetPlayerGameTypePacket packet = new SetPlayerGameTypePacket();
-        packet.setGamemode(gameMode);
+        packet.setGamemode(gameMode.ordinal());
         session.sendPacket(packet);
     }
 

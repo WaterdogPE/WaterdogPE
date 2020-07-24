@@ -1,13 +1,13 @@
 servers:
   lobby1:
-    address: 192.168.0.50:19133
+    address: 0.0.0.0:19132
   lobby2:
     address: 192.168.0.50:19134
 listener:
   motd: "§bWaterdog§3PE"
   priorities:
     - lobby1
-  host: 0.0.0.0:19132
+  host: 192.168.0.50:19134
   max_players: 20
   force_default_server: false
   forced_hosts:

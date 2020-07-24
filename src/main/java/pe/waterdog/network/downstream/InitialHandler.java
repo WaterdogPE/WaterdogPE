@@ -25,10 +25,8 @@ import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import lombok.SneakyThrows;
 import pe.waterdog.network.upstream.UpstreamHandler;
-import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.player.PlayerRewriteData;
-import pe.waterdog.utils.exceptions.CancelSignalException;
+import pe.waterdog.network.session.RewriteData;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -65,25 +63,28 @@ public class InitialHandler implements BedrockPacketHandler {
     @SneakyThrows
     @Override
     public boolean handle(StartGamePacket packet) {
-        PlayerRewriteData rewrite = new PlayerRewriteData(
+        RewriteData rewrite = new RewriteData(
                 ThreadLocalRandom.current().nextInt(10000, 15000),
                 packet.getRuntimeEntityId(),
                 packet.getBlockPalette(),
-                packet.getGamerules()
+                packet.getGamerules(),
+                packet.getDimensionId()
         );
+
+        System.out.println("HERE");
 
         packet.setRuntimeEntityId(rewrite.getEntityId());
         packet.setUniqueEntityId(rewrite.getEntityId());
 
-        this.player.setRewriteData(rewrite);
+        /*this.player.setRewriteData(rewrite);
         this.player.getEntityMap().setRewriteData(rewrite);
-        this.player.getUpstream().setPacketHandler(new UpstreamHandler(this.player, this.player.getUpstream()));
+        this.player.getUpstream().setPacketHandler(new UpstreamHandler(this.player, this.player.getUpstream()));*/
         return false;
     }
 
     public boolean handle(PlayStatusPacket packet) {
         if (packet.getStatus() == PlayStatusPacket.Status.PLAYER_SPAWN){
-            this.player.getDownstream().setPacketHandler(new ConnectedHandler(this.player, this.player.getServerInfo()));
+            this.player.getDownstream().setPacketHandler(new ConnectedHandler(this.player, this.player.getServerInfo(), this.player.getDownstream()));
         }
 
         return false;

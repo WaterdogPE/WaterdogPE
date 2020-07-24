@@ -4,6 +4,7 @@ import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import com.nukkitx.protocol.bedrock.v388.Bedrock_v388;
 import com.nukkitx.protocol.bedrock.v389.Bedrock_v389;
 import com.nukkitx.protocol.bedrock.v390.Bedrock_v390;
+import com.nukkitx.protocol.bedrock.v407.Bedrock_v407;
 import pe.waterdog.VersionInfo;
 
 import java.util.*;
@@ -13,8 +14,8 @@ public class ProtocolConstants {
     public enum Protocol{
         MINECRAFT_PE_1_13(388, Bedrock_v388.V388_CODEC),
         MINECRAFT_PE_1_14_30(389, Bedrock_v389.V389_CODEC),
-        MINECRAFT_PE_1_14_60(390, Bedrock_v390.V390_CODEC);
-
+        MINECRAFT_PE_1_14_60(390, Bedrock_v390.V390_CODEC),
+        MINECRAFT_PE_1_16(407, Bedrock_v407.V407_CODEC);
 
         private final int protocol;
         private final BedrockPacketCodec codec;

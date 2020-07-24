@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package pe.waterdog.player;
+package pe.waterdog.network.session;
 
 import com.nukkitx.nbt.tag.CompoundTag;
 import com.nukkitx.nbt.tag.ListTag;
@@ -22,18 +22,20 @@ import com.nukkitx.protocol.bedrock.data.GameRuleData;
 
 import java.util.List;
 
-public class PlayerRewriteData {
+public class RewriteData {
 
     private final long entityId;
     private long originalEntityId;
     private final ListTag<CompoundTag> blockPallete;
     private List<GameRuleData<?>> gameRules;
+    private int dimension = 0;
 
-    public PlayerRewriteData(long entityId, long originalEntityId, ListTag<CompoundTag> blockPallete, List<GameRuleData<?>> gameRules){
+    public RewriteData(long entityId, long originalEntityId, ListTag<CompoundTag> blockPallete, List<GameRuleData<?>> gameRules, int dimension){
         this.entityId = entityId;
         this.originalEntityId = originalEntityId;
         this.blockPallete = blockPallete;
         this.gameRules = gameRules;
+        this.dimension = dimension;
     }
 
     public long getEntityId() {
@@ -58,5 +60,13 @@ public class PlayerRewriteData {
 
     public List<GameRuleData<?>> getGameRules() {
         return this.gameRules;
+    }
+
+    public int getDimension() {
+        return this.dimension;
+    }
+
+    public void setDimension(int dimension) {
+        this.dimension = dimension;
     }
 }

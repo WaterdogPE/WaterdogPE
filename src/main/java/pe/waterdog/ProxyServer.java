@@ -78,7 +78,7 @@ public class ProxyServer {
     }
 
     private void boot(){
-        InetSocketAddress bindAddress = new InetSocketAddress(19132);
+        InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
         this.logger.info("Binding to "+bindAddress);
 
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());

@@ -16,10 +16,7 @@
 
 package pe.waterdog.player;
 
-import com.nukkitx.protocol.bedrock.BedrockClient;
-import com.nukkitx.protocol.bedrock.BedrockClientSession;
-import com.nukkitx.protocol.bedrock.BedrockPacket;
-import com.nukkitx.protocol.bedrock.BedrockServerSession;
+import com.nukkitx.protocol.bedrock.*;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import pe.waterdog.ProxyServer;
@@ -32,10 +29,10 @@ import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.entitymap.EntityMap;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.session.LoginData;
+import pe.waterdog.network.session.RewriteData;
 
 import java.security.KeyPair;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class ProxiedPlayer {
 
@@ -45,18 +42,20 @@ public class ProxiedPlayer {
     private BedrockClient client;
     private final BedrockServerSession session;
     private BedrockClientSession connection;
-    private BedrockClientSession pendingConnection;
+    private final Queue<BedrockClient> pendingConnections = new ArrayDeque<>(10);
 
     private final KeyPair keyPair;
     private final LoginPacket loginPacket;
     private final LoginData loginData;
-    private PlayerRewriteData rewriteData;
+    private RewriteData rewriteData;
 
     private final EntityMap entityMap;
     private ServerInfo serverInfo;
 
     private List<Long> entities;
     private List<Long> players;
+
+    private boolean dimensionChange = false;
 
     public ProxiedPlayer(ProxyServer server, BedrockServerSession session, ProtocolConstants.Protocol protocol, KeyPair keyPair, LoginPacket loginPacket, LoginData loginData){
         this.server = server;
@@ -75,7 +74,6 @@ public class ProxiedPlayer {
             this.disconnect();
         });
 
-
         String server = this.server.getConfiguration().getPriorities().get(0);
         this.connect(this.server.getServer(server));
     }
@@ -88,26 +86,29 @@ public class ProxiedPlayer {
             return;
         }
 
-
         final BedrockPacketHandler handler;
+        final BedrockClient client;
+
         if (this.connection == null){
             handler = new InitialHandler(this);
-            this.serverInfo = serverInfo;
-        }else {
-            handler = new ConnectedHandler(this, serverInfo);
 
+            this.serverInfo = serverInfo;
+            client = this.server.getPlayerManager().bindClient();
+            this.client = client;
+        }else {
+            handler = null;
+            client = this.server.getPlayerManager().bindClient();
         }
 
         //TODO: ServerSwitch event
 
-        this.client = this.server.getPlayerManager().bindClient();
         client.connect(serverInfo.getAddress()).whenComplete((downstream, throwable)->{
             if (throwable != null){
                 //TODO: remove this debug
                 this.getLogger().error("["+this.session.getAddress()+"|"+this.getName()+"] Unable to connect to downstream "+serverInfo.getServerName(), throwable);
 
                 //TODO: fallback listener
-                this.pendingConnection = null;
+                this.pendingConnections.clear();
                 return;
             }
 
@@ -115,15 +116,15 @@ public class ProxiedPlayer {
 
             if (this.connection == null){
                 this.connection = downstream;
-                this.session.setBatchedHandler(new ProxyBatchBridge(this, downstream));
-                downstream.setBatchedHandler(new ProxyBatchBridge(this, this.session));
+                this.session.setBatchHandler(new ProxyBatchBridge(this, downstream));
+                downstream.setBatchHandler(new ProxyBatchBridge(this, this.session));
             }else {
                 //Server switch
-                this.pendingConnection = downstream;
-                downstream.setBatchedHandler(new ProxyBatchTransferBridge());
+                this.pendingConnections.add(client);
+                downstream.setBatchHandler(new ProxyBatchTransferBridge(this, this.session));
             }
 
-            downstream.setPacketHandler(handler);
+            downstream.setPacketHandler(handler == null? new ConnectedHandler(this, serverInfo, downstream) : handler);
             downstream.sendPacketImmediately(this.loginPacket);
             downstream.setLogging(true);
 
@@ -140,16 +141,18 @@ public class ProxiedPlayer {
     }
 
     public void finishTransfer(ServerInfo serverInfo){
-        if (this.pendingConnection == null || this.pendingConnection.isClosed()) return;
+        if (this.pendingConnections.isEmpty()) return;
         this.serverInfo = serverInfo;
 
-        this.connection.disconnect();
-        this.connection = this.pendingConnection;
+        final BedrockSession connection = this.connection;
+        connection.disconnect();
 
-        this.pendingConnection = null;
+        final BedrockClient newClient = this.pendingConnections.remove();
+        this.connection = newClient.getSession();
+        this.client = newClient;
 
-        this.session.setBatchedHandler(new ProxyBatchBridge(this, this.connection));
-        this.connection.setBatchedHandler(new ProxyBatchBridge(this, this.session));
+        this.session.setBatchHandler(new ProxyBatchBridge(this, this.connection));
+        this.connection.setBatchHandler(new ProxyBatchBridge(this, this.session));
     }
 
     public void disconnect(){
@@ -192,12 +195,8 @@ public class ProxiedPlayer {
         return this.connection;
     }
 
-    public BedrockClientSession getPendingConnection() {
-        return this.pendingConnection;
-    }
-
-    public void setPendingConnection(BedrockClientSession pendingConnection) {
-        this.pendingConnection = pendingConnection;
+    public Queue<BedrockClient> getPendingConnections() {
+        return this.pendingConnections;
     }
 
     public EntityMap getEntityMap() {
@@ -220,15 +219,23 @@ public class ProxiedPlayer {
         return this.loginData.getDisplayName();
     }
 
-    public void setRewriteData(PlayerRewriteData rewriteData) {
+    public void setRewriteData(RewriteData rewriteData) {
         this.rewriteData = rewriteData;
     }
 
-    public PlayerRewriteData getRewriteData() {
+    public RewriteData getRewriteData() {
         return this.rewriteData;
     }
 
     public Logger getLogger() {
         return this.server.getLogger();
+    }
+
+    public void setDimensionChange(boolean dimensionChange) {
+        this.dimensionChange = dimensionChange;
+    }
+
+    public boolean isDimensionChange() {
+        return this.dimensionChange;
     }
 }

@@ -17,14 +17,14 @@
 package pe.waterdog.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
-import com.nukkitx.math.vector.Vector3f;
+import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import lombok.SneakyThrows;
-import pe.waterdog.logger.Logger;
 import pe.waterdog.network.ServerInfo;
-import pe.waterdog.player.PlayerRewriteData;
+import pe.waterdog.network.bridge.ProxyBatchBridge;
+import pe.waterdog.network.session.RewriteData;
 import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
@@ -37,13 +37,15 @@ import java.util.Base64;
 public class ConnectedHandler implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
+    private final BedrockClientSession server;
     private final ServerInfo serverInfo;
-    private final PlayerRewriteData rewrite;
+    private final RewriteData rewrite;
 
-    public ConnectedHandler(ProxiedPlayer player, ServerInfo serverInfo){
+    public ConnectedHandler(ProxiedPlayer player, ServerInfo serverInfo, BedrockClientSession session){
         this.player = player;
         this.serverInfo = serverInfo;
         this.rewrite = player.getRewriteData();
+        this.server = session;
     }
 
     @Override
@@ -60,7 +62,7 @@ public class ConnectedHandler implements BedrockPacketHandler {
         }
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
-        player.getPendingConnection().sendPacketImmediately(clientToServerHandshake);
+        this.server.sendPacketImmediately(clientToServerHandshake);
         return true;
     }
 
@@ -68,7 +70,7 @@ public class ConnectedHandler implements BedrockPacketHandler {
     @Override
     public boolean handle(PlayStatusPacket packet) {
         String kickReason = null;
-        switch (packet.getStatus()){
+        /*switch (packet.getStatus()){
             case FAILED_CLIENT:
                 kickReason = "outdatedClient";
             break;
@@ -82,14 +84,16 @@ public class ConnectedHandler implements BedrockPacketHandler {
             case FAILED_VANILLA_EDU:
             case FAILED_INVALID_TENANT:
                 break;
+            case PLAYER_SPAWN:
+                //if (this.player.isDimensionChange()) throw CancelSignalException.CANCEL;
             default:
                 return true;
-        }
+        }*/
 
         //TODO: Player send message
 
-        if (!this.player.getPendingConnection().isClosed()) this.player.getPendingConnection().disconnect();
-        this.player.setPendingConnection(null);
+        if (!this.server.isClosed()) this.server.disconnect();
+        this.player.getPendingConnections().remove();
         return true;
     }
 
@@ -97,7 +101,7 @@ public class ConnectedHandler implements BedrockPacketHandler {
     public boolean handle(ResourcePacksInfoPacket packet) {
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.HAVE_ALL_PACKS);
-        this.player.getPendingConnection().sendPacket(response);
+        this.server.sendPacket(response);
         return true;
     }
 
@@ -105,27 +109,35 @@ public class ConnectedHandler implements BedrockPacketHandler {
     public boolean handle(ResourcePackStackPacket packet) {
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.COMPLETED);
-        this.player.getPendingConnection().sendPacket(response);
+        this.server.sendPacket(response);
         return true;
     }
 
+    @SneakyThrows
     @Override
     public boolean handle(StartGamePacket packet) {
-        //Rebridge connections
         this.player.getRewriteData().setGameRules(packet.getGamerules());
         this.rewrite.setOriginalEntityId(packet.getRuntimeEntityId());
 
-        PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), packet.getDimensionId());
+        //send DIM ID 1 & than original dim
+        if (this.rewrite.getDimension() == packet.getDimensionId()){
+            this.player.setDimensionChange(true);
+            PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), packet.getDimensionId() == 0 ? 1 : 0);
+            //PlayerRewriteUtils.injectStatusChange(this.player.getUpstream(), PlayStatusPacket.Status.PLAYER_SPAWN);
+        }
+
+        this.rewrite.setDimension(packet.getDimensionId());
+
         PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getDefaultSpawn());
-        PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGamemode());
+        PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getLevelGameType());
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
-        this.player.getPendingConnection().sendPacket(initializedPacket);
+        initializedPacket.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(),
+                player.getRewriteData().getEntityId(),
+                player.getRewriteData().getOriginalEntityId()));
+        this.server.sendPacket(initializedPacket);
 
-        synchronized (this){
-            this.player.finishTransfer(serverInfo);
-        }
+        this.player.finishTransfer(serverInfo);
         return true;
     }
 }
