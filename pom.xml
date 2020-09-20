@@ -13,22 +13,10 @@
         <repository>
             <id>nukkitx-repo-release</id>
             <url>https://repo.nukkitx.com/maven-releases/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
         </repository>
         <repository>
             <id>nukkitx-repo-snapshot</id>
             <url>https://repo.nukkitx.com/maven-snapshots/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
         </repository>
     </repositories>
 
@@ -69,7 +57,7 @@
         </dependency>
         <dependency>
             <groupId>com.nukkitx.protocol</groupId>
-            <artifactId>bedrock-v407</artifactId>
+            <artifactId>bedrock-v414</artifactId>
             <version>2.6.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

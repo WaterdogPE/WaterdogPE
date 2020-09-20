@@ -17,6 +17,7 @@
 package pe.waterdog.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
+import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
@@ -34,17 +35,15 @@ import java.net.URI;
 import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
 
-public class ConnectedHandler implements BedrockPacketHandler {
+public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
     private final BedrockClientSession server;
     private final ServerInfo serverInfo;
-    private final RewriteData rewrite;
 
-    public ConnectedHandler(ProxiedPlayer player, ServerInfo serverInfo, BedrockClientSession session){
+    public SwitchDownstreamHandler(ProxiedPlayer player, ServerInfo serverInfo, BedrockClientSession session){
         this.player = player;
         this.serverInfo = serverInfo;
-        this.rewrite = player.getRewriteData();
         this.server = session;
     }
 
@@ -63,37 +62,6 @@ public class ConnectedHandler implements BedrockPacketHandler {
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
         this.server.sendPacketImmediately(clientToServerHandshake);
-        return true;
-    }
-
-    @SneakyThrows
-    @Override
-    public boolean handle(PlayStatusPacket packet) {
-        String kickReason = null;
-        /*switch (packet.getStatus()){
-            case FAILED_CLIENT:
-                kickReason = "outdatedClient";
-            break;
-            case FAILED_SERVER:
-                kickReason = "outdatedServer";
-                break;
-            case FAILED_SERVER_FULL:
-                kickReason = "serverFull";
-                break;
-            case FAILED_EDU_VANILLA:
-            case FAILED_VANILLA_EDU:
-            case FAILED_INVALID_TENANT:
-                break;
-            case PLAYER_SPAWN:
-                //if (this.player.isDimensionChange()) throw CancelSignalException.CANCEL;
-            default:
-                return true;
-        }*/
-
-        //TODO: Player send message
-
-        if (!this.server.isClosed()) this.server.disconnect();
-        this.player.getPendingConnections().remove();
         return true;
     }
 
@@ -116,28 +84,35 @@ public class ConnectedHandler implements BedrockPacketHandler {
     @SneakyThrows
     @Override
     public boolean handle(StartGamePacket packet) {
-        this.player.getRewriteData().setGameRules(packet.getGamerules());
-        this.rewrite.setOriginalEntityId(packet.getRuntimeEntityId());
+        RewriteData rewriteData = player.getRewriteData();
+        rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
+        rewriteData.setDimension(packet.getDimensionId());
+        rewriteData.setGameRules(packet.getGamerules());
 
-        //send DIM ID 1 & than original dim
+        long runtimeId = PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewriteData.getEntityId(), rewriteData.getOriginalEntityId());
+
+        PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getLevelGameType());
+
+        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
+        initializedPacket.setRuntimeEntityId(runtimeId);
+        this.server.sendPacket(initializedPacket);
+
+        MovePlayerPacket movePlayerPacket = new MovePlayerPacket();
+        movePlayerPacket.setPosition(packet.getPlayerPosition());
+        movePlayerPacket.setRuntimeEntityId(runtimeId);
+        movePlayerPacket.setRotation(Vector3f.from(packet.getRotation().getX(), packet.getRotation().getY(), packet.getRotation().getY()));
+        movePlayerPacket.setMode(MovePlayerPacket.Mode.RESPAWN);
+        this.player.getUpstream().sendPacket(movePlayerPacket);
+
+        this.server.sendPacket(rewriteData.getChunkRadius());
+
+        /*//send DIM ID 1 & than original dim
         if (this.rewrite.getDimension() == packet.getDimensionId()){
             this.player.setDimensionChange(true);
             PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), packet.getDimensionId() == 0 ? 1 : 0);
             //PlayerRewriteUtils.injectStatusChange(this.player.getUpstream(), PlayStatusPacket.Status.PLAYER_SPAWN);
-        }
-
-        this.rewrite.setDimension(packet.getDimensionId());
-
-        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getDefaultSpawn());
-        PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getLevelGameType());
-
-        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(),
-                player.getRewriteData().getEntityId(),
-                player.getRewriteData().getOriginalEntityId()));
-        this.server.sendPacket(initializedPacket);
-
-        this.player.finishTransfer(serverInfo);
+        }*/
+        this.player.transferServer(serverInfo);
         return true;
     }
 }

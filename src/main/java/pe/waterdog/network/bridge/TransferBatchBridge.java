@@ -24,9 +24,9 @@ import pe.waterdog.player.ProxiedPlayer;
 
 import java.util.Collection;
 
-public class ProxyBatchTransferBridge extends ProxyBatchBridge {
+public class TransferBatchBridge extends ProxyBatchBridge {
 
-    public ProxyBatchTransferBridge(ProxiedPlayer player, BedrockSession session) {
+    public TransferBatchBridge(ProxiedPlayer player, BedrockSession session) {
         super(player, session);
     }
 
@@ -36,11 +36,7 @@ public class ProxyBatchTransferBridge extends ProxyBatchBridge {
         if (handler == null) return;
 
         for (BedrockPacket packet : packets){
-            try {
-                packet.handle(handler);
-            }catch (Exception e){
-                //ignore
-            }
+            packet.handle(handler);
         }
     }
 }

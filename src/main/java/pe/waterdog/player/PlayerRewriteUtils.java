@@ -104,7 +104,7 @@ public class PlayerRewriteUtils {
 
         SetPlayerGameTypePacket packet = new SetPlayerGameTypePacket();
         packet.setGamemode(gameMode.ordinal());
-        session.sendPacket(packet);
+        session.sendPacketImmediately(packet);
     }
 
     public static long rewriteId(long from, long rewritten, long origin){

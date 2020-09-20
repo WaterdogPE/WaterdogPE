@@ -30,18 +30,16 @@ import java.util.List;
 public class EntityMap implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
-    private RewriteData rewrite;
+    private final RewriteData rewrite;
 
     public EntityMap(ProxiedPlayer player){
         this.player = player;
+        this.rewrite = player.getRewriteData();
     }
 
-    public void setRewriteData(RewriteData rewrite) {
-        this.rewrite = rewrite;
-    }
 
     public boolean doRewrite(BedrockPacket packet){
-        return rewrite != null && packet.handle(this);
+        return this.player.canRewrite() && packet.handle(this);
     }
 
     @Override

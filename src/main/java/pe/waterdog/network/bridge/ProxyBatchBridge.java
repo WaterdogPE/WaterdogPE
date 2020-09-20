@@ -21,7 +21,6 @@ import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import io.netty.buffer.ByteBuf;
-import pe.waterdog.logger.Logger;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
@@ -31,9 +30,6 @@ public class ProxyBatchBridge implements BatchHandler {
 
     private final BedrockSession session;
     private final ProxiedPlayer player;
-
-    protected final Queue<ByteBuf> queue = new ArrayDeque<>(42);
-    protected boolean isLocked = false;
 
     public ProxyBatchBridge(ProxiedPlayer player, BedrockSession session){
         this.session = session;
@@ -46,69 +42,34 @@ public class ProxyBatchBridge implements BatchHandler {
         BedrockPacketHandler handler = session.getPacketHandler();
         boolean wrapperHandled = false;
 
-
         for (BedrockPacket packet : packets){
             this.player.getEntityMap().doRewrite(packet);
 
-            /*if (!(packet instanceof NetworkStackLatencyPacket)) {
-                Logger.getLogger().info(session.getAddress() +" <-> "+packet);
-            }*/
-
-            /*Send original buffer when packet was handled*/
-            try {
-                if (handler != null && packet.handle(handler)){
-                    wrapperHandled = true;
-                    continue;
-                }
-            }catch (Exception e){
-                if (e instanceof CancelSignalException){ //Use SneakyThrow to cancel sending packet
-                    wrapperHandled = false;
-                    continue;
-                }
+            if (!packet.handle(handler)){
+                unhandledPackets.add(packet);
             }
 
-            unhandledPackets.add(packet);
+            /*try {
+                if (handler != null && ){
+                    wrapperHandled = true;
+                }else {
+                    unhandledPackets.add(packet);
+                }
+            }catch (Exception e){
+                //Use SneakyThrow to cancel sending packet
+                if (e instanceof CancelSignalException){
+                    wrapperHandled = true;
+                }
+            }*/
         }
 
-        if (this.checkLock(buf)) return;
-
-        if (!wrapperHandled){
+        if (!unhandledPackets.isEmpty()) {
             this.session.sendWrapped(unhandledPackets, true);
-            return;
         }
 
-        buf.readerIndex(1);
-        this.session.sendWrapped(buf, this.session.isEncrypted());
-    }
-
-    protected boolean checkLock(ByteBuf buf){
-        if (!this.isLocked) return false;
-
-        this.queue.add(buf);
-
-        if (this.queue.size() > 8192){
-            Logger.getLogger().warning("PEDimSwitchLock: queue got too large, resuming...");
-            doUnlock();
-        }
-
-        return true;
-    }
-
-    protected void doUnlock(){
-        while (!queue.isEmpty() && !this.isLocked){
-            ByteBuf buf = queue.remove();
-            buf.readerIndex(1);
+        /*if (!wrapperHandled) {
+            buf.readerIndex(1); // FE - packet id
             this.session.sendWrapped(buf, this.session.isEncrypted());
-        }
-    }
-
-    public void setLocked(boolean locked) {
-        this.isLocked = locked;
-        Logger.getLogger().info("§eSet lock: "+locked);
-        if (!locked) this.doUnlock();
-    }
-
-    public boolean isLocked() {
-        return this.isLocked;
+        } else */
     }
 }

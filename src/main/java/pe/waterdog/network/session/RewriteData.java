@@ -16,26 +16,27 @@
 
 package pe.waterdog.network.session;
 
-import com.nukkitx.nbt.tag.CompoundTag;
-import com.nukkitx.nbt.tag.ListTag;
+import com.nukkitx.nbt.NbtList;
+import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
+import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 
 import java.util.List;
 
 public class RewriteData {
 
-    private final long entityId;
+    private long entityId;
     private long originalEntityId;
-    private final ListTag<CompoundTag> blockPallete;
+    private NbtList<NbtMap> blockPallete;
     private List<GameRuleData<?>> gameRules;
     private int dimension = 0;
+    private RequestChunkRadiusPacket chunkRadius;
 
-    public RewriteData(long entityId, long originalEntityId, ListTag<CompoundTag> blockPallete, List<GameRuleData<?>> gameRules, int dimension){
+    public RewriteData(){
+    }
+
+    public void setEntityId(long entityId) {
         this.entityId = entityId;
-        this.originalEntityId = originalEntityId;
-        this.blockPallete = blockPallete;
-        this.gameRules = gameRules;
-        this.dimension = dimension;
     }
 
     public long getEntityId() {
@@ -50,7 +51,11 @@ public class RewriteData {
         this.originalEntityId = originalEntityId;
     }
 
-    public ListTag<CompoundTag> getBlockPallete() {
+    public void setBlockPallete(NbtList<NbtMap> blockPallete) {
+        this.blockPallete = blockPallete;
+    }
+
+    public NbtList<NbtMap> getBlockPallete() {
         return this.blockPallete;
     }
 
@@ -68,5 +73,13 @@ public class RewriteData {
 
     public void setDimension(int dimension) {
         this.dimension = dimension;
+    }
+
+    public void setChunkRadius(RequestChunkRadiusPacket chunkRadius) {
+        this.chunkRadius = chunkRadius;
+    }
+
+    public RequestChunkRadiusPacket getChunkRadius() {
+        return this.chunkRadius;
     }
 }

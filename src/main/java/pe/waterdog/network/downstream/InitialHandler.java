@@ -19,12 +19,10 @@ package pe.waterdog.network.downstream;
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.ClientToServerHandshakePacket;
-import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import lombok.SneakyThrows;
-import pe.waterdog.network.upstream.UpstreamHandler;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.network.session.RewriteData;
 
@@ -63,30 +61,18 @@ public class InitialHandler implements BedrockPacketHandler {
     @SneakyThrows
     @Override
     public boolean handle(StartGamePacket packet) {
-        RewriteData rewrite = new RewriteData(
-                ThreadLocalRandom.current().nextInt(10000, 15000),
-                packet.getRuntimeEntityId(),
-                packet.getBlockPalette(),
-                packet.getGamerules(),
-                packet.getDimensionId()
-        );
-
-        System.out.println("HERE");
+        RewriteData rewrite = this.player.getRewriteData();
+        rewrite.setOriginalEntityId(packet.getRuntimeEntityId());
+        rewrite.setEntityId(ThreadLocalRandom.current().nextInt(10000, 15000));
+        rewrite.setGameRules(packet.getGamerules());
+        rewrite.setBlockPallete(packet.getBlockPalette());
+        rewrite.setDimension(packet.getDimensionId());
+        this.player.setCanRewrite(true);
 
         packet.setRuntimeEntityId(rewrite.getEntityId());
         packet.setUniqueEntityId(rewrite.getEntityId());
 
-        /*this.player.setRewriteData(rewrite);
-        this.player.getEntityMap().setRewriteData(rewrite);
-        this.player.getUpstream().setPacketHandler(new UpstreamHandler(this.player, this.player.getUpstream()));*/
-        return false;
-    }
-
-    public boolean handle(PlayStatusPacket packet) {
-        if (packet.getStatus() == PlayStatusPacket.Status.PLAYER_SPAWN){
-            this.player.getDownstream().setPacketHandler(new ConnectedHandler(this.player, this.player.getServerInfo(), this.player.getDownstream()));
-        }
-
+        this.player.getDownstream().setPacketHandler(new SwitchDownstreamHandler(this.player, this.player.getServerInfo(), this.player.getDownstream()));
         return false;
     }
 }
