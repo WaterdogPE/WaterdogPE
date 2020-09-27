@@ -16,10 +16,8 @@
 
 package pe.waterdog.network.upstream;
 
-import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
-import lombok.SneakyThrows;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.ProxiedPlayer;
@@ -27,11 +25,9 @@ import pe.waterdog.player.ProxiedPlayer;
 public class UpstreamHandler implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
-    private final BedrockServerSession session;
 
-    public UpstreamHandler(ProxiedPlayer player, BedrockServerSession session){
+    public UpstreamHandler(ProxiedPlayer player){
         this.player = player;
-        this.session = session;
     }
 
     @Override
@@ -40,7 +36,6 @@ public class UpstreamHandler implements BedrockPacketHandler {
         return false;
     }
 
-    @SneakyThrows
     @Override
     public boolean handle(TextPacket packet) {
         if (!packet.getMessage().startsWith("server")) return false;
@@ -57,12 +52,12 @@ public class UpstreamHandler implements BedrockPacketHandler {
         return false;
     }
 
-    @Override
+    /*@Override
     public boolean handle(PlayerActionPacket packet) {
-        /*if (packet.getAction() != PlayerActionPacket.Action.DIMENSION_CHANGE_SUCCESS || !this.player.isDimensionChange()) return true;
+        *//*if (packet.getAction() != PlayerActionPacket.Action.DIMENSION_CHANGE_SUCCESS || !this.player.isDimensionChange()) return true;
 
         PlayerRewriteUtils.injectDimensionChange(player.getUpstream(), player.getRewriteData().getDimension());
-        this.player.setDimensionChange(false);*/
+        this.player.setDimensionChange(false);*//*
         return false;
-    }
+    }*/
 }

@@ -18,17 +18,17 @@ package pe.waterdog.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.math.vector.Vector3f;
+import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
-import lombok.SneakyThrows;
 import pe.waterdog.network.ServerInfo;
-import pe.waterdog.network.bridge.ProxyBatchBridge;
 import pe.waterdog.network.session.RewriteData;
+import pe.waterdog.network.session.ServerConnection;
+import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.utils.exceptions.CancelSignalException;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -38,13 +38,17 @@ import java.util.Base64;
 public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
-    private final BedrockClientSession server;
+    private final BedrockClient client;
     private final ServerInfo serverInfo;
 
-    public SwitchDownstreamHandler(ProxiedPlayer player, ServerInfo serverInfo, BedrockClientSession session){
+    public SwitchDownstreamHandler(ProxiedPlayer player, ServerInfo serverInfo, BedrockClient client){
         this.player = player;
         this.serverInfo = serverInfo;
-        this.server = session;
+        this.client = client;
+    }
+
+    public BedrockClientSession getDownstream(){
+        return this.client.getSession();
     }
 
     @Override
@@ -55,13 +59,13 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
             ECPublicKey serverKey = EncryptionUtils.generateKey(x5u.toASCIIString());
             SecretKey key = EncryptionUtils.getSecretKey(player.getKeyPair().getPrivate(), serverKey,
                     Base64.getDecoder().decode(saltJwt.getJWTClaimsSet().getStringClaim("salt")));
-            player.getDownstream().enableEncryption(key);
+            this.getDownstream().enableEncryption(key);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
-        this.server.sendPacketImmediately(clientToServerHandshake);
+        this.getDownstream().sendPacketImmediately(clientToServerHandshake);
         return true;
     }
 
@@ -69,7 +73,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
     public boolean handle(ResourcePacksInfoPacket packet) {
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.HAVE_ALL_PACKS);
-        this.server.sendPacket(response);
+        this.getDownstream().sendPacketImmediately(response);
         return true;
     }
 
@@ -77,11 +81,10 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
     public boolean handle(ResourcePackStackPacket packet) {
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.COMPLETED);
-        this.server.sendPacket(response);
+        this.getDownstream().sendPacketImmediately(response);
         return true;
     }
 
-    @SneakyThrows
     @Override
     public boolean handle(StartGamePacket packet) {
         RewriteData rewriteData = player.getRewriteData();
@@ -91,11 +94,12 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
         long runtimeId = PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewriteData.getEntityId(), rewriteData.getOriginalEntityId());
 
+        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getDefaultSpawn());
         PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getLevelGameType());
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(runtimeId);
-        this.server.sendPacket(initializedPacket);
+        this.getDownstream().sendPacketImmediately(initializedPacket);
 
         MovePlayerPacket movePlayerPacket = new MovePlayerPacket();
         movePlayerPacket.setPosition(packet.getPlayerPosition());
@@ -104,7 +108,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         movePlayerPacket.setMode(MovePlayerPacket.Mode.RESPAWN);
         this.player.getUpstream().sendPacket(movePlayerPacket);
 
-        this.server.sendPacket(rewriteData.getChunkRadius());
+        this.getDownstream().sendPacketImmediately(rewriteData.getChunkRadius());
 
         /*//send DIM ID 1 & than original dim
         if (this.rewrite.getDimension() == packet.getDimensionId()){
@@ -112,7 +116,20 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
             PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), packet.getDimensionId() == 0 ? 1 : 0);
             //PlayerRewriteUtils.injectStatusChange(this.player.getUpstream(), PlayStatusPacket.Status.PLAYER_SPAWN);
         }*/
-        this.player.transferServer(serverInfo);
+        //this.player.transferServer(serverInfo);
+
+        ServerConnection oldServer = this.player.getServer();
+        oldServer.disconnect();
+
+        this.serverInfo.addPlayer(this.player);
+        this.player.setPendingConnection(null);
+
+        ServerConnection server = new ServerConnection(this.client, this.getDownstream(), this.serverInfo);
+        SessionInjections.injectDownstreamHandlers(server, this.player);
+        this.player.setServer(server);
+
+        //TODO: server connected event
+
         return true;
     }
 }

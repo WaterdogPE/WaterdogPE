@@ -39,15 +39,19 @@ public class ServerInfo {
         this.players.add(player);
     }
 
+    public void removePlayer(ProxiedPlayer player){
+        this.players.remove(player);
+    }
+
     public List<ProxiedPlayer> getPlayers() {
-        return players;
+        return this.players;
     }
 
     public String getServerName() {
-        return serverName;
+        return this.serverName;
     }
 
     public InetSocketAddress getAddress() {
-        return address;
+        return this.address;
     }
 }

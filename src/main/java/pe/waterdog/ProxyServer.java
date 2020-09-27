@@ -112,6 +112,10 @@ public class ProxyServer {
         return logger;
     }
 
+    public BedrockServer getBedrockServer() {
+        return this.bedrockServer;
+    }
+
     public Path getDataPath() {
         return this.dataPath;
     }

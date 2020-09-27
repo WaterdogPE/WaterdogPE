@@ -16,18 +16,18 @@
 
 package pe.waterdog.network.downstream;
 
-import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.player.ProxiedPlayer;
 
 public class ConnectedDownstreamHandler implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
-    private final BedrockClientSession server;
+    private final ServerConnection server;
 
-    public ConnectedDownstreamHandler(ProxiedPlayer player, BedrockClientSession session){
+    public ConnectedDownstreamHandler(ProxiedPlayer player, ServerConnection server){
         this.player = player;
-        this.server = session;
+        this.server = server;
 
         System.out.println("New connected downstream!");
     }

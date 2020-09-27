@@ -18,11 +18,8 @@ package pe.waterdog.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.ClientToServerHandshakePacket;
-import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
-import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
-import lombok.SneakyThrows;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.network.session.RewriteData;
 
@@ -48,17 +45,16 @@ public class InitialHandler implements BedrockPacketHandler {
             ECPublicKey serverKey = EncryptionUtils.generateKey(x5u.toASCIIString());
             SecretKey key = EncryptionUtils.getSecretKey(player.getKeyPair().getPrivate(), serverKey,
                     Base64.getDecoder().decode(saltJwt.getJWTClaimsSet().getStringClaim("salt")));
-            player.getDownstream().enableEncryption(key);
+            this.player.getServer().getDownstream().enableEncryption(key);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
-        player.getDownstream().sendPacketImmediately(clientToServerHandshake);
+        this.player.getServer().sendPacket(clientToServerHandshake);
         return true;
     }
 
-    @SneakyThrows
     @Override
     public boolean handle(StartGamePacket packet) {
         RewriteData rewrite = this.player.getRewriteData();
@@ -72,7 +68,7 @@ public class InitialHandler implements BedrockPacketHandler {
         packet.setRuntimeEntityId(rewrite.getEntityId());
         packet.setUniqueEntityId(rewrite.getEntityId());
 
-        this.player.getDownstream().setPacketHandler(new SwitchDownstreamHandler(this.player, this.player.getServerInfo(), this.player.getDownstream()));
+        this.player.getServer().getDownstream().setPacketHandler(new ConnectedDownstreamHandler(this.player, this.player.getServer()));
         return false;
     }
 }

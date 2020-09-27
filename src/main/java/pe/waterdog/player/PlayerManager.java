@@ -16,9 +16,7 @@
 
 package pe.waterdog.player;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.nukkitx.math.GenericMath;
+import com.google.common.collect.ImmutableMap;;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import pe.waterdog.ProxyServer;
 
@@ -32,9 +30,6 @@ public class PlayerManager {
     private final ProxyServer server;
 
     private final ConcurrentMap<UUID, ProxiedPlayer> players = new ConcurrentHashMap<>();
-
-    private final ThreadPoolExecutor sessionTicker = new ThreadPoolExecutor(1, 1, 1, TimeUnit.MINUTES,
-            new LinkedBlockingQueue<>(), new ThreadFactoryBuilder().setNameFormat("WaterdogPE - Session Ticker #%d").setDaemon(true).build());
 
     public PlayerManager(ProxyServer server){
         this.server = server;
@@ -59,16 +54,12 @@ public class PlayerManager {
 
             previousSession.disconnect("disconnectionScreen.loggedinOtherLocation");
         }
-
-        this.adjustPoolSize();
         return success;
     }
 
     public void removePlayer(ProxiedPlayer player){
         if (player == null) return;
-
         this.players.remove(player.getUniqueId());
-        this.adjustPoolSize();
     }
 
     public ProxiedPlayer getPlayer(UUID uuid){
@@ -90,12 +81,5 @@ public class PlayerManager {
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
         return ImmutableMap.copyOf(this.players);
-    }
-
-    private void adjustPoolSize() {
-        int threads = GenericMath.clamp(this.players.size() / 50, 1, Runtime.getRuntime().availableProcessors());
-        if (sessionTicker.getMaximumPoolSize() != threads) {
-            sessionTicker.setMaximumPoolSize(threads);
-        }
     }
 }
