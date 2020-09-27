@@ -24,7 +24,8 @@ import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.network.ServerInfo;
-import pe.waterdog.network.session.RewriteData;
+import pe.waterdog.network.rewrite.BlockPalette;
+import pe.waterdog.network.rewrite.RewriteData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.player.PlayerRewriteUtils;
@@ -91,6 +92,9 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
         rewriteData.setDimension(packet.getDimensionId());
         rewriteData.setGameRules(packet.getGamerules());
+
+        BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
+        rewriteData.setPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
 
         long runtimeId = PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewriteData.getEntityId(), rewriteData.getOriginalEntityId());
 

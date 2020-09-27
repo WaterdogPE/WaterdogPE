@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package pe.waterdog.network.entitymap;
+package pe.waterdog.network.rewrite;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
-import pe.waterdog.network.session.RewriteData;
 import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
 

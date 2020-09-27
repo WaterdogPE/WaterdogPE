@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package pe.waterdog.network.session;
+package pe.waterdog.network.rewrite;
 
-import com.nukkitx.nbt.NbtList;
-import com.nukkitx.nbt.NbtMap;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 
@@ -27,7 +25,10 @@ public class RewriteData {
 
     private long entityId;
     private long originalEntityId;
-    private NbtList<NbtMap> blockPallete;
+
+    private BlockPalette blockPalette;
+    private BlockPaletteRewrite paletteRewrite;
+
     private List<GameRuleData<?>> gameRules;
     private int dimension = 0;
     private RequestChunkRadiusPacket chunkRadius;
@@ -51,12 +52,20 @@ public class RewriteData {
         this.originalEntityId = originalEntityId;
     }
 
-    public void setBlockPallete(NbtList<NbtMap> blockPallete) {
-        this.blockPallete = blockPallete;
+    public void setBlockPalette(BlockPalette blockPalette) {
+        this.blockPalette = blockPalette;
     }
 
-    public NbtList<NbtMap> getBlockPallete() {
-        return this.blockPallete;
+    public BlockPalette getBlockPalette() {
+        return this.blockPalette;
+    }
+
+    public void setPaletteRewrite(BlockPaletteRewrite paletteRewrite) {
+        this.paletteRewrite = paletteRewrite;
+    }
+
+    public BlockPaletteRewrite getPaletteRewrite() {
+        return this.paletteRewrite;
     }
 
     public void setGameRules(List<GameRuleData<?>> gameRules) {

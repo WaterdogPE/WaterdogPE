@@ -27,8 +27,8 @@ import java.util.*;
 
 public class ProxyBatchBridge implements BatchHandler {
 
-    private final BedrockSession session;
-    private final ProxiedPlayer player;
+    protected final BedrockSession session;
+    protected final ProxiedPlayer player;
 
     public ProxyBatchBridge(ProxiedPlayer player, BedrockSession session){
         this.session = session;
@@ -39,36 +39,21 @@ public class ProxyBatchBridge implements BatchHandler {
     public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
         List<BedrockPacket> unhandledPackets =  new ArrayList<>();
         BedrockPacketHandler handler = session.getPacketHandler();
-        boolean wrapperHandled = false;
 
         for (BedrockPacket packet : packets){
-            this.player.getEntityMap().doRewrite(packet);
 
-            if (!packet.handle(handler)){
+            if (!this.handlePacket(packet, handler)){
                 unhandledPackets.add(packet);
             }
-
-            /*try {
-                if (handler != null && ){
-                    wrapperHandled = true;
-                }else {
-                    unhandledPackets.add(packet);
-                }
-            }catch (Exception e){
-                //Use SneakyThrow to cancel sending packet
-                if (e instanceof CancelSignalException){
-                    wrapperHandled = true;
-                }
-            }*/
         }
 
         if (!unhandledPackets.isEmpty()) {
             this.session.sendWrapped(unhandledPackets, true);
         }
+    }
 
-        /*if (!wrapperHandled) {
-            buf.readerIndex(1); // FE - packet id
-            this.session.sendWrapped(buf, this.session.isEncrypted());
-        } else */
+    public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler){
+        this.player.getEntityMap().doRewrite(packet);
+        return packet.handle(handler);
     }
 }

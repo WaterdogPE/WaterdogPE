@@ -21,15 +21,17 @@ import com.nukkitx.protocol.bedrock.*;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.logger.Logger;
+import pe.waterdog.network.bridge.DownstreamBridge;
 import pe.waterdog.network.bridge.ProxyBatchBridge;
 import pe.waterdog.network.bridge.TransferBatchBridge;
 import pe.waterdog.network.downstream.SwitchDownstreamHandler;
 import pe.waterdog.network.downstream.InitialHandler;
 import pe.waterdog.network.ServerInfo;
-import pe.waterdog.network.entitymap.EntityMap;
+import pe.waterdog.network.rewrite.BlockMap;
+import pe.waterdog.network.rewrite.EntityMap;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.session.LoginData;
-import pe.waterdog.network.session.RewriteData;
+import pe.waterdog.network.rewrite.RewriteData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.network.upstream.UpstreamHandler;
@@ -55,7 +57,7 @@ public class ProxiedPlayer {
     private boolean canRewrite = false;
 
     private final EntityMap entityMap;
-    private ServerInfo serverInfo;
+    private final BlockMap blockMap;
 
     private List<Long> entities;
     private List<Long> players;
@@ -70,6 +72,7 @@ public class ProxiedPlayer {
         this.loginPacket = loginPacket;
         this.loginData = loginData;
         this.entityMap = new EntityMap(this);
+        this.blockMap = new BlockMap(this);
     }
 
     public void initialConnect(){
@@ -110,7 +113,7 @@ public class ProxiedPlayer {
                 this.serverConnection = new ServerConnection(client, downstream, serverInfo);
 
                 downstream.setPacketHandler(new InitialHandler(this));
-                downstream.setBatchHandler(new ProxyBatchBridge(this, this.upstream));
+                downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
                 this.upstream.setBatchHandler(new ProxyBatchBridge(this, downstream));
             }else {
                 this.pendingConnection = serverInfo;
@@ -191,6 +194,10 @@ public class ProxiedPlayer {
         return this.entityMap;
     }
 
+    public BlockMap getBlockMap() {
+        return this.blockMap;
+    }
+
     public UUID getUniqueId() {
         return this.loginData.getUuid();
     }
@@ -205,6 +212,10 @@ public class ProxiedPlayer {
 
     public String getName() {
         return this.loginData.getDisplayName();
+    }
+
+    public ProtocolConstants.Protocol getProtocol() {
+        return this.protocol;
     }
 
     public RewriteData getRewriteData() {

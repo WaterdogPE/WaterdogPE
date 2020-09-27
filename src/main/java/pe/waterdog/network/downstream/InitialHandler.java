@@ -20,8 +20,9 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
+import pe.waterdog.network.rewrite.BlockPalette;
 import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.network.session.RewriteData;
+import pe.waterdog.network.rewrite.RewriteData;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -61,8 +62,12 @@ public class InitialHandler implements BedrockPacketHandler {
         rewrite.setOriginalEntityId(packet.getRuntimeEntityId());
         rewrite.setEntityId(ThreadLocalRandom.current().nextInt(10000, 15000));
         rewrite.setGameRules(packet.getGamerules());
-        rewrite.setBlockPallete(packet.getBlockPalette());
         rewrite.setDimension(packet.getDimensionId());
+
+        BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
+        rewrite.setBlockPalette(palette);
+        rewrite.setPaletteRewrite(palette.createRewrite(palette));
+
         this.player.setCanRewrite(true);
 
         packet.setRuntimeEntityId(rewrite.getEntityId());

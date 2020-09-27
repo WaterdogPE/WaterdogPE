@@ -19,6 +19,7 @@ package pe.waterdog.network.session;
 import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import pe.waterdog.network.ServerInfo;
+import pe.waterdog.network.bridge.DownstreamBridge;
 import pe.waterdog.network.bridge.ProxyBatchBridge;
 import pe.waterdog.network.downstream.ConnectedDownstreamHandler;
 import pe.waterdog.player.ProxiedPlayer;
@@ -35,7 +36,7 @@ public class SessionInjections {
         Preconditions.checkArgument(server != null && player != null, "Player and ServerConnection can not be null!");
 
         player.getUpstream().setBatchHandler(new ProxyBatchBridge(player, server.getDownstream()));
-        server.getDownstream().setBatchHandler(new ProxyBatchBridge(player, player.getUpstream()));
+        server.getDownstream().setBatchHandler(new DownstreamBridge(player, player.getUpstream()));
         server.getDownstream().setPacketHandler(new ConnectedDownstreamHandler(player, server));
     }
 }

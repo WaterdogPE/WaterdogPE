@@ -20,6 +20,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.5" level="project" />
     <orderEntry type="library" name="Maven: org.yaml:snakeyaml:1.16" level="project" />
+    <orderEntry type="library" name="Maven: it.unimi.dsi:fastutil:8.4.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.projectlombok:lombok:1.18.4" level="project" />
     <orderEntry type="library" name="Maven: com.nukkitx.protocol:bedrock-v414:2.6.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.nukkitx.protocol:bedrock-v408:2.6.0-SNAPSHOT" level="project" />
