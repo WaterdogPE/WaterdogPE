@@ -16,14 +16,23 @@
 
 package pe.waterdog.network.rewrite;
 
+import com.nukkitx.network.VarInts;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import com.nukkitx.protocol.bedrock.data.SoundEvent;
+import com.nukkitx.protocol.bedrock.data.entity.EntityData;
+import com.nukkitx.protocol.bedrock.data.entity.EntityDataMap;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
+import pe.waterdog.network.rewrite.types.BlockPaletteRewrite;
+import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.player.ProxiedPlayer;
 
 public class BlockMap implements BedrockPacketHandler {
+
+    private static final int nV8Blocks = 16 * 16 * 16;
 
     private final ProxiedPlayer player;
     private final RewriteData rewrite;
@@ -43,14 +52,74 @@ public class BlockMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(LevelChunkPacket packet) {
-        //TODO:
-        return true;
+        int sections = packet.getSubChunksLength();
+        byte[] oldData = packet.getData();
+        ByteBuf from = PooledByteBufAllocator.DEFAULT.directBuffer(oldData.length);
+        ByteBuf to = PooledByteBufAllocator.DEFAULT.directBuffer(oldData.length);
+        from.writeBytes(oldData);
+
+        boolean success = true;
+        for (int section = 0 ; section < sections ; section++) {
+            boolean notSupported = false;
+            int chunkVersion = from.readUnsignedByte();
+            to.writeByte(chunkVersion);
+
+            switch (chunkVersion) {
+                case 0: //legacy block ids, no remap needed
+                case 4: //minet uses this format. what is it?
+                case 139:
+                    from.release();
+                    to.release();
+                    return false;
+                case 8: //new form chunk, baked-in palette
+                    int storageCount = from.readUnsignedByte();
+                    to.writeByte(storageCount);
+
+                    for (int storage = 0 ; storage < storageCount ; storage++) {
+                        int flags = from.readUnsignedByte();
+                        int bitsPerBlock = flags >> 1; //isRuntime = (flags & 0x1) != 0
+                        int blocksPerWord = Integer.SIZE / bitsPerBlock;
+                        int nWords = (nV8Blocks + blocksPerWord - 1) / blocksPerWord;
+
+                        to.writeByte(flags);
+                        to.writeBytes(from, nWords * Integer.BYTES);
+
+                        int nPaletteEntries = VarInts.readInt(from);
+                        VarInts.writeInt(to, nPaletteEntries);
+
+                        for (int i = 0 ; i < nPaletteEntries ; i++) {
+                            int runtimeId = VarInts.readInt(from);
+                            VarInts.writeInt(to, this.getPaletteRewrite().map(runtimeId));
+                        }
+                    }
+                    break;
+                default: //unsupported
+                    notSupported = true;
+                    this.player.getLogger().warning("PEBlockRewrite: Unknown subchunk format " + chunkVersion);
+                    break;
+            }
+
+            if (notSupported) {
+                success = false;
+                break;
+            }
+        }
+
+        if (success){
+            to.writeBytes(from); //copy the rest
+            byte[] newData = new byte[to.readableBytes()];
+            to.readBytes(newData);
+            packet.setData(newData);
+        }
+        from.release();
+        to.release();
+        return success;
     }
 
     @Override
     public boolean handle(UpdateBlockPacket packet) {
-        int id = packet.getRuntimeId();
-        packet.setRuntimeId(this.getPaletteRewrite().map(id));
+        int runtimeId = packet.getRuntimeId();
+        packet.setRuntimeId(this.getPaletteRewrite().map(runtimeId));
         return true;
     }
 
@@ -87,7 +156,13 @@ public class BlockMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(AddEntityPacket packet) {
-        //TODO: entity spawn for movable blocks
-        return false;
+        if (!packet.getIdentifier().equals("minecraft:falling_block")){
+            return false;
+        }
+
+        EntityDataMap metaData = packet.getMetadata();
+        int runtimeId = metaData.getInt(EntityData.VARIANT);
+        metaData.putInt(EntityData.VARIANT, this.getPaletteRewrite().map(runtimeId));
+        return true;
     }
 }

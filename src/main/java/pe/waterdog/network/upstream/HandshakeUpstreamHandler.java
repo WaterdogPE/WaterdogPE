@@ -82,18 +82,21 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
 
             JSONObject clientData = HandshakeUtils.parseClientData(packet, payload, session);
             JSONObject extraData = HandshakeUtils.parseExtraData(packet, payload);
+            KeyPair keyPair = EncryptionUtils.createKeyPair();
+
 
             LoginData loginData = new LoginData(
                     extraData.getAsString("displayName"),
                     UUID.fromString(extraData.getAsString("identity")),
                     extraData.getAsString("XUID"),
                     extraData.containsKey("XUID"), //XBOX auth
-                    this.session.getAddress()
+                    protocol,
+                    this.session.getAddress(),
+                    keyPair
             );
 
             //TODO: pre login event
 
-            KeyPair keyPair = EncryptionUtils.createKeyPair();
             JWSObject signedExtraData = HandshakeUtils.createExtraData(keyPair, extraData);
             JWSObject signedClientData = HandshakeUtils.encodeJWT(keyPair, clientData);
 
@@ -101,12 +104,10 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
             chainJson.put("chain", Collections.singletonList(signedExtraData.serialize()));
             AsciiString chainData = AsciiString.of(chainJson.toString(JSONStyle.LT_COMPRESS));
 
-            LoginPacket loginPacket = new LoginPacket();
-            loginPacket.setChainData(chainData);
-            loginPacket.setSkinData(AsciiString.of(signedClientData.serialize()));
-            loginPacket.setProtocolVersion(protocolVersion);
+            loginData.setChainData(chainData);
+            loginData.setSignedClientData(signedClientData);
 
-            ProxiedPlayer player = new ProxiedPlayer(this.server, this.session, protocol, keyPair, loginPacket, loginData);
+            ProxiedPlayer player = new ProxiedPlayer(this.server, this.session, loginData);
             if (!this.server.getPlayerManager().registerPlayer(player)){
                 return true;
             }

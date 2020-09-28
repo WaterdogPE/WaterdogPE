@@ -19,6 +19,7 @@ package pe.waterdog.player;
 import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.*;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
+import io.netty.util.AsciiString;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.network.bridge.DownstreamBridge;
@@ -31,7 +32,7 @@ import pe.waterdog.network.rewrite.BlockMap;
 import pe.waterdog.network.rewrite.EntityMap;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.session.LoginData;
-import pe.waterdog.network.rewrite.RewriteData;
+import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.network.upstream.UpstreamHandler;
@@ -42,15 +43,13 @@ import java.util.*;
 public class ProxiedPlayer {
 
     private final ProxyServer proxy;
-    private final ProtocolConstants.Protocol protocol;
 
     private final BedrockServerSession upstream;
     private ServerConnection serverConnection;
 
     private ServerInfo pendingConnection;
 
-    private final KeyPair keyPair;
-    private final LoginPacket loginPacket;
+    private LoginPacket loginPacket;
     private final LoginData loginData;
 
     private final RewriteData rewriteData = new RewriteData();
@@ -64,13 +63,11 @@ public class ProxiedPlayer {
 
     private boolean dimensionChange = false;
 
-    public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, ProtocolConstants.Protocol protocol, KeyPair keyPair, LoginPacket loginPacket, LoginData loginData){
+    public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData){
         this.proxy = proxy;
         this.upstream = session;
-        this.protocol = protocol;
-        this.keyPair = keyPair;
-        this.loginPacket = loginPacket;
         this.loginData = loginData;
+        this.loginPacket = loginData.constructLoginPacket();
         this.entityMap = new EntityMap(this);
         this.blockMap = new BlockMap(this);
     }
@@ -122,7 +119,7 @@ public class ProxiedPlayer {
                 downstream.setBatchHandler(new TransferBatchBridge(this, this.upstream));
             }
 
-            downstream.setPacketCodec(this.protocol.getCodec());
+            downstream.setPacketCodec(this.getProtocol().getCodec());
             downstream.sendPacketImmediately(this.loginPacket); //TODO: consider reconstructing packet
             downstream.setLogging(true);
 
@@ -148,6 +145,7 @@ public class ProxiedPlayer {
         }
 
         if (this.serverConnection != null){
+            this.serverConnection.getInfo().removePlayer(this);
             this.serverConnection.disconnect();
         }
 
@@ -198,6 +196,14 @@ public class ProxiedPlayer {
         return this.blockMap;
     }
 
+    public LoginData getLoginData() {
+        return this.loginData;
+    }
+
+    public String getName() {
+        return this.loginData.getDisplayName();
+    }
+
     public UUID getUniqueId() {
         return this.loginData.getUuid();
     }
@@ -206,16 +212,8 @@ public class ProxiedPlayer {
         return this.loginData.getXuid();
     }
 
-    public KeyPair getKeyPair() {
-        return this.keyPair;
-    }
-
-    public String getName() {
-        return this.loginData.getDisplayName();
-    }
-
     public ProtocolConstants.Protocol getProtocol() {
-        return this.protocol;
+        return this.loginData.getProtocol();
     }
 
     public RewriteData getRewriteData() {

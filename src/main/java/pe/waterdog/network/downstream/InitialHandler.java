@@ -20,9 +20,9 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
-import pe.waterdog.network.rewrite.BlockPalette;
+import pe.waterdog.network.rewrite.types.BlockPalette;
+import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.network.rewrite.RewriteData;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -44,8 +44,11 @@ public class InitialHandler implements BedrockPacketHandler {
             SignedJWT saltJwt = SignedJWT.parse(packet.getJwt());
             URI x5u = saltJwt.getHeader().getX509CertURL();
             ECPublicKey serverKey = EncryptionUtils.generateKey(x5u.toASCIIString());
-            SecretKey key = EncryptionUtils.getSecretKey(player.getKeyPair().getPrivate(), serverKey,
-                    Base64.getDecoder().decode(saltJwt.getJWTClaimsSet().getStringClaim("salt")));
+            SecretKey key = EncryptionUtils.getSecretKey(
+                    this.player.getLoginData().getKeyPair().getPrivate(),
+                    serverKey,
+                    Base64.getDecoder().decode(saltJwt.getJWTClaimsSet().getStringClaim("salt"))
+            );
             this.player.getServer().getDownstream().enableEncryption(key);
         } catch (Exception e) {
             throw new RuntimeException(e);

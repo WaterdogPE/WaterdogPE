@@ -37,23 +37,22 @@ public class ProxyBatchBridge implements BatchHandler {
 
     @Override
     public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
-        List<BedrockPacket> unhandledPackets =  new ArrayList<>();
+        List<BedrockPacket> newPackets =  new ArrayList<>();
         BedrockPacketHandler handler = session.getPacketHandler();
 
         for (BedrockPacket packet : packets){
-
-            if (!this.handlePacket(packet, handler)){
-                unhandledPackets.add(packet);
+            if (this.sendPacket(packet, handler)){
+                newPackets.add(packet);
             }
         }
 
-        if (!unhandledPackets.isEmpty()) {
-            this.session.sendWrapped(unhandledPackets, true);
+        if (!newPackets.isEmpty()) {
+            this.session.sendWrapped(newPackets, true);
         }
     }
 
-    public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler){
-        this.player.getEntityMap().doRewrite(packet);
-        return packet.handle(handler);
+    public boolean sendPacket(BedrockPacket packet, BedrockPacketHandler handler){
+        boolean unhandled = !packet.handle(handler);
+        return this.player.getEntityMap().doRewrite(packet) || unhandled;
     }
 }

@@ -31,12 +31,8 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     }
 
     @Override
-    public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
-        BedrockPacketHandler handler = session.getPacketHandler();
-        if (handler == null) return;
-
-        for (BedrockPacket packet : packets){
-            packet.handle(handler);
-        }
+    public boolean sendPacket(BedrockPacket packet, BedrockPacketHandler handler) {
+        super.sendPacket(packet, handler);
+        return false;
     }
 }

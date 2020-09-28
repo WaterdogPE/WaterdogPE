@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package pe.waterdog.network.rewrite;
+package pe.waterdog.network.rewrite.types;
 
 public abstract class BlockPaletteRewrite {
 

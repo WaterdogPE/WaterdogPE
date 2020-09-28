@@ -41,7 +41,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
         if (!packet.getMessage().startsWith("server")) return false;
 
         String[] args = packet.getMessage().split(" ");
-        if (args.length <= 1) return true;
+        if (args.length <= 1) return false;
 
         ServerInfo serverInfo = ProxyServer.getInstance().getServer(args[1]);
         if (serverInfo != null){

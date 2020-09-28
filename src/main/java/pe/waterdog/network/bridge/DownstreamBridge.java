@@ -28,8 +28,8 @@ public class DownstreamBridge extends ProxyBatchBridge{
     }
 
     @Override
-    public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) {
-        boolean handled = this.player.getBlockMap().doRewrite(packet);
-        return !handled && super.handlePacket(packet, handler);
+    public boolean sendPacket(BedrockPacket packet, BedrockPacketHandler handler) {
+        boolean handled = super.sendPacket(packet, handler);
+        return this.player.getBlockMap().doRewrite(packet) || handled;
     }
 }

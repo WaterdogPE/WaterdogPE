@@ -24,8 +24,8 @@ import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.network.ServerInfo;
-import pe.waterdog.network.rewrite.BlockPalette;
-import pe.waterdog.network.rewrite.RewriteData;
+import pe.waterdog.network.rewrite.types.BlockPalette;
+import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.player.PlayerRewriteUtils;
@@ -58,8 +58,11 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
             SignedJWT saltJwt = SignedJWT.parse(packet.getJwt());
             URI x5u = saltJwt.getHeader().getX509CertURL();
             ECPublicKey serverKey = EncryptionUtils.generateKey(x5u.toASCIIString());
-            SecretKey key = EncryptionUtils.getSecretKey(player.getKeyPair().getPrivate(), serverKey,
-                    Base64.getDecoder().decode(saltJwt.getJWTClaimsSet().getStringClaim("salt")));
+            SecretKey key = EncryptionUtils.getSecretKey(
+                    this.player.getLoginData().getKeyPair().getPrivate(),
+                    serverKey,
+                    Base64.getDecoder().decode(saltJwt.getJWTClaimsSet().getStringClaim("salt"))
+            );
             this.getDownstream().enableEncryption(key);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -123,6 +126,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         //this.player.transferServer(serverInfo);
 
         ServerConnection oldServer = this.player.getServer();
+        oldServer.getInfo().removePlayer(this.player);
         oldServer.disconnect();
 
         this.serverInfo.addPlayer(this.player);

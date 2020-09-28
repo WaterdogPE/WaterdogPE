@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package pe.waterdog.network.rewrite;
+package pe.waterdog.network.rewrite.types;
 
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;

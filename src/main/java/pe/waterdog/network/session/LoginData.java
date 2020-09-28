@@ -16,7 +16,14 @@
 
 package pe.waterdog.network.session;
 
+import com.google.common.base.Preconditions;
+import com.nimbusds.jose.JWSObject;
+import com.nukkitx.protocol.bedrock.packet.LoginPacket;
+import io.netty.util.AsciiString;
+import pe.waterdog.network.protocol.ProtocolConstants;
+
 import java.net.InetSocketAddress;
+import java.security.KeyPair;
 import java.util.UUID;
 
 public class LoginData {
@@ -25,32 +32,68 @@ public class LoginData {
     private final String xuid;
     private final boolean xboxAuthed;
     private final InetSocketAddress address;
+    private final ProtocolConstants.Protocol protocol;
 
-    public LoginData(String displayName, UUID uuid, String xuid, boolean xboxAuthed, InetSocketAddress address){
+    private final KeyPair keyPair;
+    private AsciiString chainData;
+    private JWSObject signedClientData;
+
+    public LoginData(String displayName, UUID uuid, String xuid, boolean xboxAuthed, ProtocolConstants.Protocol protocol, InetSocketAddress address, KeyPair keyPair){
         this.displayName = displayName;
         this.uuid = uuid;
         this.xuid = xuid;
         this.xboxAuthed = xboxAuthed;
+        this.protocol = protocol;
         this.address = address;
+        this.keyPair = keyPair;
+    }
+
+    public LoginPacket constructLoginPacket(){
+        LoginPacket loginPacket = new LoginPacket();
+        loginPacket.setChainData(this.chainData);
+        loginPacket.setSkinData(AsciiString.of(this.signedClientData.serialize()));
+        loginPacket.setProtocolVersion(this.protocol.getProtocol());
+        return loginPacket;
     }
 
     public String getDisplayName() {
-        return displayName;
+        return this.displayName;
     }
 
     public String getXuid() {
-        return xuid;
+        return this.xuid;
     }
 
     public boolean isXboxAuthed() {
-        return xboxAuthed;
+        return this.xboxAuthed;
     }
 
     public UUID getUuid() {
-        return uuid;
+        return this.uuid;
     }
 
     public InetSocketAddress getAddress() {
-        return address;
+        return this.address;
+    }
+
+    public ProtocolConstants.Protocol getProtocol() {
+        return this.protocol;
+    }
+
+    public KeyPair getKeyPair() {
+        return this.keyPair;
+    }
+
+    public void setChainData(AsciiString chainData) {
+        Preconditions.checkArgument(this.chainData == null, "ChainData can not be changed!");
+        this.chainData = chainData;
+    }
+
+    public void setSignedClientData(JWSObject signedClientData) {
+        this.signedClientData = signedClientData;
+    }
+
+    public JWSObject getSignedClientData() {
+        return this.signedClientData;
     }
 }
