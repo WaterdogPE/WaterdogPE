@@ -17,6 +17,8 @@
 package pe.waterdog.network.downstream;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.RemoveObjectivePacket;
+import com.nukkitx.protocol.bedrock.packet.SetDisplayObjectivePacket;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.player.ProxiedPlayer;
 
@@ -30,5 +32,17 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
         this.server = server;
 
         System.out.println("New connected downstream!");
+    }
+
+    @Override
+    public boolean handle(SetDisplayObjectivePacket packet) {
+        this.player.getScoreboards().add(packet.getObjectiveId());
+        return false;
+    }
+
+    @Override
+    public boolean handle(RemoveObjectivePacket packet) {
+        this.player.getScoreboards().remove(packet.getObjectiveId());
+        return false;
     }
 }

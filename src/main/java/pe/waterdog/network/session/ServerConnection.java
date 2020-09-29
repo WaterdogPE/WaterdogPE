@@ -38,7 +38,7 @@ public class ServerConnection {
 
     public void sendPacket(BedrockPacket packet){
         if (!this.downstream.isClosed()){
-            this.downstream.sendPacketImmediately(packet);
+            this.downstream.sendPacket(packet);
         }
     }
 

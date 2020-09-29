@@ -30,6 +30,8 @@ public class ProxyBatchBridge implements BatchHandler {
     protected final BedrockSession session;
     protected final ProxiedPlayer player;
 
+    protected boolean trackEntities = true;
+
     public ProxyBatchBridge(ProxiedPlayer player, BedrockSession session){
         this.session = session;
         this.player = player;
@@ -53,6 +55,11 @@ public class ProxyBatchBridge implements BatchHandler {
 
     public boolean sendPacket(BedrockPacket packet, BedrockPacketHandler handler){
         boolean unhandled = !packet.handle(handler);
-        return this.player.getEntityMap().doRewrite(packet) || unhandled;
+        boolean sendPacket = this.player.getEntityMap().doRewrite(packet) || unhandled;
+
+        if (this.trackEntities && sendPacket){
+            this.player.getEntityTracker().trackEntity(packet);
+        }
+        return sendPacket;
     }
 }

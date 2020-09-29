@@ -23,6 +23,8 @@ import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
@@ -35,6 +37,9 @@ import javax.crypto.SecretKey;
 import java.net.URI;
 import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
@@ -98,24 +103,47 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
         BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
         rewriteData.setPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
-
         long runtimeId = PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewriteData.getEntityId(), rewriteData.getOriginalEntityId());
 
+        //TODO: scoreboards
+
         PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getDefaultSpawn());
-        PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getLevelGameType());
+        PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(runtimeId);
-        this.getDownstream().sendPacketImmediately(initializedPacket);
+        this.getDownstream().sendPacket(initializedPacket);
 
         MovePlayerPacket movePlayerPacket = new MovePlayerPacket();
         movePlayerPacket.setPosition(packet.getPlayerPosition());
         movePlayerPacket.setRuntimeEntityId(runtimeId);
         movePlayerPacket.setRotation(Vector3f.from(packet.getRotation().getX(), packet.getRotation().getY(), packet.getRotation().getY()));
         movePlayerPacket.setMode(MovePlayerPacket.Mode.RESPAWN);
-        this.player.getUpstream().sendPacket(movePlayerPacket);
+        this.player.sendPacket(movePlayerPacket);
 
-        this.getDownstream().sendPacketImmediately(rewriteData.getChunkRadius());
+        this.getDownstream().sendPacket(rewriteData.getChunkRadius());
+
+        //TODO: find out why this two does not work
+        //PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
+        //PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
+
+        Collection<UUID> playerList = this.player.getPlayers();
+        PlayerRewriteUtils.injectRemoveAllPlayers(this.player.getUpstream(), playerList);
+        playerList.clear();
+
+        LongSet entities = this.player.getEntities();
+        for (long entityId : entities){
+            PlayerRewriteUtils.injectRemoveEntity(this.player.getUpstream(), entityId);
+        }
+        entities.clear();
+
+        ObjectSet<String> scoreboards = this.player.getScoreboards();
+        for (String scoreboard : scoreboards){
+            PlayerRewriteUtils.injectRemoveObjective(this.player.getUpstream(), scoreboard);
+        }
+        scoreboards.clear();
+
+        PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
 
         /*//send DIM ID 1 & than original dim
         if (this.rewrite.getDimension() == packet.getDimensionId()){

@@ -28,6 +28,7 @@ public class TransferBatchBridge extends ProxyBatchBridge {
 
     public TransferBatchBridge(ProxiedPlayer player, BedrockSession session) {
         super(player, session);
+        this.trackEntities = false;
     }
 
     @Override

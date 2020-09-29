@@ -186,7 +186,7 @@ public class EntityMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(PlayerListPacket packet) {
-        if (packet.getAction() != PlayerListPacket.Action.ADD) return true;
+        if (packet.getAction() != PlayerListPacket.Action.ADD) return false;
 
         List<PlayerListPacket.Entry> entries = new ArrayList<>(packet.getEntries());
         packet.getEntries().clear();

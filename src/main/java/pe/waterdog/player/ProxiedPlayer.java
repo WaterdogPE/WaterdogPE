@@ -20,6 +20,9 @@ import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.*;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import io.netty.util.AsciiString;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.objects.*;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.network.bridge.DownstreamBridge;
@@ -31,6 +34,7 @@ import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.rewrite.BlockMap;
 import pe.waterdog.network.rewrite.EntityMap;
 import pe.waterdog.network.protocol.ProtocolConstants;
+import pe.waterdog.network.rewrite.EntityTracker;
 import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.ServerConnection;
@@ -55,11 +59,14 @@ public class ProxiedPlayer {
     private final RewriteData rewriteData = new RewriteData();
     private boolean canRewrite = false;
 
+    private final EntityTracker entityTracker;
+
     private final EntityMap entityMap;
     private final BlockMap blockMap;
 
-    private List<Long> entities;
-    private List<Long> players;
+    private final LongSet entities = new LongOpenHashSet();
+    private final Collection<UUID> players = new HashSet<>();
+    private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
 
     private boolean dimensionChange = false;
 
@@ -68,6 +75,7 @@ public class ProxiedPlayer {
         this.upstream = session;
         this.loginData = loginData;
         this.loginPacket = loginData.constructLoginPacket();
+        this.entityTracker = new EntityTracker(this);
         this.entityMap = new EntityMap(this);
         this.blockMap = new BlockMap(this);
     }
@@ -120,7 +128,7 @@ public class ProxiedPlayer {
             }
 
             downstream.setPacketCodec(this.getProtocol().getCodec());
-            downstream.sendPacketImmediately(this.loginPacket); //TODO: consider reconstructing packet
+            downstream.sendPacketImmediately(this.loginPacket);
             downstream.setLogging(true);
 
             SessionInjections.injectNewDownstream(downstream, this, serverInfo);
@@ -156,7 +164,7 @@ public class ProxiedPlayer {
 
     public void sendPacket(BedrockPacket packet){
         if (this.upstream != null && !this.upstream.isClosed()){
-            this.upstream.sendPacketImmediately(packet);
+            this.upstream.sendPacket(packet);
         }
     }
 
@@ -186,6 +194,10 @@ public class ProxiedPlayer {
 
     public BedrockServerSession getUpstream() {
         return this.upstream;
+    }
+
+    public EntityTracker getEntityTracker() {
+        return this.entityTracker;
     }
 
     public EntityMap getEntityMap() {
@@ -226,5 +238,17 @@ public class ProxiedPlayer {
 
     public boolean canRewrite() {
         return this.canRewrite;
+    }
+
+    public LongSet getEntities() {
+        return this.entities;
+    }
+
+    public Collection<UUID> getPlayers() {
+        return this.players;
+    }
+
+    public ObjectSet<String> getScoreboards() {
+        return this.scoreboards;
     }
 }

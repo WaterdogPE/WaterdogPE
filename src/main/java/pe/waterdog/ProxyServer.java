@@ -87,6 +87,7 @@ public class ProxyServer {
     }
 
     private void tickProcessor(){
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
         while (!this.shutdown){
             try {
                 synchronized (this){
@@ -96,6 +97,8 @@ public class ProxyServer {
                 //ignore
             }
         }
+
+
     }
 
 

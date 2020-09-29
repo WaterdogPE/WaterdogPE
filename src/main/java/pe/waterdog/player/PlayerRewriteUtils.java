@@ -16,98 +16,87 @@
 
 package pe.waterdog.player;
 
-import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.math.vector.Vector3i;
-import com.nukkitx.network.VarInts;
-import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
+import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.GameType;
+import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import com.nukkitx.protocol.bedrock.packet.*;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 public class PlayerRewriteUtils {
 
-    private static final int PLAYER_ACTION_ID = 36;
-    protected static final int DIM_SWITCH_ACK_ID = -100;
-    protected static final int DIMENSION_CHANGE_ACK = 14;
-
-    private static final byte[] fakePEChunkData;
-    
-    static {
-        final ByteBuf serializer = Unpooled.buffer();
-        final ByteBuf chunkdata = Unpooled.buffer();
-
-        chunkdata.writeByte(1); //1 section
-        chunkdata.writeByte(8); //New subchunk version!
-        chunkdata.writeByte(1); //Zero blockstorages :O
-        chunkdata.writeByte((1 << 1) | 1);  //Runtimeflag and palette id.
-        chunkdata.writeZero(512);
-        VarInts.writeUnsignedInt(chunkdata, 1); //Palette size
-        VarInts.writeUnsignedInt(chunkdata, 0); //Air
-        chunkdata.writeZero(512); //heightmap.
-        chunkdata.writeZero(256); //Biomedata.
-        chunkdata.writeByte(0); //borders
-
-        //chunks
-        chunkdata.markReaderIndex();
-        VarInts.writeInt(serializer, chunkdata.readUnsignedByte());
-        serializer.writeByte(0);
-        VarInts.writeInt(serializer, chunkdata.readableBytes());
-        serializer.writeBytes(chunkdata);
-        fakePEChunkData = new byte[serializer.readableBytes()];
-        serializer.readBytes(fakePEChunkData);
-    }
-
-    public static void injectDimensionChange(BedrockSession session, int dimension){
-        if (session.isClosed()) return;
-
-        ChangeDimensionPacket packet = new ChangeDimensionPacket();
-        packet.setDimension(dimension);
-        packet.setPosition(Vector3f.from(0, 300, 0));
-        packet.setRespawn(true);
-        session.sendPacketImmediately(packet);
-
-        forceDimensionChange(session);
-    }
-
-    public static void forceDimensionChange(BedrockSession session){
-        injectChunkPublisherUpdate(session, Vector3i.from(0, 0, 0));
-        for (int x = -4; x <= 4; x++) {
-            for (int z = -4; z <= 4; z++) {
-                LevelChunkPacket chunkPacket = new LevelChunkPacket();
-                chunkPacket.setChunkX(x);
-                chunkPacket.setChunkZ(z);
-                chunkPacket.setData(fakePEChunkData);
-                session.sendPacketImmediately(chunkPacket);
-            }
-        }
-    }
-
-    public static void injectStatusChange(BedrockSession session, PlayStatusPacket.Status status){
-        PlayStatusPacket packet = new PlayStatusPacket();
-        packet.setStatus(status);
-        session.sendPacketImmediately(packet);
+    public static long rewriteId(long from, long rewritten, long origin){
+        return from == origin? rewritten : (from == rewritten? origin : from);
     }
 
     public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn){
-        if (session.isClosed()) return;
-
         NetworkChunkPublisherUpdatePacket packet = new NetworkChunkPublisherUpdatePacket();
         packet.setPosition(defaultSpawn);
         packet.setRadius(160);
-        session.sendPacketImmediately(packet);
+        session.sendPacket(packet);
     }
 
     public static void injectGameMode(BedrockSession session, GameType gameMode){
-        if (session.isClosed()) return;
-
         SetPlayerGameTypePacket packet = new SetPlayerGameTypePacket();
         packet.setGamemode(gameMode.ordinal());
-        session.sendPacketImmediately(packet);
+        session.sendPacket(packet);
     }
 
-    public static long rewriteId(long from, long rewritten, long origin){
-        return from == origin? rewritten : (from == rewritten? origin : from);
+    public static void injectGameRules(BedrockSession session, List<GameRuleData<?>> gameRules){
+        GameRulesChangedPacket packet = new GameRulesChangedPacket();
+        packet.getGameRules().addAll(gameRules);
+        session.sendPacket(packet);
+    }
+
+    public static void injectClearWeather(BedrockSession session){
+        LevelEventPacket stopRain = new LevelEventPacket();
+        stopRain.setType(LevelEventType.STOP_RAINING);
+        session.sendPacket(stopRain);
+
+        LevelEventPacket stopThunder = new LevelEventPacket();
+        stopThunder.setType(LevelEventType.STOP_THUNDERSTORM);
+        session.sendPacket(stopThunder);
+    }
+
+    public static void injectRemoveEntity(BedrockSession session, long runtimeId){
+        RemoveEntityPacket packet = new RemoveEntityPacket();
+        packet.setUniqueEntityId(runtimeId);
+        session.sendPacket(packet);
+    }
+
+    public static void injectRemoveAllPlayers(BedrockSession session, Collection<UUID> playerList){
+        PlayerListPacket packet = new PlayerListPacket();
+        packet.setAction(PlayerListPacket.Action.REMOVE);
+        List<PlayerListPacket.Entry> entries = new ArrayList<>();
+        for (UUID uuid : playerList){
+            entries.add(new PlayerListPacket.Entry(uuid));
+        }
+        packet.getEntries().addAll(entries);
+        session.sendPacket(packet);
+    }
+
+    public static void injectRemoveAllEffects(BedrockSession session, long runtimeId){
+        for (int i = 0 ; i < 28 ; i++) {
+            injectRemoveEntityEffect(session, runtimeId, i);
+        }
+    }
+
+    public static void injectRemoveEntityEffect(BedrockSession session, long runtimeId, int effect){
+        MobEffectPacket packet = new MobEffectPacket();
+        packet.setRuntimeEntityId(runtimeId);
+        packet.setEffectId(effect);
+        packet.setEvent(MobEffectPacket.Event.REMOVE);
+        session.sendPacket(packet);
+    }
+
+    public static void injectRemoveObjective(BedrockSession session, String objectiveId){
+        RemoveObjectivePacket packet = new RemoveObjectivePacket();
+        packet.setObjectiveId(objectiveId);
+        session.sendPacket(packet);
     }
 }

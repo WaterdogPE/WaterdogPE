@@ -16,10 +16,12 @@
 
 package pe.waterdog.network.upstream;
 
+import com.nukkitx.protocol.bedrock.data.GameType;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.ServerInfo;
+import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
 
 public class UpstreamHandler implements BedrockPacketHandler {
@@ -38,7 +40,14 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(TextPacket packet) {
-        if (!packet.getMessage().startsWith("server")) return false;
+        String message = packet.getMessage();
+        if (!message.startsWith("server")){
+            if (message.startsWith("debug")){
+                //custom debug
+                return true;
+            }
+            return false;
+        }
 
         String[] args = packet.getMessage().split(" ");
         if (args.length <= 1) return false;
