@@ -18,6 +18,8 @@ package pe.waterdog.network.rewrite.types;
 
 import com.nukkitx.nbt.NbtList;
 import com.nukkitx.nbt.NbtMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ShortLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ShortMap;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectLinkedOpenHashMap;
@@ -27,13 +29,21 @@ import pe.waterdog.network.protocol.ProtocolConstants;
 
 public class BlockPalette {
 
+    private static final Int2ObjectMap<BlockPalette> paletteCache = new Int2ObjectOpenHashMap<>();
+
     public static BlockPalette getPalette(NbtList<NbtMap> paletteData, ProtocolConstants.Protocol protocol){
-        //TODO: palette cache
-        return new BlockPalette(paletteData, protocol);
+        int hashId = paletteData.hashCode();
+        if (paletteCache.containsKey(hashId)){
+            return paletteCache.get(hashId);
+        }
+
+        BlockPalette palette = new BlockPalette(paletteData, protocol);
+        paletteCache.put(hashId, palette);
+        return palette;
     }
 
-    Object2ShortMap<BlockPair> entryToId = new Object2ShortLinkedOpenHashMap<>();
-    Short2ObjectMap<BlockPair> idToEntry = new Short2ObjectLinkedOpenHashMap<>();
+    private final Object2ShortMap<BlockPair> entryToId = new Object2ShortLinkedOpenHashMap<>();
+    private final Short2ObjectMap<BlockPair> idToEntry = new Short2ObjectLinkedOpenHashMap<>();
 
     public BlockPalette(NbtList<NbtMap> paletteData, ProtocolConstants.Protocol protocol){
         short id = 0;
