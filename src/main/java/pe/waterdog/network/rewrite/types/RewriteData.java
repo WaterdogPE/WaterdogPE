@@ -33,15 +33,15 @@ public class RewriteData {
     private int dimension = 0;
     private RequestChunkRadiusPacket chunkRadius;
 
-    public RewriteData(){
-    }
-
-    public void setEntityId(long entityId) {
-        this.entityId = entityId;
+    public RewriteData() {
     }
 
     public long getEntityId() {
         return this.entityId;
+    }
+
+    public void setEntityId(long entityId) {
+        this.entityId = entityId;
     }
 
     public long getOriginalEntityId() {
@@ -52,28 +52,28 @@ public class RewriteData {
         this.originalEntityId = originalEntityId;
     }
 
-    public void setBlockPalette(BlockPalette blockPalette) {
-        this.blockPalette = blockPalette;
-    }
-
     public BlockPalette getBlockPalette() {
         return this.blockPalette;
     }
 
-    public void setPaletteRewrite(BlockPaletteRewrite paletteRewrite) {
-        this.paletteRewrite = paletteRewrite;
+    public void setBlockPalette(BlockPalette blockPalette) {
+        this.blockPalette = blockPalette;
     }
 
     public BlockPaletteRewrite getPaletteRewrite() {
         return this.paletteRewrite;
     }
 
-    public void setGameRules(List<GameRuleData<?>> gameRules) {
-        this.gameRules = gameRules;
+    public void setPaletteRewrite(BlockPaletteRewrite paletteRewrite) {
+        this.paletteRewrite = paletteRewrite;
     }
 
     public List<GameRuleData<?>> getGameRules() {
         return this.gameRules;
+    }
+
+    public void setGameRules(List<GameRuleData<?>> gameRules) {
+        this.gameRules = gameRules;
     }
 
     public int getDimension() {
@@ -84,11 +84,11 @@ public class RewriteData {
         this.dimension = dimension;
     }
 
-    public void setChunkRadius(RequestChunkRadiusPacket chunkRadius) {
-        this.chunkRadius = chunkRadius;
-    }
-
     public RequestChunkRadiusPacket getChunkRadius() {
         return this.chunkRadius;
+    }
+
+    public void setChunkRadius(RequestChunkRadiusPacket chunkRadius) {
+        this.chunkRadius = chunkRadius;
     }
 }

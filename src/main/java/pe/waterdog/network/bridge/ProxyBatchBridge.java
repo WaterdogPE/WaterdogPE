@@ -23,7 +23,9 @@ import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import io.netty.buffer.ByteBuf;
 import pe.waterdog.player.ProxiedPlayer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class ProxyBatchBridge implements BatchHandler {
 
@@ -32,18 +34,18 @@ public class ProxyBatchBridge implements BatchHandler {
 
     protected boolean trackEntities = true;
 
-    public ProxyBatchBridge(ProxiedPlayer player, BedrockSession session){
+    public ProxyBatchBridge(ProxiedPlayer player, BedrockSession session) {
         this.session = session;
         this.player = player;
     }
 
     @Override
     public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
-        List<BedrockPacket> newPackets =  new ArrayList<>();
+        List<BedrockPacket> newPackets = new ArrayList<>();
         BedrockPacketHandler handler = session.getPacketHandler();
 
-        for (BedrockPacket packet : packets){
-            if (this.sendPacket(packet, handler)){
+        for (BedrockPacket packet : packets) {
+            if (this.sendPacket(packet, handler)) {
                 newPackets.add(packet);
             }
         }
@@ -53,11 +55,11 @@ public class ProxyBatchBridge implements BatchHandler {
         }
     }
 
-    public boolean sendPacket(BedrockPacket packet, BedrockPacketHandler handler){
+    public boolean sendPacket(BedrockPacket packet, BedrockPacketHandler handler) {
         boolean unhandled = !packet.handle(handler);
         boolean sendPacket = this.player.getEntityMap().doRewrite(packet) || unhandled;
 
-        if (this.trackEntities && sendPacket){
+        if (this.trackEntities && sendPacket) {
             this.player.getEntityTracker().trackEntity(packet);
         }
         return sendPacket;

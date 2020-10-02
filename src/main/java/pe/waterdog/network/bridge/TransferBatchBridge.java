@@ -19,10 +19,7 @@ package pe.waterdog.network.bridge;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import io.netty.buffer.ByteBuf;
 import pe.waterdog.player.ProxiedPlayer;
-
-import java.util.Collection;
 
 public class TransferBatchBridge extends ProxyBatchBridge {
 

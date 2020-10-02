@@ -29,17 +29,17 @@ public class ServerInfo {
 
     private List<ProxiedPlayer> players = new ArrayList<>();
 
-    public ServerInfo(String serverName, InetSocketAddress address){
+    public ServerInfo(String serverName, InetSocketAddress address) {
         this.serverName = serverName;
         this.address = address;
     }
 
-    public void addPlayer(ProxiedPlayer player){
+    public void addPlayer(ProxiedPlayer player) {
         if (player == null) return;
         this.players.add(player);
     }
 
-    public void removePlayer(ProxiedPlayer player){
+    public void removePlayer(ProxiedPlayer player) {
         this.players.remove(player);
     }
 

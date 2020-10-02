@@ -27,7 +27,7 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
     private final ProxiedPlayer player;
     private final ServerConnection server;
 
-    public ConnectedDownstreamHandler(ProxiedPlayer player, ServerConnection server){
+    public ConnectedDownstreamHandler(ProxiedPlayer player, ServerConnection server) {
         this.player = player;
         this.server = server;
 

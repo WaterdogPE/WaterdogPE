@@ -26,13 +26,13 @@ import pe.waterdog.player.ProxiedPlayer;
 
 public class SessionInjections {
 
-    public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server){
+    public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server) {
         downstream.addDisconnectHandler((reason) -> {
-            player.getLogger().info("["+downstream.getAddress()+"|"+player.getName()+"] -> Downstream ["+server.getServerName()+"] has disconnected");
+            player.getLogger().info("[" + downstream.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
         });
     }
 
-    public static void injectDownstreamHandlers(ServerConnection server, ProxiedPlayer player){
+    public static void injectDownstreamHandlers(ServerConnection server, ProxiedPlayer player) {
         Preconditions.checkArgument(server != null && player != null, "Player and ServerConnection can not be null!");
 
         player.getUpstream().setBatchHandler(new ProxyBatchBridge(player, server.getDownstream()));

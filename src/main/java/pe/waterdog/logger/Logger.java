@@ -18,34 +18,29 @@ package pe.waterdog.logger;
 
 import org.fusesource.jansi.Ansi;
 import pe.waterdog.WaterdogPE;
-import pe.waterdog.command.CommandReader;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.*;
 
-public class Logger extends Thread{
+public class Logger extends Thread {
 
     private static Logger instance;
-
+    protected final ConcurrentLinkedQueue<String> logBuffer = new ConcurrentLinkedQueue<>();
     private boolean shutdown = false;
-
     private String logPath;
     private boolean debug = false;
-
     private String prefix = null;
-
-    protected final ConcurrentLinkedQueue<String> logBuffer = new ConcurrentLinkedQueue<>();
     private Color[] textFormats = Color.values();
 
-    public Logger(String logFile){
+    public Logger(String logFile) {
         this(logFile, false);
     }
 
-    public Logger(String logFile, boolean debug){
-        if (instance != null){
+    public Logger(String logFile, boolean debug) {
+        if (instance != null) {
             throw new RuntimeException("Logger has been already created");
         }
 
@@ -59,12 +54,12 @@ public class Logger extends Thread{
         return instance;
     }
 
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
-
     public String getPrefix() {
         return prefix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
     }
 
     public void setDebug(boolean debug) {
@@ -95,7 +90,7 @@ public class Logger extends Thread{
         this.log(Color.DARK_RED + "[ERROR]", message);
     }
 
-    public void error(String message, Throwable e){
+    public void error(String message, Throwable e) {
         this.error(message);
         this.logException(e);
     }
@@ -120,8 +115,8 @@ public class Logger extends Thread{
         this.log(Color.GRAY + "[DEBUG]", message);
     }
 
-    private void log(String format, String message){
-        this.send(format+(this.prefix == null? "" : " ["+this.prefix+"] ")+ message);
+    private void log(String format, String message) {
+        this.send(format + (this.prefix == null ? "" : " [" + this.prefix + "] ") + message);
     }
 
     public void logException(Throwable e) {
@@ -136,10 +131,10 @@ public class Logger extends Thread{
         this.logBuffer.add(message);
     }
 
-    private String colorize(String message){
+    private String colorize(String message) {
         if (message.indexOf(Color.ESCAPE) < 0) return message;
 
-        for (Color color : this.textFormats){
+        for (Color color : this.textFormats) {
             message = message.replaceAll(color.toString(), color.getAnsi().toString());
         }
 
@@ -149,11 +144,11 @@ public class Logger extends Thread{
     @Override
     public void run() {
         File logFile = this.setupLogFiles();
-        if (logFile == null){
+        if (logFile == null) {
             throw new RuntimeException("Unable to open Log File. Maybe file permission problem?");
         }
 
-        while (!this.shutdown){
+        while (!this.shutdown) {
             if (logBuffer.isEmpty()) {
                 try {
                     /*synchronized (this) {
@@ -170,8 +165,8 @@ public class Logger extends Thread{
         this.flushBuffer(logFile);
     }
 
-    private File setupLogFiles(){
-        File logFile = new File(this.logPath+".log");
+    private File setupLogFiles() {
+        File logFile = new File(this.logPath + ".log");
         if (!logFile.exists()) {
             try {
                 logFile.createNewFile();
@@ -189,7 +184,7 @@ public class Logger extends Thread{
         if (!oldLogs.exists()) oldLogs.mkdirs();
 
         logFile.renameTo(new File(oldLogs, newName));
-        logFile = new File(this.logPath+".log");
+        logFile = new File(this.logPath + ".log");
 
         if (!logFile.exists()) {
             try {
@@ -202,7 +197,7 @@ public class Logger extends Thread{
         return logFile;
     }
 
-    private void flushBuffer(File logFile){
+    private void flushBuffer(File logFile) {
         try {
             Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(logFile, true), StandardCharsets.UTF_8), 1024);
             Date now = new Date();

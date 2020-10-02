@@ -17,6 +17,7 @@
 package pe.waterdog;
 
 import com.nukkitx.protocol.bedrock.BedrockServer;
+import lombok.SneakyThrows;
 import pe.waterdog.command.CommandReader;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.network.ProxyListener;
@@ -29,7 +30,8 @@ import pe.waterdog.utils.ProxyConfig;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Map;
+import java.util.UUID;
 
 public class ProxyServer {
 
@@ -51,7 +53,7 @@ public class ProxyServer {
 
     private Map<String, ServerInfo> serverInfoMap;
 
-    public ProxyServer(Logger logger, String filePath, String pluginPath){
+    public ProxyServer(Logger logger, String filePath, String pluginPath) {
         instance = this;
         this.logger = logger;
         this.dataPath = Paths.get(filePath);
@@ -66,34 +68,38 @@ public class ProxyServer {
        /*this.console = new CommandReader();
        this.console.start();*/
 
-       this.configurationManager = new ConfigurationManager(this);
-       configurationManager.loadProxyConfig();
+        this.configurationManager = new ConfigurationManager(this);
+        configurationManager.loadProxyConfig();
 
-       this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
+        this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
 
-       this.playerManager = new PlayerManager(this);
+        this.playerManager = new PlayerManager(this);
 
-       this.boot();
-       this.tickProcessor();
+        this.boot();
+        this.tickProcessor();
     }
 
-    private void boot(){
+    public static ProxyServer getInstance() {
+        return instance;
+    }
+
+    private void boot() {
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
-        this.logger.info("Binding to "+bindAddress);
+        this.logger.info("Binding to " + bindAddress);
 
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
         bedrockServer.setHandler(new ProxyListener(this));
         bedrockServer.bind().join();
     }
 
-    private void tickProcessor(){
+    private void tickProcessor() {
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
-        while (!this.shutdown){
+        while (!this.shutdown) {
             try {
-                synchronized (this){
+                synchronized (this) {
                     this.wait();
                 }
-            }catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 //ignore
             }
         }
@@ -104,11 +110,6 @@ public class ProxyServer {
 
     public void shutdown(){
         this.shutdown = true;
-    }
-
-
-    public static ProxyServer getInstance() {
-        return instance;
     }
 
     public Logger getLogger() {
@@ -127,7 +128,7 @@ public class ProxyServer {
         return this.configurationManager;
     }
 
-    public ProxyConfig getConfiguration(){
+    public ProxyConfig getConfiguration() {
         return this.configurationManager.getProxyConfig();
     }
 
@@ -135,7 +136,7 @@ public class ProxyServer {
         return playerManager;
     }
 
-    public ProxiedPlayer getPlayer(UUID uuid){
+    public ProxiedPlayer getPlayer(UUID uuid) {
         return this.playerManager.getPlayer(uuid);
     }
 
@@ -143,11 +144,11 @@ public class ProxyServer {
         return this.playerManager.getPlayers();
     }
 
-    public ServerInfo getServer(String serverName){
+    public ServerInfo getServer(String serverName) {
         return this.serverInfoMap.get(serverName.toLowerCase());
     }
 
-    public boolean registerServerInfo(ServerInfo serverInfo){
+    public boolean registerServerInfo(ServerInfo serverInfo) {
         if (serverInfo == null) return false;
         return this.serverInfoMap.putIfAbsent(serverInfo.getServerName().toLowerCase(), serverInfo) == null;
     }

@@ -17,7 +17,6 @@
 package pe.waterdog.network.upstream;
 
 import com.nimbusds.jose.JWSObject;
-
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
@@ -32,8 +31,8 @@ import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.session.LoginData;
-import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.player.HandshakeUtils;
+import pe.waterdog.player.ProxiedPlayer;
 
 import java.security.KeyPair;
 import java.util.Collections;
@@ -44,7 +43,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
     private final ProxyServer server;
     private final BedrockServerSession session;
 
-    public HandshakeUpstreamHandler(ProxyServer server, BedrockServerSession session){
+    public HandshakeUpstreamHandler(ProxyServer server, BedrockServerSession session) {
         this.server = server;
         this.session = session;
     }
@@ -55,11 +54,11 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
         int protocolVersion = packet.getProtocolVersion();
         ProtocolConstants.Protocol protocol = ProtocolConstants.get(protocolVersion);
 
-        session.setPacketCodec(protocol == null? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
+        session.setPacketCodec(protocol == null ? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
 
         if (protocolVersion != VersionInfo.LATEST_PROTOCOL_VERSION && protocol == null) {
             PlayStatusPacket status = new PlayStatusPacket();
-            status.setStatus((protocolVersion > VersionInfo.LATEST_PROTOCOL_VERSION?
+            status.setStatus((protocolVersion > VersionInfo.LATEST_PROTOCOL_VERSION ?
                     PlayStatusPacket.Status.LOGIN_FAILED_SERVER_OLD :
                     PlayStatusPacket.Status.LOGIN_FAILED_CLIENT_OLD));
 
@@ -108,7 +107,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
             loginData.setSignedClientData(signedClientData);
 
             ProxiedPlayer player = new ProxiedPlayer(this.server, this.session, loginData);
-            if (!this.server.getPlayerManager().registerPlayer(player)){
+            if (!this.server.getPlayerManager().registerPlayer(player)) {
                 return true;
             }
 

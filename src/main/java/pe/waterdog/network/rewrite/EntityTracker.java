@@ -27,11 +27,11 @@ public class EntityTracker implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
 
-    public EntityTracker(ProxiedPlayer player){
+    public EntityTracker(ProxiedPlayer player) {
         this.player = player;
     }
 
-    public boolean trackEntity(BedrockPacket packet){
+    public boolean trackEntity(BedrockPacket packet) {
         return packet.handle(this);
     }
 
@@ -69,9 +69,9 @@ public class EntityTracker implements BedrockPacketHandler {
     public boolean handle(PlayerListPacket packet) {
         List<PlayerListPacket.Entry> entries = packet.getEntries();
         for (PlayerListPacket.Entry entry : entries) {
-            if (packet.getAction() == PlayerListPacket.Action.ADD){
+            if (packet.getAction() == PlayerListPacket.Action.ADD) {
                 this.player.getPlayers().add(entry.getUuid());
-            }else if (packet.getAction() == PlayerListPacket.Action.REMOVE) {
+            } else if (packet.getAction() == PlayerListPacket.Action.REMOVE) {
                 this.player.getPlayers().remove(entry.getUuid());
             }
         }

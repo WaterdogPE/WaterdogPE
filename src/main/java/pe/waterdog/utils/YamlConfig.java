@@ -26,7 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class YamlConfig extends Configuration{
+public class YamlConfig extends Configuration {
 
     private final static Yaml yaml = new Yaml();
 
@@ -34,7 +34,7 @@ public class YamlConfig extends Configuration{
         super(file);
     }
 
-    public YamlConfig(Path path){
+    public YamlConfig(Path path) {
         super(path);
     }
 
@@ -46,8 +46,8 @@ public class YamlConfig extends Configuration{
     public void load() {
         try {
             this.values = yaml.loadAs(Files.newInputStream(this.file.toPath()), Map.class);
-        }catch (Exception e){
-            Logger.getLogger().error("Unable to load Config "+this.file.toString());
+        } catch (Exception e) {
+            Logger.getLogger().error("Unable to load Config " + this.file.toString());
         }
     }
 
@@ -56,8 +56,8 @@ public class YamlConfig extends Configuration{
         String writingData = yaml.dump(this.values);
         try {
             Files.write(this.file.toPath(), writingData.getBytes(Charsets.UTF_8));
-        }catch (IOException e){
-            Logger.getLogger().error("Unable to save Config "+this.file.toString());
+        } catch (IOException e) {
+            Logger.getLogger().error("Unable to save Config " + this.file.toString());
         }
     }
 }

@@ -39,7 +39,6 @@ import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
@@ -47,13 +46,13 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
     private final BedrockClient client;
     private final ServerInfo serverInfo;
 
-    public SwitchDownstreamHandler(ProxiedPlayer player, ServerInfo serverInfo, BedrockClient client){
+    public SwitchDownstreamHandler(ProxiedPlayer player, ServerInfo serverInfo, BedrockClient client) {
         this.player = player;
         this.serverInfo = serverInfo;
         this.client = client;
     }
 
-    public BedrockClientSession getDownstream(){
+    public BedrockClientSession getDownstream() {
         return this.client.getSession();
     }
 
@@ -132,13 +131,13 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         playerList.clear();
 
         LongSet entities = this.player.getEntities();
-        for (long entityId : entities){
+        for (long entityId : entities) {
             PlayerRewriteUtils.injectRemoveEntity(this.player.getUpstream(), entityId);
         }
         entities.clear();
 
         ObjectSet<String> scoreboards = this.player.getScoreboards();
-        for (String scoreboard : scoreboards){
+        for (String scoreboard : scoreboards) {
             PlayerRewriteUtils.injectRemoveObjective(this.player.getUpstream(), scoreboard);
         }
         scoreboards.clear();

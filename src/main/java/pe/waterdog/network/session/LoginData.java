@@ -38,7 +38,7 @@ public class LoginData {
     private AsciiString chainData;
     private JWSObject signedClientData;
 
-    public LoginData(String displayName, UUID uuid, String xuid, boolean xboxAuthed, ProtocolConstants.Protocol protocol, InetSocketAddress address, KeyPair keyPair){
+    public LoginData(String displayName, UUID uuid, String xuid, boolean xboxAuthed, ProtocolConstants.Protocol protocol, InetSocketAddress address, KeyPair keyPair) {
         this.displayName = displayName;
         this.uuid = uuid;
         this.xuid = xuid;
@@ -48,7 +48,7 @@ public class LoginData {
         this.keyPair = keyPair;
     }
 
-    public LoginPacket constructLoginPacket(){
+    public LoginPacket constructLoginPacket() {
         LoginPacket loginPacket = new LoginPacket();
         loginPacket.setChainData(this.chainData);
         loginPacket.setSkinData(AsciiString.of(this.signedClientData.serialize()));
@@ -89,11 +89,11 @@ public class LoginData {
         this.chainData = chainData;
     }
 
-    public void setSignedClientData(JWSObject signedClientData) {
-        this.signedClientData = signedClientData;
-    }
-
     public JWSObject getSignedClientData() {
         return this.signedClientData;
+    }
+
+    public void setSignedClientData(JWSObject signedClientData) {
+        this.signedClientData = signedClientData;
     }
 }

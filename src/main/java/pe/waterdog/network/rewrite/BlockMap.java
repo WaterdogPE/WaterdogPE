@@ -37,7 +37,7 @@ public class BlockMap implements BedrockPacketHandler {
     private final ProxiedPlayer player;
     private final RewriteData rewrite;
 
-    public BlockMap(ProxiedPlayer player){
+    public BlockMap(ProxiedPlayer player) {
         this.player = player;
         this.rewrite = player.getRewriteData();
     }
@@ -46,7 +46,7 @@ public class BlockMap implements BedrockPacketHandler {
         return this.rewrite.getPaletteRewrite();
     }
 
-    public boolean doRewrite(BedrockPacket packet){
+    public boolean doRewrite(BedrockPacket packet) {
         return this.player.canRewrite() && packet.handle(this);
     }
 
@@ -59,7 +59,7 @@ public class BlockMap implements BedrockPacketHandler {
         from.writeBytes(oldData);
 
         boolean success = true;
-        for (int section = 0 ; section < sections ; section++) {
+        for (int section = 0; section < sections; section++) {
             boolean notSupported = false;
             int chunkVersion = from.readUnsignedByte();
             to.writeByte(chunkVersion);
@@ -75,7 +75,7 @@ public class BlockMap implements BedrockPacketHandler {
                     int storageCount = from.readUnsignedByte();
                     to.writeByte(storageCount);
 
-                    for (int storage = 0 ; storage < storageCount ; storage++) {
+                    for (int storage = 0; storage < storageCount; storage++) {
                         int flags = from.readUnsignedByte();
                         int bitsPerBlock = flags >> 1; //isRuntime = (flags & 0x1) != 0
                         int blocksPerWord = Integer.SIZE / bitsPerBlock;
@@ -87,7 +87,7 @@ public class BlockMap implements BedrockPacketHandler {
                         int nPaletteEntries = VarInts.readInt(from);
                         VarInts.writeInt(to, nPaletteEntries);
 
-                        for (int i = 0 ; i < nPaletteEntries ; i++) {
+                        for (int i = 0; i < nPaletteEntries; i++) {
                             int runtimeId = VarInts.readInt(from);
                             VarInts.writeInt(to, this.getPaletteRewrite().map(runtimeId));
                         }
@@ -105,7 +105,7 @@ public class BlockMap implements BedrockPacketHandler {
             }
         }
 
-        if (success){
+        if (success) {
             to.writeBytes(from); //copy the rest
             byte[] newData = new byte[to.readableBytes()];
             to.readBytes(newData);
@@ -128,7 +128,7 @@ public class BlockMap implements BedrockPacketHandler {
         LevelEventType type = packet.getType();
 
         //TODO: what is LEVEL_EVENT_EVENT_PARTICLE_PUNCH_BLOCK
-        switch (type){
+        switch (type) {
             case PARTICLE_TERRAIN:
             case PARTICLE_DESTROY_BLOCK:
                 break;
@@ -145,7 +145,7 @@ public class BlockMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(LevelSoundEventPacket packet) {
-        if (packet.getSound() != SoundEvent.PLACE){
+        if (packet.getSound() != SoundEvent.PLACE) {
             return false;
         }
 
@@ -156,7 +156,7 @@ public class BlockMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(AddEntityPacket packet) {
-        if (!packet.getIdentifier().equals("minecraft:falling_block")){
+        if (!packet.getIdentifier().equals("minecraft:falling_block")) {
             return false;
         }
 

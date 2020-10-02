@@ -35,10 +35,10 @@ public enum Color {
     GREEN('a', 0xA, Ansi.Color.GREEN, true),
     AQUA('b', 0xB, Ansi.Color.CYAN, true),
     RED('c', 0xC, Ansi.Color.RED, true),
-    LIGHT_PURPLE('d', 0xD,Ansi.Color.MAGENTA, true),
+    LIGHT_PURPLE('d', 0xD, Ansi.Color.MAGENTA, true),
     YELLOW('e', 0xE, Ansi.Color.YELLOW, true),
-    WHITE('f', 0xF,Ansi.Color.WHITE, true),
-    BOLD('l', 0x11, null,false, Ansi.Attribute.UNDERLINE_DOUBLE),
+    WHITE('f', 0xF, Ansi.Color.WHITE, true),
+    BOLD('l', 0x11, null, false, Ansi.Attribute.UNDERLINE_DOUBLE),
     STRIKETHROUGH('m', 0x12, null, false, Ansi.Attribute.STRIKETHROUGH_ON),
     UNDERLINE('n', 0x13, null, false, Ansi.Attribute.UNDERLINE),
     ITALIC('o', 0x14, null, false, Ansi.Attribute.ITALIC),
@@ -59,7 +59,7 @@ public enum Color {
     }
 
     Color(char code, int intCode, Ansi.Color color, boolean bold) {
-        this(code, intCode,color,  bold, null);
+        this(code, intCode, color, bold, null);
     }
 
     Color(char code, int intCode, Ansi.Color color, boolean bold, Ansi.Attribute attribute) {
@@ -84,8 +84,8 @@ public enum Color {
     }
 
     public Ansi getAnsi() {
-        Ansi ansi = (attribute == null)? Ansi.ansi().a(Ansi.Attribute.RESET) : Ansi.ansi().a(this.attribute);
+        Ansi ansi = (attribute == null) ? Ansi.ansi().a(Ansi.Attribute.RESET) : Ansi.ansi().a(this.attribute);
         if (this.color != null) ansi = ansi.fg(this.color);
-        return this.bold? ansi.bold() : ansi;
+        return this.bold ? ansi.bold() : ansi;
     }
 }

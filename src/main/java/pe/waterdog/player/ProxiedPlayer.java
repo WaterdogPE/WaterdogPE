@@ -17,60 +17,56 @@
 package pe.waterdog.player;
 
 import com.google.common.base.Preconditions;
-import com.nukkitx.protocol.bedrock.*;
+import com.nukkitx.protocol.bedrock.BedrockClient;
+import com.nukkitx.protocol.bedrock.BedrockPacket;
+import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
-import io.netty.util.AsciiString;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.objects.*;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.logger.Logger;
+import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
 import pe.waterdog.network.bridge.ProxyBatchBridge;
 import pe.waterdog.network.bridge.TransferBatchBridge;
-import pe.waterdog.network.downstream.SwitchDownstreamHandler;
 import pe.waterdog.network.downstream.InitialHandler;
-import pe.waterdog.network.ServerInfo;
+import pe.waterdog.network.downstream.SwitchDownstreamHandler;
+import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.rewrite.BlockMap;
 import pe.waterdog.network.rewrite.EntityMap;
-import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.rewrite.EntityTracker;
-import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.rewrite.types.RewriteData;
+import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.network.upstream.UpstreamHandler;
 
-import java.security.KeyPair;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.UUID;
 
 public class ProxiedPlayer {
 
     private final ProxyServer proxy;
 
     private final BedrockServerSession upstream;
-    private ServerConnection serverConnection;
-
-    private ServerInfo pendingConnection;
-
-    private LoginPacket loginPacket;
     private final LoginData loginData;
-
     private final RewriteData rewriteData = new RewriteData();
-    private boolean canRewrite = false;
-
     private final EntityTracker entityTracker;
-
     private final EntityMap entityMap;
     private final BlockMap blockMap;
-
     private final LongSet entities = new LongOpenHashSet();
     private final Collection<UUID> players = new HashSet<>();
     private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
-
+    private ServerConnection serverConnection;
+    private ServerInfo pendingConnection;
+    private LoginPacket loginPacket;
+    private boolean canRewrite = false;
     private boolean dimensionChange = false;
 
-    public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData){
+    public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData) {
         this.proxy = proxy;
         this.upstream = session;
         this.loginData = loginData;
@@ -80,7 +76,7 @@ public class ProxiedPlayer {
         this.blockMap = new BlockMap(this);
     }
 
-    public void initialConnect(){
+    public void initialConnect() {
         //TODO: login event
         //TODO: get server from handler
         this.upstream.setPacketHandler(new UpstreamHandler(this));
@@ -90,24 +86,24 @@ public class ProxiedPlayer {
         this.connect(this.proxy.getServer(server));
     }
 
-    public void connect(ServerInfo serverInfo){
+    public void connect(ServerInfo serverInfo) {
         Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
 
         //TODO: ServerSwitch event
 
-        if (this.serverConnection != null && this.serverConnection.getInfo() == serverInfo){
+        if (this.serverConnection != null && this.serverConnection.getInfo() == serverInfo) {
             //Already connected
             return;
         }
 
-        if (this.pendingConnection == serverInfo){
+        if (this.pendingConnection == serverInfo) {
             return;
         }
 
         BedrockClient client = this.proxy.getPlayerManager().bindClient();
-        client.connect(serverInfo.getAddress()).whenComplete((downstream, throwable)->{
-            if (throwable != null){
-                this.getLogger().error("["+this.upstream.getAddress()+"|"+this.getName()+"] Unable to connect to downstream "+serverInfo.getServerName(), throwable);
+        client.connect(serverInfo.getAddress()).whenComplete((downstream, throwable) -> {
+            if (throwable != null) {
+                this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + serverInfo.getServerName(), throwable);
 
                 //TODO: fallback listener
                 this.pendingConnection = null;
@@ -120,7 +116,7 @@ public class ProxiedPlayer {
                 downstream.setPacketHandler(new InitialHandler(this));
                 downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
                 this.upstream.setBatchHandler(new ProxyBatchBridge(this, downstream));
-            }else {
+            } else {
                 this.pendingConnection = serverInfo;
 
                 downstream.setPacketHandler(new SwitchDownstreamHandler(this, serverInfo, client));
@@ -132,38 +128,38 @@ public class ProxiedPlayer {
             downstream.setLogging(true);
 
             SessionInjections.injectNewDownstream(downstream, this, serverInfo);
-            this.getLogger().info("["+this.upstream.getAddress()+"|"+this.getName()+"] -> Downstream ["+serverInfo.getServerName()+"] has connected");
+            this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + serverInfo.getServerName() + "] has connected");
         });
 
     }
 
-    public void disconnect(){
+    public void disconnect() {
         this.disconnect(null, false);
     }
 
-    public void disconnect(String reason){
+    public void disconnect(String reason) {
         this.disconnect(reason, false);
     }
 
-    public void disconnect(String reason, boolean force){
+    public void disconnect(String reason, boolean force) {
         //TODO: disconnect event
 
-        if (this.upstream != null && !this.upstream.isClosed()){
+        if (this.upstream != null && !this.upstream.isClosed()) {
             this.upstream.disconnect(reason);
         }
 
-        if (this.serverConnection != null){
+        if (this.serverConnection != null) {
             this.serverConnection.getInfo().removePlayer(this);
             this.serverConnection.disconnect();
         }
 
         this.proxy.getPlayerManager().removePlayer(this);
-        this.getLogger().info("["+this.getName()+"] -> Upstream has disconnected");
-        if (reason != null) this.getLogger().info("["+this.getName()+"] -> Disconnected with: §c" + reason);
+        this.getLogger().info("[" + this.getName() + "] -> Upstream has disconnected");
+        if (reason != null) this.getLogger().info("[" + this.getName() + "] -> Disconnected with: §c" + reason);
     }
 
-    public void sendPacket(BedrockPacket packet){
-        if (this.upstream != null && !this.upstream.isClosed()){
+    public void sendPacket(BedrockPacket packet) {
+        if (this.upstream != null && !this.upstream.isClosed()) {
             this.upstream.sendPacket(packet);
         }
     }

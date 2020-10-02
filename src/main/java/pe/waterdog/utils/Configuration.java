@@ -32,19 +32,19 @@ public abstract class Configuration {
         this(new File(file));
     }
 
-    public Configuration(Path path){
+    public Configuration(Path path) {
         this(path.toFile());
     }
 
     public Configuration(File file) {
         this.file = file;
 
-        if (!this.file.exists()){
+        if (!this.file.exists()) {
             try {
                 this.file.getParentFile().mkdirs();
                 this.file.createNewFile();
-            }catch (IOException e){
-                Logger.getLogger().error("Unable to create Config "+this.file.toString(), e);
+            } catch (IOException e) {
+                Logger.getLogger().error("Unable to create Config " + this.file.toString(), e);
             }
         }
 
@@ -52,16 +52,17 @@ public abstract class Configuration {
     }
 
     public abstract void load();
+
     public abstract void save();
 
     public Set<String> getKeys() {
         return new HashSet<>(this.values.keySet());
     }
-    
+
     public void set(String key, Object value) {
         this.values.put(key, value);
     }
-    
+
     public Object get(String key) {
         return this.get(key, null);
     }
@@ -73,24 +74,24 @@ public abstract class Configuration {
         if (!this.values.containsKey(keys[0])) return defaultValue;
 
         Object value = this.values.get(keys[0]);
-        if (!(value instanceof Map) || keys.length == 1) return value == null? defaultValue : value;
+        if (!(value instanceof Map) || keys.length == 1) return value == null ? defaultValue : value;
 
-        for (int i = 1; i < keys.length; i++){
+        for (int i = 1; i < keys.length; i++) {
             value = ((Map) value).get(keys[i]);
 
-            if (!(value instanceof Map)){
-                return value == null? defaultValue : value;
+            if (!(value instanceof Map)) {
+                return value == null ? defaultValue : value;
             }
         }
 
         return value;
     }
 
-    
+
     public void setString(String key, String value) {
         this.values.put(key, value);
     }
-    
+
     public String getString(String key) {
         return this.getString(key, null);
     }
@@ -99,11 +100,11 @@ public abstract class Configuration {
         return (String) this.get(key, defaultValue);
     }
 
-    
+
     public void setInt(String key, Integer value) {
         this.values.put(key, value);
     }
-    
+
     public Integer getInt(String key) {
         return this.getInt(key, null);
     }
@@ -112,7 +113,7 @@ public abstract class Configuration {
         return (Integer) this.get(key, defaultValue);
     }
 
-    
+
     public void setLong(String key, Long value) {
         this.values.put(key, value);
     }
@@ -125,7 +126,7 @@ public abstract class Configuration {
         return (Long) this.get(key, defaultValue);
     }
 
-    
+
     public void setDouble(String key, Double value) {
         this.values.put(key, value);
     }
@@ -133,12 +134,12 @@ public abstract class Configuration {
     public Double getDouble(String key) {
         return this.getDouble(key, null);
     }
-    
+
     public Double getDouble(String key, Double defaultValue) {
         return (Double) this.get(key, defaultValue);
     }
 
-    
+
     public void setBoolean(String key, Boolean value) {
         this.values.put(key, value);
     }
@@ -151,7 +152,7 @@ public abstract class Configuration {
         return (Boolean) this.get(key, defaultValue);
     }
 
-    
+
     public <T> void setList(String key, List<T> value) {
         this.values.put(key, value);
     }
@@ -169,11 +170,11 @@ public abstract class Configuration {
         this.values.put(key, value);
     }
 
-    public List<String> getStringList(String key){
+    public List<String> getStringList(String key) {
         return getStringList(key, null);
     }
 
-    public List<String> getStringList(String key, List<String> defaultValue){
+    public List<String> getStringList(String key, List<String> defaultValue) {
         return (List<String>) this.get(key, defaultValue);
     }
 

@@ -32,13 +32,13 @@ public class EntityMap implements BedrockPacketHandler {
     private final ProxiedPlayer player;
     private final RewriteData rewrite;
 
-    public EntityMap(ProxiedPlayer player){
+    public EntityMap(ProxiedPlayer player) {
         this.player = player;
         this.rewrite = player.getRewriteData();
     }
 
 
-    public boolean doRewrite(BedrockPacket packet){
+    public boolean doRewrite(BedrockPacket packet) {
         return this.player.canRewrite() && packet.handle(this);
     }
 
@@ -191,7 +191,7 @@ public class EntityMap implements BedrockPacketHandler {
         List<PlayerListPacket.Entry> entries = new ArrayList<>(packet.getEntries());
         packet.getEntries().clear();
 
-        for (PlayerListPacket.Entry entry : entries){
+        for (PlayerListPacket.Entry entry : entries) {
             entry.setEntityId(PlayerRewriteUtils.rewriteId(entry.getEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
             packet.getEntries().add(entry);
         }

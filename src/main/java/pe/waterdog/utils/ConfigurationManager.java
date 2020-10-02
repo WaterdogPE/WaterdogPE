@@ -15,6 +15,7 @@
  */
 
 package pe.waterdog.utils;
+
 import pe.waterdog.ProxyServer;
 import pe.waterdog.logger.Logger;
 
@@ -32,16 +33,16 @@ public class ConfigurationManager {
     private ProxyServer server;
     private ProxyConfig proxyConfig;
 
-    public ConfigurationManager(ProxyServer server){
+    public ConfigurationManager(ProxyServer server) {
         this.server = server;
     }
 
-    public static Configuration newConfig(File file, int type){
+    public static Configuration newConfig(File file, int type) {
         return newConfig(file.toString(), type);
     }
 
-    public static Configuration newConfig(String file, int type){
-        switch (type){
+    public static Configuration newConfig(String file, int type) {
+        switch (type) {
             case YAML:
                 return new YamlConfig(file);
             case JSON:
@@ -52,16 +53,16 @@ public class ConfigurationManager {
         }
     }
 
-    public void loadProxyConfig(){
+    public void loadProxyConfig() {
         InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("config.yml");
         Path path = Paths.get(this.server.getDataPath().toString(), "config.yml");
 
         try {
-            if (!path.toFile().exists()){
+            if (!path.toFile().exists()) {
                 Files.copy(inputStream, path);
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             Logger.getLogger().error("Unable to save proxy config file!", e);
         }
 

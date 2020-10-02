@@ -30,10 +30,19 @@ import pe.waterdog.network.protocol.ProtocolConstants;
 public class BlockPalette {
 
     private static final Int2ObjectMap<BlockPalette> paletteCache = new Int2ObjectOpenHashMap<>();
+    private final Object2ShortMap<BlockPair> entryToId = new Object2ShortLinkedOpenHashMap<>();
+    private final Short2ObjectMap<BlockPair> idToEntry = new Short2ObjectLinkedOpenHashMap<>();
+    public BlockPalette(NbtList<NbtMap> paletteData, ProtocolConstants.Protocol protocol) {
+        short id = 0;
+        for (NbtMap item : paletteData) {
+            final NbtMap block = item.getCompound("block");
+            this.addEntry(id++, block.getString("name"), block.getCompound("states"));
+        }
+    }
 
-    public static BlockPalette getPalette(NbtList<NbtMap> paletteData, ProtocolConstants.Protocol protocol){
+    public static BlockPalette getPalette(NbtList<NbtMap> paletteData, ProtocolConstants.Protocol protocol) {
         int hashId = paletteData.hashCode();
-        if (paletteCache.containsKey(hashId)){
+        if (paletteCache.containsKey(hashId)) {
             return paletteCache.get(hashId);
         }
 
@@ -42,19 +51,8 @@ public class BlockPalette {
         return palette;
     }
 
-    private final Object2ShortMap<BlockPair> entryToId = new Object2ShortLinkedOpenHashMap<>();
-    private final Short2ObjectMap<BlockPair> idToEntry = new Short2ObjectLinkedOpenHashMap<>();
-
-    public BlockPalette(NbtList<NbtMap> paletteData, ProtocolConstants.Protocol protocol){
-        short id = 0;
-        for (NbtMap item : paletteData) {
-            final NbtMap block = item.getCompound("block");
-            this.addEntry(id++, block.getString("name"), block.getCompound("states"));
-        }
-    }
-
-    public BlockPaletteRewrite createRewrite(BlockPalette to){
-        if (BlockPalette.this == to){
+    public BlockPaletteRewrite createRewrite(BlockPalette to) {
+        if (BlockPalette.this == to) {
             return BlockPaletteRewrite.EQUAL;
         }
 

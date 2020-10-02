@@ -24,7 +24,7 @@ import net.minidev.json.JSONObject;
 import pe.waterdog.ProxyServer;
 
 import java.net.URI;
-import java.security.*;
+import java.security.KeyPair;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
@@ -80,14 +80,14 @@ public class HandshakeUtils {
         JSONObject clientData = clientJwt.getPayload().toJSONObject();
 
         /* Add WaterdogAttributes*/
-        if (ProxyServer.getInstance().getConfiguration().isIpForward()){
+        if (ProxyServer.getInstance().getConfiguration().isIpForward()) {
             clientData.put("Waterdog_IP", session.getAddress().getAddress().getHostAddress());
         }
 
         return clientData;
     }
 
-    public static JSONObject parseExtraData(LoginPacket packet, JSONObject payload){
+    public static JSONObject parseExtraData(LoginPacket packet, JSONObject payload) {
         Object extraDataObject = payload.get("extraData");
         if (!(extraDataObject instanceof JSONObject)) {
             throw new IllegalStateException("Invalid 'extraData'");
@@ -95,7 +95,7 @@ public class HandshakeUtils {
 
         JSONObject extraData = (JSONObject) extraDataObject;
         /* Replace spaces in name*/
-        if (ProxyServer.getInstance().getConfiguration().isReplaceUsernameSpaces()){
+        if (ProxyServer.getInstance().getConfiguration().isReplaceUsernameSpaces()) {
             String playerName = extraData.getAsString("displayName");
             extraData.put("displayName", playerName.replaceAll(" ", "_"));
         }

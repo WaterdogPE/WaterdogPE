@@ -16,19 +16,18 @@
 
 package pe.waterdog.network.upstream;
 
-import com.nukkitx.protocol.bedrock.data.GameType;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.*;
+import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
+import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.ServerInfo;
-import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
 
 public class UpstreamHandler implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
 
-    public UpstreamHandler(ProxiedPlayer player){
+    public UpstreamHandler(ProxiedPlayer player) {
         this.player = player;
     }
 
@@ -41,8 +40,8 @@ public class UpstreamHandler implements BedrockPacketHandler {
     @Override
     public boolean handle(TextPacket packet) {
         String message = packet.getMessage();
-        if (!message.startsWith("server")){
-            if (message.startsWith("debug")){
+        if (!message.startsWith("server")) {
+            if (message.startsWith("debug")) {
                 //custom debug
                 return true;
             }
@@ -53,7 +52,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
         if (args.length <= 1) return false;
 
         ServerInfo serverInfo = ProxyServer.getInstance().getServer(args[1]);
-        if (serverInfo != null){
+        if (serverInfo != null) {
             player.connect(serverInfo);
             return true;
         }

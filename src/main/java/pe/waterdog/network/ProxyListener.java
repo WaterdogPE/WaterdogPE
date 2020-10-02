@@ -32,7 +32,7 @@ public class ProxyListener implements BedrockServerEventHandler {
 
     private ProxyServer proxy;
 
-    public ProxyListener(ProxyServer proxy){
+    public ProxyListener(ProxyServer proxy) {
         this.proxy = proxy;
     }
 
@@ -65,7 +65,7 @@ public class ProxyListener implements BedrockServerEventHandler {
 
     @Override
     public void onSessionCreation(BedrockServerSession session) {
-        this.proxy.getLogger().info("["+session.getAddress()+"] <-> InitialHandler has connected");
+        this.proxy.getLogger().info("[" + session.getAddress() + "] <-> InitialHandler has connected");
         session.setPacketHandler(new HandshakeUpstreamHandler(this.proxy, session));
     }
 

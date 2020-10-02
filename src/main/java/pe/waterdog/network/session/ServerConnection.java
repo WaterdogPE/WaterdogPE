@@ -30,20 +30,20 @@ public class ServerConnection {
     private final BedrockClient client;
     private final BedrockClientSession downstream;
 
-    public ServerConnection(BedrockClient client, BedrockClientSession session, ServerInfo serverInfo){
+    public ServerConnection(BedrockClient client, BedrockClientSession session, ServerInfo serverInfo) {
         this.client = client;
         this.downstream = session;
         this.serverInfo = serverInfo;
     }
 
-    public void sendPacket(BedrockPacket packet){
-        if (!this.downstream.isClosed()){
+    public void sendPacket(BedrockPacket packet) {
+        if (!this.downstream.isClosed()) {
             this.downstream.sendPacket(packet);
         }
     }
 
-    public void disconnect(){
-        if (!this.downstream.isClosed()){
+    public void disconnect() {
+        if (!this.downstream.isClosed()) {
             this.downstream.disconnect();
         }
         this.client.close();
@@ -57,7 +57,7 @@ public class ServerConnection {
         return this.downstream;
     }
 
-    public InetSocketAddress getAddress(){
+    public InetSocketAddress getAddress() {
         return this.downstream.getAddress();
     }
 

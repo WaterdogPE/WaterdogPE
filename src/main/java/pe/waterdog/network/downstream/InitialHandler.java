@@ -18,7 +18,9 @@ package pe.waterdog.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.*;
+import com.nukkitx.protocol.bedrock.packet.ClientToServerHandshakePacket;
+import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
+import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
@@ -34,7 +36,7 @@ public class InitialHandler implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
 
-    public InitialHandler(ProxiedPlayer player){
+    public InitialHandler(ProxiedPlayer player) {
         this.player = player;
     }
 

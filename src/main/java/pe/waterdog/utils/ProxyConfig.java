@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ProxyConfig extends YamlConfig{
+public class ProxyConfig extends YamlConfig {
 
     private String motd = "WaterdogPE";
     private int maxPlayerCount = 24;
@@ -54,25 +54,25 @@ public class ProxyConfig extends YamlConfig{
         this.servers = this.getInetAddressMap("servers");
     }
 
-    public InetSocketAddress getInetAddress(String key){
+    public InetSocketAddress getInetAddress(String key) {
         String addressString = this.getString(key);
         if (addressString == null) return null;
 
         String[] data = addressString.split(":");
-        return new InetSocketAddress(data[0], (data.length <= 1? 19132 : Integer.parseInt(data[1])));
+        return new InetSocketAddress(data[0], (data.length <= 1 ? 19132 : Integer.parseInt(data[1])));
     }
 
-    public Map<String, InetSocketAddress> getInetAddressMap(String key){
+    public Map<String, InetSocketAddress> getInetAddressMap(String key) {
         Map<String, Map<String, String>> map = (Map<String, Map<String, String>>) this.get(key);
         Map<String, InetSocketAddress> servers = new HashMap<>();
 
-        for (String server : map.keySet()){
+        for (String server : map.keySet()) {
             InetSocketAddress address = null;
             try {
                 String[] data = map.get(server).get("address").split(":");
                 address = new InetSocketAddress(data[0], Integer.parseInt(data[1]));
-            }catch (Exception e){
-                Logger.getLogger().error("Unable to parse server from config! Please check you configuration. Server name: "+server);
+            } catch (Exception e) {
+                Logger.getLogger().error("Unable to parse server from config! Please check you configuration. Server name: " + server);
             }
 
             if (address != null) servers.put(server, address);
@@ -81,9 +81,9 @@ public class ProxyConfig extends YamlConfig{
         return servers;
     }
 
-    public Map<String, ServerInfo> buildServerMap(){
+    public Map<String, ServerInfo> buildServerMap() {
         Map<String, ServerInfo> servers = new HashMap<>();
-        for (Map.Entry<String, InetSocketAddress> entry : this.servers.entrySet()){
+        for (Map.Entry<String, InetSocketAddress> entry : this.servers.entrySet()) {
             servers.put(entry.getKey().toLowerCase(), new ServerInfo(entry.getKey(), entry.getValue()));
         }
 
@@ -110,16 +110,16 @@ public class ProxyConfig extends YamlConfig{
         return onlineMode;
     }
 
-    public void setIpForward(boolean ipForward) {
-        this.ipForward = ipForward;
-    }
-
     public boolean isReplaceUsernameSpaces() {
         return replaceUsernameSpaces;
     }
 
     public boolean isIpForward() {
         return ipForward;
+    }
+
+    public void setIpForward(boolean ipForward) {
+        this.ipForward = ipForward;
     }
 
     public boolean isForceDefault() {

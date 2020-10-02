@@ -21,7 +21,7 @@ import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import pe.waterdog.player.ProxiedPlayer;
 
-public class DownstreamBridge extends ProxyBatchBridge{
+public class DownstreamBridge extends ProxyBatchBridge {
 
     public DownstreamBridge(ProxiedPlayer player, BedrockSession session) {
         super(player, session);

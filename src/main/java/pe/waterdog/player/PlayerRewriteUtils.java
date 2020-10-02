@@ -30,30 +30,30 @@ import java.util.UUID;
 
 public class PlayerRewriteUtils {
 
-    public static long rewriteId(long from, long rewritten, long origin){
-        return from == origin? rewritten : (from == rewritten? origin : from);
+    public static long rewriteId(long from, long rewritten, long origin) {
+        return from == origin ? rewritten : (from == rewritten ? origin : from);
     }
 
-    public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn){
+    public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn) {
         NetworkChunkPublisherUpdatePacket packet = new NetworkChunkPublisherUpdatePacket();
         packet.setPosition(defaultSpawn);
         packet.setRadius(160);
         session.sendPacket(packet);
     }
 
-    public static void injectGameMode(BedrockSession session, GameType gameMode){
+    public static void injectGameMode(BedrockSession session, GameType gameMode) {
         SetPlayerGameTypePacket packet = new SetPlayerGameTypePacket();
         packet.setGamemode(gameMode.ordinal());
         session.sendPacket(packet);
     }
 
-    public static void injectGameRules(BedrockSession session, List<GameRuleData<?>> gameRules){
+    public static void injectGameRules(BedrockSession session, List<GameRuleData<?>> gameRules) {
         GameRulesChangedPacket packet = new GameRulesChangedPacket();
         packet.getGameRules().addAll(gameRules);
         session.sendPacket(packet);
     }
 
-    public static void injectClearWeather(BedrockSession session){
+    public static void injectClearWeather(BedrockSession session) {
         LevelEventPacket stopRain = new LevelEventPacket();
         stopRain.setType(LevelEventType.STOP_RAINING);
         session.sendPacket(stopRain);
@@ -63,30 +63,30 @@ public class PlayerRewriteUtils {
         session.sendPacket(stopThunder);
     }
 
-    public static void injectRemoveEntity(BedrockSession session, long runtimeId){
+    public static void injectRemoveEntity(BedrockSession session, long runtimeId) {
         RemoveEntityPacket packet = new RemoveEntityPacket();
         packet.setUniqueEntityId(runtimeId);
         session.sendPacket(packet);
     }
 
-    public static void injectRemoveAllPlayers(BedrockSession session, Collection<UUID> playerList){
+    public static void injectRemoveAllPlayers(BedrockSession session, Collection<UUID> playerList) {
         PlayerListPacket packet = new PlayerListPacket();
         packet.setAction(PlayerListPacket.Action.REMOVE);
         List<PlayerListPacket.Entry> entries = new ArrayList<>();
-        for (UUID uuid : playerList){
+        for (UUID uuid : playerList) {
             entries.add(new PlayerListPacket.Entry(uuid));
         }
         packet.getEntries().addAll(entries);
         session.sendPacket(packet);
     }
 
-    public static void injectRemoveAllEffects(BedrockSession session, long runtimeId){
-        for (int i = 0 ; i < 28 ; i++) {
+    public static void injectRemoveAllEffects(BedrockSession session, long runtimeId) {
+        for (int i = 0; i < 28; i++) {
             injectRemoveEntityEffect(session, runtimeId, i);
         }
     }
 
-    public static void injectRemoveEntityEffect(BedrockSession session, long runtimeId, int effect){
+    public static void injectRemoveEntityEffect(BedrockSession session, long runtimeId, int effect) {
         MobEffectPacket packet = new MobEffectPacket();
         packet.setRuntimeEntityId(runtimeId);
         packet.setEffectId(effect);
@@ -94,7 +94,7 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
-    public static void injectRemoveObjective(BedrockSession session, String objectiveId){
+    public static void injectRemoveObjective(BedrockSession session, String objectiveId) {
         RemoveObjectivePacket packet = new RemoveObjectivePacket();
         packet.setObjectiveId(objectiveId);
         session.sendPacket(packet);

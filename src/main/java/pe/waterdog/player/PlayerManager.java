@@ -16,14 +16,18 @@
 
 package pe.waterdog.player;
 
-import com.google.common.collect.ImmutableMap;;
+import com.google.common.collect.ImmutableMap;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import pe.waterdog.ProxyServer;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ThreadLocalRandom;
+
+;
 
 public class PlayerManager {
 
@@ -31,11 +35,11 @@ public class PlayerManager {
 
     private final ConcurrentMap<UUID, ProxiedPlayer> players = new ConcurrentHashMap<>();
 
-    public PlayerManager(ProxyServer server){
+    public PlayerManager(ProxyServer server) {
         this.server = server;
     }
 
-    public BedrockClient bindClient(){
+    public BedrockClient bindClient() {
         InetSocketAddress address = new InetSocketAddress("0.0.0.0", ThreadLocalRandom.current().nextInt(20000, 60000));
         BedrockClient client = new BedrockClient(address);
 
@@ -43,13 +47,13 @@ public class PlayerManager {
         return client;
     }
 
-    public boolean registerPlayer(ProxiedPlayer player){
+    public boolean registerPlayer(ProxiedPlayer player) {
         if (player == null) return false;
 
         ProxiedPlayer previousSession = this.players.put(player.getUniqueId(), player);
         boolean success = true;
 
-        if (previousSession != null && !previousSession.getUpstream().isClosed()){
+        if (previousSession != null && !previousSession.getUpstream().isClosed()) {
             success = false;
 
             previousSession.disconnect("disconnectionScreen.loggedinOtherLocation");
@@ -57,19 +61,19 @@ public class PlayerManager {
         return success;
     }
 
-    public void removePlayer(ProxiedPlayer player){
+    public void removePlayer(ProxiedPlayer player) {
         if (player == null) return;
         this.players.remove(player.getUniqueId());
     }
 
-    public ProxiedPlayer getPlayer(UUID uuid){
-        return uuid == null? null : this.players.get(uuid);
+    public ProxiedPlayer getPlayer(UUID uuid) {
+        return uuid == null ? null : this.players.get(uuid);
     }
 
-    public ProxiedPlayer getPlayer(String playerName){
+    public ProxiedPlayer getPlayer(String playerName) {
         if (playerName == null) return null;
 
-        for (ProxiedPlayer player : this.players.values()){
+        for (ProxiedPlayer player : this.players.values()) {
             if (!player.getName().toLowerCase().startsWith(playerName)) continue;
 
             int strLen = player.getName().length() - playerName.length();
