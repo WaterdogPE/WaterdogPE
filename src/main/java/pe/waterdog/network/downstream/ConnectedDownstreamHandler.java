@@ -30,8 +30,6 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
     public ConnectedDownstreamHandler(ProxiedPlayer player, ServerConnection server) {
         this.player = player;
         this.server = server;
-
-        System.out.println("New connected downstream!");
     }
 
     @Override
