@@ -107,8 +107,13 @@ public class ProxyServer {
 
     }
 
-
-    public void shutdown(){
+    @SneakyThrows
+    public void shutdown() {
+        for (Map.Entry<UUID, ProxiedPlayer> player : getPlayerManager().getPlayers().entrySet()) {
+            System.out.println("Disconnecting " + player.getValue().getName());
+            player.getValue().disconnect("Proxy Shutdown", true);
+        }
+        Thread.sleep(500);
         this.shutdown = true;
     }
 
