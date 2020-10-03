@@ -40,7 +40,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(PacketViolationWarningPacket packet) {
-        player.getLogger().warning("Received Packet Violation(Severity=" + packet.getSeverity() + ",PID=" + packet.getPacketId() + ",Context=" + packet.getContext() + ",PacketType=" + packet.getPacketType() + ")");
+        this.player.getLogger().warning("Received "+packet.toString());
         return true;
     }
 

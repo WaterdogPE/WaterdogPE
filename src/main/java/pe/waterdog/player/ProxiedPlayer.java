@@ -52,19 +52,23 @@ public class ProxiedPlayer {
     private final ProxyServer proxy;
 
     private final BedrockServerSession upstream;
-    private final LoginData loginData;
+    private ServerConnection serverConnection;
+    private ServerInfo pendingConnection;
+
     private final RewriteData rewriteData = new RewriteData();
+    private final LoginData loginData;
+    private LoginPacket loginPacket;
+
     private final EntityTracker entityTracker;
     private final EntityMap entityMap;
     private final BlockMap blockMap;
+
     private final LongSet entities = new LongOpenHashSet();
+    private final LongSet bossbars = new LongOpenHashSet();
     private final Collection<UUID> players = new HashSet<>();
     private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
-    private ServerConnection serverConnection;
-    private ServerInfo pendingConnection;
-    private LoginPacket loginPacket;
+
     private boolean canRewrite = false;
-    private boolean dimensionChange = false;
 
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData) {
         this.proxy = proxy;
@@ -238,6 +242,10 @@ public class ProxiedPlayer {
 
     public LongSet getEntities() {
         return this.entities;
+    }
+
+    public LongSet getBossbars() {
+        return this.bossbars;
     }
 
     public Collection<UUID> getPlayers() {

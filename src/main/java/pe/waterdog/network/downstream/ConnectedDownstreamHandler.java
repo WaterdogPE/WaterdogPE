@@ -17,6 +17,7 @@
 package pe.waterdog.network.downstream;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.BossEventPacket;
 import com.nukkitx.protocol.bedrock.packet.RemoveObjectivePacket;
 import com.nukkitx.protocol.bedrock.packet.SetDisplayObjectivePacket;
 import pe.waterdog.network.session.ServerConnection;
@@ -41,6 +42,17 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
     @Override
     public boolean handle(RemoveObjectivePacket packet) {
         this.player.getScoreboards().remove(packet.getObjectiveId());
+        return false;
+    }
+
+    @Override
+    public boolean handle(BossEventPacket packet) {
+        switch (packet.getAction()){
+            case CREATE:
+                this.player.getBossbars().add(packet.getBossUniqueEntityId());
+            case REMOVE:
+                this.player.getBossbars().remove(packet.getBossUniqueEntityId());
+        }
         return false;
     }
 }

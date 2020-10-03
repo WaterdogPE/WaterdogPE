@@ -140,6 +140,12 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         }
         scoreboards.clear();
 
+        LongSet bossbars = this.player.getBossbars();
+        for (long bossbarId : bossbars){
+            PlayerRewriteUtils.injectRemoveBossbar(this.player.getUpstream(), bossbarId);
+        }
+        bossbars.clear();
+
         PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
 
         /*//send DIM ID 1 & than original dim
