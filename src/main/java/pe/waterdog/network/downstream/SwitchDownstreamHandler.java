@@ -121,10 +121,8 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         this.player.sendPacket(movePlayerPacket);
 
         this.getDownstream().sendPacket(rewriteData.getChunkRadius());
-
-        //TODO: find out why this two does not work
-        //PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
-        //PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
+        PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
+        PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
 
         Collection<UUID> playerList = this.player.getPlayers();
         PlayerRewriteUtils.injectRemoveAllPlayers(this.player.getUpstream(), playerList);

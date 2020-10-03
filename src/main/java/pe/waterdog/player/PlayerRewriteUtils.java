@@ -16,11 +16,13 @@
 
 package pe.waterdog.player;
 
+import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.GameType;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
+import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.packet.*;
 
 import java.util.ArrayList;
@@ -56,11 +58,15 @@ public class PlayerRewriteUtils {
     public static void injectClearWeather(BedrockSession session) {
         LevelEventPacket stopRain = new LevelEventPacket();
         stopRain.setType(LevelEventType.STOP_RAINING);
-        session.sendPacket(stopRain);
+        stopRain.setData(10000);
+        stopRain.setPosition(Vector3f.ZERO);
+        session.sendPacketImmediately(stopRain);
 
         LevelEventPacket stopThunder = new LevelEventPacket();
+        stopThunder.setData(0);
+        stopThunder.setPosition(Vector3f.ZERO);
         stopThunder.setType(LevelEventType.STOP_THUNDERSTORM);
-        session.sendPacket(stopThunder);
+        session.sendPacketImmediately(stopThunder);
     }
 
     public static void injectRemoveEntity(BedrockSession session, long runtimeId) {
@@ -84,6 +90,12 @@ public class PlayerRewriteUtils {
         for (int i = 0; i < 28; i++) {
             injectRemoveEntityEffect(session, runtimeId, i);
         }
+        SetEntityDataPacket packet = new SetEntityDataPacket();
+        packet.getMetadata().putShort(EntityData.POTION_AUX_VALUE, 0);
+        packet.getMetadata().putInt(EntityData.EFFECT_COLOR, 0);
+        packet.getMetadata().putByte(EntityData.EFFECT_AMBIENT, (byte) 0);
+        packet.setRuntimeEntityId(runtimeId);
+        session.sendPacket(packet);
     }
 
     public static void injectRemoveEntityEffect(BedrockSession session, long runtimeId, int effect) {
