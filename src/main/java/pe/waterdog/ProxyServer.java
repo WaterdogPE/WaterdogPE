@@ -24,6 +24,7 @@ import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.plugin.Plugin;
 import pe.waterdog.plugin.PluginManager;
 import pe.waterdog.utils.ConfigurationManager;
 import pe.waterdog.utils.ProxyConfig;
@@ -94,6 +95,10 @@ public class ProxyServer {
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
         bedrockServer.setHandler(new ProxyListener(this));
         bedrockServer.bind().join();
+
+        for (Plugin plugin : pluginManager.getPlugins()) {
+            plugin.onStartup();
+        }
     }
 
     private void tickProcessor() {
@@ -114,10 +119,13 @@ public class ProxyServer {
     @SneakyThrows
     public void shutdown() {
         for (Map.Entry<UUID, ProxiedPlayer> player : getPlayerManager().getPlayers().entrySet()) {
-            System.out.println("Disconnecting " + player.getValue().getName());
             player.getValue().disconnect("Proxy Shutdown", true);
         }
         Thread.sleep(500);
+
+        for (Plugin plugin : pluginManager.getPlugins()) {
+            plugin.onShutdown();
+        }
         this.shutdown = true;
     }
 
