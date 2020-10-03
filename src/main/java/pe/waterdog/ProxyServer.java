@@ -24,9 +24,11 @@ import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.plugin.PluginManager;
 import pe.waterdog.utils.ConfigurationManager;
 import pe.waterdog.utils.ProxyConfig;
 
+import java.io.File;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,7 +50,7 @@ public class ProxyServer {
 
     private ConfigurationManager configurationManager;
     private PlayerManager playerManager;
-
+    private PluginManager pluginManager;
     private boolean shutdown = false;
 
     private Map<String, ServerInfo> serverInfoMap;
@@ -57,13 +59,15 @@ public class ProxyServer {
         instance = this;
         this.logger = logger;
         this.dataPath = Paths.get(filePath);
+        this.pluginPath = Paths.get(pluginPath);
 
-
-       /* if (!new File(pluginPath).exists()) {
+        if (!new File(pluginPath).exists()) {
+            this.logger.info("Created Plugin Folder at " + this.pluginPath.toString());
             new File(pluginPath).mkdirs();
         }
 
-        this.pluginPath = new File(pluginPath).getAbsolutePath() + "/";*/
+        this.pluginManager = new PluginManager(this);
+
 
        /*this.console = new CommandReader();
        this.console.start();*/
@@ -156,5 +160,13 @@ public class ProxyServer {
     public boolean registerServerInfo(ServerInfo serverInfo) {
         if (serverInfo == null) return false;
         return this.serverInfoMap.putIfAbsent(serverInfo.getServerName().toLowerCase(), serverInfo) == null;
+    }
+
+    public Path getPluginPath() {
+        return pluginPath;
+    }
+
+    public PluginManager getPluginManager() {
+        return pluginManager;
     }
 }

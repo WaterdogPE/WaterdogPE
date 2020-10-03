@@ -63,13 +63,4 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
         return false;
     }
-
-    /*@Override
-    public boolean handle(PlayerActionPacket packet) {
-        *//*if (packet.getAction() != PlayerActionPacket.Action.DIMENSION_CHANGE_SUCCESS || !this.player.isDimensionChange()) return true;
-
-        PlayerRewriteUtils.injectDimensionChange(player.getUpstream(), player.getRewriteData().getDimension());
-        this.player.setDimensionChange(false);*//*
-        return false;
-    }*/
 }
