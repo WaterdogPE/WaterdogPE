@@ -16,6 +16,7 @@
 
 package pe.waterdog.player;
 
+import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
@@ -56,11 +57,15 @@ public class PlayerRewriteUtils {
     public static void injectClearWeather(BedrockSession session) {
         LevelEventPacket stopRain = new LevelEventPacket();
         stopRain.setType(LevelEventType.STOP_RAINING);
-        session.sendPacket(stopRain);
+        stopRain.setData(10000);
+        stopRain.setPosition(Vector3f.ZERO);
+        session.sendPacketImmediately(stopRain);
 
         LevelEventPacket stopThunder = new LevelEventPacket();
+        stopThunder.setData(0);
+        stopThunder.setPosition(Vector3f.ZERO);
         stopThunder.setType(LevelEventType.STOP_THUNDERSTORM);
-        session.sendPacket(stopThunder);
+        session.sendPacketImmediately(stopThunder);
     }
 
     public static void injectRemoveEntity(BedrockSession session, long runtimeId) {
