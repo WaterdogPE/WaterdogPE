@@ -7,103 +7,124 @@ import pe.waterdog.ProxyServer;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.stream.Stream;
 
 public class PluginManager {
 
     private final ProxyServer server;
-
     private final Map<String, Plugin> pluginMap = new HashMap<>();
+    private final Yaml yamlLoader = new Yaml(new CustomClassLoaderConstructor(this.getClass().getClassLoader()));
 
     public PluginManager(ProxyServer server) {
         this.server = server;
-        Yaml yamlLoader = new Yaml(new CustomClassLoaderConstructor(this.getClass().getClassLoader()));
-        Map<PluginYAML, File> validPlugins = getJarFiles(yamlLoader);
-        this.server.getLogger().info("Found " + validPlugins.size() + " valid plugin files");
-        loadPluginJars(validPlugins);
-        this.server.getLogger().info("Loaded " + this.pluginMap.size() + " plugin(s)");
+        PluginLoader.loadPluginsIn(this.server.getPluginPath(), this);
     }
 
-    public static boolean isJarFile(Path file) {
-        return file.getFileName().toString().endsWith(".jar");
+
+    public Plugin loadPlugin(Path p, boolean directStartup) {
+        if (Files.isRegularFile(p) && PluginLoader.isJarFile(p)) {
+            File pluginFile = p.toFile();
+            if (pluginFile.exists()) {
+                PluginYAML config = loadPluginData(pluginFile, this.yamlLoader);
+                if (config != null) {
+                    if (getPluginByName(config.getName()) == null) {
+                        Plugin plugin = loadPluginJAR(config, pluginFile);
+                        if (plugin != null) {
+                            this.server.getLogger().info("Loaded plugin " + config.getName() + " successfully! (version=" + config.getVersion() + ",author=" + config.getAuthor() + ")");
+                            this.pluginMap.put(config.getName(), plugin);
+                            if (directStartup) {
+                                plugin.onStartup();
+                            }
+                            return plugin;
+                        }
+                    } else {
+                        this.server.getLogger().warning("Plugin is already loaded: " + config.getName());
+                    }
+                }
+            }
+        } else {
+            this.server.getLogger().warning("Cannot load plugin: Provided file is no jar file: " + p.getFileName());
+        }
+        return null;
     }
 
-    public void loadPluginJars(Map<PluginYAML, File> validPlugins) {
-        PluginYAML pluginConfig;
+    public Plugin loadPlugin(Path p) {
+        return loadPlugin(p, false);
+    }
 
-        for (Map.Entry<PluginYAML, File> plugin : validPlugins.entrySet()) {
+    private PluginYAML loadPluginData(File file, Yaml yaml) {
+        try (JarFile pluginJar = new JarFile(file)) {
+            JarEntry configEntry = pluginJar.getJarEntry("plugin.yml");
+            if (configEntry != null) {
+                InputStream fileStream = pluginJar.getInputStream(configEntry);
+                PluginYAML pluginConfig = yaml.loadAs(fileStream, PluginYAML.class);
+                if (pluginConfig.getMain() != null && pluginConfig.getName() != null) {
+                    // Valid plugin.yml, main and name set
+                    return pluginConfig;
 
-            pluginConfig = plugin.getKey();
+                } else {
+                    this.server.getLogger().warning("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
+                }
+            } else {
+                this.server.getLogger().warning("Jar file " + file.getName() + " doesnt contain a plugin.yml!");
+            }
+        } catch (IOException e) {
+            this.server.getLogger().error("Error while reading plugin directory", e);
+        }
+        return null;
+    }
+
+
+    private Plugin loadPluginJAR(PluginYAML pluginConfig, File pluginJar) {
+        try {
+
+            URLClassLoader loader = new URLClassLoader(new URL[]{pluginJar.toURI().toURL()}, this.getClass().getClassLoader());
             try {
 
-                URLClassLoader loader = new URLClassLoader(new URL[]{plugin.getValue().toURI().toURL()}, this.getClass().getClassLoader());
-                try {
+                Class mainClass = loader.loadClass(pluginConfig.getMain());
 
-                    Class mainClass = loader.loadClass(pluginConfig.getMain());
-
-                    if (Plugin.class.isAssignableFrom(mainClass)) {
-                        // Main Class extends Plugin class
-                        // TODO Init Method
-                        Class<Plugin> castedMain = mainClass.asSubclass(Plugin.class);
-                        this.pluginMap.put(pluginConfig.getName(), castedMain.newInstance());
-                    }
-
-                } catch (ClassCastException e) {
-                    this.server.getLogger().error("Error while loading plugin main class(main=" + pluginConfig.getMain() + ",plugin=" + plugin.getKey().getName() + ")", e);
-                } catch (IllegalAccessException | InstantiationException e) {
-                    this.server.getLogger().error("Error while creating main class instance(plugin=" + pluginConfig.getName() + ",main=" + plugin.getKey().getMain() + ")", e);
-                } catch (ClassNotFoundException e) {
-                    this.server.getLogger().error("Main Class " + pluginConfig.getMain() + " not found", e);
+                if (Plugin.class.isAssignableFrom(mainClass)) {
+                    // Main Class extends Plugin class
+                    // TODO Init Method?
+                    Class<Plugin> castedMain = mainClass.asSubclass(Plugin.class);
+                    return castedMain.getDeclaredConstructor(PluginYAML.class, ProxyServer.class).newInstance(pluginConfig, this.server);
                 }
-            } catch (MalformedURLException e) {
-                this.server.getLogger().error("Error while creating class loader(plugin=" + pluginConfig.getName() + ")");
+            } catch (ClassCastException e) {
+                this.server.getLogger().error("Error while loading plugin main class(main=" + pluginConfig.getMain() + ",plugin=" + pluginConfig.getName() + ")", e);
+            } catch (IllegalAccessException | InstantiationException e) {
+                this.server.getLogger().error("Error while creating main class instance(plugin=" + pluginConfig.getName() + ",main=" + pluginConfig.getMain() + ")", e);
+            } catch (ClassNotFoundException e) {
+                this.server.getLogger().error("Main Class " + pluginConfig.getMain() + " not found", e);
+            } catch (NoSuchMethodException | InvocationTargetException e) {
+                this.server.getLogger().error("Malformed Plugin Class Constructor", e);
             }
-
+        } catch (MalformedURLException e) {
+            this.server.getLogger().error("Error while creating class loader(plugin=" + pluginConfig.getName() + ")");
         }
+        return null;
     }
 
-    public Map<PluginYAML, File> getJarFiles(Yaml yaml) {
-        Map<PluginYAML, File> loadPlugins = new HashMap<>();
-        try (Stream<Path> pluginPaths = Files.walk(this.server.getPluginPath())) {
-            pluginPaths
-                    .filter(Files::isRegularFile)
-                    .filter(PluginManager::isJarFile)
-                    .forEach(jarPath -> {
-                        File pluginFile = new File(jarPath.toUri());
-                        try (JarFile pluginJar = new JarFile(new File(jarPath.toAbsolutePath().toString()))) {
-
-                            JarEntry configEntry = pluginJar.getJarEntry("plugin.yml");
-                            if (configEntry != null) {
-                                InputStream fileStream = pluginJar.getInputStream(configEntry);
-                                PluginYAML pluginConfig = yaml.loadAs(fileStream, PluginYAML.class);
-                                if (pluginConfig.getMain() != null && pluginConfig.getName() != null) {
-
-                                    // Valid plugin.yml, main and name set
-                                    loadPlugins.put(pluginConfig, pluginFile);
-
-                                } else {
-                                    this.server.getLogger().warning("Invalid plugin.yml for " + pluginFile.getName() + ": main and/or name property missing");
-                                }
-                            } else {
-                                this.server.getLogger().warning("Jar file " + pluginFile.getName() + " doesnt contain a plugin.yml!");
-                            }
-                        } catch (IOException e) {
-                            this.server.getLogger().error("Error while reading plugin directory", e);
-                        }
-                    });
-        } catch (IOException e) {
-            this.server.getLogger().error("Error while filtering plugin files", e);
-        }
-        return loadPlugins;
+    public Map<String, Plugin> getPluginMap() {
+        return pluginMap;
     }
+
+    public Collection<Plugin> getPlugins() {
+        return pluginMap.values();
+    }
+
+    public Plugin getPluginByName(String pluginName) {
+        return this.pluginMap.getOrDefault(pluginName, null);
+    }
+
 
 }
