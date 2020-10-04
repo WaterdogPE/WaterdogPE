@@ -28,7 +28,11 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
+import lombok.NonNull;
 import pe.waterdog.ProxyServer;
+import pe.waterdog.event.events.DisconnectEvent;
+import pe.waterdog.event.events.PlayerLoginEvent;
+import pe.waterdog.event.events.PreTransferEvent;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
@@ -46,12 +50,11 @@ import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.network.upstream.UpstreamHandler;
-import pe.waterdog.utils.types.TransactionContainer;
+import pe.waterdog.utils.types.TranslationContainer;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public class ProxiedPlayer {
 
@@ -87,49 +90,61 @@ public class ProxiedPlayer {
     }
 
     public void initialConnect() {
-        //TODO: login event
-        //TODO: get server from handler
-        this.upstream.setPacketHandler(new UpstreamHandler(this));
-        this.upstream.addDisconnectHandler((reason) -> this.disconnect(null, true));
+        PlayerLoginEvent event = new PlayerLoginEvent(this);
+        this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, ignored) -> {
+            if (event.isCancelled()) {
+                this.disconnect(event.getCancelReason());
+                return;
+            }
+            //TODO: get server from handler
+            this.upstream.setPacketHandler(new UpstreamHandler(this));
+            this.upstream.addDisconnectHandler((reason) -> this.disconnect(null, true));
 
-        String server = this.proxy.getConfiguration().getPriorities().get(0);
-        this.connect(this.proxy.getServer(server));
+            String server = this.proxy.getConfiguration().getPriorities().get(0);
+            this.connect(this.proxy.getServer(server));
+        });
     }
 
     public void connect(ServerInfo serverInfo) {
         Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
 
-        //TODO: ServerSwitch event
-
-        if (this.serverConnection != null && this.serverConnection.getInfo() == serverInfo) {
-            this.sendMessage(new TransactionContainer("waterdog.downstream.connected", serverInfo.getServerName()));
+        PreTransferEvent event = new PreTransferEvent(this, serverInfo);
+        ProxyServer.getInstance().getEventManager().callEvent(event);
+        if (event.isCancelled()) {
             return;
         }
 
-        if (this.pendingConnection == serverInfo) {
-            this.sendMessage(new TransactionContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
+        final @NonNull ServerInfo targetServer = event.getTargetServer();
+
+        if (this.serverConnection != null && this.serverConnection.getInfo() == targetServer) {
+            this.sendMessage(new TranslationContainer("waterdog.downstream.connected", serverInfo.getServerName()));
+            return;
+        }
+
+        if (this.pendingConnection == targetServer) {
+            this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
             return;
         }
 
         BedrockClient client = this.proxy.getPlayerManager().bindClient();
-        client.connect(serverInfo.getAddress()).whenComplete((downstream, throwable) -> {
+        client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
-                this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + serverInfo.getServerName(), throwable);
-                this.sendMessage(new TransactionContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), throwable.getLocalizedMessage()));
+                this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
+                this.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), throwable.getLocalizedMessage()));
                 this.pendingConnection = null;
                 return;
             }
 
             if (this.serverConnection == null) {
-                this.serverConnection = new ServerConnection(client, downstream, serverInfo);
+                this.serverConnection = new ServerConnection(client, downstream, targetServer);
 
                 downstream.setPacketHandler(new InitialHandler(this));
                 downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
                 this.upstream.setBatchHandler(new ProxyBatchBridge(this, downstream));
             } else {
-                this.pendingConnection = serverInfo;
+                this.pendingConnection = targetServer;
 
-                downstream.setPacketHandler(new SwitchDownstreamHandler(this, serverInfo, client));
+                downstream.setPacketHandler(new SwitchDownstreamHandler(this, targetServer, client));
                 downstream.setBatchHandler(new TransferBatchBridge(this, this.upstream));
             }
 
@@ -137,8 +152,8 @@ public class ProxiedPlayer {
             downstream.sendPacketImmediately(this.loginPacket);
             downstream.setLogging(true);
 
-            SessionInjections.injectNewDownstream(downstream, this, serverInfo);
-            this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + serverInfo.getServerName() + "] has connected");
+            SessionInjections.injectNewDownstream(downstream, this, targetServer);
+            this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         });
     }
 
@@ -151,7 +166,9 @@ public class ProxiedPlayer {
     }
 
     public void disconnect(String reason, boolean force) {
-        //TODO: disconnect event
+        DisconnectEvent event = new DisconnectEvent(this);
+        ProxyServer.getInstance().getEventManager().callEvent(event);
+
 
         if (this.upstream != null && !this.upstream.isClosed()) {
             this.upstream.disconnect(reason);
@@ -174,14 +191,14 @@ public class ProxiedPlayer {
     }
 
     public void sendMessage(TextContainer message) {
-        if (message instanceof TransactionContainer){
-            this.sendTranslation((TransactionContainer) message);
+        if (message instanceof TranslationContainer){
+            this.sendTranslation((TranslationContainer) message);
         }else {
             this.sendMessage(message.getMessage());
         }
     }
 
-    public void sendTranslation(TransactionContainer textContainer){
+    public void sendTranslation(TranslationContainer textContainer){
         this.sendMessage(this.proxy.translate(textContainer));
     }
 

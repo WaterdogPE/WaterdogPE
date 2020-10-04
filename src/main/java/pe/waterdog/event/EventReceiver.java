@@ -14,36 +14,17 @@
  * limitations under the License.
  */
 
-package pe.waterdog.plugin;
+package pe.waterdog.event;
 
-import java.util.List;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class PluginYAML {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface EventReceiver {
 
-    public String name;
-    public String version;
-    public String author;
-    public String main;
+    ReceiverPriority priority() default ReceiverPriority.NORMAL;
 
-    public List<String> depends;
-
-    public String getAuthor() {
-        return this.author;
-    }
-
-    public String getMain() {
-        return this.main;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public String getVersion() {
-        return this.version;
-    }
-
-    public List<String> getDepends() {
-        return this.depends;
-    }
 }

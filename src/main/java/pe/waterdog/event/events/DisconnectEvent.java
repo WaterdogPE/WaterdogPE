@@ -14,36 +14,22 @@
  * limitations under the License.
  */
 
-package pe.waterdog.plugin;
+package pe.waterdog.event.events;
 
-import java.util.List;
+import pe.waterdog.event.AsyncEvent;
+import pe.waterdog.event.Event;
+import pe.waterdog.player.ProxiedPlayer;
 
-public class PluginYAML {
+@AsyncEvent
+public class DisconnectEvent extends Event {
 
-    public String name;
-    public String version;
-    public String author;
-    public String main;
+    private final ProxiedPlayer player;
 
-    public List<String> depends;
-
-    public String getAuthor() {
-        return this.author;
+    public DisconnectEvent(ProxiedPlayer player) {
+        this.player = player;
     }
 
-    public String getMain() {
-        return this.main;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public String getVersion() {
-        return this.version;
-    }
-
-    public List<String> getDepends() {
-        return this.depends;
+    public ProxiedPlayer getPlayer() {
+        return this.player;
     }
 }

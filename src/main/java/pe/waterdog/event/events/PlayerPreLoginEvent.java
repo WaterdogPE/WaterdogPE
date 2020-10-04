@@ -14,36 +14,29 @@
  * limitations under the License.
  */
 
-package pe.waterdog.plugin;
+package pe.waterdog.event.events;
 
-import java.util.List;
+import pe.waterdog.event.CancellableEvent;
+import pe.waterdog.network.session.LoginData;
 
-public class PluginYAML {
+public class PlayerPreLoginEvent extends CancellableEvent {
 
-    public String name;
-    public String version;
-    public String author;
-    public String main;
+    private LoginData loginData;
+    private String cancelReason = "Login was cancelled";
 
-    public List<String> depends;
-
-    public String getAuthor() {
-        return this.author;
+    public PlayerPreLoginEvent(LoginData loginData) {
+        this.loginData = loginData;
     }
 
-    public String getMain() {
-        return this.main;
+    public LoginData getLoginData() {
+        return this.loginData;
     }
 
-    public String getName() {
-        return this.name;
+    public String getCancelReason() {
+        return this.cancelReason;
     }
 
-    public String getVersion() {
-        return this.version;
-    }
-
-    public List<String> getDepends() {
-        return this.depends;
+    public void setCancelReason(String cancelReason) {
+        this.cancelReason = cancelReason;
     }
 }

@@ -14,36 +14,31 @@
  * limitations under the License.
  */
 
-package pe.waterdog.plugin;
+package pe.waterdog.event.events;
 
-import java.util.List;
+import pe.waterdog.event.AsyncEvent;
+import pe.waterdog.event.CancellableEvent;
+import pe.waterdog.player.ProxiedPlayer;
 
-public class PluginYAML {
+@AsyncEvent
+public class PlayerLoginEvent extends CancellableEvent {
 
-    public String name;
-    public String version;
-    public String author;
-    public String main;
+    private final ProxiedPlayer player;
+    private String cancelReason = "Login cancelled";
 
-    public List<String> depends;
-
-    public String getAuthor() {
-        return this.author;
+    public PlayerLoginEvent(ProxiedPlayer player) {
+        this.player = player;
     }
 
-    public String getMain() {
-        return this.main;
+    public ProxiedPlayer getPlayer() {
+        return this.player;
     }
 
-    public String getName() {
-        return this.name;
+    public String getCancelReason() {
+        return this.cancelReason;
     }
 
-    public String getVersion() {
-        return this.version;
-    }
-
-    public List<String> getDepends() {
-        return this.depends;
+    public void setCancelReason(String cancelReason) {
+        this.cancelReason = cancelReason;
     }
 }

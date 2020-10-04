@@ -14,36 +14,31 @@
  * limitations under the License.
  */
 
-package pe.waterdog.plugin;
+package pe.waterdog.event.events;
 
-import java.util.List;
+import pe.waterdog.event.CancellableEvent;
+import pe.waterdog.player.ProxiedPlayer;
 
-public class PluginYAML {
+public class PlayerChatEvent extends CancellableEvent {
 
-    public String name;
-    public String version;
-    public String author;
-    public String main;
+    private final ProxiedPlayer player;
 
-    public List<String> depends;
+    private String message;
 
-    public String getAuthor() {
-        return this.author;
+    public PlayerChatEvent(ProxiedPlayer player, String message) {
+        this.player = player;
+        this.message = message;
     }
 
-    public String getMain() {
-        return this.main;
+    public String getMessage() {
+        return this.message;
     }
 
-    public String getName() {
-        return this.name;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
-    public String getVersion() {
-        return this.version;
-    }
-
-    public List<String> getDepends() {
-        return this.depends;
+    public ProxiedPlayer getPlayer() {
+        return this.player;
     }
 }
