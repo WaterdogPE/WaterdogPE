@@ -1,3 +1,19 @@
+/**
+ * Copyright 2020 WaterdogTEAM
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package pe.waterdog.plugin;
 
 import com.google.common.base.Preconditions;
@@ -10,27 +26,38 @@ import pe.waterdog.utils.exceptions.PluginChangeStateException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public abstract class Plugin {
 
-    private final PluginYAML description;
-    private final ProxyServer proxy;
+    private PluginYAML description;
+    private ProxyServer proxy;
 
-    private final File dataFolder;
-    private final File configFile;
+    private File pluginFile;
+    private File dataFolder;
+    private File configFile;
 
     private Configuration config;
+
+    private boolean initialized = false;
     protected boolean enabled = false;
 
-    public Plugin(PluginYAML description, ProxyServer proxy) {
-        this.description = description;
-        this.proxy = proxy;
+    public Plugin() {
+    }
 
-        this.dataFolder = new File(proxy.getPluginPath()+"/"+description.getName().toLowerCase()+"/");
-        if (!this.dataFolder.exists()){
-            this.dataFolder.mkdirs();
+    protected void init(PluginYAML description, ProxyServer proxy, File pluginFile){
+        if (!this.initialized){
+            this.description = description;
+            this.proxy = proxy;
+
+            this.pluginFile = pluginFile;
+            this.dataFolder = new File(proxy.getPluginPath()+"/"+description.getName().toLowerCase()+"/");
+            if (!this.dataFolder.exists()){
+                this.dataFolder.mkdirs();
+            }
+            this.configFile = new File(this.dataFolder, "config.yml");
         }
-        this.configFile = new File(this.dataFolder, "config.yml");
     }
 
     public void onStartup(){
@@ -55,9 +82,15 @@ public abstract class Plugin {
         }
     }
 
-    //TODO: do plugin class loader
     public InputStream getResourceFile(String filename) {
-        return this.getClass().getClassLoader().getResourceAsStream(filename);
+        try {
+            JarFile pluginJar = new JarFile(this.pluginFile);
+            JarEntry entry = pluginJar.getJarEntry(filename);
+            return pluginJar.getInputStream(entry);
+        }catch (IOException e){
+            this.proxy.getLogger().error("Can not get plugin resource!", e);
+        }
+        return null;
     }
 
     public boolean saveResource(String filename) {

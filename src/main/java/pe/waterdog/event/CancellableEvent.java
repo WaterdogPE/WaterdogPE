@@ -14,36 +14,21 @@
  * limitations under the License.
  */
 
-package pe.waterdog.plugin;
+package pe.waterdog.event;
 
-import java.util.List;
+public abstract class CancellableEvent extends Event {
 
-public class PluginYAML {
+    private boolean cancelled = false;
 
-    public String name;
-    public String version;
-    public String author;
-    public String main;
-
-    public List<String> depends;
-
-    public String getAuthor() {
-        return this.author;
+    public boolean isCancelled() {
+        return cancelled;
     }
 
-    public String getMain() {
-        return this.main;
+    public void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
     }
 
-    public String getName() {
-        return this.name;
-    }
-
-    public String getVersion() {
-        return this.version;
-    }
-
-    public List<String> getDepends() {
-        return this.depends;
+    public void setCancelled() {
+        this.cancelled = true;
     }
 }

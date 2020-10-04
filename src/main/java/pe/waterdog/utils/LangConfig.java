@@ -20,11 +20,10 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.utils.types.TextContainer;
-import pe.waterdog.utils.types.TransactionContainer;
+import pe.waterdog.utils.types.TranslationContainer;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class LangConfig {
 
@@ -78,10 +77,10 @@ public class LangConfig {
     }
 
     public String translateContainer(TextContainer textContainer){
-        if (!(textContainer instanceof TransactionContainer)){
+        if (!(textContainer instanceof TranslationContainer)){
             return textContainer.getMessage();
         }
-        return this.translateString(textContainer.getMessage(), ((TransactionContainer) textContainer).getParams());
+        return this.translateString(textContainer.getMessage(), ((TranslationContainer) textContainer).getParams());
     }
 
     public String getTransaction(String key){

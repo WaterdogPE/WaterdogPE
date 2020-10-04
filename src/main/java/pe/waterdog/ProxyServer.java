@@ -19,6 +19,7 @@ package pe.waterdog;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.SneakyThrows;
 import pe.waterdog.command.CommandReader;
+import pe.waterdog.event.EventManager;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
@@ -55,15 +56,16 @@ public class ProxyServer {
 
     private BedrockServer bedrockServer;
 
-    private ConfigurationManager configurationManager;
-    private WaterdogScheduler scheduler;
-    private PlayerManager playerManager;
-    private PluginManager pluginManager;
+    private final ConfigurationManager configurationManager;
+    private final WaterdogScheduler scheduler;
+    private final PlayerManager playerManager;
+    private final PluginManager pluginManager;
+    private final EventManager eventManager;
     private boolean shutdown = false;
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
 
-    private Map<String, ServerInfo> serverInfoMap;
+    private final Map<String, ServerInfo> serverInfoMap;
 
     private int currentTick = 0;
     private long nextTick;
@@ -81,9 +83,9 @@ public class ProxyServer {
 
         this.pluginManager = new PluginManager(this);
 
+        /*this.console = new CommandReader();
+        this.console.start();*/
 
-       /*this.console = new CommandReader();
-       this.console.start();*/
         this.configurationManager = new ConfigurationManager(this);
         configurationManager.loadProxyConfig();
         configurationManager.loadLanguage();
@@ -94,7 +96,7 @@ public class ProxyServer {
 
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
-
+        this.eventManager = new EventManager();
         this.boot();
         this.tickProcessor();
     }
@@ -230,10 +232,14 @@ public class ProxyServer {
     }
 
     public IJoinHandler getJoinHandler() {
-        return joinHandler;
+        return this.joinHandler;
     }
 
     public IReconnectHandler getReconnectHandler() {
-        return reconnectHandler;
+        return this.reconnectHandler;
+    }
+
+    public EventManager getEventManager() {
+        return this.eventManager;
     }
 }
