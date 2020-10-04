@@ -17,10 +17,13 @@
 package pe.waterdog.player;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
+import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
+import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -31,6 +34,7 @@ import pe.waterdog.event.events.DisconnectEvent;
 import pe.waterdog.event.events.PlayerLoginEvent;
 import pe.waterdog.event.events.PreTransferEvent;
 import pe.waterdog.logger.Logger;
+import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
 import pe.waterdog.network.bridge.ProxyBatchBridge;
@@ -46,29 +50,35 @@ import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.network.upstream.UpstreamHandler;
+import pe.waterdog.utils.types.TransactionContainer;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class ProxiedPlayer {
 
     private final ProxyServer proxy;
 
     private final BedrockServerSession upstream;
-    private final LoginData loginData;
+    private ServerConnection serverConnection;
+    private ServerInfo pendingConnection;
+
     private final RewriteData rewriteData = new RewriteData();
+    private final LoginData loginData;
+    private LoginPacket loginPacket;
+
     private final EntityTracker entityTracker;
     private final EntityMap entityMap;
     private final BlockMap blockMap;
+
     private final LongSet entities = new LongOpenHashSet();
+    private final LongSet bossbars = new LongOpenHashSet();
     private final Collection<UUID> players = new HashSet<>();
     private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
-    private ServerConnection serverConnection;
-    private ServerInfo pendingConnection;
-    private LoginPacket loginPacket;
+
     private boolean canRewrite = false;
-    private boolean dimensionChange = false;
 
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData) {
         this.proxy = proxy;
@@ -107,11 +117,12 @@ public class ProxiedPlayer {
         final @NonNull ServerInfo targetServer = event.getTargetServer();
 
         if (this.serverConnection != null && this.serverConnection.getInfo() == targetServer) {
-            //Already connected
+            this.sendMessage(new TransactionContainer("waterdog.downstream.connected", serverInfo.getServerName()));
             return;
         }
 
         if (this.pendingConnection == targetServer) {
+            this.sendMessage(new TransactionContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
             return;
         }
 
@@ -119,8 +130,7 @@ public class ProxiedPlayer {
         client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
                 this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
-
-                //TODO: fallback listener
+                this.sendMessage(new TransactionContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), throwable.getLocalizedMessage()));
                 this.pendingConnection = null;
                 return;
             }
@@ -145,7 +155,6 @@ public class ProxiedPlayer {
             SessionInjections.injectNewDownstream(downstream, this, targetServer);
             this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         });
-
     }
 
     public void disconnect() {
@@ -180,6 +189,100 @@ public class ProxiedPlayer {
         if (this.upstream != null && !this.upstream.isClosed()) {
             this.upstream.sendPacket(packet);
         }
+    }
+
+    public void sendMessage(TextContainer message) {
+        if (message instanceof TransactionContainer){
+            this.sendTranslation((TransactionContainer) message);
+        }else {
+            this.sendMessage(message.getMessage());
+        }
+    }
+
+    public void sendTranslation(TransactionContainer textContainer){
+        this.sendMessage(this.proxy.translate(textContainer));
+    }
+
+    public void sendMessage(String message) {
+        if (message.trim().isEmpty()){
+            return; //Client wont accept empty string
+        }
+
+        TextPacket packet = new TextPacket();
+        packet.setType(TextPacket.Type.RAW);
+        packet.setXuid(this.getXuid());
+        packet.setMessage(message);
+        this.sendPacket(packet);
+    }
+
+    public void sendPopup(String message, String subtitle) {
+        TextPacket packet = new TextPacket();
+        packet.setType(TextPacket.Type.POPUP);
+        packet.setMessage(message);
+        packet.setXuid(this.getXuid());
+        this.sendPacket(packet);
+    }
+
+    public void sendTip(String message) {
+        TextPacket packet = new TextPacket();
+        packet.setType(TextPacket.Type.TIP);
+        packet.setMessage(message);
+        packet.setXuid(this.getXuid());
+        this.sendPacket(packet);
+    }
+
+    public void setSubtitle(String subtitle) {
+        SetTitlePacket packet = new SetTitlePacket();
+        packet.setType(SetTitlePacket.Type.SUBTITLE);
+        packet.setText(subtitle);
+        this.sendPacket(packet);
+    }
+
+    public void setTitleAnimationTimes(int fadein, int duration, int fadeout) {
+        SetTitlePacket packet = new SetTitlePacket();
+        packet.setType(SetTitlePacket.Type.TIMES);
+        packet.setFadeInTime(fadein);
+        packet.setStayTime(duration);
+        packet.setFadeOutTime(fadeout);
+        packet.setText("");
+        this.sendPacket(packet);
+    }
+
+    private void setTitle(String text) {
+        SetTitlePacket packet = new SetTitlePacket();
+        packet.setType(SetTitlePacket.Type.TITLE);
+        packet.setText(text);
+        this.sendPacket(packet);
+    }
+
+    public void clearTitle() {
+        SetTitlePacket packet = new SetTitlePacket();
+        packet.setType(SetTitlePacket.Type.CLEAR);
+        packet.setText("");
+        this.sendPacket(packet);
+    }
+
+    public void resetTitleSettings() {
+        SetTitlePacket packet = new SetTitlePacket();
+        packet.setType(SetTitlePacket.Type.RESET);
+        packet.setText("");
+        this.sendPacket(packet);
+    }
+
+    public void sendTitle(String title) {
+        this.sendTitle(title, null, 20, 20, 5);
+    }
+
+    public void sendTitle(String title, String subtitle) {
+        this.sendTitle(title, subtitle, 20, 20, 5);
+    }
+
+    public void sendTitle(String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+        this.setTitleAnimationTimes(fadeIn, stay, fadeOut);
+        if (!Strings.isNullOrEmpty(subtitle)) {
+            this.setSubtitle(subtitle);
+        }
+        this.setTitle(Strings.isNullOrEmpty(title) ? " " : title);
     }
 
     public ProxyServer getProxy() {
@@ -256,6 +359,10 @@ public class ProxiedPlayer {
 
     public LongSet getEntities() {
         return this.entities;
+    }
+
+    public LongSet getBossbars() {
+        return this.bossbars;
     }
 
     public Collection<UUID> getPlayers() {

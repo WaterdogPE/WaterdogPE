@@ -52,8 +52,11 @@ public abstract class Configuration {
     }
 
     public abstract void load();
-
     public abstract void save();
+
+    public void loadFrom(Map<String, Object> values){
+        this.values = values;
+    }
 
     public Set<String> getKeys() {
         return new HashSet<>(this.values.keySet());
@@ -77,8 +80,7 @@ public abstract class Configuration {
         if (!(value instanceof Map) || keys.length == 1) return value == null ? defaultValue : value;
 
         for (int i = 1; i < keys.length; i++) {
-            value = ((Map) value).get(keys[i]);
-
+            value = ((Map<?, ?>) value).get(keys[i]);
             if (!(value instanceof Map)) {
                 return value == null ? defaultValue : value;
             }
@@ -177,5 +179,4 @@ public abstract class Configuration {
     public List<String> getStringList(String key, List<String> defaultValue) {
         return (List<String>) this.get(key, defaultValue);
     }
-
 }

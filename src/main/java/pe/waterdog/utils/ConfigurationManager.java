@@ -20,6 +20,7 @@ import pe.waterdog.ProxyServer;
 import pe.waterdog.logger.Logger;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,11 +31,12 @@ public class ConfigurationManager {
     public static final int JSON = 1;
     public static final int YAML = 2;
 
-    private ProxyServer server;
+    private ProxyServer proxy;
     private ProxyConfig proxyConfig;
+    private LangConfig langConfig;
 
-    public ConfigurationManager(ProxyServer server) {
-        this.server = server;
+    public ConfigurationManager(ProxyServer proxy) {
+        this.proxy = proxy;
     }
 
     public static Configuration newConfig(File file, int type) {
@@ -54,26 +56,39 @@ public class ConfigurationManager {
     }
 
     public void loadProxyConfig() {
-        InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("config.yml");
-        Path path = Paths.get(this.server.getDataPath().toString(), "config.yml");
-
-        try {
-            if (!path.toFile().exists()) {
-                Files.copy(inputStream, path);
+        File configFile = new File(this.proxy.getDataPath().toString()+"/config.yml");
+        if (!configFile.exists()){
+            try {
+                FileUtils.saveFromResources("config.yml", configFile);
+            }catch (IOException e){
+                this.proxy.getLogger().error("Unable to save proxy config file!", e);
             }
-
-        } catch (Exception e) {
-            Logger.getLogger().error("Unable to save proxy config file!", e);
         }
-
-        this.proxyConfig = new ProxyConfig(path);
+        this.proxyConfig = new ProxyConfig(configFile);
     }
 
-    public ProxyServer getServer() {
-        return server;
+    public void loadLanguage(){
+        File langFile = new File(this.proxy.getDataPath().toString()+"/lang.ini");
+        if (!langFile.exists()){
+            try {
+                FileUtils.saveFromResources("lang.ini", langFile);
+            }catch (IOException e){
+                this.proxy.getLogger().error("Can not save lang file!", e);
+            }
+        }
+
+        this.langConfig = new LangConfig(langFile);
+    }
+
+    public ProxyServer getProxy() {
+        return this.proxy;
     }
 
     public ProxyConfig getProxyConfig() {
-        return proxyConfig;
+        return this.proxyConfig;
+    }
+
+    public LangConfig getLangConfig() {
+        return this.langConfig;
     }
 }

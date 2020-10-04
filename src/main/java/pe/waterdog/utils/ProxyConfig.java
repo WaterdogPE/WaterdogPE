@@ -19,8 +19,8 @@ package pe.waterdog.utils;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.network.ServerInfo;
 
+import java.io.File;
 import java.net.InetSocketAddress;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +40,8 @@ public class ProxyConfig extends YamlConfig {
     private Map<String, InetSocketAddress> servers;
     private Map<String, String> forcedHosts;
 
-    public ProxyConfig(Path path) {
-        super(path);
+    public ProxyConfig(File file){
+        super(file);
 
         this.motd = this.getString("listener.motd");
         this.maxPlayerCount = this.getInt("listener.max_players");

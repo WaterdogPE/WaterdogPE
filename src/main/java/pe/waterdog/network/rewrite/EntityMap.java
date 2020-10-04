@@ -139,6 +139,7 @@ public class EntityMap implements BedrockPacketHandler {
     @Override
     public boolean handle(BossEventPacket packet) {
         packet.setBossUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getBossUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setPlayerUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getPlayerUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
         return true;
     }
 
@@ -168,7 +169,7 @@ public class EntityMap implements BedrockPacketHandler {
         long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), rewrite.getEntityId(), rewrite.getOriginalEntityId());
         long to = PlayerRewriteUtils.rewriteId(entityLink.getTo(), rewrite.getEntityId(), rewrite.getOriginalEntityId());
 
-        packet.setEntityLink(new EntityLinkData(from, to, entityLink.getType(), entityLink.isImmediate()));
+        packet.setEntityLink(new EntityLinkData(from, to, entityLink.getType(), entityLink.isImmediate(), entityLink.isRiderInitiated()));
         return true;
     }
 

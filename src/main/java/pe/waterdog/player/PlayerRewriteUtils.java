@@ -111,4 +111,11 @@ public class PlayerRewriteUtils {
         packet.setObjectiveId(objectiveId);
         session.sendPacket(packet);
     }
+
+    public static void injectRemoveBossbar(BedrockSession session, long bossbarId){
+        BossEventPacket packet = new BossEventPacket();
+        packet.setAction(BossEventPacket.Action.REMOVE);
+        packet.setBossUniqueEntityId(bossbarId);
+        session.sendPacket(packet);
+    }
 }
