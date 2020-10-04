@@ -1,5 +1,7 @@
 package pe.waterdog.plugin;
 
+import java.util.List;
+
 public class PluginYAML {
 
     public String name;
@@ -7,19 +9,25 @@ public class PluginYAML {
     public String author;
     public String main;
 
+    public List<String> depends;
+
     public String getAuthor() {
-        return author;
+        return this.author;
     }
 
     public String getMain() {
-        return main;
+        return this.main;
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public String getVersion() {
-        return version;
+        return this.version;
+    }
+
+    public List<String> getDepends() {
+        return this.depends;
     }
 }

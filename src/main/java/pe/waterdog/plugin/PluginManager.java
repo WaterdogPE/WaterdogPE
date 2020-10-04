@@ -3,57 +3,79 @@ package pe.waterdog.plugin;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 import pe.waterdog.ProxyServer;
+import pe.waterdog.logger.Logger;
+import pe.waterdog.utils.exceptions.PluginChangeStateException;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class PluginManager {
 
-    private final ProxyServer server;
+    private final ProxyServer proxy;
+    private final PluginLoader pluginLoader;
+
     private final Map<String, Plugin> pluginMap = new HashMap<>();
     private final Yaml yamlLoader = new Yaml(new CustomClassLoaderConstructor(this.getClass().getClassLoader()));
 
-    public PluginManager(ProxyServer server) {
-        this.server = server;
-        PluginLoader.loadPluginsIn(this.server.getPluginPath(), this);
+    public PluginManager(ProxyServer proxy) {
+        this.proxy = proxy;
+        this.pluginLoader = new PluginLoader(this);
+        this.loadPluginsIn(this.proxy.getPluginPath());
+    }
+
+    public void loadPluginsIn(Path folderPath) {
+        this.loadPluginsIn(folderPath, false);
+    }
+
+    public void loadPluginsIn(Path folderPath, boolean directStartup) {
+        try (Stream<Path> pluginPaths = Files.walk(folderPath)) {
+            pluginPaths
+                    .filter(Files::isRegularFile)
+                    .filter(PluginLoader::isJarFile)
+                    .forEach(jarPath -> {
+                        this.loadPlugin(jarPath, directStartup);
+                    });
+        } catch (IOException e) {
+            Logger.getLogger().error("Error while filtering plugin files", e);
+        }
+    }
+
+    public Plugin loadPlugin(Path p) {
+        return this.loadPlugin(p, false);
     }
 
     public Plugin loadPlugin(Path p, boolean directStartup) {
         if (!Files.isRegularFile(p) || !PluginLoader.isJarFile(p)) {
-            this.server.getLogger().warning("Cannot load plugin: Provided file is no jar file: " + p.getFileName());
+            this.proxy.getLogger().warning("Cannot load plugin: Provided file is no jar file: " + p.getFileName());
             return null;
         }
 
         File pluginFile = p.toFile();
         if (pluginFile.exists()) {
-            PluginYAML config = this.loadPluginData(pluginFile, this.yamlLoader);
+            PluginYAML config = this.pluginLoader.loadPluginData(pluginFile, this.yamlLoader);
             if (config == null) return null;
 
             if (this.getPluginByName(config.getName()) != null) {
-                this.server.getLogger().warning("Plugin is already loaded: " + config.getName());
+                this.proxy.getLogger().warning("Plugin is already loaded: " + config.getName());
                 return null;
             }
 
-            Plugin plugin = this.loadPluginJAR(config, pluginFile);
+            Plugin plugin = this.pluginLoader.loadPluginJAR(config, pluginFile);
             if (plugin != null) {
-                this.server.getLogger().info("Loaded plugin " + config.getName() + " successfully! (version=" + config.getVersion() + ",author=" + config.getAuthor() + ")");
+                this.proxy.getLogger().info("Loaded plugin " + config.getName() + " successfully! (version=" + config.getVersion() + ",author=" + config.getAuthor() + ")");
                 this.pluginMap.put(config.getName(), plugin);
 
                 plugin.onStartup();
                 if (directStartup) {
-                    plugin.onEnable();
+                    try {
+                        plugin.setEnabled(true);
+                    }catch (Exception e){
+                        this.proxy.getLogger().error("Direct startup failed!", e);
+                    }
                 }
                 return plugin;
             }
@@ -61,59 +83,69 @@ public class PluginManager {
         return null;
     }
 
-    public Plugin loadPlugin(Path p) {
-        return this.loadPlugin(p, false);
-    }
+    public void enableAllPlugins(){
+        LinkedList<Plugin> failed = new LinkedList<>();
 
-    private PluginYAML loadPluginData(File file, Yaml yaml) {
-        try (JarFile pluginJar = new JarFile(file)) {
-            JarEntry configEntry = pluginJar.getJarEntry("plugin.yml");
-            if (configEntry != null) {
-                InputStream fileStream = pluginJar.getInputStream(configEntry);
-                PluginYAML pluginConfig = yaml.loadAs(fileStream, PluginYAML.class);
-                if (pluginConfig.getMain() != null && pluginConfig.getName() != null) {
-                    // Valid plugin.yml, main and name set
-                    return pluginConfig;
-
-                } else {
-                    this.server.getLogger().warning("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
-                }
-            } else {
-                this.server.getLogger().warning("Jar file " + file.getName() + " doesnt contain a plugin.yml!");
+        for (Plugin plugin : this.pluginMap.values()){
+            if (!this.enablePlugin(plugin, null)){
+                failed.add(plugin);
             }
-        } catch (IOException e) {
-            this.server.getLogger().error("Error while reading plugin directory", e);
         }
-        return null;
+
+        if (!failed.isEmpty()){
+            StringBuilder builder = new StringBuilder("§cFailed to load plugins: §e");
+            while (failed.peek() != null){
+                Plugin plugin = failed.poll();
+                builder.append(plugin.getName());
+                if (failed.peek() != null){
+                    builder.append(", ");
+                }
+            }
+            this.proxy.getLogger().warning(builder.toString());
+        }
     }
 
+    public boolean enablePlugin(Plugin plugin, String parent){
+        if (plugin.isEnabled()) return true;
+        String pluginName = plugin.getName();
 
-    private Plugin loadPluginJAR(PluginYAML pluginConfig, File pluginJar) {
+        if (plugin.getDescription().getDepends() != null){
+            for (String depend : plugin.getDescription().getDepends()){
+                if (depend.equals(parent)){
+                    this.proxy.getLogger().warning("§cCan not enable plugin "+pluginName+" circular dependency "+parent+"!");
+                    return false;
+                }
+
+                Plugin dependPlugin = this.getPluginByName(depend);
+                if (dependPlugin == null){
+                    this.proxy.getLogger().warning("§cCan not enable plugin "+pluginName+" missing dependency "+depend+"!");
+                    return false;
+                }
+
+                if (!dependPlugin.isEnabled() && !this.enablePlugin(dependPlugin, pluginName)){
+                    return false;
+                }
+            }
+        }
+
         try {
-            URLClassLoader loader = new URLClassLoader(new URL[]{pluginJar.toURI().toURL()}, this.getClass().getClassLoader());
-            try {
-
-                Class<?> mainClass = loader.loadClass(pluginConfig.getMain());
-
-                if (Plugin.class.isAssignableFrom(mainClass)) {
-                    // Main Class extends Plugin class
-                    // TODO Init Method?
-                    Class<? extends Plugin> castedMain = mainClass.asSubclass(Plugin.class);
-                    return castedMain.getDeclaredConstructor(PluginYAML.class, ProxyServer.class).newInstance(pluginConfig, this.server);
-                }
-            } catch (ClassCastException e) {
-                this.server.getLogger().error("Error while loading plugin main class(main=" + pluginConfig.getMain() + ",plugin=" + pluginConfig.getName() + ")", e);
-            } catch (IllegalAccessException | InstantiationException e) {
-                this.server.getLogger().error("Error while creating main class instance(plugin=" + pluginConfig.getName() + ",main=" + pluginConfig.getMain() + ")", e);
-            } catch (ClassNotFoundException e) {
-                this.server.getLogger().error("Main Class " + pluginConfig.getMain() + " not found", e);
-            } catch (NoSuchMethodException | InvocationTargetException e) {
-                this.server.getLogger().error("Malformed Plugin Class Constructor", e);
-            }
-        } catch (MalformedURLException e) {
-            this.server.getLogger().error("Error while creating class loader(plugin=" + pluginConfig.getName() + ")");
+            plugin.setEnabled(true);
+        }catch (PluginChangeStateException e){
+            this.proxy.getLogger().error(e.getMessage(), e.getCause());
+            return false;
         }
-        return null;
+        return true;
+    }
+
+    public void disableAllPlugins(){
+        for (Plugin plugin : this.pluginMap.values()){
+            this.proxy.getLogger().info("Disabling plugin "+plugin.getName()+"!");
+            try {
+                plugin.setEnabled(false);
+            }catch (PluginChangeStateException e){
+                this.proxy.getLogger().error(e.getMessage(), e.getCause());
+            }
+        }
     }
 
     public Map<String, Plugin> getPluginMap() {
@@ -128,5 +160,7 @@ public class PluginManager {
         return this.pluginMap.getOrDefault(pluginName, null);
     }
 
-
+    public ProxyServer getProxy() {
+        return this.proxy;
+    }
 }

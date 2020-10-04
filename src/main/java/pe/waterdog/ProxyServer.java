@@ -104,9 +104,7 @@ public class ProxyServer {
         bedrockServer.setHandler(new ProxyListener(this));
         bedrockServer.bind().join();
 
-        for (Plugin plugin : pluginManager.getPlugins()) {
-            plugin.onEnable();
-        }
+        this.pluginManager.enableAllPlugins();
     }
 
     private void tickProcessor() {
@@ -151,10 +149,7 @@ public class ProxyServer {
             player.getValue().disconnect("Proxy Shutdown", true);
         }
         Thread.sleep(500);
-
-        for (Plugin plugin : pluginManager.getPlugins()) {
-            plugin.onShutdown();
-        }
+        this.pluginManager.disableAllPlugins();
         this.shutdown = true;
     }
 
@@ -212,11 +207,11 @@ public class ProxyServer {
     }
 
     public Path getPluginPath() {
-        return pluginPath;
+        return this.pluginPath;
     }
 
     public PluginManager getPluginManager() {
-        return pluginManager;
+        return this.pluginManager;
     }
 
     public int getCurrentTick() {
