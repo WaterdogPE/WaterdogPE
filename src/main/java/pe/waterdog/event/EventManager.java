@@ -25,14 +25,15 @@ public class EventManager {
         }
     }
 
-    public CompletableFuture<Void> callEvent(Event event) {
+    public CompletableFuture<Event> callEvent(Event event) {
         ArrayList<Consumer<Event>> handlerList = this.handlerMap.get(event.getClass());
         if (handlerList != null) {
             if (event.getClass().isAnnotationPresent(AsyncEvent.class)) {
-                return CompletableFuture.runAsync(() -> {
+                return CompletableFuture.supplyAsync(() -> {
                     for (Consumer<Event> eventHandler : handlerList) {
                         eventHandler.accept(event);
                     }
+                    return event;
                 });
             } else {
                 for (Consumer<Event> eventHandler : handlerList) {
