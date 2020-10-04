@@ -26,6 +26,7 @@ import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.plugin.Plugin;
 import pe.waterdog.plugin.PluginManager;
+import pe.waterdog.scheduler.WaterdogScheduler;
 import pe.waterdog.utils.ConfigurationManager;
 import pe.waterdog.utils.ProxyConfig;
 
@@ -38,7 +39,6 @@ import java.util.UUID;
 
 public class ProxyServer {
 
-
     private static ProxyServer instance;
 
     private Path dataPath;
@@ -50,11 +50,15 @@ public class ProxyServer {
     private BedrockServer bedrockServer;
 
     private ConfigurationManager configurationManager;
+    private WaterdogScheduler scheduler;
     private PlayerManager playerManager;
     private PluginManager pluginManager;
     private boolean shutdown = false;
 
     private Map<String, ServerInfo> serverInfoMap;
+
+    private int currentTick = 0;
+    private long nextTick;
 
     public ProxyServer(Logger logger, String filePath, String pluginPath) {
         instance = this;
@@ -78,6 +82,7 @@ public class ProxyServer {
 
         this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
 
+        this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
 
         this.boot();
@@ -103,22 +108,43 @@ public class ProxyServer {
 
     private void tickProcessor() {
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+        this.nextTick = System.currentTimeMillis();
+
         while (!this.shutdown) {
-            try {
-                synchronized (this) {
-                    this.wait();
+            long tickTime = System.currentTimeMillis();
+            long delay = this.nextTick - tickTime;
+
+            if (delay >= 50){
+                try {
+                    Thread.sleep(Math.max(25, delay - 25));
+                } catch (InterruptedException e) {
+                    this.logger.error("Main thread interrupted whilst sleeping", e);
                 }
-            } catch (InterruptedException e) {
-                //ignore
+            }
+
+            try {
+                this.onTick(++this.currentTick);
+            }catch (Exception e){
+                this.logger.error("Error while ticking proxy!", e);
+            }
+
+            if (this.nextTick - tickTime < -1000){
+                //We are not doing 20 ticks per second
+                this.nextTick = tickTime;
+            }else {
+                this.nextTick += 50;
             }
         }
+    }
 
-
+    private void onTick(int currentTick){
+        this.scheduler.onTick(currentTick);
     }
 
     @SneakyThrows
     public void shutdown() {
-        for (Map.Entry<UUID, ProxiedPlayer> player : getPlayerManager().getPlayers().entrySet()) {
+        for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
+            this.logger.info("Disconnecting " + player.getValue().getName());
             player.getValue().disconnect("Proxy Shutdown", true);
         }
         Thread.sleep(500);
@@ -130,7 +156,7 @@ public class ProxyServer {
     }
 
     public Logger getLogger() {
-        return logger;
+        return this.logger;
     }
 
     public BedrockServer getBedrockServer() {
@@ -149,8 +175,12 @@ public class ProxyServer {
         return this.configurationManager.getProxyConfig();
     }
 
+    public WaterdogScheduler getScheduler() {
+        return this.scheduler;
+    }
+
     public PlayerManager getPlayerManager() {
-        return playerManager;
+        return this.playerManager;
     }
 
     public ProxiedPlayer getPlayer(UUID uuid) {
@@ -176,5 +206,9 @@ public class ProxyServer {
 
     public PluginManager getPluginManager() {
         return pluginManager;
+    }
+  
+    public int getCurrentTick() {
+        return this.currentTick;
     }
 }
