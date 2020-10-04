@@ -25,7 +25,11 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
+import lombok.NonNull;
 import pe.waterdog.ProxyServer;
+import pe.waterdog.event.events.DisconnectEvent;
+import pe.waterdog.event.events.PlayerLoginEvent;
+import pe.waterdog.event.events.PreTransferEvent;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
@@ -77,7 +81,12 @@ public class ProxiedPlayer {
     }
 
     public void initialConnect() {
-        //TODO: login event
+        PlayerLoginEvent event = new PlayerLoginEvent(this);
+        ProxyServer.getInstance().getEventManager().callEvent(event);
+        if (event.isCancelled()) {
+            this.upstream.disconnect(event.getCancelReason());
+            return;
+        }
         //TODO: get server from handler
         this.upstream.setPacketHandler(new UpstreamHandler(this));
         this.upstream.addDisconnectHandler((reason) -> this.disconnect(null, true));
@@ -89,21 +98,27 @@ public class ProxiedPlayer {
     public void connect(ServerInfo serverInfo) {
         Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
 
-        //TODO: ServerSwitch event
+        PreTransferEvent event = new PreTransferEvent(this, serverInfo);
+        ProxyServer.getInstance().getEventManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
 
-        if (this.serverConnection != null && this.serverConnection.getInfo() == serverInfo) {
+        final @NonNull ServerInfo targetServer = event.getTargetServer();
+
+        if (this.serverConnection != null && this.serverConnection.getInfo() == targetServer) {
             //Already connected
             return;
         }
 
-        if (this.pendingConnection == serverInfo) {
+        if (this.pendingConnection == targetServer) {
             return;
         }
 
         BedrockClient client = this.proxy.getPlayerManager().bindClient();
-        client.connect(serverInfo.getAddress()).whenComplete((downstream, throwable) -> {
+        client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
-                this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + serverInfo.getServerName(), throwable);
+                this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
 
                 //TODO: fallback listener
                 this.pendingConnection = null;
@@ -111,15 +126,15 @@ public class ProxiedPlayer {
             }
 
             if (this.serverConnection == null) {
-                this.serverConnection = new ServerConnection(client, downstream, serverInfo);
+                this.serverConnection = new ServerConnection(client, downstream, targetServer);
 
                 downstream.setPacketHandler(new InitialHandler(this));
                 downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
                 this.upstream.setBatchHandler(new ProxyBatchBridge(this, downstream));
             } else {
-                this.pendingConnection = serverInfo;
+                this.pendingConnection = targetServer;
 
-                downstream.setPacketHandler(new SwitchDownstreamHandler(this, serverInfo, client));
+                downstream.setPacketHandler(new SwitchDownstreamHandler(this, targetServer, client));
                 downstream.setBatchHandler(new TransferBatchBridge(this, this.upstream));
             }
 
@@ -127,8 +142,8 @@ public class ProxiedPlayer {
             downstream.sendPacketImmediately(this.loginPacket);
             downstream.setLogging(true);
 
-            SessionInjections.injectNewDownstream(downstream, this, serverInfo);
-            this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + serverInfo.getServerName() + "] has connected");
+            SessionInjections.injectNewDownstream(downstream, this, targetServer);
+            this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         });
 
     }
@@ -142,7 +157,10 @@ public class ProxiedPlayer {
     }
 
     public void disconnect(String reason, boolean force) {
-        //TODO: disconnect event
+
+        DisconnectEvent event = new DisconnectEvent(this);
+        ProxyServer.getInstance().getEventManager().callEvent(event);
+
 
         if (this.upstream != null && !this.upstream.isClosed()) {
             this.upstream.disconnect(reason);

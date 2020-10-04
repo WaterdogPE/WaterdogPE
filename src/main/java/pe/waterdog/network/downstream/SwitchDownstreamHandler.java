@@ -25,6 +25,8 @@ import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
+import pe.waterdog.ProxyServer;
+import pe.waterdog.event.events.TransferCompleteEvent;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
@@ -161,7 +163,8 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         SessionInjections.injectDownstreamHandlers(server, this.player);
         this.player.setServer(server);
 
-        //TODO: server connected event
+        TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
+        ProxyServer.getInstance().getEventManager().callEvent(event);
 
         return true;
     }

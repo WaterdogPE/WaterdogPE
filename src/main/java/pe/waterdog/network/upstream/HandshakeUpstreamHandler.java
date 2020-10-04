@@ -29,6 +29,7 @@ import net.minidev.json.JSONStyle;
 import net.minidev.json.JSONValue;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
+import pe.waterdog.event.events.PlayerPreLoginEvent;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.session.LoginData;
 import pe.waterdog.player.HandshakeUtils;
@@ -94,7 +95,14 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
                     keyPair
             );
 
-            //TODO: pre login event
+            PlayerPreLoginEvent event = new PlayerPreLoginEvent(loginData);
+            this.server.getEventManager().callEvent(event);
+
+            if (event.isCancelled()) {
+                // Pre Login was cancelled
+                session.disconnect(event.getCancelReason());
+                return true;
+            }
 
             JWSObject signedExtraData = HandshakeUtils.createExtraData(keyPair, extraData);
             JWSObject signedClientData = HandshakeUtils.encodeJWT(keyPair, clientData);
