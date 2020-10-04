@@ -29,6 +29,7 @@ import net.minidev.json.JSONStyle;
 import net.minidev.json.JSONValue;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
+import pe.waterdog.event.events.PlayerCreationEvent;
 import pe.waterdog.event.events.PlayerPreLoginEvent;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.session.LoginData;
@@ -114,7 +115,10 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
             loginData.setChainData(chainData);
             loginData.setSignedClientData(signedClientData);
 
-            ProxiedPlayer player = new ProxiedPlayer(this.server, this.session, loginData);
+            PlayerCreationEvent creationEvent = new PlayerCreationEvent(ProxiedPlayer.class, loginData, this.session.getAddress());
+            this.server.getEventManager().callEvent(creationEvent);
+
+            ProxiedPlayer player = creationEvent.getBaseClass().getConstructor(ProxyServer.class, BedrockServerSession.class, LoginData.class).newInstance(this.server, this.session, loginData);
             if (!this.server.getPlayerManager().registerPlayer(player)) {
                 return true;
             }

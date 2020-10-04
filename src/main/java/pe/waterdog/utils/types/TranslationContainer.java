@@ -18,15 +18,15 @@ package pe.waterdog.utils.types;
 
 import pe.waterdog.ProxyServer;
 
-public class TransactionContainer extends TextContainer{
+public class TranslationContainer extends TextContainer{
 
     private String[] params;
 
-    public TransactionContainer(String message) {
+    public TranslationContainer(String message) {
         super(message);
     }
 
-    public TransactionContainer(String message, String... args) {
+    public TranslationContainer(String message, String... args) {
         super(message, args);
         this.params = args;
     }

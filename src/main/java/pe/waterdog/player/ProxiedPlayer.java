@@ -50,12 +50,11 @@ import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.network.upstream.UpstreamHandler;
-import pe.waterdog.utils.types.TransactionContainer;
+import pe.waterdog.utils.types.TranslationContainer;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public class ProxiedPlayer {
 
@@ -92,17 +91,18 @@ public class ProxiedPlayer {
 
     public void initialConnect() {
         PlayerLoginEvent event = new PlayerLoginEvent(this);
-        ProxyServer.getInstance().getEventManager().callEvent(event);
-        if (event.isCancelled()) {
-            this.upstream.disconnect(event.getCancelReason());
-            return;
-        }
-        //TODO: get server from handler
-        this.upstream.setPacketHandler(new UpstreamHandler(this));
-        this.upstream.addDisconnectHandler((reason) -> this.disconnect(null, true));
+        this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, ignored) -> {
+            if (event.isCancelled()) {
+                this.disconnect(event.getCancelReason());
+                return;
+            }
+            //TODO: get server from handler
+            this.upstream.setPacketHandler(new UpstreamHandler(this));
+            this.upstream.addDisconnectHandler((reason) -> this.disconnect(null, true));
 
-        String server = this.proxy.getConfiguration().getPriorities().get(0);
-        this.connect(this.proxy.getServer(server));
+            String server = this.proxy.getConfiguration().getPriorities().get(0);
+            this.connect(this.proxy.getServer(server));
+        });
     }
 
     public void connect(ServerInfo serverInfo) {
@@ -117,12 +117,12 @@ public class ProxiedPlayer {
         final @NonNull ServerInfo targetServer = event.getTargetServer();
 
         if (this.serverConnection != null && this.serverConnection.getInfo() == targetServer) {
-            this.sendMessage(new TransactionContainer("waterdog.downstream.connected", serverInfo.getServerName()));
+            this.sendMessage(new TranslationContainer("waterdog.downstream.connected", serverInfo.getServerName()));
             return;
         }
 
         if (this.pendingConnection == targetServer) {
-            this.sendMessage(new TransactionContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
+            this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
             return;
         }
 
@@ -130,7 +130,7 @@ public class ProxiedPlayer {
         client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
                 this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
-                this.sendMessage(new TransactionContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), throwable.getLocalizedMessage()));
+                this.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), throwable.getLocalizedMessage()));
                 this.pendingConnection = null;
                 return;
             }
@@ -166,7 +166,6 @@ public class ProxiedPlayer {
     }
 
     public void disconnect(String reason, boolean force) {
-
         DisconnectEvent event = new DisconnectEvent(this);
         ProxyServer.getInstance().getEventManager().callEvent(event);
 
@@ -192,14 +191,14 @@ public class ProxiedPlayer {
     }
 
     public void sendMessage(TextContainer message) {
-        if (message instanceof TransactionContainer){
-            this.sendTranslation((TransactionContainer) message);
+        if (message instanceof TranslationContainer){
+            this.sendTranslation((TranslationContainer) message);
         }else {
             this.sendMessage(message.getMessage());
         }
     }
 
-    public void sendTranslation(TransactionContainer textContainer){
+    public void sendTranslation(TranslationContainer textContainer){
         this.sendMessage(this.proxy.translate(textContainer));
     }
 
