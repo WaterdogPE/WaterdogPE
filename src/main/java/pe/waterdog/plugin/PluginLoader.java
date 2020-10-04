@@ -11,17 +11,15 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.stream.Stream;
 
 public class PluginLoader {
 
     private final PluginManager pluginManager;
 
-    public PluginLoader(PluginManager pluginManager){
+    public PluginLoader(PluginManager pluginManager) {
         this.pluginManager = pluginManager;
     }
 
