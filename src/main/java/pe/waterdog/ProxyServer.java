@@ -19,6 +19,7 @@ package pe.waterdog;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.SneakyThrows;
 import pe.waterdog.command.CommandReader;
+import pe.waterdog.event.EventManager;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
@@ -50,8 +51,10 @@ public class ProxyServer {
     private BedrockServer bedrockServer;
 
     private ConfigurationManager configurationManager;
-    private PlayerManager playerManager;
-    private PluginManager pluginManager;
+    private final PlayerManager playerManager;
+    private final PluginManager pluginManager;
+    private final EventManager eventManager;
+
     private boolean shutdown = false;
 
     private Map<String, ServerInfo> serverInfoMap;
@@ -79,7 +82,7 @@ public class ProxyServer {
         this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
 
         this.playerManager = new PlayerManager(this);
-
+        this.eventManager = new EventManager();
         this.boot();
         this.tickProcessor();
     }
@@ -176,5 +179,9 @@ public class ProxyServer {
 
     public PluginManager getPluginManager() {
         return pluginManager;
+    }
+
+    public EventManager getEventManager() {
+        return eventManager;
     }
 }
