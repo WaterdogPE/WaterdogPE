@@ -10,27 +10,38 @@ import pe.waterdog.utils.exceptions.PluginChangeStateException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public abstract class Plugin {
 
-    private final PluginYAML description;
-    private final ProxyServer proxy;
+    private PluginYAML description;
+    private ProxyServer proxy;
 
-    private final File dataFolder;
-    private final File configFile;
+    private File pluginFile;
+    private File dataFolder;
+    private File configFile;
 
     private Configuration config;
+
+    private boolean initialized = false;
     protected boolean enabled = false;
 
-    public Plugin(PluginYAML description, ProxyServer proxy) {
-        this.description = description;
-        this.proxy = proxy;
+    public Plugin() {
+    }
 
-        this.dataFolder = new File(proxy.getPluginPath()+"/"+description.getName().toLowerCase()+"/");
-        if (!this.dataFolder.exists()){
-            this.dataFolder.mkdirs();
+    protected void init(PluginYAML description, ProxyServer proxy, File pluginFile){
+        if (!this.initialized){
+            this.description = description;
+            this.proxy = proxy;
+
+            this.pluginFile = pluginFile;
+            this.dataFolder = new File(proxy.getPluginPath()+"/"+description.getName().toLowerCase()+"/");
+            if (!this.dataFolder.exists()){
+                this.dataFolder.mkdirs();
+            }
+            this.configFile = new File(this.dataFolder, "config.yml");
         }
-        this.configFile = new File(this.dataFolder, "config.yml");
     }
 
     public void onStartup(){
@@ -55,9 +66,15 @@ public abstract class Plugin {
         }
     }
 
-    //TODO: do plugin class loader
     public InputStream getResourceFile(String filename) {
-        return this.getClass().getClassLoader().getResourceAsStream(filename);
+        try {
+            JarFile pluginJar = new JarFile(this.pluginFile);
+            JarEntry entry = pluginJar.getJarEntry(filename);
+            return pluginJar.getInputStream(entry);
+        }catch (IOException e){
+            this.proxy.getLogger().error("Can not get plugin resource!", e);
+        }
+        return null;
     }
 
     public boolean saveResource(String filename) {

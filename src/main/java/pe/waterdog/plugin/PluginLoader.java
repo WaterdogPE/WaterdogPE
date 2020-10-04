@@ -1,21 +1,17 @@
 package pe.waterdog.plugin;
 
 import org.yaml.snakeyaml.Yaml;
-import pe.waterdog.ProxyServer;
 import pe.waterdog.logger.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.stream.Stream;
 
 public class PluginLoader {
 
@@ -39,7 +35,9 @@ public class PluginLoader {
                     // Main Class extends Plugin class
                     // TODO Init Method?
                     Class<? extends Plugin> castedMain = mainClass.asSubclass(Plugin.class);
-                    return castedMain.getDeclaredConstructor(PluginYAML.class, ProxyServer.class).newInstance(pluginConfig, this.pluginManager.getProxy());
+                    Plugin plugin = castedMain.newInstance();
+                    plugin.init(pluginConfig, this.pluginManager.getProxy(), pluginJar);
+                    return plugin;
                 }
             } catch (ClassCastException e) {
                 Logger.getLogger().error("Error while loading plugin main class(main=" + pluginConfig.getMain() + ",plugin=" + pluginConfig.getName() + ")", e);
@@ -47,8 +45,6 @@ public class PluginLoader {
                 Logger.getLogger().error("Error while creating main class instance(plugin=" + pluginConfig.getName() + ",main=" + pluginConfig.getMain() + ")", e);
             } catch (ClassNotFoundException e) {
                 Logger.getLogger().error("Main Class " + pluginConfig.getMain() + " not found", e);
-            } catch (NoSuchMethodException | InvocationTargetException e) {
-                Logger.getLogger().error("Malformed Plugin Class Constructor", e);
             }
         } catch (MalformedURLException e) {
             Logger.getLogger().error("Error while creating class loader(plugin=" + pluginConfig.getName() + ")");
