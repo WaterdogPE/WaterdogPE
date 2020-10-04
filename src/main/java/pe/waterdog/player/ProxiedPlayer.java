@@ -30,7 +30,6 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.logger.Logger;
-import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
 import pe.waterdog.network.bridge.ProxyBatchBridge;
@@ -46,12 +45,12 @@ import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.network.upstream.UpstreamHandler;
+import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.utils.types.TransactionContainer;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public class ProxiedPlayer {
 
@@ -84,12 +83,16 @@ public class ProxiedPlayer {
 
     public void initialConnect() {
         //TODO: login event
-        //TODO: get server from handler
         this.upstream.setPacketHandler(new UpstreamHandler(this));
         this.upstream.addDisconnectHandler((reason) -> this.disconnect(null, true));
 
-        String server = this.proxy.getConfiguration().getPriorities().get(0);
-        this.connect(this.proxy.getServer(server));
+        ServerInfo i = this.getProxy().getJoinHandler().determineServer();
+        if (i != null) {
+            this.connect(i);
+        } else {
+            this.upstream.disconnect(new TransactionContainer("waterdog.no.initial.server").getTranslated());
+        }
+
     }
 
     public void connect(ServerInfo serverInfo) {

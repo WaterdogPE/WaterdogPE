@@ -22,9 +22,12 @@ import pe.waterdog.command.CommandReader;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
+import pe.waterdog.network.handler.IJoinHandler;
+import pe.waterdog.network.handler.IReconnectHandler;
+import pe.waterdog.network.handler.VanillaJoinHandler;
+import pe.waterdog.network.handler.VanillaReconnectHandler;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.plugin.Plugin;
 import pe.waterdog.plugin.PluginManager;
 import pe.waterdog.scheduler.WaterdogScheduler;
 import pe.waterdog.utils.ConfigurationManager;
@@ -36,6 +39,7 @@ import java.io.File;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
@@ -56,6 +60,8 @@ public class ProxyServer {
     private PlayerManager playerManager;
     private PluginManager pluginManager;
     private boolean shutdown = false;
+    private IReconnectHandler reconnectHandler;
+    private IJoinHandler joinHandler;
 
     private Map<String, ServerInfo> serverInfoMap;
 
@@ -78,11 +84,12 @@ public class ProxyServer {
 
        /*this.console = new CommandReader();
        this.console.start();*/
-
         this.configurationManager = new ConfigurationManager(this);
         configurationManager.loadProxyConfig();
         configurationManager.loadLanguage();
-
+        // Default Handlers
+        this.reconnectHandler = new VanillaReconnectHandler();
+        this.joinHandler = new VanillaJoinHandler(this);
         this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
 
         this.scheduler = new WaterdogScheduler(this);
@@ -216,5 +223,17 @@ public class ProxyServer {
 
     public int getCurrentTick() {
         return this.currentTick;
+    }
+
+    public Collection<ServerInfo> getServers() {
+        return this.serverInfoMap.values();
+    }
+
+    public IJoinHandler getJoinHandler() {
+        return joinHandler;
+    }
+
+    public IReconnectHandler getReconnectHandler() {
+        return reconnectHandler;
     }
 }
