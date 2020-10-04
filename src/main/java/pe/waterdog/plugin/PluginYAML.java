@@ -1,6 +1,7 @@
 package pe.waterdog.plugin;
 
 public class PluginYAML {
+
     public String name;
     public String version;
     public String author;

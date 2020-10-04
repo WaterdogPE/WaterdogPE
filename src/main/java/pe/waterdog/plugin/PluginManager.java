@@ -30,36 +30,39 @@ public class PluginManager {
         PluginLoader.loadPluginsIn(this.server.getPluginPath(), this);
     }
 
-
     public Plugin loadPlugin(Path p, boolean directStartup) {
-        if (Files.isRegularFile(p) && PluginLoader.isJarFile(p)) {
-            File pluginFile = p.toFile();
-            if (pluginFile.exists()) {
-                PluginYAML config = loadPluginData(pluginFile, this.yamlLoader);
-                if (config != null) {
-                    if (getPluginByName(config.getName()) == null) {
-                        Plugin plugin = loadPluginJAR(config, pluginFile);
-                        if (plugin != null) {
-                            this.server.getLogger().info("Loaded plugin " + config.getName() + " successfully! (version=" + config.getVersion() + ",author=" + config.getAuthor() + ")");
-                            this.pluginMap.put(config.getName(), plugin);
-                            if (directStartup) {
-                                plugin.onStartup();
-                            }
-                            return plugin;
-                        }
-                    } else {
-                        this.server.getLogger().warning("Plugin is already loaded: " + config.getName());
-                    }
-                }
-            }
-        } else {
+        if (!Files.isRegularFile(p) || !PluginLoader.isJarFile(p)) {
             this.server.getLogger().warning("Cannot load plugin: Provided file is no jar file: " + p.getFileName());
+            return null;
+        }
+
+        File pluginFile = p.toFile();
+        if (pluginFile.exists()) {
+            PluginYAML config = this.loadPluginData(pluginFile, this.yamlLoader);
+            if (config == null) return null;
+
+            if (this.getPluginByName(config.getName()) != null) {
+                this.server.getLogger().warning("Plugin is already loaded: " + config.getName());
+                return null;
+            }
+
+            Plugin plugin = this.loadPluginJAR(config, pluginFile);
+            if (plugin != null) {
+                this.server.getLogger().info("Loaded plugin " + config.getName() + " successfully! (version=" + config.getVersion() + ",author=" + config.getAuthor() + ")");
+                this.pluginMap.put(config.getName(), plugin);
+
+                plugin.onStartup();
+                if (directStartup) {
+                    plugin.onEnable();
+                }
+                return plugin;
+            }
         }
         return null;
     }
 
     public Plugin loadPlugin(Path p) {
-        return loadPlugin(p, false);
+        return this.loadPlugin(p, false);
     }
 
     private PluginYAML loadPluginData(File file, Yaml yaml) {
@@ -87,16 +90,15 @@ public class PluginManager {
 
     private Plugin loadPluginJAR(PluginYAML pluginConfig, File pluginJar) {
         try {
-
             URLClassLoader loader = new URLClassLoader(new URL[]{pluginJar.toURI().toURL()}, this.getClass().getClassLoader());
             try {
 
-                Class mainClass = loader.loadClass(pluginConfig.getMain());
+                Class<?> mainClass = loader.loadClass(pluginConfig.getMain());
 
                 if (Plugin.class.isAssignableFrom(mainClass)) {
                     // Main Class extends Plugin class
                     // TODO Init Method?
-                    Class<Plugin> castedMain = mainClass.asSubclass(Plugin.class);
+                    Class<? extends Plugin> castedMain = mainClass.asSubclass(Plugin.class);
                     return castedMain.getDeclaredConstructor(PluginYAML.class, ProxyServer.class).newInstance(pluginConfig, this.server);
                 }
             } catch (ClassCastException e) {
@@ -115,11 +117,11 @@ public class PluginManager {
     }
 
     public Map<String, Plugin> getPluginMap() {
-        return pluginMap;
+        return this.pluginMap;
     }
 
     public Collection<Plugin> getPlugins() {
-        return pluginMap.values();
+        return this.pluginMap.values();
     }
 
     public Plugin getPluginByName(String pluginName) {

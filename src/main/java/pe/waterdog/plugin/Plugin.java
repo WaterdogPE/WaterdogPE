@@ -5,22 +5,25 @@ import pe.waterdog.ProxyServer;
 public abstract class Plugin {
 
     private final PluginYAML description;
-    private final ProxyServer server;
+    private final ProxyServer proxy;
 
-    public Plugin(PluginYAML description, ProxyServer server) {
+    public Plugin(PluginYAML description, ProxyServer proxy) {
         this.description = description;
-        this.server = server;
+        this.proxy = proxy;
     }
 
-    public abstract void onStartup();
+    public void onStartup(){
+    }
+    public abstract void onEnable();
+    public void onShutdown(){
+    }
 
-    public abstract void onShutdown();
 
     public PluginYAML getDescription() {
-        return description;
+        return this.description;
     }
 
-    public ProxyServer getServer() {
-        return server;
+    public ProxyServer getProxy() {
+        return this.proxy;
     }
 }

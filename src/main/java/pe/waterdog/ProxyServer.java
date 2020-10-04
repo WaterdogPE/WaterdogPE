@@ -97,7 +97,7 @@ public class ProxyServer {
         bedrockServer.bind().join();
 
         for (Plugin plugin : pluginManager.getPlugins()) {
-            plugin.onStartup();
+            plugin.onEnable();
         }
     }
 
