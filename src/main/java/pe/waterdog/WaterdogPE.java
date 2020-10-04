@@ -17,7 +17,8 @@
 package pe.waterdog;
 
 
-import pe.waterdog.logger.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WaterdogPE {
 
@@ -28,27 +29,24 @@ public class WaterdogPE {
         Thread.currentThread().setName("WaterdogPE-main");
         System.out.println("Starting WaterdogPE....");
 
-        Logger logger = new Logger("latest");
-        logger.setPrefix("Server");
-        logger.setDebug(VersionInfo.IS_DEVELOPMENT);
+        Logger logger = LoggerFactory.getLogger("Main");
 
         /* Nice Start Message*/
-        logger.info("§bStarting WaterDogPE proxy software!");
-        logger.info("§3Software Version: " + VersionInfo.BASE_VERSION);
-        logger.info("§3Build Version: " + VersionInfo.BUILD_VERSION);
-        logger.info("§3Development Build: " + VersionInfo.IS_DEVELOPMENT);
-        logger.info("§3Software Authors: " + VersionInfo.AUTHOR);
+        logger.info("Starting WaterDogPE proxy software!");
+        logger.info("Software Version: " + VersionInfo.BASE_VERSION);
+        logger.info("Build Version: " + VersionInfo.BUILD_VERSION);
+        logger.info("Development Build: " + VersionInfo.IS_DEVELOPMENT);
+        logger.info("Software Authors: " + VersionInfo.AUTHOR);
 
         if (VersionInfo.BUILD_VERSION == "#build") {
-            logger.warning("Unknown build id. Custom build? Unofficial builds should be not run in production!");
+            logger.warn("Unknown build id. Custom build? Unofficial builds should be not run in production!");
         }
 
         try {
             ProxyServer server = new ProxyServer(logger, DATA_PATH, PLUGIN_PATH);
         } catch (Exception e) {
-            logger.logException(e);
+            logger.error("Error while bootstrapping ProxyServer", e);
         }
 
-        logger.shutdown();
     }
 }

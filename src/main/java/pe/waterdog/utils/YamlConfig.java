@@ -18,7 +18,7 @@ package pe.waterdog.utils;
 
 import com.google.common.base.Charsets;
 import org.yaml.snakeyaml.Yaml;
-import pe.waterdog.logger.Logger;
+import pe.waterdog.ProxyServer;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +47,7 @@ public class YamlConfig extends Configuration {
         try {
             this.values = yaml.loadAs(Files.newInputStream(this.file.toPath()), Map.class);
         } catch (Exception e) {
-            Logger.getLogger().error("Unable to load Config " + this.file.toString());
+            ProxyServer.getInstance().getLogger().error("Unable to load Config " + this.file.toString());
         }
     }
 
@@ -57,7 +57,7 @@ public class YamlConfig extends Configuration {
         try {
             Files.write(this.file.toPath(), writingData.getBytes(Charsets.UTF_8));
         } catch (IOException e) {
-            Logger.getLogger().error("Unable to save Config " + this.file.toString());
+            ProxyServer.getInstance().getLogger().error("Unable to save Config " + this.file.toString(), e);
         }
     }
 }

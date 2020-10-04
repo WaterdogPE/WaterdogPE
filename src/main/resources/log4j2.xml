@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
+<Configuration status="INFO">
     <Appenders>
         <Console name="Console">
-            <PatternLayout pattern="[%d{HH:mm:ss} %-5level]: %msg%n"/>
+            <!-- disable disableAnsi for console colors -->
+            <PatternLayout disableAnsi="true"
+                           pattern="%highlight{%d{HH:mm:ss.SSS} %-5level %logger{36}.%M() @%L - %msg%n}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}"/>
         </Console>
         <RollingRandomAccessFile name="File" fileName="logs/server.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="%d{yyy-MM-dd HH:mm:ss.SSS} [%t] %-5level - %msg%n"/>
@@ -13,7 +15,7 @@
         </RollingRandomAccessFile>
     </Appenders>
     <Loggers>
-        <Root level="WARN">
+        <Root level="INFO">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
         </Root>

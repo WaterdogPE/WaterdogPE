@@ -16,7 +16,7 @@
 
 package pe.waterdog.utils;
 
-import pe.waterdog.logger.Logger;
+import pe.waterdog.ProxyServer;
 import pe.waterdog.network.ServerInfo;
 
 import java.net.InetSocketAddress;
@@ -72,7 +72,7 @@ public class ProxyConfig extends YamlConfig {
                 String[] data = map.get(server).get("address").split(":");
                 address = new InetSocketAddress(data[0], Integer.parseInt(data[1]));
             } catch (Exception e) {
-                Logger.getLogger().error("Unable to parse server from config! Please check you configuration. Server name: " + server);
+                ProxyServer.getInstance().getLogger().error("Unable to parse server from config! Please check you configuration. Server name: " + server, e);
             }
 
             if (address != null) servers.put(server, address);

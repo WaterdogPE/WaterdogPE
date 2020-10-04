@@ -18,8 +18,8 @@ package pe.waterdog;
 
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.SneakyThrows;
+import org.slf4j.Logger;
 import pe.waterdog.command.CommandReader;
-import pe.waterdog.logger.Logger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.PlayerManager;
@@ -57,7 +57,6 @@ public class ProxyServer {
         instance = this;
         this.logger = logger;
         this.dataPath = Paths.get(filePath);
-
 
        /* if (!new File(pluginPath).exists()) {
             new File(pluginPath).mkdirs();

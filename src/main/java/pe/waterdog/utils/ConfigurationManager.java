@@ -17,7 +17,6 @@
 package pe.waterdog.utils;
 
 import pe.waterdog.ProxyServer;
-import pe.waterdog.logger.Logger;
 
 import java.io.File;
 import java.io.InputStream;
@@ -63,7 +62,7 @@ public class ConfigurationManager {
             }
 
         } catch (Exception e) {
-            Logger.getLogger().error("Unable to save proxy config file!", e);
+            ProxyServer.getInstance().getLogger().error("Unable to save proxy config file!", e);
         }
 
         this.proxyConfig = new ProxyConfig(path);

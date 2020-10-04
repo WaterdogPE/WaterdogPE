@@ -95,7 +95,7 @@ public class BlockMap implements BedrockPacketHandler {
                     break;
                 default: //unsupported
                     notSupported = true;
-                    this.player.getLogger().warning("PEBlockRewrite: Unknown subchunk format " + chunkVersion);
+                    this.player.getLogger().warn("PEBlockRewrite: Unknown subchunk format " + chunkVersion);
                     break;
             }
 

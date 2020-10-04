@@ -7,7 +7,7 @@ listener:
   motd: "§bWaterdog§3PE"
   priorities:
     - lobby1
-  host: 192.168.0.50:19132
+  host: 0.0.0.0:19132
   max_players: 20
   force_default_server: false
   forced_hosts:
