@@ -24,10 +24,15 @@ import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.plugin.Plugin;
+import pe.waterdog.plugin.PluginManager;
 import pe.waterdog.scheduler.WaterdogScheduler;
 import pe.waterdog.utils.ConfigurationManager;
+import pe.waterdog.utils.LangConfig;
 import pe.waterdog.utils.ProxyConfig;
+import pe.waterdog.utils.types.TextContainer;
 
+import java.io.File;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,7 +54,7 @@ public class ProxyServer {
     private ConfigurationManager configurationManager;
     private WaterdogScheduler scheduler;
     private PlayerManager playerManager;
-
+    private PluginManager pluginManager;
     private boolean shutdown = false;
 
     private Map<String, ServerInfo> serverInfoMap;
@@ -61,19 +66,22 @@ public class ProxyServer {
         instance = this;
         this.logger = logger;
         this.dataPath = Paths.get(filePath);
+        this.pluginPath = Paths.get(pluginPath);
 
-
-       /* if (!new File(pluginPath).exists()) {
+        if (!new File(pluginPath).exists()) {
+            this.logger.info("Created Plugin Folder at " + this.pluginPath.toString());
             new File(pluginPath).mkdirs();
         }
 
-        this.pluginPath = new File(pluginPath).getAbsolutePath() + "/";*/
+        this.pluginManager = new PluginManager(this);
+
 
        /*this.console = new CommandReader();
        this.console.start();*/
 
         this.configurationManager = new ConfigurationManager(this);
         configurationManager.loadProxyConfig();
+        configurationManager.loadLanguage();
 
         this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
 
@@ -95,6 +103,8 @@ public class ProxyServer {
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
         bedrockServer.setHandler(new ProxyListener(this));
         bedrockServer.bind().join();
+
+        this.pluginManager.enableAllPlugins();
     }
 
     private void tickProcessor() {
@@ -139,7 +149,12 @@ public class ProxyServer {
             player.getValue().disconnect("Proxy Shutdown", true);
         }
         Thread.sleep(500);
+        this.pluginManager.disableAllPlugins();
         this.shutdown = true;
+    }
+
+    public String translate(TextContainer textContainer){
+        return this.getLanguageConfig().translateContainer(textContainer);
     }
 
     public Logger getLogger() {
@@ -160,6 +175,10 @@ public class ProxyServer {
 
     public ProxyConfig getConfiguration() {
         return this.configurationManager.getProxyConfig();
+    }
+
+    public LangConfig getLanguageConfig(){
+        return this.configurationManager.getLangConfig();
     }
 
     public WaterdogScheduler getScheduler() {
@@ -185,6 +204,14 @@ public class ProxyServer {
     public boolean registerServerInfo(ServerInfo serverInfo) {
         if (serverInfo == null) return false;
         return this.serverInfoMap.putIfAbsent(serverInfo.getServerName().toLowerCase(), serverInfo) == null;
+    }
+
+    public Path getPluginPath() {
+        return this.pluginPath;
+    }
+
+    public PluginManager getPluginManager() {
+        return this.pluginManager;
     }
 
     public int getCurrentTick() {

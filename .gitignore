@@ -5,6 +5,10 @@
 logs/
 *.log
 
+# Test files
+plugins/
+config.yml
+
 # BlueJ files
 *.ctxt
 
