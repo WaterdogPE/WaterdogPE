@@ -17,7 +17,7 @@ public class PluginLoader {
 
     private final PluginManager pluginManager;
 
-    public PluginLoader(PluginManager pluginManager){
+    public PluginLoader(PluginManager pluginManager) {
         this.pluginManager = pluginManager;
     }
 

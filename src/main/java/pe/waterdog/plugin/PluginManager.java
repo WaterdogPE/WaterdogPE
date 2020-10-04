@@ -10,7 +10,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class PluginManager {
@@ -73,7 +76,7 @@ public class PluginManager {
                 if (directStartup) {
                     try {
                         plugin.setEnabled(true);
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         this.proxy.getLogger().error("Direct startup failed!", e);
                     }
                 }
@@ -83,21 +86,21 @@ public class PluginManager {
         return null;
     }
 
-    public void enableAllPlugins(){
+    public void enableAllPlugins() {
         LinkedList<Plugin> failed = new LinkedList<>();
 
-        for (Plugin plugin : this.pluginMap.values()){
-            if (!this.enablePlugin(plugin, null)){
+        for (Plugin plugin : this.pluginMap.values()) {
+            if (!this.enablePlugin(plugin, null)) {
                 failed.add(plugin);
             }
         }
 
-        if (!failed.isEmpty()){
+        if (!failed.isEmpty()) {
             StringBuilder builder = new StringBuilder("§cFailed to load plugins: §e");
-            while (failed.peek() != null){
+            while (failed.peek() != null) {
                 Plugin plugin = failed.poll();
                 builder.append(plugin.getName());
-                if (failed.peek() != null){
+                if (failed.peek() != null) {
                     builder.append(", ");
                 }
             }
@@ -105,24 +108,24 @@ public class PluginManager {
         }
     }
 
-    public boolean enablePlugin(Plugin plugin, String parent){
+    public boolean enablePlugin(Plugin plugin, String parent) {
         if (plugin.isEnabled()) return true;
         String pluginName = plugin.getName();
 
-        if (plugin.getDescription().getDepends() != null){
-            for (String depend : plugin.getDescription().getDepends()){
-                if (depend.equals(parent)){
-                    this.proxy.getLogger().warning("§cCan not enable plugin "+pluginName+" circular dependency "+parent+"!");
+        if (plugin.getDescription().getDepends() != null) {
+            for (String depend : plugin.getDescription().getDepends()) {
+                if (depend.equals(parent)) {
+                    this.proxy.getLogger().warning("§cCan not enable plugin " + pluginName + " circular dependency " + parent + "!");
                     return false;
                 }
 
                 Plugin dependPlugin = this.getPluginByName(depend);
-                if (dependPlugin == null){
-                    this.proxy.getLogger().warning("§cCan not enable plugin "+pluginName+" missing dependency "+depend+"!");
+                if (dependPlugin == null) {
+                    this.proxy.getLogger().warning("§cCan not enable plugin " + pluginName + " missing dependency " + depend + "!");
                     return false;
                 }
 
-                if (!dependPlugin.isEnabled() && !this.enablePlugin(dependPlugin, pluginName)){
+                if (!dependPlugin.isEnabled() && !this.enablePlugin(dependPlugin, pluginName)) {
                     return false;
                 }
             }
@@ -130,19 +133,19 @@ public class PluginManager {
 
         try {
             plugin.setEnabled(true);
-        }catch (PluginChangeStateException e){
+        } catch (PluginChangeStateException e) {
             this.proxy.getLogger().error(e.getMessage(), e.getCause());
             return false;
         }
         return true;
     }
 
-    public void disableAllPlugins(){
-        for (Plugin plugin : this.pluginMap.values()){
-            this.proxy.getLogger().info("Disabling plugin "+plugin.getName()+"!");
+    public void disableAllPlugins() {
+        for (Plugin plugin : this.pluginMap.values()) {
+            this.proxy.getLogger().info("Disabling plugin " + plugin.getName() + "!");
             try {
                 plugin.setEnabled(false);
-            }catch (PluginChangeStateException e){
+            } catch (PluginChangeStateException e) {
                 this.proxy.getLogger().error(e.getMessage(), e.getCause());
             }
         }
