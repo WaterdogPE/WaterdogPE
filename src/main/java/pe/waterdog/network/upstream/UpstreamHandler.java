@@ -21,6 +21,7 @@ import com.nukkitx.protocol.bedrock.packet.PacketViolationWarningPacket;
 import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import pe.waterdog.ProxyServer;
+import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.ProxiedPlayer;
 
@@ -48,8 +49,11 @@ public class UpstreamHandler implements BedrockPacketHandler {
     public boolean handle(TextPacket packet) {
         String message = packet.getMessage();
         if (!message.startsWith("server")) {
-            //custom debug
-            return message.startsWith("debug");
+            if (message.startsWith("debug")){
+                player.sendMessage(new TextContainer("§aHey {%0}, you are connected to {%1}!", player.getName(), player.getServer().getInfo().getServerName()));
+                return true;
+            }
+            return false;
         }
 
         String[] args = packet.getMessage().split(" ");

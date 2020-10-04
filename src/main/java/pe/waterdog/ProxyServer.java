@@ -28,7 +28,9 @@ import pe.waterdog.plugin.Plugin;
 import pe.waterdog.plugin.PluginManager;
 import pe.waterdog.scheduler.WaterdogScheduler;
 import pe.waterdog.utils.ConfigurationManager;
+import pe.waterdog.utils.LangConfig;
 import pe.waterdog.utils.ProxyConfig;
+import pe.waterdog.utils.types.TextContainer;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -79,6 +81,7 @@ public class ProxyServer {
 
         this.configurationManager = new ConfigurationManager(this);
         configurationManager.loadProxyConfig();
+        configurationManager.loadLanguage();
 
         this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
 
@@ -155,6 +158,10 @@ public class ProxyServer {
         this.shutdown = true;
     }
 
+    public String translate(TextContainer textContainer){
+        return this.getLanguageConfig().translateContainer(textContainer);
+    }
+
     public Logger getLogger() {
         return this.logger;
     }
@@ -173,6 +180,10 @@ public class ProxyServer {
 
     public ProxyConfig getConfiguration() {
         return this.configurationManager.getProxyConfig();
+    }
+
+    public LangConfig getLanguageConfig(){
+        return this.configurationManager.getLangConfig();
     }
 
     public WaterdogScheduler getScheduler() {
@@ -207,7 +218,7 @@ public class ProxyServer {
     public PluginManager getPluginManager() {
         return pluginManager;
     }
-  
+
     public int getCurrentTick() {
         return this.currentTick;
     }
