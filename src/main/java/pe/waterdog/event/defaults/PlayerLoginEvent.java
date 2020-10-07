@@ -14,13 +14,26 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event;
+package pe.waterdog.event.defaults;
 
-public interface CancellableEvent {
+import pe.waterdog.event.AsyncEvent;
+import pe.waterdog.event.CancellableEvent;
+import pe.waterdog.player.ProxiedPlayer;
 
-    boolean isCancelled();
+@AsyncEvent
+public class PlayerLoginEvent extends PlayerEvent implements CancellableEvent {
 
-    void setCancelled(boolean cancelled);
+    private String cancelReason = "Login cancelled";
 
-    void setCancelled();
+    public PlayerLoginEvent(ProxiedPlayer player) {
+        super(player);
+    }
+
+    public String getCancelReason() {
+        return this.cancelReason;
+    }
+
+    public void setCancelReason(String cancelReason) {
+        this.cancelReason = cancelReason;
+    }
 }

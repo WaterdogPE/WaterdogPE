@@ -26,7 +26,7 @@ import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import pe.waterdog.ProxyServer;
-import pe.waterdog.event.events.TransferCompleteEvent;
+import pe.waterdog.event.defaults.TransferCompleteEvent;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;

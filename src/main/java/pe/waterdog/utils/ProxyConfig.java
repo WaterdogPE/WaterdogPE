@@ -31,6 +31,7 @@ public class ProxyConfig extends YamlConfig {
     private int maxPlayerCount = 24;
 
     private boolean onlineMode = true;
+    private boolean useLoginExtras = true;
     private boolean ipForward = true;
     private boolean replaceUsernameSpaces = true;
     private boolean forceDefault = true;
@@ -45,6 +46,7 @@ public class ProxyConfig extends YamlConfig {
 
         this.motd = this.getString("listener.motd");
         this.maxPlayerCount = this.getInt("listener.max_players");
+        this.useLoginExtras = this.getBoolean("use_login_extras");
         this.onlineMode = this.getBoolean("online_mode");
         this.ipForward = this.getBoolean("ip_forward");
         this.replaceUsernameSpaces = this.getBoolean("replace_username_spaces");
@@ -91,7 +93,7 @@ public class ProxyConfig extends YamlConfig {
     }
 
     public String getMotd() {
-        return motd;
+        return this.motd;
     }
 
     public void setMotd(String motd) {
@@ -99,7 +101,7 @@ public class ProxyConfig extends YamlConfig {
     }
 
     public int getMaxPlayerCount() {
-        return maxPlayerCount;
+        return this.maxPlayerCount;
     }
 
     public void setMaxPlayerCount(int maxPlayerCount) {
@@ -107,15 +109,23 @@ public class ProxyConfig extends YamlConfig {
     }
 
     public boolean isOnlineMode() {
-        return onlineMode;
+        return this.onlineMode;
+    }
+
+    public boolean useLoginExtras() {
+        return this.useLoginExtras;
+    }
+
+    public void setUseLoginExtras(boolean useLoginExtras) {
+        this.useLoginExtras = useLoginExtras;
     }
 
     public boolean isReplaceUsernameSpaces() {
-        return replaceUsernameSpaces;
+        return this.replaceUsernameSpaces;
     }
 
     public boolean isIpForward() {
-        return ipForward;
+        return this.ipForward;
     }
 
     public void setIpForward(boolean ipForward) {
@@ -123,22 +133,22 @@ public class ProxyConfig extends YamlConfig {
     }
 
     public boolean isForceDefault() {
-        return forceDefault;
+        return this.forceDefault;
     }
 
     public InetSocketAddress getBindAddress() {
-        return bindAddress;
+        return this.bindAddress;
     }
 
     public List<String> getPriorities() {
-        return priorities;
+        return this.priorities;
     }
 
     public Map<String, InetSocketAddress> getServers() {
-        return servers;
+        return this.servers;
     }
 
     public Map<String, String> getForcedHosts() {
-        return forcedHosts;
+        return this.forcedHosts;
     }
 }

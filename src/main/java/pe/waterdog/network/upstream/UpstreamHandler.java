@@ -21,8 +21,7 @@ import com.nukkitx.protocol.bedrock.packet.PacketViolationWarningPacket;
 import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import pe.waterdog.ProxyServer;
-import pe.waterdog.utils.types.TextContainer;
-import pe.waterdog.event.events.PlayerChatEvent;
+import pe.waterdog.event.defaults.PlayerChatEvent;
 import pe.waterdog.player.ProxiedPlayer;
 
 public class UpstreamHandler implements BedrockPacketHandler {

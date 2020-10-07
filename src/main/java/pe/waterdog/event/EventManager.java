@@ -16,49 +16,42 @@
 
 package pe.waterdog.event;
 
-import java.util.ArrayList;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public class EventManager {
 
-    private final HashMap<Class<? extends Event>, ArrayList<Consumer<Event>>> handlerMap = new HashMap<>();
+    private final ExecutorService threadedExecutor;
+    private final HashMap<Class<? extends Event>, EventHandler> handlerMap = new HashMap<>();
+
+    public EventManager(){
+        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
+        builder.setNameFormat("WaterdogEvents Executor");
+        this.threadedExecutor = Executors.newCachedThreadPool(builder.build());
+    }
 
     public <T extends Event> void subscribe(Class<? extends Event> event, Consumer<T> handler) {
-        ArrayList<Consumer<Event>> handlerList = this.handlerMap.get(event);
+        this.subscribe(event, handler, EventPriority.NORMAL);
+    }
+
+    public <T extends Event> void subscribe(Class<? extends Event> event, Consumer<T> handler, EventPriority priority) {
+        EventHandler eventHandler = this.handlerMap.computeIfAbsent(event, e -> new EventHandler(event, this));
+
         Consumer<Event> func = (Consumer<Event>) handler;
-        if (handlerList != null) {
-            // Event is registered already
-            if (!handlerList.contains(handler)) {
-                // Handler is not registered yet
-                handlerList.add(func);
-            }
-        } else {
-            handlerList = new ArrayList<>();
-            handlerList.add(func);
-            this.handlerMap.put(event, handlerList);
-        }
+        eventHandler.subscribe(func, priority);
     }
 
     public CompletableFuture<Event> callEvent(Event event) {
-        ArrayList<Consumer<Event>> handlerList = this.handlerMap.get(event.getClass());
-        if (event.getClass().isAnnotationPresent(AsyncEvent.class)) {
-            return CompletableFuture.supplyAsync(() -> {
-                if (handlerList != null){
-                    for (Consumer<Event> eventHandler : handlerList) {
-                        eventHandler.accept(event);
-                    }
-                }
-                return event;
-            });
-        }
+        EventHandler eventHandler = this.handlerMap.computeIfAbsent(event.getClass(), e -> new EventHandler(event.getClass(), this));
+        return eventHandler.handle(event);
+    }
 
-        if (handlerList != null) {
-            for (Consumer<Event> eventHandler : handlerList) {
-                eventHandler.accept(event);
-            }
-        }
-        return null;
+    public ExecutorService getThreadedExecutor() {
+        return this.threadedExecutor;
     }
 }

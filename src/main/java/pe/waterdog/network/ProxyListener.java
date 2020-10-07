@@ -20,6 +20,7 @@ import com.nukkitx.protocol.bedrock.BedrockPong;
 import com.nukkitx.protocol.bedrock.BedrockServerEventHandler;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import pe.waterdog.ProxyServer;
+import pe.waterdog.event.defaults.ProxyQueryEvent;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.upstream.HandshakeUpstreamHandler;
 import pe.waterdog.utils.ProxyConfig;
@@ -45,21 +46,29 @@ public class ProxyListener implements BedrockServerEventHandler {
     @Override
     public BedrockPong onQuery(InetSocketAddress address) {
         ProxyConfig config = this.proxy.getConfiguration();
-        //TODO: query event here
+
+        ProxyQueryEvent event = new ProxyQueryEvent(
+                config.getMotd(),
+                "SMP",
+                "MCPE",
+                "",
+                this.proxy.getPlayers().size(),
+                config.getMaxPlayerCount()
+        );
+        this.proxy.getEventManager().callEvent(event);
 
         BedrockPong pong = PONG_THREAD_LOCAL.get();
-        pong.setEdition("MCPE");
-        pong.setMotd(config.getMotd());
+        pong.setEdition(event.getEdition());
+        pong.setMotd(event.getMotd());
         pong.setSubMotd("");
-        pong.setGameType("SMP");
-        pong.setMaximumPlayerCount(config.getMaxPlayerCount());
-        pong.setPlayerCount(0);
+        pong.setGameType(event.getGameType());
+        pong.setMaximumPlayerCount(event.getMaximumPlayerCount());
+        pong.setPlayerCount(event.getPlayerCount());
         pong.setIpv4Port(config.getBindAddress().getPort());
         pong.setIpv6Port(config.getBindAddress().getPort());
         pong.setProtocolVersion(ProtocolConstants.Protocol.MINECRAFT_PE_1_13.getProtocol());
-        pong.setVersion("");
+        pong.setVersion(event.getVersion());
         pong.setNintendoLimited(false);
-
         return pong;
     }
 

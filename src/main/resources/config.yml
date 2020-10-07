@@ -15,6 +15,7 @@ listener:
 
 online_mode: true
 
+use_login_extras: true
 ip_forward: false
 replace_username_spaces: true
 network_compression_threshold: 256

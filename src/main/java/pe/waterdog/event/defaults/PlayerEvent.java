@@ -14,28 +14,17 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event.events;
+package pe.waterdog.event.defaults;
 
-import pe.waterdog.event.CancellableEvent;
+import pe.waterdog.event.Event;
 import pe.waterdog.player.ProxiedPlayer;
 
-public class PlayerChatEvent extends CancellableEvent {
+public abstract class PlayerEvent extends Event {
 
-    private final ProxiedPlayer player;
+    protected ProxiedPlayer player;
 
-    private String message;
-
-    public PlayerChatEvent(ProxiedPlayer player, String message) {
+    public PlayerEvent(ProxiedPlayer player){
         this.player = player;
-        this.message = message;
-    }
-
-    public String getMessage() {
-        return this.message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public ProxiedPlayer getPlayer() {

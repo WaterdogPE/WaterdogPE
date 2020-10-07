@@ -16,6 +16,30 @@
 
 package pe.waterdog.event;
 
+import pe.waterdog.utils.exceptions.EventException;
+
 public abstract class Event {
 
+    private boolean cancelled = false;
+
+    public boolean isCancelled() {
+        if (!(this instanceof CancellableEvent)) {
+            throw new EventException("Event is not Cancellable");
+        }
+        return this.cancelled;
+    }
+
+    public void setCancelled(boolean cancelled) {
+        if (!(this instanceof CancellableEvent)) {
+            throw new EventException("Event is not Cancellable");
+        }
+        this.cancelled = cancelled;
+    }
+
+    public void setCancelled() {
+        if (!(this instanceof CancellableEvent)) {
+            throw new EventException("Event is not Cancellable");
+        }
+        this.cancelled = true;
+    }
 }

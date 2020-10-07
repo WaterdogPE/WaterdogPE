@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event.events;
+package pe.waterdog.utils.exceptions;
 
-import pe.waterdog.event.AsyncEvent;
-import pe.waterdog.event.Event;
-import pe.waterdog.player.ProxiedPlayer;
+public class EventException extends RuntimeException{
 
-@AsyncEvent
-public class DisconnectEvent extends Event {
-
-    private final ProxiedPlayer player;
-
-    public DisconnectEvent(ProxiedPlayer player) {
-        this.player = player;
+    public EventException(){
+        super();
     }
 
-    public ProxiedPlayer getPlayer() {
-        return this.player;
+    public EventException(String message){
+        super(message);
     }
 }

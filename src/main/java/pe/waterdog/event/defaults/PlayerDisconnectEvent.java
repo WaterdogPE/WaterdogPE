@@ -14,31 +14,16 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event.events;
+package pe.waterdog.event.defaults;
 
 import pe.waterdog.event.AsyncEvent;
-import pe.waterdog.event.CancellableEvent;
+import pe.waterdog.event.Event;
 import pe.waterdog.player.ProxiedPlayer;
 
 @AsyncEvent
-public class PlayerLoginEvent extends CancellableEvent {
+public class PlayerDisconnectEvent extends PlayerEvent {
 
-    private final ProxiedPlayer player;
-    private String cancelReason = "Login cancelled";
-
-    public PlayerLoginEvent(ProxiedPlayer player) {
-        this.player = player;
-    }
-
-    public ProxiedPlayer getPlayer() {
-        return this.player;
-    }
-
-    public String getCancelReason() {
-        return this.cancelReason;
-    }
-
-    public void setCancelReason(String cancelReason) {
-        this.cancelReason = cancelReason;
+    public PlayerDisconnectEvent(ProxiedPlayer player) {
+        super(player);
     }
 }

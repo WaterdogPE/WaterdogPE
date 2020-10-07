@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event.events;
+package pe.waterdog.event.defaults;
 
 import pe.waterdog.event.AsyncEvent;
 import pe.waterdog.event.Event;
@@ -22,18 +22,16 @@ import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.player.ProxiedPlayer;
 
 @AsyncEvent
-public class TransferCompleteEvent extends Event {
+public class TransferCompleteEvent extends PlayerEvent {
 
-    private final ProxiedPlayer player;
     private ServerConnection oldServer;
     private ServerConnection newServer;
 
     public TransferCompleteEvent(ServerConnection oldServer, ServerConnection newServer, ProxiedPlayer player) {
+        super(player);
         this.oldServer = oldServer;
         this.newServer = newServer;
-        this.player = player;
     }
-
 
     public ServerConnection getNewServer() {
         return this.newServer;
@@ -41,10 +39,6 @@ public class TransferCompleteEvent extends Event {
 
     public ServerConnection getOldServer() {
         return this.oldServer;
-    }
-
-    public ProxiedPlayer getPlayer() {
-        return this.player;
     }
 }
 

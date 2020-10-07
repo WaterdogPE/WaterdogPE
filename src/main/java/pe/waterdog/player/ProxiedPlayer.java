@@ -30,9 +30,9 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
 import pe.waterdog.ProxyServer;
-import pe.waterdog.event.events.DisconnectEvent;
-import pe.waterdog.event.events.PlayerLoginEvent;
-import pe.waterdog.event.events.PreTransferEvent;
+import pe.waterdog.event.defaults.PlayerDisconnectEvent;
+import pe.waterdog.event.defaults.PlayerLoginEvent;
+import pe.waterdog.event.defaults.PreTransferEvent;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
@@ -166,7 +166,7 @@ public class ProxiedPlayer {
     }
 
     public void disconnect(String reason, boolean force) {
-        DisconnectEvent event = new DisconnectEvent(this);
+        PlayerDisconnectEvent event = new PlayerDisconnectEvent(this);
         ProxyServer.getInstance().getEventManager().callEvent(event);
 
 

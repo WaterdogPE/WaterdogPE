@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event.events;
+package pe.waterdog.event.defaults;
 
 import pe.waterdog.event.CancellableEvent;
+import pe.waterdog.event.Event;
 import pe.waterdog.network.session.LoginData;
 
-public class PlayerPreLoginEvent extends CancellableEvent {
+public class PlayerPreLoginEvent extends Event implements CancellableEvent {
 
     private LoginData loginData;
     private String cancelReason = "Login was cancelled";

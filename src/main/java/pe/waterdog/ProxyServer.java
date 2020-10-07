@@ -138,6 +138,8 @@ public class ProxyServer {
                 this.nextTick += 50;
             }
         }
+
+        this.bedrockServer.close();
     }
 
     private void onTick(int currentTick){
