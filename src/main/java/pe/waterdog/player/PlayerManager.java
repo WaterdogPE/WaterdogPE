@@ -21,6 +21,8 @@ import com.nukkitx.protocol.bedrock.BedrockClient;
 import pe.waterdog.ProxyServer;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -85,5 +87,13 @@ public class PlayerManager {
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
         return ImmutableMap.copyOf(this.players);
+    }
+
+    public List<String> playerNameList(){
+        List<String> playerNames = new ArrayList<>();
+        for (ProxiedPlayer player : this.players.values()){
+            playerNames.add(player.getName());
+        }
+        return playerNames;
     }
 }

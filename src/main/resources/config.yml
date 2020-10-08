@@ -14,7 +14,7 @@ listener:
     pvp.waterdog.io: pvp
 
 online_mode: true
-
+enable_query: true
 use_login_extras: true
 ip_forward: false
 replace_username_spaces: true

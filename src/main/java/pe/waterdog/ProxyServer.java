@@ -25,8 +25,8 @@ import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.plugin.Plugin;
 import pe.waterdog.plugin.PluginManager;
+import pe.waterdog.query.QueryHandler;
 import pe.waterdog.scheduler.WaterdogScheduler;
 import pe.waterdog.utils.ConfigurationManager;
 import pe.waterdog.utils.LangConfig;
@@ -51,6 +51,7 @@ public class ProxyServer {
     private CommandReader console;
 
     private BedrockServer bedrockServer;
+    private QueryHandler queryHandler;
 
     private ConfigurationManager configurationManager;
     private WaterdogScheduler scheduler;
@@ -101,6 +102,10 @@ public class ProxyServer {
     private void boot() {
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
         this.logger.info("Binding to " + bindAddress);
+
+        if (this.getConfiguration().isEnabledQuery()){
+            this.queryHandler = new QueryHandler(this, bindAddress);
+        }
 
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
         bedrockServer.setHandler(new ProxyListener(this));
@@ -223,6 +228,10 @@ public class ProxyServer {
     }
 
     public EventManager getEventManager() {
-        return eventManager;
+        return this.eventManager;
+    }
+
+    public QueryHandler getQueryHandler() {
+        return this.queryHandler;
     }
 }

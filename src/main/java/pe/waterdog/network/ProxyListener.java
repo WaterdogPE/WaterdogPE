@@ -19,13 +19,18 @@ package pe.waterdog.network;
 import com.nukkitx.protocol.bedrock.BedrockPong;
 import com.nukkitx.protocol.bedrock.BedrockServerEventHandler;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.socket.DatagramPacket;
 import pe.waterdog.ProxyServer;
-import pe.waterdog.event.defaults.ProxyQueryEvent;
+import pe.waterdog.event.defaults.ProxyPingEvent;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.upstream.HandshakeUpstreamHandler;
+import pe.waterdog.query.QueryHandler;
 import pe.waterdog.utils.ProxyConfig;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 
 public class ProxyListener implements BedrockServerEventHandler {
 
@@ -37,7 +42,6 @@ public class ProxyListener implements BedrockServerEventHandler {
         this.proxy = proxy;
     }
 
-
     @Override
     public boolean onConnectionRequest(InetSocketAddress address) {
         return true;
@@ -47,13 +51,14 @@ public class ProxyListener implements BedrockServerEventHandler {
     public BedrockPong onQuery(InetSocketAddress address) {
         ProxyConfig config = this.proxy.getConfiguration();
 
-        ProxyQueryEvent event = new ProxyQueryEvent(
+        ProxyPingEvent event = new ProxyPingEvent(
                 config.getMotd(),
                 "SMP",
                 "MCPE",
                 "",
-                this.proxy.getPlayers().size(),
-                config.getMaxPlayerCount()
+                this.proxy.getPlayerManager().playerNameList(),
+                config.getMaxPlayerCount(),
+                address
         );
         this.proxy.getEventManager().callEvent(event);
 
@@ -78,4 +83,23 @@ public class ProxyListener implements BedrockServerEventHandler {
         session.setPacketHandler(new HandshakeUpstreamHandler(this.proxy, session));
     }
 
+    @Override
+    public void onUnhandledDatagram(ChannelHandlerContext ctx, DatagramPacket packet) {
+        ByteBuf buf = packet.content();
+        if (!buf.isReadable(3)){
+            return;
+        }
+
+        try {
+            byte[] prefix = new byte[2];
+            buf.readBytes(prefix);
+
+            QueryHandler queryHandler = this.proxy.getQueryHandler();
+            if (queryHandler != null && Arrays.equals(prefix, QueryHandler.QUERY_SIGNATURE)) {
+                queryHandler.onQuery(packet.sender(), buf, ctx);
+            }
+        }catch (Exception e){
+            this.proxy.getLogger().error("Can not handle packet!", e);
+        }
+    }
 }
