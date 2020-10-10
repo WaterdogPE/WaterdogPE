@@ -17,9 +17,7 @@
 package pe.waterdog.network.upstream;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.PacketViolationWarningPacket;
-import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
-import com.nukkitx.protocol.bedrock.packet.TextPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.PlayerChatEvent;
 import pe.waterdog.player.ProxiedPlayer;
@@ -50,5 +48,11 @@ public class UpstreamHandler implements BedrockPacketHandler {
         ProxyServer.getInstance().getEventManager().callEvent(event);
         packet.setMessage(event.getMessage());
         return event.isCancelled();
+    }
+
+    @Override
+    public boolean handle(CommandRequestPacket packet) {
+        String message = packet.getCommand();
+        return this.player.getProxy().handlePlayerCommand(this.player, message);
     }
 }

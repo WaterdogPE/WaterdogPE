@@ -80,12 +80,15 @@ public class SimpleCommandMap implements CommandMap {
             this.execute(aliasCommand, sender, commandName, args);
             return true;
         }
-        sender.sendMessage(new TranslationContainer("waterdog.command.unknown"));
+
+        if (!sender.isPlayer()){ //Player commands may be handled by servers
+            sender.sendMessage(new TranslationContainer("waterdog.command.unknown"));
+        }
         return false;
     }
 
     private void execute(Command command, CommandSender sender, String alias, String[] args){
-        boolean permission = sender.hasPermission(command.getPermission());
+        boolean permission = sender.hasPermission(new TranslationContainer(command.getPermission()).getTranslated());
         if (!permission){
             sender.sendMessage(new TranslationContainer(command.getPermissionMessage()));
             return;
@@ -94,7 +97,7 @@ public class SimpleCommandMap implements CommandMap {
         try {
             boolean success = command.onExecute(sender, alias, args);
             if (!success){
-                sender.sendMessage(new TranslationContainer(command.getUsageMessage()));
+                sender.sendMessage("§cCommand usage: "+new TranslationContainer(command.getUsageMessage()));
             }
         }catch (Exception e){
             this.proxy.getLogger().error("Error appeared while processing command!", e);

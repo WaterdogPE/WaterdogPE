@@ -51,7 +51,7 @@ public class TextContainer implements Cloneable{
 
     @Override
     public String toString() {
-        return this.clean();
+        return this.message;
     }
 
     @Override

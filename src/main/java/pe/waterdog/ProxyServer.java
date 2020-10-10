@@ -22,6 +22,7 @@ import lombok.SneakyThrows;
 import pe.waterdog.command.*;
 import pe.waterdog.console.TerminalConsole;
 import pe.waterdog.event.EventManager;
+import pe.waterdog.event.defaults.DispatchCommandEvent;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
@@ -168,11 +169,22 @@ public class ProxyServer {
         return this.getLanguageConfig().translateContainer(textContainer);
     }
 
-    public void dispatchCommand(CommandSender sender, String message){
-        //TODO: commandDispatchEvent
+    public boolean handlePlayerCommand(ProxiedPlayer player, String message){
+        if (!this.commandMap.handleMessage(player, message)){
+            return false;
+        }
+        return this.dispatchCommand(player, message.substring(this.commandMap.getCommandPrefix().length()));
+    }
 
+    public boolean dispatchCommand(CommandSender sender, String message){
+        DispatchCommandEvent event = new DispatchCommandEvent(sender, message);
+        this.eventManager.callEvent(event);
+
+        if (event.isCancelled()){
+            return false;
+        }
         String[] args = message.split(" ");
-        this.commandMap.handleCommand(sender, args[0], Arrays.copyOfRange(args, 1, args.length));
+        return this.commandMap.handleCommand(sender, args[0], Arrays.copyOfRange(args, 1, args.length));
     }
 
     public boolean isRunning(){
@@ -213,6 +225,10 @@ public class ProxyServer {
 
     public ProxiedPlayer getPlayer(UUID uuid) {
         return this.playerManager.getPlayer(uuid);
+    }
+
+    public ProxiedPlayer getPlayer(String playerName) {
+        return this.playerManager.getPlayer(playerName);
     }
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
