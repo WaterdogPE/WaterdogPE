@@ -19,8 +19,10 @@ package pe.waterdog.player;
 import com.google.common.collect.ImmutableMap;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import pe.waterdog.ProxyServer;
+import pe.waterdog.utils.types.Permission;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,12 +33,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class PlayerManager {
 
-    private final ProxyServer server;
+    private final ProxyServer proxy;
 
     private final ConcurrentMap<UUID, ProxiedPlayer> players = new ConcurrentHashMap<>();
 
-    public PlayerManager(ProxyServer server) {
-        this.server = server;
+    public PlayerManager(ProxyServer proxy) {
+        this.proxy = proxy;
     }
 
     public BedrockClient bindClient() {
@@ -51,14 +53,21 @@ public class PlayerManager {
         if (player == null) return false;
 
         ProxiedPlayer previousSession = this.players.put(player.getUniqueId(), player);
-        boolean success = true;
-
         if (previousSession != null && !previousSession.getUpstream().isClosed()) {
-            success = false;
-
             previousSession.disconnect("disconnectionScreen.loggedinOtherLocation");
+            return false;
         }
-        return success;
+        return true;
+    }
+
+    public void subscribePermissions(ProxiedPlayer player){
+        List<String> permissions = this.proxy.getConfiguration().getPlayerPermissions().get(player.getName());
+        if (permissions == null){
+            return;
+        }
+        for (String perm : permissions){
+            player.addPermission(new Permission(perm, true));
+        }
     }
 
     public void removePlayer(ProxiedPlayer player) {

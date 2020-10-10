@@ -27,13 +27,13 @@ public interface CommandMap {
     boolean isRegistered(String name);
 
     /**
-     * Returns true if command can be handled by this command map.
+     * @return if command can be handled by this command map
      */
     boolean handleMessage(CommandSender sender, String message);
 
     /**
-     * Returns true if command was handled.
      * WARNING: Will return true even if command was handled but thrown exception!
+     * @return true if command was handled.
      */
     boolean handleCommand(CommandSender sender, String command, String[] args);
 
