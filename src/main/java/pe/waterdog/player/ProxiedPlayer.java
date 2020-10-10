@@ -33,7 +33,7 @@ import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.PlayerDisconnectEvent;
 import pe.waterdog.event.defaults.PlayerLoginEvent;
 import pe.waterdog.event.defaults.PreTransferEvent;
-import pe.waterdog.logger.Logger;
+import pe.waterdog.logger.MainLogger;
 import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
@@ -288,7 +288,7 @@ public class ProxiedPlayer {
         return this.proxy;
     }
 
-    public Logger getLogger() {
+    public MainLogger getLogger() {
         return this.proxy.getLogger();
     }
 

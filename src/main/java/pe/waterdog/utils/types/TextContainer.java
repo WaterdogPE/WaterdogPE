@@ -17,7 +17,7 @@
 package pe.waterdog.utils.types;
 
 import pe.waterdog.logger.Color;
-import pe.waterdog.logger.Logger;
+import pe.waterdog.logger.MainLogger;
 
 public class TextContainer implements Cloneable{
 
@@ -59,7 +59,7 @@ public class TextContainer implements Cloneable{
         try {
             return (TextContainer) super.clone();
         } catch (CloneNotSupportedException e) {
-            Logger.getLogger().logException(e);
+            MainLogger.getLogger().logException(e);
         }
         return null;
     }

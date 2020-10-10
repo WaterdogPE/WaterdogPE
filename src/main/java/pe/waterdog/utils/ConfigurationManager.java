@@ -17,14 +17,9 @@
 package pe.waterdog.utils;
 
 import pe.waterdog.ProxyServer;
-import pe.waterdog.logger.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class ConfigurationManager {
 
