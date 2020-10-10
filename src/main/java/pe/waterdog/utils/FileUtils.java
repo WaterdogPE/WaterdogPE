@@ -16,8 +16,6 @@
 
 package pe.waterdog.utils;
 
-import pe.waterdog.logger.Logger;
-
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
