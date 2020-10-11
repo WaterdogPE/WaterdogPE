@@ -16,11 +16,9 @@
 
 package pe.waterdog.query;
 
-import com.nukkitx.network.query.QueryEventListener;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.socket.DatagramPacket;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import pe.waterdog.ProxyServer;
@@ -31,12 +29,17 @@ import pe.waterdog.utils.types.TranslationContainer;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class QueryHandler {
 
-    private static final String GAME_ID = "MINECRAFTPE";
     public static final byte[] QUERY_SIGNATURE = new byte[]{(byte) 0xFE, (byte) 0xFD};
+    public static final byte[] LONG_RESPONSE_PADDING_TOP = new byte[]{115, 112, 108, 105, 116, 110, 117, 109, 0, -128, 0};
+    public static final byte[] LONG_RESPONSE_PADDING_BOTTOM = new byte[]{1, 112, 108, 97, 121, 101, 114, 95, 0, 0};
+
+    private static final String GAME_ID = "MINECRAFTPE";
     public static final int HANDSHAKE = 0x09;
     public static final short STATISTICS = 0x00;
 
@@ -66,32 +69,21 @@ public class QueryHandler {
         short packetId = packet.readUnsignedByte();
         int sessionId = packet.readInt();
 
-        System.out.println("SESSION: "+sessionId+" PACKET: "+packetId);
-
         if (packetId == HANDSHAKE){
-            //ByteBuf reply = ByteBufAllocator.DEFAULT.ioBuffer(10);
-            ByteBuf reply = ctx.alloc().buffer(); //TEST
-            DatagramPacket response = new DatagramPacket(reply, address);
-
+            ByteBuf reply = ByteBufAllocator.DEFAULT.ioBuffer(10);
             reply.writeByte(HANDSHAKE);
             reply.writeInt(sessionId);
 
             int token = ThreadLocalRandom.current().nextInt();
             this.querySessions.put(address.getAddress(), new QuerySession(token, System.currentTimeMillis()));
             this.writeInt(reply, token);
-
-            System.out.println("TOKEN:"+token);
-
-            //this.proxy.getBedrockServer().getRakNet().send(address, reply);
-            ctx.writeAndFlush(response);
+            this.proxy.getBedrockServer().getRakNet().send(address, reply);
             return;
         }
 
         if (packetId == STATISTICS){
-            int token = packet.readInt();
-            System.out.println("TOKEN:"+token);
             QuerySession session = this.querySessions.remove(address.getAddress());
-
+            int token = packet.readInt();
             if (session == null || session.token != token){
                 return;
             }
@@ -100,17 +92,13 @@ public class QueryHandler {
             reply.writeByte(STATISTICS);
             reply.writeInt(sessionId);
 
-            QueryEventListener.Data queryData = this.buildData(address);
-            if (packet.readableBytes() == 8) {
-                reply.writeBytes(queryData.getLongStats());
-            } else {
-                reply.writeBytes(queryData.getShortStats());
-            }
+            ByteBuf queryData = this.buildData(address, packet.readableBytes() == 8);
+            reply.writeBytes(queryData);
             this.proxy.getBedrockServer().getRakNet().send(address, reply);
         }
     }
 
-    private QueryEventListener.Data buildData(InetSocketAddress address){
+    private ByteBuf buildData(InetSocketAddress address, boolean simple){
         ProxyConfig config = this.proxy.getConfiguration();
         ProxyQueryEvent event = new ProxyQueryEvent(
                 config.getMotd(),
@@ -124,23 +112,45 @@ public class QueryHandler {
         );
         this.proxy.getEventManager().callEvent(event);
 
-        return new QueryEventListener.Data(
-                event.getMotd(),
-                event.getGameType(),
-                event.getMap(),
-                event.getPlayerCount(),
-                event.getMaximumPlayerCount(),
-                this.bindAddress.getPort(),
-                this.bindAddress.getHostName(),
-                GAME_ID,
-                event.getVersion(),
-                VersionInfo.BASE_VERSION,
-                event.hasWhitelist(),
-                new String[0], //Plugins
-                event.getPlayers().toArray(new String[0]),
-                null,
-                null
-        );
+        ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
+        if (simple){
+            this.writeString(buf, event.getMotd());
+            this.writeString(buf, event.getGameType());
+            this.writeString(buf, event.getMap());
+            this.writeString(buf, Integer.toString(event.getPlayerCount()));
+            this.writeString(buf, Integer.toString(event.getMaximumPlayerCount()));
+            buf.writeShortLE(this.bindAddress.getPort());
+            this.writeString(buf, this.bindAddress.getHostName());
+            return buf;
+        }
+
+        Map<String, String> map = new HashMap();
+        map.put("hostname", event.getMotd());
+        map.put("gametype", event.getGameType());
+        map.put("map", event.getMap());
+        map.put("numplayers", Integer.toString(event.getPlayerCount()));
+        map.put("maxplayers", Integer.toString(event.getMaximumPlayerCount()));
+        map.put("hostport", Integer.toString(this.bindAddress.getPort()));
+        map.put("hostip", this.bindAddress.getHostName());
+        map.put("game_id", GAME_ID);
+        map.put("version", event.getVersion());
+        map.put("plugins", VersionInfo.BASE_VERSION); // Do not list plugins
+        map.put("whitelist", event.hasWhitelist() ? "on" : "off");
+
+        buf.writeBytes(LONG_RESPONSE_PADDING_TOP);
+        map.forEach((key, value) -> {
+            this.writeString(buf, value);
+        });
+        buf.writeByte(0);
+        buf.writeBytes(LONG_RESPONSE_PADDING_BOTTOM);
+
+        if (event.getPlayers().size() >= 1){
+            for (String player : event.getPlayers()){
+                this.writeString(buf, player);
+            }
+        }
+        buf.writeByte(0);
+        return buf;
     }
 
     private class QuerySession{

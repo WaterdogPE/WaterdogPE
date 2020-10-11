@@ -156,12 +156,6 @@
             <version>${raklib.version}</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>com.nukkitx.network</groupId>
-            <artifactId>query</artifactId>
-            <version>${raklib.version}</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
 
