@@ -56,6 +56,7 @@ import pe.waterdog.utils.types.TranslationContainer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class ProxiedPlayer implements CommandSender {
 
@@ -130,8 +131,8 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        BedrockClient client = this.proxy.getPlayerManager().bindClient();
-        client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
+        CompletableFuture<BedrockClient> future = this.proxy.getPlayerManager().bindClient();
+        future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
                 this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
                 this.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), throwable.getLocalizedMessage()));
@@ -158,7 +159,7 @@ public class ProxiedPlayer implements CommandSender {
 
             SessionInjections.injectNewDownstream(downstream, this, targetServer);
             this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
-        });
+        }));
     }
 
     public void disconnect() {
