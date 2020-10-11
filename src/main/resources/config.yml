@@ -1,21 +1,43 @@
+# WaterdogPE Config
+#
+# Map of servers that will be indexed after proxy starts
+# Server address must be in format address:port
 servers:
   lobby1:
     address: 192.168.0.50:19133
   lobby2:
     address: 192.168.0.50:19134
+
+# Configuration of listener:
+# Priorities are used to define server joining priority
+# If player will be unable to connect to server, server under will be used
+# Host address must be in format address:port
+# Using forced hosts players can connect directly to server
 listener:
   motd: "§bWaterdog§3PE"
   priorities:
     - lobby1
   host: 0.0.0.0:19132
   max_players: 20
-  force_default_server: false
   forced_hosts:
     pvp.waterdog.io: pvp
 
+# Simple permission map to assign player permissions
+# Player permissions should be list of strings player_name: ["permission", "permission1"]
+permissions:
+  alemiz003:
+    - "waterdog.player.transfer"
+# List of default permissions applied to player
+permissions_default:
+  - "waterdog.player.info"
+
+# Enable online mode to prevent unauthorized players to join
 online_mode: true
-enable_query: true
+# Some server software may have problem with extra attributes in packets. You can disable it here
 use_login_extras: true
+# Disable if you do not want ho handle query requests
+enable_query: true
+# Forward original address in client data under 'Waterdog_IP' attribute
 ip_forward: false
+# Replace spaces in player's username
 replace_username_spaces: true
-network_compression_threshold: 256

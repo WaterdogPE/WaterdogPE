@@ -17,7 +17,7 @@
 package pe.waterdog;
 
 
-import pe.waterdog.logger.Logger;
+import pe.waterdog.logger.MainLogger;
 
 public class WaterdogPE {
 
@@ -27,12 +27,9 @@ public class WaterdogPE {
     public static void main(String[] args) {
         Thread.currentThread().setName("WaterdogPE-main");
         System.out.println("Starting WaterdogPE....");
+        System.setProperty("log4j.skipJansi", "false");
 
-        Logger logger = new Logger("latest");
-        logger.setPrefix("Server");
-        logger.setDebug(VersionInfo.IS_DEVELOPMENT);
-
-        /* Nice Start Message*/
+        MainLogger logger = MainLogger.getLogger();
         logger.info("§bStarting WaterDogPE proxy software!");
         logger.info("§3Software Version: " + VersionInfo.BASE_VERSION);
         logger.info("§3Build Version: " + VersionInfo.BUILD_VERSION);
@@ -48,7 +45,5 @@ public class WaterdogPE {
         } catch (Exception e) {
             logger.logException(e);
         }
-
-        logger.shutdown();
     }
 }

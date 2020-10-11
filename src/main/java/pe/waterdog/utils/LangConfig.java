@@ -18,7 +18,7 @@ package pe.waterdog.utils;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import pe.waterdog.logger.Logger;
+import pe.waterdog.logger.MainLogger;
 import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.utils.types.TranslationContainer;
 
@@ -60,7 +60,7 @@ public class LangConfig {
             }
 
         } catch (IOException e) {
-            Logger.getLogger().error("Unable to load Config " + this.file.toString());
+            MainLogger.getLogger().error("Unable to load Config " + this.file.toString());
         }
     }
 

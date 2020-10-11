@@ -16,7 +16,7 @@
 
 package pe.waterdog.scheduler;
 
-import pe.waterdog.logger.Logger;
+import pe.waterdog.logger.MainLogger;
 
 public class TaskHandler {
 
@@ -44,7 +44,7 @@ public class TaskHandler {
         try {
             this.task.run();
         }catch (Exception e){
-            Logger.getLogger().error("Exception while running task!", e);
+            MainLogger.getLogger().error("Exception while running task!", e);
         }
     }
 

@@ -16,36 +16,34 @@
 
 package pe.waterdog.utils.types;
 
-import pe.waterdog.ProxyServer;
+import lombok.ToString;
 
-public class TranslationContainer extends TextContainer{
+import java.util.concurrent.atomic.AtomicBoolean;
 
-    private String[] params;
+@ToString
+public class Permission {
 
-    public TranslationContainer(String message) {
-        super(message);
+    private final String name;
+    private final AtomicBoolean value = new AtomicBoolean(false);
+
+    public Permission(String name, boolean value){
+        this.name = name.toLowerCase();
+        this.value.set(value);
     }
 
-    public TranslationContainer(String message, String... args) {
-        super(message, args);
-        this.params = args;
+    public String getName() {
+        return this.name;
     }
 
-    @Override
-    protected String translate(String message, String... args) {
-        return message;
+    public void setValue(boolean value) {
+        this.value.set(value);
     }
 
-    public String getTranslated(){
-        return ProxyServer.getInstance().translate(this);
+    public boolean getValue() {
+        return this.value.get();
     }
 
-    public String[] getParams() {
-        return this.params;
-    }
-
-    @Override
-    public String toString() {
-        return this.getTranslated();
+    public AtomicBoolean getAtomicValue() {
+        return this.value;
     }
 }

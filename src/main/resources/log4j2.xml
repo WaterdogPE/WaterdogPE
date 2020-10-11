@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN">
+<Configuration status="WARN" packages="net.minecrell.terminalconsole">
     <Appenders>
-        <Console name="Console">
-            <PatternLayout pattern="[%d{HH:mm:ss} %-5level]: %msg%n"/>
-        </Console>
+        <TerminalConsole name="Console">
+            <PatternLayout pattern="%cyan{%d{HH:mm:ss}} [%style{%highlight{%-5level}{STYLE=Logback}}] %minecraftFormatting{%msg}%n"/>
+        </TerminalConsole>
         <RollingRandomAccessFile name="File" fileName="logs/server.log" filePattern="logs/%d{yyyy-MM-dd}-%i.log.gz">
             <PatternLayout pattern="%d{yyy-MM-dd HH:mm:ss.SSS} [%t] %-5level - %msg%n"/>
             <Policies>
@@ -13,7 +13,7 @@
         </RollingRandomAccessFile>
     </Appenders>
     <Loggers>
-        <Root level="WARN">
+        <Root level="INFO">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="File"/>
         </Root>
