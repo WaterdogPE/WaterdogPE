@@ -25,6 +25,7 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -41,12 +42,10 @@ public class PlayerManager {
         this.proxy = proxy;
     }
 
-    public BedrockClient bindClient() {
+    public CompletableFuture<BedrockClient> bindClient() {
         InetSocketAddress address = new InetSocketAddress("0.0.0.0", ThreadLocalRandom.current().nextInt(20000, 60000));
         BedrockClient client = new BedrockClient(address);
-
-        client.bind().join();
-        return client;
+        return client.bind().thenApply(i -> client);
     }
 
     public boolean registerPlayer(ProxiedPlayer player) {
