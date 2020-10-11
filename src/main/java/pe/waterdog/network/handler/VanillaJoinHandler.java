@@ -2,6 +2,7 @@ package pe.waterdog.network.handler;
 
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.ServerInfo;
+import pe.waterdog.player.ProxiedPlayer;
 
 public class VanillaJoinHandler implements IJoinHandler {
 
@@ -12,7 +13,7 @@ public class VanillaJoinHandler implements IJoinHandler {
     }
 
     @Override
-    public ServerInfo determineServer() {
+    public ServerInfo determineServer(ProxiedPlayer player) {
         return this.server.getServer(this.server.getConfiguration().getPriorities().get(0));
     }
 }

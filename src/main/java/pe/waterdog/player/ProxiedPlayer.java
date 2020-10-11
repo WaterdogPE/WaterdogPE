@@ -99,7 +99,7 @@ public class ProxiedPlayer {
             this.upstream.setPacketHandler(new UpstreamHandler(this));
             this.upstream.addDisconnectHandler((reason) -> this.disconnect(null, true));
 
-            ServerInfo serverInfo = this.getProxy().getJoinHandler().determineServer();
+            ServerInfo serverInfo = this.getProxy().getJoinHandler().determineServer(this);
             if (serverInfo != null) {
                 this.connect(serverInfo);
             } else {
