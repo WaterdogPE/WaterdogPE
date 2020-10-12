@@ -23,7 +23,6 @@ import pe.waterdog.command.*;
 import pe.waterdog.console.TerminalConsole;
 import pe.waterdog.event.EventManager;
 import pe.waterdog.event.defaults.DispatchCommandEvent;
-import pe.waterdog.event.EventManager;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
@@ -34,6 +33,7 @@ import pe.waterdog.utils.types.VanillaReconnectHandler;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.plugin.PluginManager;
+import pe.waterdog.query.QueryHandler;
 import pe.waterdog.scheduler.WaterdogScheduler;
 import pe.waterdog.utils.ConfigurationManager;
 import pe.waterdog.utils.LangConfig;
@@ -44,6 +44,7 @@ import java.io.File;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -60,6 +61,7 @@ public class ProxyServer {
     private final TerminalConsole console;
 
     private BedrockServer bedrockServer;
+    private QueryHandler queryHandler;
 
     private final ConfigurationManager configurationManager;
     private final WaterdogScheduler scheduler;
@@ -71,6 +73,9 @@ public class ProxyServer {
     private IJoinHandler joinHandler;
 
     private final Map<String, ServerInfo> serverInfoMap;
+
+    private final ConsoleCommandSender commandSender;
+    private CommandMap commandMap;
 
     private final ConsoleCommandSender commandSender;
     private CommandMap commandMap;
@@ -119,6 +124,10 @@ public class ProxyServer {
 
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
         this.logger.info("Binding to " + bindAddress);
+
+        if (this.getConfiguration().isEnabledQuery()){
+            this.queryHandler = new QueryHandler(this, bindAddress);
+        }
 
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
         bedrockServer.setHandler(new ProxyListener(this));
@@ -290,6 +299,10 @@ public class ProxyServer {
 
     public EventManager getEventManager() {
         return this.eventManager;
+    }
+
+    public QueryHandler getQueryHandler() {
+        return this.queryHandler;
     }
 
     public CommandMap getCommandMap() {

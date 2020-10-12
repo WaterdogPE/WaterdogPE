@@ -35,6 +35,8 @@ permissions_default:
 online_mode: true
 # Some server software may have problem with extra attributes in packets. You can disable it here
 use_login_extras: true
+# Disable if you do not want ho handle query requests
+enable_query: true
 # Forward original address in client data under 'Waterdog_IP' attribute
 ip_forward: false
 # Replace spaces in player's username
