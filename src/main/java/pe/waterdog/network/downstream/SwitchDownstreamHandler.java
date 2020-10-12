@@ -34,6 +34,7 @@ import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -76,7 +77,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
         this.getDownstream().sendPacketImmediately(clientToServerHandshake);
-        return true;
+        throw CancelSignalException.CANCEL;
     }
 
     @Override
@@ -84,7 +85,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.HAVE_ALL_PACKS);
         this.getDownstream().sendPacketImmediately(response);
-        return true;
+        throw CancelSignalException.CANCEL;
     }
 
     @Override
@@ -92,7 +93,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.COMPLETED);
         this.getDownstream().sendPacketImmediately(response);
-        return true;
+        throw CancelSignalException.CANCEL;
     }
 
     @Override
@@ -172,6 +173,6 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
         ProxyServer.getInstance().getEventManager().callEvent(event);
 
-        return true;
+        throw CancelSignalException.CANCEL;
     }
 }

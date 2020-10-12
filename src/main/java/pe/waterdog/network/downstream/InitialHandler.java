@@ -25,6 +25,7 @@ import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -58,7 +59,7 @@ public class InitialHandler implements BedrockPacketHandler {
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
         this.player.getServer().sendPacket(clientToServerHandshake);
-        return true;
+        throw CancelSignalException.CANCEL;
     }
 
     @Override
@@ -79,6 +80,6 @@ public class InitialHandler implements BedrockPacketHandler {
         packet.setUniqueEntityId(rewrite.getEntityId());
 
         this.player.getServer().getDownstream().setPacketHandler(new ConnectedDownstreamHandler(this.player, this.player.getServer()));
-        return false;
+        return true;
     }
 }
