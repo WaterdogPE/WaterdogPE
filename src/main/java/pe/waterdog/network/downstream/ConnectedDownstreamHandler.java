@@ -17,11 +17,14 @@
 package pe.waterdog.network.downstream;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.DisconnectPacket;
 import com.nukkitx.protocol.bedrock.packet.BossEventPacket;
 import com.nukkitx.protocol.bedrock.packet.RemoveObjectivePacket;
 import com.nukkitx.protocol.bedrock.packet.SetDisplayObjectivePacket;
+import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.types.TranslationContainer;
 
 public class ConnectedDownstreamHandler implements BedrockPacketHandler {
 
@@ -54,5 +57,16 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
                 this.player.getBossbars().remove(packet.getBossUniqueEntityId());
         }
         return false;
+    }
+
+    @Override
+    public boolean handle(DisconnectPacket packet) {
+        ServerInfo serverInfo = this.player.getProxy().getReconnectHandler().getFallbackServer(this.player, this.server.getInfo());
+        if (serverInfo != null) {
+            this.player.connect(serverInfo);
+            return true;
+        }
+        this.player.disconnect(new TranslationContainer("waterdog.downstream.kicked") + packet.getKickMessage());
+        return true;
     }
 }

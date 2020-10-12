@@ -101,12 +101,15 @@ public class ProxiedPlayer implements CommandSender {
                 this.disconnect(event.getCancelReason());
                 return;
             }
-            //TODO: get server from handler
             this.upstream.setPacketHandler(new UpstreamHandler(this));
             this.upstream.addDisconnectHandler((reason) -> this.disconnect(null, true));
 
-            String server = this.proxy.getConfiguration().getPriorities().get(0);
-            this.connect(this.proxy.getServer(server));
+            ServerInfo serverInfo = this.getProxy().getJoinHandler().determineServer(this);
+            if (serverInfo != null) {
+                this.connect(serverInfo);
+            } else {
+                this.disconnect(new TranslationContainer("waterdog.no.initial.server").getTranslated());
+            }
         });
     }
 

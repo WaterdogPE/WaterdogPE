@@ -26,6 +26,10 @@ import pe.waterdog.event.defaults.DispatchCommandEvent;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
+import pe.waterdog.utils.types.IJoinHandler;
+import pe.waterdog.utils.types.IReconnectHandler;
+import pe.waterdog.utils.types.VanillaJoinHandler;
+import pe.waterdog.utils.types.VanillaReconnectHandler;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.plugin.PluginManager;
@@ -41,6 +45,8 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
@@ -57,14 +63,19 @@ public class ProxyServer {
     private BedrockServer bedrockServer;
     private QueryHandler queryHandler;
 
-    private ConfigurationManager configurationManager;
-    private WaterdogScheduler scheduler;
+    private final ConfigurationManager configurationManager;
+    private final WaterdogScheduler scheduler;
     private final PlayerManager playerManager;
     private final PluginManager pluginManager;
     private final EventManager eventManager;
     private boolean shutdown = false;
+    private IReconnectHandler reconnectHandler;
+    private IJoinHandler joinHandler;
 
-    private Map<String, ServerInfo> serverInfoMap;
+    private final Map<String, ServerInfo> serverInfoMap;
+
+    private final ConsoleCommandSender commandSender;
+    private CommandMap commandMap;
 
     private final ConsoleCommandSender commandSender;
     private CommandMap commandMap;
@@ -86,7 +97,9 @@ public class ProxyServer {
         this.configurationManager = new ConfigurationManager(this);
         configurationManager.loadProxyConfig();
         configurationManager.loadLanguage();
-
+        // Default Handlers
+        this.reconnectHandler = new VanillaReconnectHandler();
+        this.joinHandler = new VanillaJoinHandler(this);
         this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
 
         this.pluginManager = new PluginManager(this);
@@ -245,9 +258,31 @@ public class ProxyServer {
         return this.serverInfoMap.get(serverName.toLowerCase());
     }
 
+    /**
+     * Allows to add servers dynamically to server map
+     * @return if server was registered
+     */
     public boolean registerServerInfo(ServerInfo serverInfo) {
-        if (serverInfo == null) return false;
-        return this.serverInfoMap.putIfAbsent(serverInfo.getServerName().toLowerCase(), serverInfo) == null;
+        Preconditions.checkNotNull(serverInfo, "ServerInfo can not be null!");
+        return this.serverInfoMap.putIfAbsent(serverInfo.getServerName(), serverInfo) == null;
+    }
+
+    /**
+     * Remove server from server map
+     * @return removed ServerInfo or null
+     */
+    public ServerInfo removeServerInfo(String serverName) {
+        Preconditions.checkNotNull(serverName, "ServerName can not be null!");
+        return this.serverInfoMap.remove(serverName);
+    }
+
+    public ServerInfo getServerInfo(String serverName) {
+        Preconditions.checkNotNull(serverName, "ServerName can not be null!");
+        return this.serverInfoMap.get(serverName);
+    }
+
+    public Collection<ServerInfo> getServers() {
+        return this.serverInfoMap.values();
     }
 
     public Path getPluginPath() {
@@ -281,5 +316,21 @@ public class ProxyServer {
 
     public ConsoleCommandSender getConsoleSender() {
         return this.commandSender;
+    }
+
+    public void setJoinHandler(IJoinHandler joinHandler) {
+        this.joinHandler = joinHandler;
+    }
+
+    public IJoinHandler getJoinHandler() {
+        return this.joinHandler;
+    }
+
+    public void setReconnectHandler(IReconnectHandler reconnectHandler) {
+        this.reconnectHandler = reconnectHandler;
+    }
+
+    public IReconnectHandler getReconnectHandler() {
+        return this.reconnectHandler;
     }
 }
