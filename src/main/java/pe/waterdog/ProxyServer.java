@@ -16,6 +16,7 @@
 
 package pe.waterdog;
 
+import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.SneakyThrows;
 import pe.waterdog.command.CommandReader;
@@ -23,10 +24,10 @@ import pe.waterdog.event.EventManager;
 import pe.waterdog.logger.Logger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
-import pe.waterdog.network.handler.IJoinHandler;
-import pe.waterdog.network.handler.IReconnectHandler;
-import pe.waterdog.network.handler.VanillaJoinHandler;
-import pe.waterdog.network.handler.VanillaReconnectHandler;
+import pe.waterdog.utils.types.IJoinHandler;
+import pe.waterdog.utils.types.IReconnectHandler;
+import pe.waterdog.utils.types.VanillaJoinHandler;
+import pe.waterdog.utils.types.VanillaReconnectHandler;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.plugin.PluginManager;
@@ -210,9 +211,31 @@ public class ProxyServer {
         return this.serverInfoMap.get(serverName.toLowerCase());
     }
 
+    /**
+     * Allows to add servers dynamically to server map
+     * @return if server was registered
+     */
     public boolean registerServerInfo(ServerInfo serverInfo) {
-        if (serverInfo == null) return false;
-        return this.serverInfoMap.putIfAbsent(serverInfo.getServerName().toLowerCase(), serverInfo) == null;
+        Preconditions.checkNotNull(serverInfo, "ServerInfo can not be null!");
+        return this.serverInfoMap.putIfAbsent(serverInfo.getServerName(), serverInfo) == null;
+    }
+
+    /**
+     * Remove server from server map
+     * @return removed ServerInfo or null
+     */
+    public ServerInfo removeServerInfo(String serverName) {
+        Preconditions.checkNotNull(serverName, "ServerName can not be null!");
+        return this.serverInfoMap.remove(serverName);
+    }
+
+    public ServerInfo getServerInfo(String serverName) {
+        Preconditions.checkNotNull(serverName, "ServerName can not be null!");
+        return this.serverInfoMap.get(serverName);
+    }
+
+    public Collection<ServerInfo> getServers() {
+        return this.serverInfoMap.values();
     }
 
     public Path getPluginPath() {
@@ -227,12 +250,16 @@ public class ProxyServer {
         return this.currentTick;
     }
 
-    public Collection<ServerInfo> getServers() {
-        return this.serverInfoMap.values();
+    public void setJoinHandler(IJoinHandler joinHandler) {
+        this.joinHandler = joinHandler;
     }
 
     public IJoinHandler getJoinHandler() {
         return this.joinHandler;
+    }
+
+    public void setReconnectHandler(IReconnectHandler reconnectHandler) {
+        this.reconnectHandler = reconnectHandler;
     }
 
     public IReconnectHandler getReconnectHandler() {

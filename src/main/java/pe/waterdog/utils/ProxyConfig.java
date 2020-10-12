@@ -84,7 +84,7 @@ public class ProxyConfig extends YamlConfig {
     public Map<String, ServerInfo> buildServerMap() {
         Map<String, ServerInfo> servers = new HashMap<>();
         for (Map.Entry<String, InetSocketAddress> entry : this.servers.entrySet()) {
-            servers.put(entry.getKey().toLowerCase(), new ServerInfo(entry.getKey(), entry.getValue()));
+            servers.put(entry.getKey().toLowerCase(), new ServerInfo(entry.getKey().toLowerCase(), entry.getValue()));
         }
 
         return servers;

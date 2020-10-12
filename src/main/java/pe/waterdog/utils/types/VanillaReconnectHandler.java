@@ -1,7 +1,8 @@
-package pe.waterdog.network.handler;
+package pe.waterdog.utils.types;
 
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.types.IReconnectHandler;
 
 public class VanillaReconnectHandler implements IReconnectHandler {
 

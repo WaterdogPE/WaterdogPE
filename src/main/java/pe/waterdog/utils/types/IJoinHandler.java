@@ -1,4 +1,4 @@
-package pe.waterdog.network.handler;
+package pe.waterdog.utils.types;
 
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.ProxiedPlayer;
