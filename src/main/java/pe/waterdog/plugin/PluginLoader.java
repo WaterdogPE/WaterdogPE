@@ -17,7 +17,7 @@
 package pe.waterdog.plugin;
 
 import org.yaml.snakeyaml.Yaml;
-import pe.waterdog.logger.Logger;
+import pe.waterdog.logger.MainLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,14 +56,14 @@ public class PluginLoader {
                     return plugin;
                 }
             } catch (ClassCastException e) {
-                Logger.getLogger().error("Error while loading plugin main class(main=" + pluginConfig.getMain() + ",plugin=" + pluginConfig.getName() + ")", e);
+                MainLogger.getLogger().error("Error while loading plugin main class(main=" + pluginConfig.getMain() + ",plugin=" + pluginConfig.getName() + ")", e);
             } catch (IllegalAccessException | InstantiationException e) {
-                Logger.getLogger().error("Error while creating main class instance(plugin=" + pluginConfig.getName() + ",main=" + pluginConfig.getMain() + ")", e);
+                MainLogger.getLogger().error("Error while creating main class instance(plugin=" + pluginConfig.getName() + ",main=" + pluginConfig.getMain() + ")", e);
             } catch (ClassNotFoundException e) {
-                Logger.getLogger().error("Main Class " + pluginConfig.getMain() + " not found", e);
+                MainLogger.getLogger().error("Main Class " + pluginConfig.getMain() + " not found", e);
             }
         } catch (MalformedURLException e) {
-            Logger.getLogger().error("Error while creating class loader(plugin=" + pluginConfig.getName() + ")");
+            MainLogger.getLogger().error("Error while creating class loader(plugin=" + pluginConfig.getName() + ")");
         }
         return null;
     }
@@ -79,13 +79,13 @@ public class PluginLoader {
                     return pluginConfig;
 
                 } else {
-                    Logger.getLogger().warning("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
+                    MainLogger.getLogger().warning("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
                 }
             } else {
-                Logger.getLogger().warning("Jar file " + file.getName() + " doesnt contain a plugin.yml!");
+                MainLogger.getLogger().warning("Jar file " + file.getName() + " doesnt contain a plugin.yml!");
             }
         } catch (IOException e) {
-            Logger.getLogger().error("Error while reading plugin directory", e);
+            MainLogger.getLogger().error("Error while reading plugin directory", e);
         }
         return null;
     }

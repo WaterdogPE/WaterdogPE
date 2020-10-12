@@ -14,35 +14,25 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event.events;
+package pe.waterdog.event.defaults;
 
 import pe.waterdog.event.CancellableEvent;
-import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.ProxiedPlayer;
 
-public class PreTransferEvent extends CancellableEvent {
+public class PlayerChatEvent extends PlayerEvent implements CancellableEvent {
 
-    private ProxiedPlayer player;
-    private ServerInfo targetServer;
+    private String message;
 
-    public PreTransferEvent(ProxiedPlayer player, ServerInfo targetServer) {
-        this.player = player;
-        this.targetServer = targetServer;
+    public PlayerChatEvent(ProxiedPlayer player, String message) {
+        super(player);
+        this.message = message;
     }
 
-    public ProxiedPlayer getPlayer() {
-        return this.player;
+    public String getMessage() {
+        return this.message;
     }
 
-    public void setPlayer(ProxiedPlayer player) {
-        this.player = player;
-    }
-
-    public ServerInfo getTargetServer() {
-        return this.targetServer;
-    }
-
-    public void setTargetServer(ServerInfo targetServer) {
-        this.targetServer = targetServer;
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

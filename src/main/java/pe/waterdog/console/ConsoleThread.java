@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event;
+package pe.waterdog.console;
 
-public interface CancellableEvent {
+public class ConsoleThread extends Thread{
 
-    boolean isCancelled();
+    private final TerminalConsole console;
 
-    void setCancelled(boolean cancelled);
+    public ConsoleThread(TerminalConsole console){
+        super("WaterdogPE Console");
+        this.console = console;
+    }
 
-    void setCancelled();
+    @Override
+    public void run() {
+        this.console.start();
+    }
 }

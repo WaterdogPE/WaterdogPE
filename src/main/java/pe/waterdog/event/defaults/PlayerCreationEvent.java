@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event.events;
+package pe.waterdog.event.defaults;
 
 import pe.waterdog.event.Event;
 import pe.waterdog.network.session.LoginData;

@@ -18,6 +18,8 @@ package pe.waterdog.plugin;
 
 import com.google.common.base.Preconditions;
 import pe.waterdog.ProxyServer;
+import pe.waterdog.logger.Logger;
+import pe.waterdog.logger.PluginLogger;
 import pe.waterdog.utils.Configuration;
 import pe.waterdog.utils.FileUtils;
 import pe.waterdog.utils.YamlConfig;
@@ -33,6 +35,7 @@ public abstract class Plugin {
 
     private PluginYAML description;
     private ProxyServer proxy;
+    private Logger logger;
 
     private File pluginFile;
     private File dataFolder;
@@ -50,6 +53,7 @@ public abstract class Plugin {
         if (!this.initialized){
             this.description = description;
             this.proxy = proxy;
+            this.logger = new PluginLogger(this);
 
             this.pluginFile = pluginFile;
             this.dataFolder = new File(proxy.getPluginPath()+"/"+description.getName().toLowerCase()+"/");
@@ -155,6 +159,10 @@ public abstract class Plugin {
 
     public ProxyServer getProxy() {
         return this.proxy;
+    }
+
+    public Logger getLogger() {
+        return this.logger;
     }
 
     public File getDataFolder() {

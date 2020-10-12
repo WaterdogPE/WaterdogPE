@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event;
+package pe.waterdog.utils.exceptions;
 
-public interface CancellableEvent {
+public class EventException extends RuntimeException{
 
-    boolean isCancelled();
+    public EventException(){
+        super();
+    }
 
-    void setCancelled(boolean cancelled);
-
-    void setCancelled();
+    public EventException(String message){
+        super(message);
+    }
 }

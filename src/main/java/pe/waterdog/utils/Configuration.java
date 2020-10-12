@@ -16,7 +16,7 @@
 
 package pe.waterdog.utils;
 
-import pe.waterdog.logger.Logger;
+import pe.waterdog.logger.MainLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public abstract class Configuration {
                 this.file.getParentFile().mkdirs();
                 this.file.createNewFile();
             } catch (IOException e) {
-                Logger.getLogger().error("Unable to create Config " + this.file.toString(), e);
+                MainLogger.getLogger().error("Unable to create Config " + this.file.toString(), e);
             }
         }
 

@@ -22,6 +22,7 @@ import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import net.minidev.json.JSONObject;
 import pe.waterdog.ProxyServer;
+import pe.waterdog.utils.ProxyConfig;
 
 import java.net.URI;
 import java.security.KeyPair;
@@ -80,7 +81,8 @@ public class HandshakeUtils {
         JSONObject clientData = clientJwt.getPayload().toJSONObject();
 
         /* Add WaterdogAttributes*/
-        if (ProxyServer.getInstance().getConfiguration().isIpForward()) {
+        ProxyConfig config = ProxyServer.getInstance().getConfiguration();
+        if (config.useLoginExtras() && config.isIpForward()) {
             clientData.put("Waterdog_IP", session.getAddress().getAddress().getHostAddress());
         }
 

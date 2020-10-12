@@ -14,31 +14,19 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event.events;
+package pe.waterdog.command;
 
-import pe.waterdog.event.CancellableEvent;
-import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.ProxyServer;
+import pe.waterdog.utils.types.TextContainer;
 
-public class PlayerChatEvent extends CancellableEvent {
+public interface CommandSender {
 
-    private final ProxiedPlayer player;
+    String getName();
+    boolean isPlayer();
+    boolean hasPermission(String permission);
 
-    private String message;
+    void sendMessage(String message);
+    void sendMessage(TextContainer message);
 
-    public PlayerChatEvent(ProxiedPlayer player, String message) {
-        this.player = player;
-        this.message = message;
-    }
-
-    public String getMessage() {
-        return this.message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public ProxiedPlayer getPlayer() {
-        return this.player;
-    }
+    ProxyServer getProxy();
 }

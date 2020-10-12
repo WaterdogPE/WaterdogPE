@@ -19,9 +19,12 @@ package pe.waterdog;
 import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.SneakyThrows;
-import pe.waterdog.command.CommandReader;
+import pe.waterdog.command.*;
+import pe.waterdog.console.TerminalConsole;
 import pe.waterdog.event.EventManager;
-import pe.waterdog.logger.Logger;
+import pe.waterdog.event.defaults.DispatchCommandEvent;
+import pe.waterdog.event.EventManager;
+import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.utils.types.IJoinHandler;
@@ -41,6 +44,7 @@ import java.io.File;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
@@ -52,8 +56,8 @@ public class ProxyServer {
     private Path dataPath;
     private Path pluginPath;
 
-    private Logger logger;
-    private CommandReader console;
+    private final MainLogger logger;
+    private final TerminalConsole console;
 
     private BedrockServer bedrockServer;
 
@@ -68,10 +72,13 @@ public class ProxyServer {
 
     private final Map<String, ServerInfo> serverInfoMap;
 
+    private final ConsoleCommandSender commandSender;
+    private CommandMap commandMap;
+
     private int currentTick = 0;
     private long nextTick;
 
-    public ProxyServer(Logger logger, String filePath, String pluginPath) {
+    public ProxyServer(MainLogger logger, String filePath, String pluginPath) {
         instance = this;
         this.logger = logger;
         this.dataPath = Paths.get(filePath);
@@ -82,11 +89,6 @@ public class ProxyServer {
             new File(pluginPath).mkdirs();
         }
 
-        this.pluginManager = new PluginManager(this);
-
-        /*this.console = new CommandReader();
-        this.console.start();*/
-
         this.configurationManager = new ConfigurationManager(this);
         configurationManager.loadProxyConfig();
         configurationManager.loadLanguage();
@@ -95,9 +97,14 @@ public class ProxyServer {
         this.joinHandler = new VanillaJoinHandler(this);
         this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
 
+        this.pluginManager = new PluginManager(this);
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
         this.eventManager = new EventManager();
+
+        this.commandSender = new ConsoleCommandSender(this);
+        this.commandMap = new DefaultCommandMap(this, SimpleCommandMap.DEFAULT_PREFIX);
+        this.console = new TerminalConsole(this);
         this.boot();
         this.tickProcessor();
     }
@@ -107,14 +114,15 @@ public class ProxyServer {
     }
 
     private void boot() {
+        this.console.getConsoleThread().start();
+        this.pluginManager.enableAllPlugins();
+
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
         this.logger.info("Binding to " + bindAddress);
 
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
         bedrockServer.setHandler(new ProxyListener(this));
         bedrockServer.bind().join();
-
-        this.pluginManager.enableAllPlugins();
     }
 
     private void tickProcessor() {
@@ -146,6 +154,8 @@ public class ProxyServer {
                 this.nextTick += 50;
             }
         }
+
+        this.bedrockServer.close();
     }
 
     private void onTick(int currentTick){
@@ -154,20 +164,44 @@ public class ProxyServer {
 
     @SneakyThrows
     public void shutdown() {
+        this.shutdown = true;
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
             player.getValue().disconnect("Proxy Shutdown", true);
         }
         Thread.sleep(500);
+
+        this.console.getConsoleThread().interrupt();
         this.pluginManager.disableAllPlugins();
-        this.shutdown = true;
     }
 
     public String translate(TextContainer textContainer){
         return this.getLanguageConfig().translateContainer(textContainer);
     }
 
-    public Logger getLogger() {
+    public boolean handlePlayerCommand(ProxiedPlayer player, String message){
+        if (!this.commandMap.handleMessage(player, message)){
+            return false;
+        }
+        return this.dispatchCommand(player, message.substring(this.commandMap.getCommandPrefix().length()));
+    }
+
+    public boolean dispatchCommand(CommandSender sender, String message){
+        DispatchCommandEvent event = new DispatchCommandEvent(sender, message);
+        this.eventManager.callEvent(event);
+
+        if (event.isCancelled()){
+            return false;
+        }
+        String[] args = message.split(" ");
+        return this.commandMap.handleCommand(sender, args[0], Arrays.copyOfRange(args, 1, args.length));
+    }
+
+    public boolean isRunning(){
+        return !this.shutdown;
+    }
+
+    public MainLogger getLogger() {
         return this.logger;
     }
 
@@ -201,6 +235,10 @@ public class ProxyServer {
 
     public ProxiedPlayer getPlayer(UUID uuid) {
         return this.playerManager.getPlayer(uuid);
+    }
+
+    public ProxiedPlayer getPlayer(String playerName) {
+        return this.playerManager.getPlayer(playerName);
     }
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
@@ -250,6 +288,23 @@ public class ProxyServer {
         return this.currentTick;
     }
 
+    public EventManager getEventManager() {
+        return this.eventManager;
+    }
+
+    public CommandMap getCommandMap() {
+        return this.commandMap;
+    }
+
+    public void setCommandMap(CommandMap commandMap) {
+        Preconditions.checkNotNull(commandMap, "Command map can not be null!");
+        this.commandMap = commandMap;
+    }
+
+    public ConsoleCommandSender getConsoleSender() {
+        return this.commandSender;
+    }
+
     public void setJoinHandler(IJoinHandler joinHandler) {
         this.joinHandler = joinHandler;
     }
@@ -264,9 +319,5 @@ public class ProxyServer {
 
     public IReconnectHandler getReconnectHandler() {
         return this.reconnectHandler;
-    }
-
-    public EventManager getEventManager() {
-        return this.eventManager;
     }
 }

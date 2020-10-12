@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event.events;
+package pe.waterdog.command;
 
-import pe.waterdog.event.AsyncEvent;
-import pe.waterdog.event.Event;
-import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.ProxyServer;
 
-@AsyncEvent
-public class DisconnectEvent extends Event {
+public class DefaultCommandMap extends SimpleCommandMap{
 
-    private final ProxiedPlayer player;
-
-    public DisconnectEvent(ProxiedPlayer player) {
-        this.player = player;
+    public DefaultCommandMap(ProxyServer proxy, String prefix) {
+        super(proxy, prefix);
+        this.registerDefaults();
     }
 
-    public ProxiedPlayer getPlayer() {
-        return this.player;
+    public void registerDefaults(){
+        //TODO:
     }
 }

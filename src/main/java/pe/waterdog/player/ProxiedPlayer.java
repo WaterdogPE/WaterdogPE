@@ -26,14 +26,16 @@ import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
 import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
+import it.unimi.dsi.fastutil.objects.*;
 import lombok.NonNull;
 import pe.waterdog.ProxyServer;
-import pe.waterdog.event.events.DisconnectEvent;
-import pe.waterdog.event.events.PlayerLoginEvent;
-import pe.waterdog.event.events.PreTransferEvent;
-import pe.waterdog.logger.Logger;
+import pe.waterdog.command.CommandSender;
+import pe.waterdog.event.defaults.PlayerDisconnectEvent;
+import pe.waterdog.event.defaults.PlayerLoginEvent;
+import pe.waterdog.event.defaults.PreTransferEvent;
+import pe.waterdog.logger.MainLogger;
+import pe.waterdog.utils.types.Permission;
+import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
 import pe.waterdog.network.bridge.ProxyBatchBridge;
@@ -49,14 +51,14 @@ import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.network.upstream.UpstreamHandler;
-import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.utils.types.TranslationContainer;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-public class ProxiedPlayer {
+public class ProxiedPlayer implements CommandSender {
 
     private final ProxyServer proxy;
 
@@ -77,6 +79,8 @@ public class ProxiedPlayer {
     private final Collection<UUID> players = new HashSet<>();
     private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
 
+    private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
+
     private boolean canRewrite = false;
 
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData) {
@@ -87,6 +91,7 @@ public class ProxiedPlayer {
         this.entityTracker = new EntityTracker(this);
         this.entityMap = new EntityMap(this);
         this.blockMap = new BlockMap(this);
+        this.proxy.getPlayerManager().subscribePermissions(this);
     }
 
     public void initialConnect() {
@@ -129,8 +134,8 @@ public class ProxiedPlayer {
             return;
         }
 
-        BedrockClient client = this.proxy.getPlayerManager().bindClient();
-        client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
+        CompletableFuture<BedrockClient> future = this.proxy.getPlayerManager().bindClient();
+        future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
                 this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
                 this.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), throwable.getLocalizedMessage()));
@@ -157,7 +162,7 @@ public class ProxiedPlayer {
 
             SessionInjections.injectNewDownstream(downstream, this, targetServer);
             this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
-        });
+        }));
     }
 
     public void disconnect() {
@@ -169,7 +174,7 @@ public class ProxiedPlayer {
     }
 
     public void disconnect(String reason, boolean force) {
-        DisconnectEvent event = new DisconnectEvent(this);
+        PlayerDisconnectEvent event = new PlayerDisconnectEvent(this);
         ProxyServer.getInstance().getEventManager().callEvent(event);
 
 
@@ -193,6 +198,7 @@ public class ProxiedPlayer {
         }
     }
 
+    @Override
     public void sendMessage(TextContainer message) {
         if (message instanceof TranslationContainer){
             this.sendTranslation((TranslationContainer) message);
@@ -205,6 +211,7 @@ public class ProxiedPlayer {
         this.sendMessage(this.proxy.translate(textContainer));
     }
 
+    @Override
     public void sendMessage(String message) {
         if (message.trim().isEmpty()){
             return; //Client wont accept empty string
@@ -287,11 +294,52 @@ public class ProxiedPlayer {
         this.setTitle(Strings.isNullOrEmpty(title) ? " " : title);
     }
 
+    public boolean addPermission(String permission){
+        return this.addPermission(new Permission(permission, true));
+    }
+
+    /**
+     * Add permission to player
+     * @return if the update was successful
+     */
+    public boolean addPermission(Permission permission){
+        Permission oldPerm = this.permissions.get(permission.getName());
+        if (oldPerm == null){
+            this.permissions.put(permission.getName(), permission);
+            return true;
+        }
+        return oldPerm.getAtomicValue().getAndSet(permission.getValue()) != permission.getValue();
+    }
+
+    @Override
+    public boolean hasPermission(String permission) {
+       Permission perm = this.permissions.get(permission.toLowerCase());
+       return perm != null && perm.getValue();
+    }
+
+    /**
+     * Remove permission from player
+     * @return if player had this permission
+     */
+    public boolean removePermission(String permission){
+        return this.permissions.remove(permission.toLowerCase()) != null;
+    }
+
+    public Permission getPermission(String permission){
+        return this.permissions.get(permission.toLowerCase());
+    }
+
+    @Override
+    public boolean isPlayer() {
+        return true;
+    }
+
+    @Override
     public ProxyServer getProxy() {
         return this.proxy;
     }
 
-    public Logger getLogger() {
+    public MainLogger getLogger() {
         return this.proxy.getLogger();
     }
 
@@ -331,6 +379,7 @@ public class ProxiedPlayer {
         return this.loginData;
     }
 
+    @Override
     public String getName() {
         return this.loginData.getDisplayName();
     }

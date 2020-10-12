@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event;
+package pe.waterdog.event.defaults;
 
-public interface CancellableEvent {
+import pe.waterdog.event.AsyncEvent;
+import pe.waterdog.event.Event;
+import pe.waterdog.player.ProxiedPlayer;
 
-    boolean isCancelled();
+@AsyncEvent
+public class PlayerDisconnectEvent extends PlayerEvent {
 
-    void setCancelled(boolean cancelled);
-
-    void setCancelled();
+    public PlayerDisconnectEvent(ProxiedPlayer player) {
+        super(player);
+    }
 }

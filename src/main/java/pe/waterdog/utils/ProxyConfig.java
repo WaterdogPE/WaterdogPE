@@ -16,7 +16,7 @@
 
 package pe.waterdog.utils;
 
-import pe.waterdog.logger.Logger;
+import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ServerInfo;
 
 import java.io.File;
@@ -27,31 +27,36 @@ import java.util.Map;
 
 public class ProxyConfig extends YamlConfig {
 
-    private String motd = "WaterdogPE";
-    private int maxPlayerCount = 24;
+    private String motd;
+    private int maxPlayerCount;
 
-    private boolean onlineMode = true;
-    private boolean ipForward = true;
-    private boolean replaceUsernameSpaces = true;
-    private boolean forceDefault = true;
+    private final boolean onlineMode;
+    private final boolean replaceUsernameSpaces;
+    private boolean useLoginExtras;
+    private boolean ipForward;
 
-    private InetSocketAddress bindAddress;
-    private List<String> priorities;
-    private Map<String, InetSocketAddress> servers;
+    private final InetSocketAddress bindAddress;
+    private final List<String> priorities;
+    private final Map<String, InetSocketAddress> servers;
     private Map<String, String> forcedHosts;
+
+    private final Map<String, List<String>> playerPermissions = new HashMap<>();
+    private List<String> defaultPermissions;
 
     public ProxyConfig(File file){
         super(file);
 
         this.motd = this.getString("listener.motd");
         this.maxPlayerCount = this.getInt("listener.max_players");
+        this.useLoginExtras = this.getBoolean("use_login_extras");
         this.onlineMode = this.getBoolean("online_mode");
         this.ipForward = this.getBoolean("ip_forward");
         this.replaceUsernameSpaces = this.getBoolean("replace_username_spaces");
-        this.forceDefault = this.getBoolean("listener.force_default_server");
         this.bindAddress = this.getInetAddress("listener.host");
         this.priorities = this.getStringList("listener.priorities");
         this.servers = this.getInetAddressMap("servers");
+        this.defaultPermissions = this.getStringList("permissions_default");
+        this.playerPermissions.putAll(this.getPlayerPermissions("permissions"));
     }
 
     public InetSocketAddress getInetAddress(String key) {
@@ -62,7 +67,7 @@ public class ProxyConfig extends YamlConfig {
         return new InetSocketAddress(data[0], (data.length <= 1 ? 19132 : Integer.parseInt(data[1])));
     }
 
-    public Map<String, InetSocketAddress> getInetAddressMap(String key) {
+    private Map<String, InetSocketAddress> getInetAddressMap(String key) {
         Map<String, Map<String, String>> map = (Map<String, Map<String, String>>) this.get(key);
         Map<String, InetSocketAddress> servers = new HashMap<>();
 
@@ -72,12 +77,11 @@ public class ProxyConfig extends YamlConfig {
                 String[] data = map.get(server).get("address").split(":");
                 address = new InetSocketAddress(data[0], Integer.parseInt(data[1]));
             } catch (Exception e) {
-                Logger.getLogger().error("Unable to parse server from config! Please check you configuration. Server name: " + server);
+                MainLogger.getLogger().error("Unable to parse server from config! Please check you configuration. Server name: " + server);
             }
 
             if (address != null) servers.put(server, address);
         }
-
         return servers;
     }
 
@@ -86,12 +90,15 @@ public class ProxyConfig extends YamlConfig {
         for (Map.Entry<String, InetSocketAddress> entry : this.servers.entrySet()) {
             servers.put(entry.getKey().toLowerCase(), new ServerInfo(entry.getKey().toLowerCase(), entry.getValue()));
         }
-
         return servers;
     }
 
+    private Map<String, List<String>> getPlayerPermissions(String key){
+        return (Map<String, List<String>>) this.get(key);
+    }
+
     public String getMotd() {
-        return motd;
+        return this.motd;
     }
 
     public void setMotd(String motd) {
@@ -99,7 +106,7 @@ public class ProxyConfig extends YamlConfig {
     }
 
     public int getMaxPlayerCount() {
-        return maxPlayerCount;
+        return this.maxPlayerCount;
     }
 
     public void setMaxPlayerCount(int maxPlayerCount) {
@@ -107,38 +114,54 @@ public class ProxyConfig extends YamlConfig {
     }
 
     public boolean isOnlineMode() {
-        return onlineMode;
+        return this.onlineMode;
+    }
+
+    public boolean useLoginExtras() {
+        return this.useLoginExtras;
+    }
+
+    public void setUseLoginExtras(boolean useLoginExtras) {
+        this.useLoginExtras = useLoginExtras;
     }
 
     public boolean isReplaceUsernameSpaces() {
-        return replaceUsernameSpaces;
+        return this.replaceUsernameSpaces;
     }
 
     public boolean isIpForward() {
-        return ipForward;
+        return this.ipForward;
     }
 
     public void setIpForward(boolean ipForward) {
         this.ipForward = ipForward;
     }
 
-    public boolean isForceDefault() {
-        return forceDefault;
-    }
-
     public InetSocketAddress getBindAddress() {
-        return bindAddress;
+        return this.bindAddress;
     }
 
     public List<String> getPriorities() {
-        return priorities;
+        return this.priorities;
     }
 
     public Map<String, InetSocketAddress> getServers() {
-        return servers;
+        return this.servers;
     }
 
     public Map<String, String> getForcedHosts() {
-        return forcedHosts;
+        return this.forcedHosts;
+    }
+
+    public Map<String, List<String>> getPlayerPermissions() {
+        return this.playerPermissions;
+    }
+
+    public void setDefaultPermissions(List<String> defaultPermissions) {
+        this.defaultPermissions = defaultPermissions;
+    }
+
+    public List<String> getDefaultPermissions() {
+        return this.defaultPermissions;
     }
 }

@@ -14,13 +14,27 @@
  * limitations under the License.
  */
 
-package pe.waterdog.event;
+package pe.waterdog.event.defaults;
 
-public interface CancellableEvent {
+import pe.waterdog.command.CommandSender;
+import pe.waterdog.event.CancellableEvent;
+import pe.waterdog.event.Event;
 
-    boolean isCancelled();
+public class DispatchCommandEvent extends Event implements CancellableEvent {
 
-    void setCancelled(boolean cancelled);
+    private final CommandSender sender;
+    private final String command;
 
-    void setCancelled();
+    public DispatchCommandEvent(CommandSender sender, String command){
+        this.sender = sender;
+        this.command = command;
+    }
+
+    public CommandSender getSender() {
+        return this.sender;
+    }
+
+    public String getCommand() {
+        return this.command;
+    }
 }

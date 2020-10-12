@@ -19,7 +19,7 @@ package pe.waterdog.plugin;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 import pe.waterdog.ProxyServer;
-import pe.waterdog.logger.Logger;
+import pe.waterdog.logger.MainLogger;
 import pe.waterdog.utils.exceptions.PluginChangeStateException;
 
 import java.io.File;
@@ -59,7 +59,7 @@ public class PluginManager {
                         this.loadPlugin(jarPath, directStartup);
                     });
         } catch (IOException e) {
-            Logger.getLogger().error("Error while filtering plugin files", e);
+            MainLogger.getLogger().error("Error while filtering plugin files", e);
         }
     }
 
