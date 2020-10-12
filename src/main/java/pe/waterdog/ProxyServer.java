@@ -54,8 +54,8 @@ public class ProxyServer {
 
     private static ProxyServer instance;
 
-    private Path dataPath;
-    private Path pluginPath;
+    private final Path dataPath;
+    private final Path pluginPath;
 
     private final MainLogger logger;
     private final TerminalConsole console;
@@ -73,9 +73,6 @@ public class ProxyServer {
     private IJoinHandler joinHandler;
 
     private final Map<String, ServerInfo> serverInfoMap;
-
-    private final ConsoleCommandSender commandSender;
-    private CommandMap commandMap;
 
     private final ConsoleCommandSender commandSender;
     private CommandMap commandMap;

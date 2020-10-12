@@ -88,16 +88,16 @@ public class SimpleCommandMap implements CommandMap {
     }
 
     private void execute(Command command, CommandSender sender, String alias, String[] args){
-        boolean permission = sender.hasPermission(new TranslationContainer(command.getPermission()).getTranslated());
+        boolean permission = sender.hasPermission(command.getPermission());
         if (!permission){
-            sender.sendMessage(new TranslationContainer(command.getPermissionMessage()));
+            sender.sendMessage(command.getPermissionMessage());
             return;
         }
 
         try {
             boolean success = command.onExecute(sender, alias, args);
             if (!success){
-                sender.sendMessage("§cCommand usage: "+new TranslationContainer(command.getUsageMessage()));
+                sender.sendMessage("§cCommand usage: "+this.commandPrefix+command.getUsageMessage());
             }
         }catch (Exception e){
             this.proxy.getLogger().error("Error appeared while processing command!", e);

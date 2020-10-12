@@ -80,6 +80,7 @@ public class ProxiedPlayer implements CommandSender {
     private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
 
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
+    private boolean admin = false;
 
     private boolean canRewrite = false;
 
@@ -139,12 +140,14 @@ public class ProxiedPlayer implements CommandSender {
             if (throwable != null) {
                 this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
                 this.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), throwable.getLocalizedMessage()));
+                //TODO: reconnect handler
                 this.pendingConnection = null;
                 return;
             }
 
             if (this.serverConnection == null) {
                 this.serverConnection = new ServerConnection(client, downstream, targetServer);
+                targetServer.addPlayer(this);
 
                 downstream.setPacketHandler(new InitialHandler(this));
                 downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
@@ -313,8 +316,11 @@ public class ProxiedPlayer implements CommandSender {
 
     @Override
     public boolean hasPermission(String permission) {
-       Permission perm = this.permissions.get(permission.toLowerCase());
-       return perm != null && perm.getValue();
+        if (this.admin){
+            return true;
+        }
+        Permission perm = this.permissions.get(permission.toLowerCase());
+        return perm != null && perm.getValue();
     }
 
     /**
@@ -327,6 +333,14 @@ public class ProxiedPlayer implements CommandSender {
 
     public Permission getPermission(String permission){
         return this.permissions.get(permission.toLowerCase());
+    }
+
+    public void setIsAdmin(boolean admin) {
+        this.admin = admin;
+    }
+
+    public boolean isAdmin() {
+        return this.admin;
     }
 
     @Override

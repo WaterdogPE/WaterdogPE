@@ -17,10 +17,10 @@
 package pe.waterdog.event.defaults;
 
 import pe.waterdog.event.Event;
+import pe.waterdog.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
-import java.util.Collections;
-import java.util.List;
+import java.util.Collection;
 
 public class ProxyPingEvent extends Event {
 
@@ -29,13 +29,13 @@ public class ProxyPingEvent extends Event {
     private String edition;
     private String version;
 
-    private List<String> players = Collections.emptyList();
+    private Collection<ProxiedPlayer> players;
     private int playerCount = -1;
     private int maximumPlayerCount;
 
     private final InetSocketAddress address;
 
-    public ProxyPingEvent(String motd, String gameType, String edition, String version, List<String> players, int maximumPlayerCount, InetSocketAddress address){
+    public ProxyPingEvent(String motd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, InetSocketAddress address){
         this.motd = motd;
         this.gameType = gameType;
         this.edition = edition;
@@ -77,11 +77,11 @@ public class ProxyPingEvent extends Event {
         return this.version;
     }
 
-    public void setPlayers(List<String> players) {
+    public void setPlayers(Collection<ProxiedPlayer> players) {
         this.players = players;
     }
 
-    public List<String> getPlayers() {
+    public Collection<ProxiedPlayer> getPlayers() {
         return this.players;
     }
 

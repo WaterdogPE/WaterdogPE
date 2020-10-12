@@ -56,7 +56,7 @@ public class ProxyListener implements BedrockServerEventHandler {
                 "SMP",
                 "MCPE",
                 "",
-                this.proxy.getPlayerManager().playerNameList(),
+                this.proxy.getPlayerManager().getPlayers().values(),
                 config.getMaxPlayerCount(),
                 address
         );
@@ -71,7 +71,7 @@ public class ProxyListener implements BedrockServerEventHandler {
         pong.setPlayerCount(event.getPlayerCount());
         pong.setIpv4Port(config.getBindAddress().getPort());
         pong.setIpv6Port(config.getBindAddress().getPort());
-        pong.setProtocolVersion(ProtocolConstants.Protocol.MINECRAFT_PE_1_16_20.getProtocol());
+        pong.setProtocolVersion(ProtocolConstants.getLatestProtocol().getProtocol());
         pong.setVersion(event.getVersion());
         pong.setNintendoLimited(false);
         return pong;

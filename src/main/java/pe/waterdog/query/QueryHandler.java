@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
 import pe.waterdog.event.defaults.ProxyQueryEvent;
+import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.ProxyConfig;
 import pe.waterdog.utils.types.TranslationContainer;
 
@@ -105,7 +106,7 @@ public class QueryHandler {
                 "SMP",
                 "MCPE",
                 "",
-                this.proxy.getPlayerManager().playerNameList(),
+                this.proxy.getPlayerManager().getPlayers().values(),
                 config.getMaxPlayerCount(),
                 "WaterdogPE",
                 address
@@ -145,8 +146,8 @@ public class QueryHandler {
         buf.writeBytes(LONG_RESPONSE_PADDING_BOTTOM);
 
         if (event.getPlayers().size() >= 1){
-            for (String player : event.getPlayers()){
-                this.writeString(buf, player);
+            for (ProxiedPlayer player : event.getPlayers()){
+                this.writeString(buf, player.getName());
             }
         }
         buf.writeByte(0);

@@ -31,8 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 
-;
-
 public class PlayerManager {
 
     private final ProxyServer proxy;
@@ -61,10 +59,12 @@ public class PlayerManager {
     }
 
     public void subscribePermissions(ProxiedPlayer player){
-        List<String> permissions = this.proxy.getConfiguration().getPlayerPermissions().get(player.getName());
-        if (permissions == null){
-            return;
+        List<String> permissions = new ArrayList<>(this.proxy.getConfiguration().getDefaultPermissions());
+        List<String> playerPermissions = this.proxy.getConfiguration().getPlayerPermissions().get(player.getName());
+        if (playerPermissions != null){
+            permissions.addAll(playerPermissions);
         }
+
         for (String perm : permissions){
             player.addPermission(new Permission(perm, true));
         }
@@ -83,7 +83,9 @@ public class PlayerManager {
         if (playerName == null) return null;
 
         for (ProxiedPlayer player : this.players.values()) {
-            if (!player.getName().toLowerCase().startsWith(playerName)) continue;
+            if (!player.getName().toLowerCase().startsWith(playerName.toLowerCase())){
+                continue;
+            }
 
             int strLen = player.getName().length() - playerName.length();
             if (strLen == 0) return player;
@@ -94,13 +96,5 @@ public class PlayerManager {
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
         return ImmutableMap.copyOf(this.players);
-    }
-
-    public List<String> playerNameList(){
-        List<String> playerNames = new ArrayList<>();
-        for (ProxiedPlayer player : this.players.values()){
-            playerNames.add(player.getName());
-        }
-        return playerNames;
     }
 }

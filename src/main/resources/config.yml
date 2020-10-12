@@ -27,9 +27,11 @@ listener:
 permissions:
   alemiz003:
     - "waterdog.player.transfer"
+    - "waterdog.player.list"
 # List of default permissions applied to player
 permissions_default:
-  - "waterdog.player.info"
+  - "waterdog.command.help"
+  - "waterdog.command.info"
 
 # Enable online mode to prevent unauthorized players to join
 online_mode: true

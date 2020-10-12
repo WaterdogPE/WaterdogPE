@@ -16,6 +16,8 @@
 
 package pe.waterdog.command;
 
+import pe.waterdog.utils.types.TranslationContainer;
+
 public class CommandSettings {
 
     private final String usageMessage;
@@ -27,10 +29,10 @@ public class CommandSettings {
     private final String[] aliases;
 
     private CommandSettings(String usageMessage, String description, String permission, String[] aliases, String permissionMessage) {
-        this.usageMessage = usageMessage;
-        this.description = description;
-        this.permission = permission;
-        this.permissionMessage = permissionMessage;
+        this.usageMessage = new TranslationContainer(usageMessage).getTranslated();
+        this.description = new TranslationContainer(description).getTranslated();
+        this.permission = new TranslationContainer(permission).getTranslated();
+        this.permissionMessage = new TranslationContainer(permissionMessage).getTranslated();
         this.aliases = aliases;
     }
 

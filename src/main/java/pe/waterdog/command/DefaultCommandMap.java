@@ -17,6 +17,10 @@
 package pe.waterdog.command;
 
 import pe.waterdog.ProxyServer;
+import pe.waterdog.command.defaults.HelpCommand;
+import pe.waterdog.command.defaults.InfoCommand;
+import pe.waterdog.command.defaults.ListCommand;
+import pe.waterdog.command.defaults.ServerCommand;
 
 public class DefaultCommandMap extends SimpleCommandMap{
 
@@ -26,6 +30,9 @@ public class DefaultCommandMap extends SimpleCommandMap{
     }
 
     public void registerDefaults(){
-        //TODO:
+        this.registerCommand("wdhelp", new HelpCommand());
+        this.registerCommand("wdlist", new ListCommand());
+        this.registerCommand("wdinfo", new InfoCommand());
+        this.registerCommand("server", new ServerCommand());
     }
 }

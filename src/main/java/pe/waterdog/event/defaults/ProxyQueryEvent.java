@@ -16,15 +16,17 @@
 
 package pe.waterdog.event.defaults;
 
+import pe.waterdog.player.ProxiedPlayer;
+
 import java.net.InetSocketAddress;
-import java.util.List;
+import java.util.Collection;
 
 public class ProxyQueryEvent extends ProxyPingEvent{
 
     private String map;
     private boolean hasWhitelist = false;
 
-    public ProxyQueryEvent(String motd, String gameType, String edition, String version, List<String> players, int maximumPlayerCount, String map, InetSocketAddress address) {
+    public ProxyQueryEvent(String motd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, String map, InetSocketAddress address) {
         super(motd, gameType, edition, version, players, maximumPlayerCount, address);
         this.map = map;
     }
