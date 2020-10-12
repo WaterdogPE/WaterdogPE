@@ -11,7 +11,7 @@
 
     <properties>
         <raklib.version>1.6.20</raklib.version>
-        <protocol.protocol>414</protocol.protocol>
+        <protocol.protocol>bedrock-v417</protocol.protocol>
         <protocol.version>2.6.0-SNAPSHOT</protocol.version>
         <log4j2.version>2.13.3</log4j2.version>
         <jline.version>3.9.0</jline.version>
@@ -124,7 +124,7 @@
         </dependency>
         <dependency>
             <groupId>com.nukkitx.protocol</groupId>
-            <artifactId>bedrock-v${protocol.protocol}</artifactId>
+            <artifactId>${protocol.protocol}</artifactId>
             <version>${protocol.version}</version>
             <scope>compile</scope>
             <exclusions>

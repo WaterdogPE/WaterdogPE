@@ -16,72 +16,32 @@
 
 package pe.waterdog.event.defaults;
 
-import pe.waterdog.event.Event;
+import java.net.InetSocketAddress;
+import java.util.List;
 
-public class ProxyQueryEvent extends Event {
+public class ProxyQueryEvent extends ProxyPingEvent{
 
-    private String motd;
-    private String gameType;
-    private String edition;
-    private String version;
+    private String map;
+    private boolean hasWhitelist = false;
 
-    private int playerCount;
-    private int maximumPlayerCount;
-
-    public ProxyQueryEvent(String motd, String gameType, String edition, String version, int playerCount, int maximumPlayerCount){
-        this.motd = motd;
-        this.gameType = gameType;
-        this.edition = edition;
-        this.version = version;
-        this.playerCount = playerCount;
-        this.maximumPlayerCount = maximumPlayerCount;
+    public ProxyQueryEvent(String motd, String gameType, String edition, String version, List<String> players, int maximumPlayerCount, String map, InetSocketAddress address) {
+        super(motd, gameType, edition, version, players, maximumPlayerCount, address);
+        this.map = map;
     }
 
-    public void setMotd(String motd) {
-        this.motd = motd;
+    public void setMap(String map) {
+        this.map = map;
     }
 
-    public String getMotd() {
-        return this.motd;
+    public String getMap() {
+        return this.map;
     }
 
-    public void setGameType(String gameType) {
-        this.gameType = gameType;
+    public void setHasWhitelist(boolean hasWhitelist) {
+        this.hasWhitelist = hasWhitelist;
     }
 
-    public String getGameType() {
-        return this.gameType;
-    }
-
-    public void setEdition(String edition) {
-        this.edition = edition;
-    }
-
-    public String getEdition() {
-        return this.edition;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getVersion() {
-        return this.version;
-    }
-
-    public void setPlayerCount(int playerCount) {
-        this.playerCount = playerCount;
-    }
-
-    public int getPlayerCount() {
-        return this.playerCount;
-    }
-
-    public void setMaximumPlayerCount(int maximumPlayerCount) {
-        this.maximumPlayerCount = maximumPlayerCount;
-    }
-
-    public int getMaximumPlayerCount() {
-        return this.maximumPlayerCount;
+    public boolean hasWhitelist() {
+        return this.hasWhitelist;
     }
 }

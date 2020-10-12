@@ -22,6 +22,7 @@ import pe.waterdog.ProxyServer;
 import pe.waterdog.utils.types.Permission;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -93,5 +94,13 @@ public class PlayerManager {
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
         return ImmutableMap.copyOf(this.players);
+    }
+
+    public List<String> playerNameList(){
+        List<String> playerNames = new ArrayList<>();
+        for (ProxiedPlayer player : this.players.values()){
+            playerNames.add(player.getName());
+        }
+        return playerNames;
     }
 }

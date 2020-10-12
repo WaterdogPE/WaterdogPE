@@ -33,6 +33,7 @@ public class ProxyConfig extends YamlConfig {
     private final boolean onlineMode;
     private final boolean replaceUsernameSpaces;
     private boolean useLoginExtras;
+    private boolean enableQuery = true;
     private boolean ipForward;
 
     private final InetSocketAddress bindAddress;
@@ -50,6 +51,7 @@ public class ProxyConfig extends YamlConfig {
         this.maxPlayerCount = this.getInt("listener.max_players");
         this.useLoginExtras = this.getBoolean("use_login_extras");
         this.onlineMode = this.getBoolean("online_mode");
+        this.enableQuery = this.getBoolean("enable_query");
         this.ipForward = this.getBoolean("ip_forward");
         this.replaceUsernameSpaces = this.getBoolean("replace_username_spaces");
         this.bindAddress = this.getInetAddress("listener.host");
@@ -115,6 +117,14 @@ public class ProxyConfig extends YamlConfig {
 
     public boolean isOnlineMode() {
         return this.onlineMode;
+    }
+
+    public void setEnableQuery(boolean enableQuery) {
+        this.enableQuery = enableQuery;
+    }
+
+    public boolean isEnabledQuery() {
+        return this.enableQuery;
     }
 
     public boolean useLoginExtras() {
