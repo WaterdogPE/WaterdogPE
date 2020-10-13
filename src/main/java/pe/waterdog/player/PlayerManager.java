@@ -17,6 +17,7 @@
 package pe.waterdog.player;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.protocol.ProtocolConstants;
@@ -39,11 +40,9 @@ public class PlayerManager {
 
     public PlayerManager(ProxyServer proxy) {
         this.proxy = proxy;
-        this.internalThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), r -> {
-            Thread t = new Thread(r);
-            t.setName("Internal-Runner-" + ThreadLocalRandom.current().nextInt(1, 100));
-            return t;
-        });
+        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
+        builder.setNameFormat("WaterdogInternal Executor");
+        this.internalThreadPool = Executors.newCachedThreadPool(builder.build());
     }
 
     public CompletableFuture<BedrockClient> bindClient(ProtocolConstants.Protocol protocol) {
@@ -106,6 +105,6 @@ public class PlayerManager {
 
 
     public Executor getInternalThreadPool() {
-        return internalThreadPool;
+        return this.internalThreadPool;
     }
 }
