@@ -17,6 +17,7 @@
 package pe.waterdog;
 
 import com.google.common.base.Preconditions;
+import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.SneakyThrows;
 import pe.waterdog.command.*;
@@ -26,6 +27,7 @@ import pe.waterdog.event.defaults.DispatchCommandEvent;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
+import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.utils.types.IJoinHandler;
 import pe.waterdog.utils.types.IReconnectHandler;
 import pe.waterdog.utils.types.VanillaJoinHandler;
@@ -49,6 +51,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ProxyServer {
 
@@ -204,6 +208,13 @@ public class ProxyServer {
         }
         String[] args = message.split(" ");
         return this.commandMap.handleCommand(sender, args[0], Arrays.copyOfRange(args, 1, args.length));
+    }
+
+    public CompletableFuture<BedrockClient> bindClient(ProtocolConstants.Protocol protocol) {
+        InetSocketAddress address = new InetSocketAddress("0.0.0.0", ThreadLocalRandom.current().nextInt(20000, 60000));
+        BedrockClient client = new BedrockClient(address);
+        client.setRakNetVersion(protocol.getRaknetVersion());
+        return client.bind().thenApply(i -> client);
     }
 
     public boolean isRunning(){

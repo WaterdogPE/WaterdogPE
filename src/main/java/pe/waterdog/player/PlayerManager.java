@@ -18,12 +18,9 @@ package pe.waterdog.player;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.nukkitx.protocol.bedrock.BedrockClient;
 import pe.waterdog.ProxyServer;
-import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.utils.types.Permission;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,13 +40,6 @@ public class PlayerManager {
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
         builder.setNameFormat("WaterdogInternal Executor");
         this.internalThreadPool = Executors.newCachedThreadPool(builder.build());
-    }
-
-    public CompletableFuture<BedrockClient> bindClient(ProtocolConstants.Protocol protocol) {
-        InetSocketAddress address = new InetSocketAddress("0.0.0.0", ThreadLocalRandom.current().nextInt(20000, 60000));
-        BedrockClient client = new BedrockClient(address);
-        client.setRakNetVersion(protocol.getRaknetVersion());
-        return client.bind().thenApply(i -> client);
     }
 
     public boolean registerPlayer(ProxiedPlayer player) {
