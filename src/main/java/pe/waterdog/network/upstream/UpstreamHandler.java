@@ -24,6 +24,7 @@ import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.PlayerChatEvent;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 
 /**
  * Main handler for handling packets received from upstream.
@@ -37,28 +38,35 @@ public class UpstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(RequestChunkRadiusPacket packet) {
+    public final boolean handle(RequestChunkRadiusPacket packet) {
         this.player.getRewriteData().setChunkRadius(packet);
         return false;
     }
 
     @Override
-    public boolean handle(PacketViolationWarningPacket packet) {
+    public final boolean handle(PacketViolationWarningPacket packet) {
         this.player.getLogger().warning("Received "+packet.toString());
+        throw CancelSignalException.CANCEL;
+    }
+
+    @Override
+    public final boolean handle(TextPacket packet) {
+        PlayerChatEvent event = new PlayerChatEvent(this.player, packet.getMessage());
+        ProxyServer.getInstance().getEventManager().callEvent(event);
+        packet.setMessage(event.getMessage());
+
+        if (event.isCancelled()){
+            throw CancelSignalException.CANCEL;
+        }
         return true;
     }
 
     @Override
-    public boolean handle(TextPacket packet) {
-        PlayerChatEvent event = new PlayerChatEvent(this.player, packet.getMessage());
-        ProxyServer.getInstance().getEventManager().callEvent(event);
-        packet.setMessage(event.getMessage());
-        return event.isCancelled();
-    }
-
-    @Override
-    public boolean handle(CommandRequestPacket packet) {
+    public final boolean handle(CommandRequestPacket packet) {
         String message = packet.getCommand();
-        return this.player.getProxy().handlePlayerCommand(this.player, message);
+        if (this.player.getProxy().handlePlayerCommand(this.player, message)){
+            throw CancelSignalException.CANCEL;
+        }
+        return false;
     }
 }

@@ -22,6 +22,7 @@ import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import io.netty.buffer.ByteBuf;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,27 +42,48 @@ public class ProxyBatchBridge implements BatchHandler {
 
     @Override
     public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
-        List<BedrockPacket> newPackets = new ArrayList<>();
         BedrockPacketHandler handler = session.getPacketHandler();
+        List<BedrockPacket> allPackets = new ArrayList<>();
+        boolean changed = false;
 
         for (BedrockPacket packet : packets) {
-            if (this.sendPacket(packet, handler)) {
-                newPackets.add(packet);
+            try {
+                if (this.handlePacket(packet, handler)) {
+                    changed = true;
+                }
+                allPackets.add(packet);
+            }catch (CancelSignalException e){
             }
         }
 
-        if (!newPackets.isEmpty()) {
-            this.session.sendWrapped(newPackets, true);
+        if (!changed && allPackets.size() == packets.size()){
+            buf.readerIndex(1);
+            this.session.sendWrapped(buf, this.session.isEncrypted());
+        }else {
+            this.session.sendWrapped(allPackets, true);
         }
     }
 
-    public boolean sendPacket(BedrockPacket packet, BedrockPacketHandler handler) {
-        boolean unhandled = !packet.handle(handler);
-        boolean sendPacket = this.player.getEntityMap().doRewrite(packet) || unhandled;
+    /**
+     * @return if packet was changed
+     * @throws CancelSignalException if we do not want to send packet
+     */
+    public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
+        boolean handled = false, canceled = false;
+        try {
+            handled = packet.handle(handler);
+        }catch (CancelSignalException e){
+            canceled = true;
+        }
 
-        if (this.trackEntities && sendPacket) {
+        boolean changed = this.player.getEntityMap().doRewrite(packet) || handled;
+        if (!changed && canceled){
+            throw CancelSignalException.CANCEL;
+        }
+
+        if (this.trackEntities) {
             this.player.getEntityTracker().trackEntity(packet);
         }
-        return sendPacket;
+        return changed;
     }
 }

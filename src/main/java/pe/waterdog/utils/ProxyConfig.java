@@ -44,6 +44,9 @@ public class ProxyConfig extends YamlConfig {
     private final Map<String, List<String>> playerPermissions = new HashMap<>();
     private List<String> defaultPermissions;
 
+    private final int upstreamCompression;
+    private final int downstreamCompression;
+
     public ProxyConfig(File file){
         super(file);
 
@@ -59,6 +62,8 @@ public class ProxyConfig extends YamlConfig {
         this.servers = this.getInetAddressMap("servers");
         this.defaultPermissions = this.getStringList("permissions_default");
         this.playerPermissions.putAll(this.getPlayerPermissions("permissions"));
+        this.upstreamCompression = this.getInt("upstream_compression_level");
+        this.downstreamCompression = this.getInt("downstream_compression_level");
     }
 
     public InetSocketAddress getInetAddress(String key) {
@@ -173,5 +178,13 @@ public class ProxyConfig extends YamlConfig {
 
     public List<String> getDefaultPermissions() {
         return this.defaultPermissions;
+    }
+
+    public int getUpstreamCompression() {
+        return this.upstreamCompression;
+    }
+
+    public int getDownstreamCompression() {
+        return this.downstreamCompression;
     }
 }

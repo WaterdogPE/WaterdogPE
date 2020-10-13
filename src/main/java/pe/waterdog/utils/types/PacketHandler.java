@@ -14,24 +14,29 @@
  * limitations under the License.
  */
 
-package pe.waterdog.network.bridge;
+package pe.waterdog.utils.types;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.utils.exceptions.CancelSignalException;
 
-public class TransferBatchBridge extends ProxyBatchBridge {
+/**
+ * Using PacketHandler class plugins can handle safely handle packet.
+ * Handle method will be only invoked if packet was not canceled by proxy handlers.
+ */
+public abstract class PacketHandler implements BedrockPacketHandler {
 
-    public TransferBatchBridge(ProxiedPlayer player, BedrockSession session) {
-        super(player, session);
-        this.trackEntities = false;
+    private final BedrockSession session;
+
+    public PacketHandler(BedrockSession session){
+        this.session = session;
     }
 
-    @Override
-    public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
-        super.handlePacket(packet, handler);
-        throw CancelSignalException.CANCEL;
+    public boolean handlePacket(BedrockPacket packet) {
+        return packet.handle(this);
+    }
+
+    public BedrockSession getSession() {
+        return this.session;
     }
 }

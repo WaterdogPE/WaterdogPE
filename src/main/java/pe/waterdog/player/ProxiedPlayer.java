@@ -37,9 +37,13 @@ import pe.waterdog.event.defaults.PlayerDisconnectEvent;
 import pe.waterdog.event.defaults.PlayerLoginEvent;
 import pe.waterdog.event.defaults.PreTransferEvent;
 import pe.waterdog.logger.MainLogger;
+
+import pe.waterdog.network.bridge.UpstreamBridge;
+import pe.waterdog.utils.types.PacketHandler;
+import pe.waterdog.utils.types.Permission;
+import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
-import pe.waterdog.network.bridge.ProxyBatchBridge;
 import pe.waterdog.network.bridge.TransferBatchBridge;
 import pe.waterdog.network.downstream.InitialHandler;
 import pe.waterdog.network.downstream.SwitchDownstreamHandler;
@@ -91,6 +95,13 @@ public class ProxiedPlayer implements CommandSender {
 
     private boolean canRewrite = false;
 
+    /**
+     * Additional downstream and upstream handlers can be set by plugin.
+     * Do not set directly BedrockPacketHandler to sessions!
+     */
+    private PacketHandler pluginUpstreamHandler = null;
+    private PacketHandler pluginDownstreamHandler = null;
+
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData) {
         this.proxy = proxy;
         this.upstream = session;
@@ -113,9 +124,7 @@ public class ProxiedPlayer implements CommandSender {
                 this.disconnect(event.getCancelReason());
                 return;
             }
-            this.upstream.setPacketHandler(new UpstreamHandler(this));
-            this.upstream.addDisconnectHandler((reason) -> this.disconnect(null));
-
+            SessionInjections.injectUpstreamHandlers(this.upstream, this);
             ServerInfo serverInfo = this.getProxy().getJoinHandler().determineServer(this);
             if (serverInfo != null) {
                 this.connect(serverInfo);
@@ -151,7 +160,7 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        CompletableFuture<BedrockClient> future = this.proxy.getPlayerManager().bindClient();
+        CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
         future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
                 this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
@@ -167,7 +176,7 @@ public class ProxiedPlayer implements CommandSender {
 
                 downstream.setPacketHandler(new InitialHandler(this));
                 downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
-                this.upstream.setBatchHandler(new ProxyBatchBridge(this, downstream));
+                this.upstream.setBatchHandler(new UpstreamBridge(this, downstream));
             } else {
                 this.pendingConnection = targetServer;
 
@@ -534,5 +543,21 @@ public class ProxiedPlayer implements CommandSender {
 
     public ObjectSet<String> getScoreboards() {
         return this.scoreboards;
+    }
+
+    public void setPluginUpstreamHandler(PacketHandler pluginUpstreamHandler) {
+        this.pluginUpstreamHandler = pluginUpstreamHandler;
+    }
+
+    public PacketHandler getPluginUpstreamHandler() {
+        return this.pluginUpstreamHandler;
+    }
+
+    public void setPluginDownstreamHandler(PacketHandler pluginDownstreamHandler) {
+        this.pluginDownstreamHandler = pluginDownstreamHandler;
+    }
+
+    public PacketHandler getPluginDownstreamHandler() {
+        return this.pluginDownstreamHandler;
     }
 }
