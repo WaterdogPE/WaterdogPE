@@ -19,6 +19,7 @@ package pe.waterdog.player;
 import com.google.common.collect.ImmutableMap;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import pe.waterdog.ProxyServer;
+import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.utils.types.Permission;
 
 import java.net.InetSocketAddress;
@@ -41,9 +42,10 @@ public class PlayerManager {
         this.proxy = proxy;
     }
 
-    public CompletableFuture<BedrockClient> bindClient() {
+    public CompletableFuture<BedrockClient> bindClient(ProtocolConstants.Protocol protocol) {
         InetSocketAddress address = new InetSocketAddress("0.0.0.0", ThreadLocalRandom.current().nextInt(20000, 60000));
         BedrockClient client = new BedrockClient(address);
+        client.setRakNetVersion(protocol.getRaknetVersion());
         return client.bind().thenApply(i -> client);
     }
 

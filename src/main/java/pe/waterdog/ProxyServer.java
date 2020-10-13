@@ -129,6 +129,9 @@ public class ProxyServer {
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
         bedrockServer.setHandler(new ProxyListener(this));
         bedrockServer.bind().join();
+
+        this.logger.debug("Upstream <-> Proxy compression level "+this.getConfiguration().getUpstreamCompression());
+        this.logger.debug("Downstream <-> Proxy compression level "+this.getConfiguration().getDownstreamCompression());
     }
 
     private void tickProcessor() {
