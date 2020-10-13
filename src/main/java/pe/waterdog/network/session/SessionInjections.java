@@ -22,11 +22,19 @@ import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
 import pe.waterdog.network.bridge.ProxyBatchBridge;
 import pe.waterdog.network.downstream.ConnectedDownstreamHandler;
+import pe.waterdog.network.upstream.UpstreamHandler;
 import pe.waterdog.player.ProxiedPlayer;
 
 public class SessionInjections {
 
+    public static void injectUpstreamHandlers(BedrockSession upstream, ProxiedPlayer player){
+        upstream.setCompressionLevel(player.getProxy().getConfiguration().getUpstreamCompression());
+        upstream.setPacketHandler(new UpstreamHandler(player));
+        upstream.addDisconnectHandler((reason) -> player.disconnect(null, true));
+    }
+
     public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server) {
+        downstream.setCompressionLevel(player.getProxy().getConfiguration().getDownstreamCompression());
         downstream.addDisconnectHandler((reason) -> {
             player.getLogger().info("[" + downstream.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
         });

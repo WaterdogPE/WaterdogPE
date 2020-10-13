@@ -24,7 +24,7 @@ import it.unimi.dsi.fastutil.objects.Object2ShortLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ShortMap;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectMap;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import pe.waterdog.network.protocol.ProtocolConstants;
 
 public class BlockPalette {
@@ -85,7 +85,6 @@ public class BlockPalette {
         private final int hash;
 
         public BlockPair(String name, Object data) {
-            super(name, data);
             this.key = name;
             this.data = data;
             this.hash = super.hashCode();
@@ -97,6 +96,11 @@ public class BlockPalette {
 
         public Object getRight() {
             return this.data;
+        }
+
+        @Override
+        public Object setValue(Object value) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

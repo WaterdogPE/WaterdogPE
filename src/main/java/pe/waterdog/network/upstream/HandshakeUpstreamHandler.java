@@ -42,11 +42,11 @@ import java.util.UUID;
 
 public class HandshakeUpstreamHandler implements BedrockPacketHandler {
 
-    private final ProxyServer server;
+    private final ProxyServer proxy;
     private final BedrockServerSession session;
 
-    public HandshakeUpstreamHandler(ProxyServer server, BedrockServerSession session) {
-        this.server = server;
+    public HandshakeUpstreamHandler(ProxyServer proxy, BedrockServerSession session) {
+        this.proxy = proxy;
         this.session = session;
     }
 
@@ -54,10 +54,10 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
     @Override
     public boolean handle(LoginPacket packet) {
         int protocolVersion = packet.getProtocolVersion();
+        this.proxy.getLogger().info("[" + session.getAddress() + "] <-> Upstream has connected (protocol="+protocolVersion+")");
+
         ProtocolConstants.Protocol protocol = ProtocolConstants.get(protocolVersion);
-
         session.setPacketCodec(protocol == null ? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
-
         if (protocolVersion != VersionInfo.LATEST_PROTOCOL_VERSION && protocol == null) {
             PlayStatusPacket status = new PlayStatusPacket();
             status.setStatus((protocolVersion > VersionInfo.LATEST_PROTOCOL_VERSION ?
@@ -97,7 +97,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
             );
 
             PlayerPreLoginEvent event = new PlayerPreLoginEvent(loginData);
-            this.server.getEventManager().callEvent(event);
+            this.proxy.getEventManager().callEvent(event);
 
             if (event.isCancelled()) {
                 // Pre Login was cancelled
@@ -116,10 +116,10 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
             loginData.setSignedClientData(signedClientData);
 
             PlayerCreationEvent creationEvent = new PlayerCreationEvent(ProxiedPlayer.class, loginData, this.session.getAddress());
-            this.server.getEventManager().callEvent(creationEvent);
+            this.proxy.getEventManager().callEvent(creationEvent);
 
-            ProxiedPlayer player = creationEvent.getBaseClass().getConstructor(ProxyServer.class, BedrockServerSession.class, LoginData.class).newInstance(this.server, this.session, loginData);
-            if (!this.server.getPlayerManager().registerPlayer(player)) {
+            ProxiedPlayer player = creationEvent.getBaseClass().getConstructor(ProxyServer.class, BedrockServerSession.class, LoginData.class).newInstance(this.proxy, this.session, loginData);
+            if (!this.proxy.getPlayerManager().registerPlayer(player)) {
                 return true;
             }
 

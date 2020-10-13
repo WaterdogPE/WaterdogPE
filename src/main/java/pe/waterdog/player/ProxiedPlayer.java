@@ -102,8 +102,7 @@ public class ProxiedPlayer implements CommandSender {
                 this.disconnect(event.getCancelReason());
                 return;
             }
-            this.upstream.setPacketHandler(new UpstreamHandler(this));
-            this.upstream.addDisconnectHandler((reason) -> this.disconnect(null, true));
+            SessionInjections.injectUpstreamHandlers(this.upstream, this);
 
             ServerInfo serverInfo = this.getProxy().getJoinHandler().determineServer(this);
             if (serverInfo != null) {
@@ -135,7 +134,7 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        CompletableFuture<BedrockClient> future = this.proxy.getPlayerManager().bindClient();
+        CompletableFuture<BedrockClient> future = this.proxy.getPlayerManager().bindClient(this.getProtocol());
         future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
                 this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);

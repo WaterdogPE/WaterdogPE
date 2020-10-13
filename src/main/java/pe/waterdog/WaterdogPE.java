@@ -16,7 +16,11 @@
 
 package pe.waterdog;
 
-
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 import pe.waterdog.logger.MainLogger;
 
 public class WaterdogPE {
@@ -40,10 +44,22 @@ public class WaterdogPE {
             logger.warning("Unknown build id. Custom build? Unofficial builds should be not run in production!");
         }
 
+        if (VersionInfo.IS_DEVELOPMENT){
+            setLoggerLevel(Level.DEBUG);
+        }
+
         try {
             ProxyServer server = new ProxyServer(logger, DATA_PATH, PLUGIN_PATH);
         } catch (Exception e) {
             logger.logException(e);
         }
+    }
+
+    public static void setLoggerLevel(Level level){
+        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+        Configuration log4jConfig = context.getConfiguration();
+        LoggerConfig loggerConfig = log4jConfig.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
+        loggerConfig.setLevel(level);
+        context.updateLoggers();
     }
 }
