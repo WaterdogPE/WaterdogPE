@@ -21,6 +21,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Use this Annotation to mark asynchronously handled events. @AsyncEvent annotated Events will have all the event handlers
+ * be called asynchronously. This is recommended especially for events which don't change any values,
+ * for example the DisconnectEvent or TransferCompleteEvent
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface AsyncEvent {

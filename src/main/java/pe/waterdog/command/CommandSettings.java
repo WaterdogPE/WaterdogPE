@@ -18,6 +18,9 @@ package pe.waterdog.command;
 
 import pe.waterdog.utils.types.TranslationContainer;
 
+/**
+ * a container holding base information of each command
+ */
 public class CommandSettings {
 
     private final String usageMessage;

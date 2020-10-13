@@ -20,6 +20,9 @@ import org.fusesource.jansi.Ansi;
 
 import java.util.regex.Pattern;
 
+/**
+ * Base color class usable for sending colors in the console
+ */
 public enum Color {
 
     BLACK('0', 0x0, Ansi.Color.BLACK),
@@ -45,7 +48,7 @@ public enum Color {
     RESET('r', 0x15, null, false, Ansi.Attribute.RESET);
 
     public static final char ESCAPE = '\u00A7';
-    private static final Pattern CLEAN_PATTERN = Pattern.compile("(?i)" + String.valueOf(ESCAPE) + "[0-9A-FK-OR]");
+    private static final Pattern CLEAN_PATTERN = Pattern.compile("(?i)" + ESCAPE + "[0-9A-FK-OR]");
 
     private final char code;
     private final int intCode;

@@ -31,6 +31,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Base Player Manager, managing the registration, binding and removal of instances of ProxiedPlayer.
+ */
 public class PlayerManager {
 
     private final ProxyServer proxy;

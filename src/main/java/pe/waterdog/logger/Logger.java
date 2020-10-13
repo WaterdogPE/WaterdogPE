@@ -16,6 +16,9 @@
 
 package pe.waterdog.logger;
 
+/**
+ * Base Logger class
+ */
 public interface Logger {
 
     void emergency(String message);

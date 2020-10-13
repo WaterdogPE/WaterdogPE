@@ -20,6 +20,10 @@ import pe.waterdog.event.AsyncEvent;
 import pe.waterdog.event.CancellableEvent;
 import pe.waterdog.player.ProxiedPlayer;
 
+/**
+ * Called right before the initial connect is made.
+ * Cancelling it will close the connection with the cancelReason as the disconnectMessage.
+ */
 @AsyncEvent
 public class PlayerLoginEvent extends PlayerEvent implements CancellableEvent {
 

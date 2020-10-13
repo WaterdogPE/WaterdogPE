@@ -18,6 +18,7 @@ package pe.waterdog;
 
 import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.BedrockServer;
+import io.netty.util.ResourceLeakDetector;
 import lombok.SneakyThrows;
 import pe.waterdog.command.*;
 import pe.waterdog.console.TerminalConsole;
@@ -26,10 +27,6 @@ import pe.waterdog.event.defaults.DispatchCommandEvent;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
-import pe.waterdog.utils.types.IJoinHandler;
-import pe.waterdog.utils.types.IReconnectHandler;
-import pe.waterdog.utils.types.VanillaJoinHandler;
-import pe.waterdog.utils.types.VanillaReconnectHandler;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.plugin.PluginManager;
@@ -38,13 +35,12 @@ import pe.waterdog.scheduler.WaterdogScheduler;
 import pe.waterdog.utils.ConfigurationManager;
 import pe.waterdog.utils.LangConfig;
 import pe.waterdog.utils.ProxyConfig;
-import pe.waterdog.utils.types.TextContainer;
+import pe.waterdog.utils.types.*;
 
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -77,6 +73,7 @@ public class ProxyServer {
     private final ConsoleCommandSender commandSender;
     private CommandMap commandMap;
 
+
     private int currentTick = 0;
     private long nextTick;
 
@@ -108,7 +105,7 @@ public class ProxyServer {
         this.commandMap = new DefaultCommandMap(this, SimpleCommandMap.DEFAULT_PREFIX);
         this.console = new TerminalConsole(this);
         this.boot();
-        this.tickProcessor();
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
     }
 
     public static ProxyServer getInstance() {
@@ -116,30 +113,39 @@ public class ProxyServer {
     }
 
     private void boot() {
+
+        System.setSecurityManager(null);
+        System.setProperty("java.net.preferIPv4Stack", "true");
+        System.setProperty("io.netty.selectorAutoRebuildThreshold", "0");
+        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
+
+
         this.console.getConsoleThread().start();
         this.pluginManager.enableAllPlugins();
 
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
         this.logger.info("Binding to " + bindAddress);
 
-        if (this.getConfiguration().isEnabledQuery()){
+        if (this.getConfiguration().isEnabledQuery()) {
             this.queryHandler = new QueryHandler(this, bindAddress);
         }
 
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
         bedrockServer.setHandler(new ProxyListener(this));
-        bedrockServer.bind().join();
+        bedrockServer.bind().whenComplete((r, t) -> {
+            logger.info("Server started successfully");
+        });
     }
 
     private void tickProcessor() {
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+
         this.nextTick = System.currentTimeMillis();
 
         while (!this.shutdown) {
             long tickTime = System.currentTimeMillis();
             long delay = this.nextTick - tickTime;
 
-            if (delay >= 50){
+            if (delay >= 50) {
                 try {
                     Thread.sleep(Math.max(25, delay - 25));
                 } catch (InterruptedException e) {
@@ -149,14 +155,14 @@ public class ProxyServer {
 
             try {
                 this.onTick(++this.currentTick);
-            }catch (Exception e){
+            } catch (Exception e) {
                 this.logger.error("Error while ticking proxy!", e);
             }
 
-            if (this.nextTick - tickTime < -1000){
+            if (this.nextTick - tickTime < -1000) {
                 //We are not doing 20 ticks per second
                 this.nextTick = tickTime;
-            }else {
+            } else {
                 this.nextTick += 50;
             }
         }
@@ -164,7 +170,7 @@ public class ProxyServer {
         this.bedrockServer.close();
     }
 
-    private void onTick(int currentTick){
+    private void onTick(int currentTick) {
         this.scheduler.onTick(currentTick);
     }
 
@@ -173,7 +179,7 @@ public class ProxyServer {
         this.shutdown = true;
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
-            player.getValue().disconnect("Proxy Shutdown", true);
+            player.getValue().disconnect("Proxy Shutdown");
         }
         Thread.sleep(500);
 
@@ -181,29 +187,29 @@ public class ProxyServer {
         this.pluginManager.disableAllPlugins();
     }
 
-    public String translate(TextContainer textContainer){
+    public String translate(TextContainer textContainer) {
         return this.getLanguageConfig().translateContainer(textContainer);
     }
 
-    public boolean handlePlayerCommand(ProxiedPlayer player, String message){
-        if (!this.commandMap.handleMessage(player, message)){
+    public boolean handlePlayerCommand(ProxiedPlayer player, String message) {
+        if (!this.commandMap.handleMessage(player, message)) {
             return false;
         }
         return this.dispatchCommand(player, message.substring(this.commandMap.getCommandPrefix().length()));
     }
 
-    public boolean dispatchCommand(CommandSender sender, String message){
+    public boolean dispatchCommand(CommandSender sender, String message) {
         DispatchCommandEvent event = new DispatchCommandEvent(sender, message);
         this.eventManager.callEvent(event);
 
-        if (event.isCancelled()){
+        if (event.isCancelled()) {
             return false;
         }
         String[] args = message.split(" ");
         return this.commandMap.handleCommand(sender, args[0], Arrays.copyOfRange(args, 1, args.length));
     }
 
-    public boolean isRunning(){
+    public boolean isRunning() {
         return !this.shutdown;
     }
 
@@ -227,7 +233,7 @@ public class ProxyServer {
         return this.configurationManager.getProxyConfig();
     }
 
-    public LangConfig getLanguageConfig(){
+    public LangConfig getLanguageConfig() {
         return this.configurationManager.getLangConfig();
     }
 
@@ -257,6 +263,7 @@ public class ProxyServer {
 
     /**
      * Allows to add servers dynamically to server map
+     *
      * @return if server was registered
      */
     public boolean registerServerInfo(ServerInfo serverInfo) {
@@ -266,6 +273,7 @@ public class ProxyServer {
 
     /**
      * Remove server from server map
+     *
      * @return removed ServerInfo or null
      */
     public ServerInfo removeServerInfo(String serverName) {

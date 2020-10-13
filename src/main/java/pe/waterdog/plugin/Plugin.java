@@ -31,6 +31,9 @@ import java.io.InputStream;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+/**
+ * Base plugin class all plugins must extend
+ */
 public abstract class Plugin {
 
     private PluginYAML description;
@@ -64,12 +67,32 @@ public abstract class Plugin {
         }
     }
 
+    /**
+     * Called when the plugin is loaded into the server, but before it was enabled.
+     * Can be used to load important informations or to establish connections
+     */
     public void onStartup(){
     }
+
+    /**
+     * Called when the base server startup is done and the plugins are getting enabled.
+     * Also called whenever the plugin state changes to enabled
+     */
     public abstract void onEnable();
+
+    /**
+     * Called on server shutdown, or when the plugin gets disabled, for example by another plugin or when an error occured.
+     * Also gets called when the plugin state changes to disabled
+     */
     public void onDisable(){
     }
 
+
+    /**
+     * Changes the plugin's state
+     * @param enabled whether the plugin should be enabled or disabled
+     * @throws PluginChangeStateException Thrown whenever an uncaught error occurred in onEnable() or onDisable() of a plugin
+     */
     public void setEnabled(boolean enabled) throws PluginChangeStateException {
         if (this.enabled == enabled){
             return;
@@ -86,6 +109,10 @@ public abstract class Plugin {
         }
     }
 
+    /**
+     * @param filename the file name to read
+     * @return Returns a file from inside the plugin jar as an InputStream
+     */
     public InputStream getResourceFile(String filename) {
         try {
             JarFile pluginJar = new JarFile(this.pluginFile);
@@ -105,6 +132,15 @@ public abstract class Plugin {
         return this.saveResource(filename, filename, replace);
     }
 
+    /**
+     * Saves a resource from the plugin jar's resources to the plugin folder
+     * @param filename the name of the file in the jar's resources
+     * @param outputName the name the file should be saved as in the plugin folder
+     * @param replace whether the file should be replaced even if present already
+     * @return returns false if an exception occured, the file already exists and shouldn't be replaced, and when the file could
+     *         not be found in the jar
+     *         returns true if the file overwrite / copy was successful
+     */
     public boolean saveResource(String filename, String outputName, boolean replace) {
         Preconditions.checkArgument(filename != null && !filename.trim().isEmpty(), "Filename can not be null!");
 
@@ -129,6 +165,9 @@ public abstract class Plugin {
         return true;
     }
 
+    /**
+     * Loads the config.yml from the plugin jar if not present in the data folder and loads it as a YamlConfig
+     */
     public void loadConfig(){
         try {
             this.saveResource("config.yml");
@@ -138,6 +177,9 @@ public abstract class Plugin {
         }
     }
 
+    /**
+     * @return Returns the config.yml class, loads it if not loaded yet using loadConfig()
+     */
     public Configuration getConfig(){
         if (this.config == null){
             this.loadConfig();

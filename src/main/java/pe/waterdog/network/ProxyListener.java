@@ -32,6 +32,10 @@ import pe.waterdog.utils.ProxyConfig;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 
+/**
+ * Main class for Proxy-related traffic.
+ * Handles Bedrock Queries as well as new incoming connections.
+ */
 public class ProxyListener implements BedrockServerEventHandler {
 
     private static final ThreadLocal<BedrockPong> PONG_THREAD_LOCAL = ThreadLocal.withInitial(BedrockPong::new);

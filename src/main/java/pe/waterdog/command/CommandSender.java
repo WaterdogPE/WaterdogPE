@@ -19,13 +19,19 @@ package pe.waterdog.command;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.utils.types.TextContainer;
 
+/**
+ * base interface for all instances that are able to issue commands.
+ */
 public interface CommandSender {
 
     String getName();
+
     boolean isPlayer();
+
     boolean hasPermission(String permission);
 
     void sendMessage(String message);
+
     void sendMessage(TextContainer message);
 
     ProxyServer getProxy();

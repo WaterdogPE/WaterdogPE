@@ -16,9 +16,18 @@
 
 package pe.waterdog.command;
 
+/**
+ * base class for proxy commands
+ */
 public abstract class Command {
 
+    /**
+     * the name of the command
+     */
     private final String name;
+    /**
+     * the command settings assigned to it
+     */
     private final CommandSettings settings;
 
     public Command(String name, CommandSettings settings){

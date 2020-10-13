@@ -22,6 +22,10 @@ import pe.waterdog.player.ProxiedPlayer;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 
+/**
+ * This event is called when the Proxy receives a ping packet from a client.
+ * It can be used to modify data, for example to combine proxy player counts.
+ */
 public class ProxyPingEvent extends Event {
 
     private String motd;

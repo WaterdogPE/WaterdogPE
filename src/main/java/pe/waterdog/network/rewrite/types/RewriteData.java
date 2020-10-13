@@ -21,15 +21,32 @@ import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 
 import java.util.List;
 
+/**
+ * Rewrite data of a present player.
+ * Holds both the client-known entityId and the downstream-known clientId.
+ * Important when interacting when packets, as different packet targets might want different entityIds.
+ */
 public class RewriteData {
 
+    /**
+     * the downstream-known entityId
+     */
     private long entityId;
+    /**
+     * the original entityId known to the client
+     */
     private long originalEntityId;
 
     private BlockPalette blockPalette;
     private BlockPaletteRewrite paletteRewrite;
 
+    /**
+     * A list of GameRules currently known to the client.
+     */
     private List<GameRuleData<?>> gameRules;
+    /**
+     * The dimensionId the player is currently in
+     */
     private int dimension = 0;
     private RequestChunkRadiusPacket chunkRadius;
 

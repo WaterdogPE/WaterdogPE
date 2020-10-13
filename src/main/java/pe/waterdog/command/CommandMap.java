@@ -18,10 +18,15 @@ package pe.waterdog.command;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 
+/**
+ * base interface for a CommandMap. provides required methods for all command maps that should exist
+ */
 public interface CommandMap {
 
     boolean registerCommand(String name, Command command);
+
     boolean registerAlias(String name, Command command);
+
     boolean unregisterCommand(String name);
 
     boolean isRegistered(String name);
@@ -38,5 +43,6 @@ public interface CommandMap {
     boolean handleCommand(CommandSender sender, String command, String[] args);
 
     String getCommandPrefix();
+
     Object2ObjectMap<String, Command> getCommands();
 }

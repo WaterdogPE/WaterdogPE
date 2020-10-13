@@ -23,6 +23,9 @@ import pe.waterdog.network.ServerInfo;
 
 import java.net.InetSocketAddress;
 
+/**
+ * Class holding a connection between a Player (client) and a MC:BE Server (downstream).
+ */
 public class ServerConnection {
 
     private final ServerInfo serverInfo;

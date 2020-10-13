@@ -11,6 +11,9 @@ import pe.waterdog.VersionInfo;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Constants for all currently supported versions of the Minecraft: Bedrock Edition
+ */
 public class ProtocolConstants {
 
     public static Map<Integer, Protocol> protocolMap = new HashMap<>();

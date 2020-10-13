@@ -23,6 +23,10 @@ import pe.waterdog.player.ProxiedPlayer;
 
 import java.util.List;
 
+/**
+ * Pipeline Handler used to track entities of any kind, aswell as other data
+ * that will be required to get removed when switching servers.
+ */
 public class EntityTracker implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;
