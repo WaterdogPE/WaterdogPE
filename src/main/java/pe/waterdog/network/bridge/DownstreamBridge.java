@@ -20,6 +20,7 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 
 public class DownstreamBridge extends ProxyBatchBridge {
 
@@ -28,8 +29,8 @@ public class DownstreamBridge extends ProxyBatchBridge {
     }
 
     @Override
-    public boolean sendPacket(BedrockPacket packet, BedrockPacketHandler handler) {
-        boolean handled = super.sendPacket(packet, handler);
-        return this.player.getBlockMap().doRewrite(packet) || handled;
+    public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
+        boolean changed = super.handlePacket(packet, handler);
+        return this.player.getBlockMap().doRewrite(packet) || changed;
     }
 }

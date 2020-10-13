@@ -16,7 +16,7 @@
 
 package pe.waterdog.utils.exceptions;
 
-public class CancelSignalException extends Exception {
+public class CancelSignalException extends RuntimeException {
 
     public static CancelSignalException CANCEL = new CancelSignalException();
 }

@@ -17,6 +17,7 @@
 package pe.waterdog.player;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.protocol.ProtocolConstants;
@@ -27,10 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 public class PlayerManager {
 
@@ -38,8 +36,13 @@ public class PlayerManager {
 
     private final ConcurrentMap<UUID, ProxiedPlayer> players = new ConcurrentHashMap<>();
 
+    private final Executor internalThreadPool;
+
     public PlayerManager(ProxyServer proxy) {
         this.proxy = proxy;
+        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
+        builder.setNameFormat("WaterdogInternal Executor");
+        this.internalThreadPool = Executors.newCachedThreadPool(builder.build());
     }
 
     public CompletableFuture<BedrockClient> bindClient(ProtocolConstants.Protocol protocol) {
@@ -98,5 +101,10 @@ public class PlayerManager {
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
         return ImmutableMap.copyOf(this.players);
+    }
+
+
+    public Executor getInternalThreadPool() {
+        return this.internalThreadPool;
     }
 }
