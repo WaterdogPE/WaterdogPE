@@ -107,8 +107,6 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         rewriteData.setPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
         long runtimeId = PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewriteData.getEntityId(), rewriteData.getOriginalEntityId());
 
-        //TODO: scoreboards
-
         PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getDefaultSpawn());
         PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
 
@@ -172,9 +170,6 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
         TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
         ProxyServer.getInstance().getEventManager().callEvent(event);
-        this.player.getProxy().getPlayerManager().getInternalThreadPool().execute(() -> {
-            this.player.getUpstream().sendPacketImmediately(packet);
-        });
         throw CancelSignalException.CANCEL;
     }
 }
