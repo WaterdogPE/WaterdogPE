@@ -21,21 +21,19 @@ import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import pe.waterdog.player.ProxiedPlayer;
 
-public class DownstreamBridge extends ProxyBatchBridge {
+public class UpstreamBridge extends ProxyBatchBridge {
 
-    public DownstreamBridge(ProxiedPlayer player, BedrockSession session) {
+    public UpstreamBridge(ProxiedPlayer player, BedrockSession session) {
         super(player, session);
     }
 
     @Override
     public boolean sendPacket(BedrockPacket packet, BedrockPacketHandler handler) {
         boolean handled = super.sendPacket(packet, handler);
-        boolean rewrote = this.player.getBlockMap().doRewrite(packet);
-
         boolean pluginHandled = false;
-        if (this.player.getPluginDownstreamHandler() != null){
-            pluginHandled = this.player.getPluginDownstreamHandler().handlePacket(packet);
+        if (this.player.getPluginUpstreamHandler() != null){
+            pluginHandled = this.player.getPluginUpstreamHandler().handlePacket(packet);
         }
-        return handled || rewrote || pluginHandled;
+        return handled || pluginHandled;
     }
 }

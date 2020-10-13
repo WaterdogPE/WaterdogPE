@@ -59,7 +59,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(ServerToClientHandshakePacket packet) {
+    public final boolean handle(ServerToClientHandshakePacket packet) {
         try {
             SignedJWT saltJwt = SignedJWT.parse(packet.getJwt());
             URI x5u = saltJwt.getHeader().getX509CertURL();
@@ -80,7 +80,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(ResourcePacksInfoPacket packet) {
+    public final boolean handle(ResourcePacksInfoPacket packet) {
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.HAVE_ALL_PACKS);
         this.getDownstream().sendPacketImmediately(response);
@@ -88,7 +88,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(ResourcePackStackPacket packet) {
+    public final boolean handle(ResourcePackStackPacket packet) {
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.COMPLETED);
         this.getDownstream().sendPacketImmediately(response);
@@ -96,7 +96,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(StartGamePacket packet) {
+    public final boolean handle(StartGamePacket packet) {
         RewriteData rewriteData = player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
         rewriteData.setDimension(packet.getDimensionId());

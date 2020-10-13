@@ -31,19 +31,19 @@ public class UpstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(RequestChunkRadiusPacket packet) {
+    public final boolean handle(RequestChunkRadiusPacket packet) {
         this.player.getRewriteData().setChunkRadius(packet);
         return false;
     }
 
     @Override
-    public boolean handle(PacketViolationWarningPacket packet) {
+    public final boolean handle(PacketViolationWarningPacket packet) {
         this.player.getLogger().warning("Received "+packet.toString());
         return true;
     }
 
     @Override
-    public boolean handle(TextPacket packet) {
+    public final boolean handle(TextPacket packet) {
         PlayerChatEvent event = new PlayerChatEvent(this.player, packet.getMessage());
         ProxyServer.getInstance().getEventManager().callEvent(event);
         packet.setMessage(event.getMessage());
@@ -51,7 +51,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(CommandRequestPacket packet) {
+    public final boolean handle(CommandRequestPacket packet) {
         String message = packet.getCommand();
         return this.player.getProxy().handlePlayerCommand(this.player, message);
     }
