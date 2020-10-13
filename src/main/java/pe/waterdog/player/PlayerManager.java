@@ -17,20 +17,15 @@
 package pe.waterdog.player;
 
 import com.google.common.collect.ImmutableMap;
-import com.nukkitx.protocol.bedrock.BedrockClient;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import pe.waterdog.ProxyServer;
-import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.utils.types.Permission;
 
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 public class PlayerManager {
 
@@ -38,15 +33,13 @@ public class PlayerManager {
 
     private final ConcurrentMap<UUID, ProxiedPlayer> players = new ConcurrentHashMap<>();
 
+    private final Executor internalThreadPool;
+
     public PlayerManager(ProxyServer proxy) {
         this.proxy = proxy;
-    }
-
-    public CompletableFuture<BedrockClient> bindClient(ProtocolConstants.Protocol protocol) {
-        InetSocketAddress address = new InetSocketAddress("0.0.0.0", ThreadLocalRandom.current().nextInt(20000, 60000));
-        BedrockClient client = new BedrockClient(address);
-        client.setRakNetVersion(protocol.getRaknetVersion());
-        return client.bind().thenApply(i -> client);
+        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
+        builder.setNameFormat("WaterdogInternal Executor");
+        this.internalThreadPool = Executors.newCachedThreadPool(builder.build());
     }
 
     public boolean registerPlayer(ProxiedPlayer player) {
@@ -98,5 +91,10 @@ public class PlayerManager {
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
         return ImmutableMap.copyOf(this.players);
+    }
+
+
+    public Executor getInternalThreadPool() {
+        return this.internalThreadPool;
     }
 }

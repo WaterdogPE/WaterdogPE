@@ -21,6 +21,7 @@ import com.nukkitx.protocol.bedrock.packet.*;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.PlayerChatEvent;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 
 public class UpstreamHandler implements BedrockPacketHandler {
 
@@ -39,7 +40,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
     @Override
     public final boolean handle(PacketViolationWarningPacket packet) {
         this.player.getLogger().warning("Received "+packet.toString());
-        return true;
+        throw CancelSignalException.CANCEL;
     }
 
     @Override
@@ -47,12 +48,19 @@ public class UpstreamHandler implements BedrockPacketHandler {
         PlayerChatEvent event = new PlayerChatEvent(this.player, packet.getMessage());
         ProxyServer.getInstance().getEventManager().callEvent(event);
         packet.setMessage(event.getMessage());
-        return event.isCancelled();
+
+        if (event.isCancelled()){
+            throw CancelSignalException.CANCEL;
+        }
+        return true;
     }
 
     @Override
     public final boolean handle(CommandRequestPacket packet) {
         String message = packet.getCommand();
-        return this.player.getProxy().handlePlayerCommand(this.player, message);
+        if (this.player.getProxy().handlePlayerCommand(this.player, message)){
+            throw CancelSignalException.CANCEL;
+        }
+        return false;
     }
 }

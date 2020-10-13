@@ -24,6 +24,7 @@ import com.nukkitx.protocol.bedrock.packet.SetDisplayObjectivePacket;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 import pe.waterdog.utils.types.TranslationContainer;
 
 public class ConnectedDownstreamHandler implements BedrockPacketHandler {
@@ -64,9 +65,9 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
         ServerInfo serverInfo = this.player.getProxy().getReconnectHandler().getFallbackServer(this.player, this.server.getInfo());
         if (serverInfo != null) {
             this.player.connect(serverInfo);
-            return true;
+            throw CancelSignalException.CANCEL;
         }
         this.player.disconnect(new TranslationContainer("waterdog.downstream.kicked") + packet.getKickMessage());
-        return true;
+        throw CancelSignalException.CANCEL;
     }
 }
