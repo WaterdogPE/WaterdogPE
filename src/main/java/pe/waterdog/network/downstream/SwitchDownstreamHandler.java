@@ -172,7 +172,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
         TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
         ProxyServer.getInstance().getEventManager().callEvent(event);
-        this.player.getProxy().getScheduler().scheduleAsync(() -> {
+        this.player.getProxy().getPlayerManager().getInternalThreadPool().execute(() -> {
             this.player.getUpstream().sendPacketImmediately(packet);
         });
         throw CancelSignalException.CANCEL;

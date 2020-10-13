@@ -26,10 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 public class PlayerManager {
 
@@ -37,8 +34,15 @@ public class PlayerManager {
 
     private final ConcurrentMap<UUID, ProxiedPlayer> players = new ConcurrentHashMap<>();
 
+    private final Executor internalThreadPool;
+
     public PlayerManager(ProxyServer proxy) {
         this.proxy = proxy;
+        this.internalThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(), r -> {
+            Thread t = new Thread(r);
+            t.setName("Internal-Runner-" + ThreadLocalRandom.current().nextInt(1, 100));
+            return t;
+        });
     }
 
     public CompletableFuture<BedrockClient> bindClient() {
@@ -96,5 +100,10 @@ public class PlayerManager {
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
         return ImmutableMap.copyOf(this.players);
+    }
+
+
+    public Executor getInternalThreadPool() {
+        return internalThreadPool;
     }
 }
