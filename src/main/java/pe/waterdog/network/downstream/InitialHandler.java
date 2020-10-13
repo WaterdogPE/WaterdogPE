@@ -42,7 +42,7 @@ public class InitialHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(ServerToClientHandshakePacket packet) {
+    public final boolean handle(ServerToClientHandshakePacket packet) {
         try {
             SignedJWT saltJwt = SignedJWT.parse(packet.getJwt());
             URI x5u = saltJwt.getHeader().getX509CertURL();
@@ -63,7 +63,7 @@ public class InitialHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(StartGamePacket packet) {
+    public final boolean handle(StartGamePacket packet) {
         RewriteData rewrite = this.player.getRewriteData();
         rewrite.setOriginalEntityId(packet.getRuntimeEntityId());
         rewrite.setEntityId(ThreadLocalRandom.current().nextInt(10000, 15000));

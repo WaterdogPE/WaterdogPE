@@ -34,11 +34,12 @@ import pe.waterdog.event.defaults.PlayerDisconnectEvent;
 import pe.waterdog.event.defaults.PlayerLoginEvent;
 import pe.waterdog.event.defaults.PreTransferEvent;
 import pe.waterdog.logger.MainLogger;
+import pe.waterdog.network.bridge.UpstreamBridge;
+import pe.waterdog.utils.types.PacketHandler;
 import pe.waterdog.utils.types.Permission;
 import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
-import pe.waterdog.network.bridge.ProxyBatchBridge;
 import pe.waterdog.network.bridge.TransferBatchBridge;
 import pe.waterdog.network.downstream.InitialHandler;
 import pe.waterdog.network.downstream.SwitchDownstreamHandler;
@@ -50,7 +51,6 @@ import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
-import pe.waterdog.network.upstream.UpstreamHandler;
 import pe.waterdog.utils.types.TranslationContainer;
 
 import java.util.Collection;
@@ -83,6 +83,13 @@ public class ProxiedPlayer implements CommandSender {
     private boolean admin = false;
 
     private boolean canRewrite = false;
+
+    /**
+     * Additional downstream and upstream handlers can be set by plugin.
+     * Do not set directly BedrockPacketHandler to sessions!
+     */
+    private PacketHandler pluginUpstreamHandler = null;
+    private PacketHandler pluginDownstreamHandler = null;
 
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData) {
         this.proxy = proxy;
@@ -150,7 +157,7 @@ public class ProxiedPlayer implements CommandSender {
 
                 downstream.setPacketHandler(new InitialHandler(this));
                 downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
-                this.upstream.setBatchHandler(new ProxyBatchBridge(this, downstream));
+                this.upstream.setBatchHandler(new UpstreamBridge(this, downstream));
             } else {
                 this.pendingConnection = targetServer;
 
@@ -435,5 +442,21 @@ public class ProxiedPlayer implements CommandSender {
 
     public ObjectSet<String> getScoreboards() {
         return this.scoreboards;
+    }
+
+    public void setPluginUpstreamHandler(PacketHandler pluginUpstreamHandler) {
+        this.pluginUpstreamHandler = pluginUpstreamHandler;
+    }
+
+    public PacketHandler getPluginUpstreamHandler() {
+        return this.pluginUpstreamHandler;
+    }
+
+    public void setPluginDownstreamHandler(PacketHandler pluginDownstreamHandler) {
+        this.pluginDownstreamHandler = pluginDownstreamHandler;
+    }
+
+    public PacketHandler getPluginDownstreamHandler() {
+        return this.pluginDownstreamHandler;
     }
 }

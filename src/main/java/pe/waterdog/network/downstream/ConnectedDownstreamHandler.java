@@ -38,19 +38,19 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(SetDisplayObjectivePacket packet) {
+    public final boolean handle(SetDisplayObjectivePacket packet) {
         this.player.getScoreboards().add(packet.getObjectiveId());
         return false;
     }
 
     @Override
-    public boolean handle(RemoveObjectivePacket packet) {
+    public final boolean handle(RemoveObjectivePacket packet) {
         this.player.getScoreboards().remove(packet.getObjectiveId());
         return false;
     }
 
     @Override
-    public boolean handle(BossEventPacket packet) {
+    public final boolean handle(BossEventPacket packet) {
         switch (packet.getAction()){
             case CREATE:
                 this.player.getBossbars().add(packet.getBossUniqueEntityId());
@@ -61,7 +61,7 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(DisconnectPacket packet) {
+    public final boolean handle(DisconnectPacket packet) {
         ServerInfo serverInfo = this.player.getProxy().getReconnectHandler().getFallbackServer(this.player, this.server.getInfo());
         if (serverInfo != null) {
             this.player.connect(serverInfo);
