@@ -17,6 +17,7 @@
 package pe.waterdog;
 
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.SneakyThrows;
@@ -47,12 +48,10 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 public class ProxyServer {
 
@@ -81,8 +80,9 @@ public class ProxyServer {
     private final ConsoleCommandSender commandSender;
     private CommandMap commandMap;
 
+    private final ScheduledExecutorService tickExecutor;
+    private ScheduledFuture<?> tickFuture;
     private int currentTick = 0;
-    private long nextTick;
 
     public ProxyServer(MainLogger logger, String filePath, String pluginPath) {
         instance = this;
@@ -94,6 +94,10 @@ public class ProxyServer {
             this.logger.info("Created Plugin Folder at " + this.pluginPath.toString());
             new File(pluginPath).mkdirs();
         }
+
+        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
+        builder.setNameFormat("WaterdogTick Executor");
+        this.tickExecutor = Executors.newScheduledThreadPool(1, builder.build());
 
         this.configurationManager = new ConfigurationManager(this);
         configurationManager.loadProxyConfig();
@@ -112,7 +116,6 @@ public class ProxyServer {
         this.commandMap = new DefaultCommandMap(this, SimpleCommandMap.DEFAULT_PREFIX);
         this.console = new TerminalConsole(this);
         this.boot();
-        this.tickProcessor();
     }
 
     public static ProxyServer getInstance() {
@@ -136,39 +139,22 @@ public class ProxyServer {
 
         this.logger.debug("Upstream <-> Proxy compression level "+this.getConfiguration().getUpstreamCompression());
         this.logger.debug("Downstream <-> Proxy compression level "+this.getConfiguration().getDownstreamCompression());
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
+        this.tickFuture = this.tickExecutor.scheduleAtFixedRate(this::tickProcessor, 50, 50, TimeUnit.MILLISECONDS);
     }
 
     private void tickProcessor() {
-        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
-        this.nextTick = System.currentTimeMillis();
-
-        while (!this.shutdown) {
-            long tickTime = System.currentTimeMillis();
-            long delay = this.nextTick - tickTime;
-
-            if (delay >= 50){
-                try {
-                    Thread.sleep(Math.max(25, delay - 25));
-                } catch (InterruptedException e) {
-                    this.logger.error("Main thread interrupted whilst sleeping", e);
-                }
-            }
-
-            try {
-                this.onTick(++this.currentTick);
-            }catch (Exception e){
-                this.logger.error("Error while ticking proxy!", e);
-            }
-
-            if (this.nextTick - tickTime < -1000){
-                //We are not doing 20 ticks per second
-                this.nextTick = tickTime;
-            }else {
-                this.nextTick += 50;
-            }
+        if (this.shutdown && !this.tickFuture.isCancelled()){
+            this.tickFuture.cancel(false);
+            this.bedrockServer.close();
         }
 
-        this.bedrockServer.close();
+        try {
+            this.onTick(++this.currentTick);
+        }catch (Exception e){
+            this.logger.error("Error while ticking proxy!", e);
+        }
     }
 
     private void onTick(int currentTick){
@@ -182,10 +168,15 @@ public class ProxyServer {
             this.logger.info("Disconnecting " + player.getValue().getName());
             player.getValue().disconnect("Proxy Shutdown", true);
         }
-        Thread.sleep(500);
 
         this.console.getConsoleThread().interrupt();
         this.pluginManager.disableAllPlugins();
+
+        if (!this.tickFuture.isCancelled()){
+            Thread.sleep(400);
+            this.logger.info("Interrupting scheduler!");
+            this.tickFuture.cancel(true);
+        }
     }
 
     public String translate(TextContainer textContainer){

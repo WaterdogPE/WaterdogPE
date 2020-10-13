@@ -50,7 +50,6 @@ public class TerminalConsole extends SimpleTerminalConsole {
 
     @Override
     protected void shutdown() {
-        this.proxy.shutdown();
     }
 
     @Override
