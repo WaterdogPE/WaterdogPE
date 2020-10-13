@@ -26,7 +26,10 @@ import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
 import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.objects.*;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.command.CommandSender;
@@ -34,8 +37,6 @@ import pe.waterdog.event.defaults.PlayerDisconnectEvent;
 import pe.waterdog.event.defaults.PlayerLoginEvent;
 import pe.waterdog.event.defaults.PreTransferEvent;
 import pe.waterdog.logger.MainLogger;
-import pe.waterdog.utils.types.Permission;
-import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
 import pe.waterdog.network.bridge.ProxyBatchBridge;
@@ -51,6 +52,8 @@ import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.network.upstream.UpstreamHandler;
+import pe.waterdog.utils.types.Permission;
+import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.utils.types.TranslationContainer;
 
 import java.util.Collection;
@@ -335,7 +338,7 @@ public class ProxiedPlayer implements CommandSender {
         return this.permissions.get(permission.toLowerCase());
     }
 
-    public void setIsAdmin(boolean admin) {
+    public void setAdmin(boolean admin) {
         this.admin = admin;
     }
 
