@@ -2,9 +2,11 @@
 #
 # Map of servers that will be indexed after proxy starts.
 # Server address must be in format address:port
+# Public server address can be used to specify address that is used when connecting though
 servers:
   lobby1:
     address: 192.168.0.50:19133
+    public_address: pvp.waterdog.io:19133
   lobby2:
     address: 192.168.0.50:19134
 

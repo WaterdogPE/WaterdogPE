@@ -24,6 +24,7 @@ import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
 import com.nukkitx.protocol.bedrock.packet.TextPacket;
+import com.nukkitx.protocol.bedrock.packet.TransferPacket;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.*;
@@ -301,6 +302,18 @@ public class ProxiedPlayer implements CommandSender {
             this.setSubtitle(subtitle);
         }
         this.setTitle(Strings.isNullOrEmpty(title) ? " " : title);
+    }
+
+    /**
+     * Transfer player to another server using "slow" reconnect method
+     * @param serverInfo destination server
+     */
+    public void redirectServer(ServerInfo serverInfo){
+        Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
+        TransferPacket packet = new TransferPacket();
+        packet.setAddress(serverInfo.getPublicAddress().getAddress().getHostAddress());;
+        packet.setPort(serverInfo.getPublicAddress().getPort());
+        this.sendPacket(packet);
     }
 
     public boolean addPermission(String permission){
