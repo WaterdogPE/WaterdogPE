@@ -38,11 +38,13 @@ public class ProxyConfig extends YamlConfig {
 
     private final InetSocketAddress bindAddress;
     private final List<String> priorities;
-    private final Map<String, InetSocketAddress> servers;
     private Map<String, String> forcedHosts;
 
     private final Map<String, List<String>> playerPermissions = new HashMap<>();
     private List<String> defaultPermissions;
+
+    private final int upstreamCompression;
+    private final int downstreamCompression;
 
     public ProxyConfig(File file){
         super(file);
@@ -56,9 +58,10 @@ public class ProxyConfig extends YamlConfig {
         this.replaceUsernameSpaces = this.getBoolean("replace_username_spaces");
         this.bindAddress = this.getInetAddress("listener.host");
         this.priorities = this.getStringList("listener.priorities");
-        this.servers = this.getInetAddressMap("servers");
         this.defaultPermissions = this.getStringList("permissions_default");
         this.playerPermissions.putAll(this.getPlayerPermissions("permissions"));
+        this.upstreamCompression = this.getInt("upstream_compression_level");
+        this.downstreamCompression = this.getInt("downstream_compression_level");
     }
 
     public InetSocketAddress getInetAddress(String key) {
@@ -69,28 +72,35 @@ public class ProxyConfig extends YamlConfig {
         return new InetSocketAddress(data[0], (data.length <= 1 ? 19132 : Integer.parseInt(data[1])));
     }
 
-    private Map<String, InetSocketAddress> getInetAddressMap(String key) {
-        Map<String, Map<String, String>> map = (Map<String, Map<String, String>>) this.get(key);
-        Map<String, InetSocketAddress> servers = new HashMap<>();
+    public Map<String, ServerInfo> buildServerMap() {
+        Map<String, Map<String, String>> map = (Map<String, Map<String, String>>) this.get("servers");
+        Map<String, ServerInfo> servers = new HashMap<>();
 
         for (String server : map.keySet()) {
+            Map<String, String> serverData = map.get(server);
+
             InetSocketAddress address = null;
+            InetSocketAddress publicAddress = null;
+
             try {
-                String[] data = map.get(server).get("address").split(":");
+                String[] data = serverData.get("address").split(":");
                 address = new InetSocketAddress(data[0], Integer.parseInt(data[1]));
             } catch (Exception e) {
                 MainLogger.getLogger().error("Unable to parse server from config! Please check you configuration. Server name: " + server);
+                continue;
             }
 
-            if (address != null) servers.put(server, address);
-        }
-        return servers;
-    }
+            if (serverData.containsKey("public_address")){
+                try {
+                    String[] data = serverData.get("public_address").split(":");
+                    publicAddress = new InetSocketAddress(data[0], Integer.parseInt(data[1]));
+                }catch (Exception e){
+                    MainLogger.getLogger().warning("Can not parse public server address! Server name: "+server);
+                }
+            }
 
-    public Map<String, ServerInfo> buildServerMap() {
-        Map<String, ServerInfo> servers = new HashMap<>();
-        for (Map.Entry<String, InetSocketAddress> entry : this.servers.entrySet()) {
-            servers.put(entry.getKey().toLowerCase(), new ServerInfo(entry.getKey().toLowerCase(), entry.getValue()));
+            ServerInfo serverInfo = new ServerInfo(server.toLowerCase(), address, publicAddress == null? address : publicAddress);
+            servers.put(server.toLowerCase(), serverInfo);
         }
         return servers;
     }
@@ -155,10 +165,6 @@ public class ProxyConfig extends YamlConfig {
         return this.priorities;
     }
 
-    public Map<String, InetSocketAddress> getServers() {
-        return this.servers;
-    }
-
     public Map<String, String> getForcedHosts() {
         return this.forcedHosts;
     }
@@ -173,5 +179,13 @@ public class ProxyConfig extends YamlConfig {
 
     public List<String> getDefaultPermissions() {
         return this.defaultPermissions;
+    }
+
+    public int getUpstreamCompression() {
+        return this.upstreamCompression;
+    }
+
+    public int getDownstreamCompression() {
+        return this.downstreamCompression;
     }
 }

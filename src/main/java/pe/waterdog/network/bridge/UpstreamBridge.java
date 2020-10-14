@@ -22,21 +22,19 @@ import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
-public class DownstreamBridge extends ProxyBatchBridge {
+public class UpstreamBridge extends ProxyBatchBridge {
 
-    public DownstreamBridge(ProxiedPlayer player, BedrockSession session) {
+    public UpstreamBridge(ProxiedPlayer player, BedrockSession session) {
         super(player, session);
     }
 
     @Override
     public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
         boolean changed = super.handlePacket(packet, handler);
-        boolean rewrote = this.player.getBlockMap().doRewrite(packet);
-
         boolean pluginHandled = false;
-        if (this.player.getPluginDownstreamHandler() != null){
-            pluginHandled = this.player.getPluginDownstreamHandler().handlePacket(packet);
+        if (this.player.getPluginUpstreamHandler() != null){
+            pluginHandled = this.player.getPluginUpstreamHandler().handlePacket(packet);
         }
-        return changed || rewrote || pluginHandled;
+        return changed || pluginHandled;
     }
 }

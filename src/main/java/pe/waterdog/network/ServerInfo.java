@@ -16,22 +16,40 @@
 
 package pe.waterdog.network;
 
+import com.nukkitx.network.raknet.RakNetPong;
+import com.nukkitx.protocol.bedrock.packet.TransferPacket;
+import pe.waterdog.ProxyServer;
+import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class ServerInfo {
 
     private final String serverName;
     private final InetSocketAddress address;
+    private final InetSocketAddress publicAddress;
 
-    private List<ProxiedPlayer> players = new ArrayList<>();
+    private final List<ProxiedPlayer> players = new ArrayList<>();
 
-    public ServerInfo(String serverName, InetSocketAddress address) {
+    public ServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {
         this.serverName = serverName;
         this.address = address;
+        this.publicAddress = publicAddress;
+    }
+
+    /**
+     * CompletableFuture may throw exception if ping fails. Therefore it is recommended to handle using whenComplete().
+     * @return CompletableFuture with RakNetPong.
+     */
+    public CompletableFuture<RakNetPong> ping(long timeout, TimeUnit unit){
+        return ProxyServer.getInstance().bindClient(ProtocolConstants.getLatestProtocol()).thenCompose(client -> {
+            return client.getRakNet().ping(this.address, timeout, unit);
+        });
     }
 
     public void addPlayer(ProxiedPlayer player) {
@@ -53,5 +71,9 @@ public class ServerInfo {
 
     public InetSocketAddress getAddress() {
         return this.address;
+    }
+
+    public InetSocketAddress getPublicAddress() {
+        return this.publicAddress;
     }
 }

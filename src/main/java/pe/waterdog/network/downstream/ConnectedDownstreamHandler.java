@@ -24,6 +24,7 @@ import com.nukkitx.protocol.bedrock.packet.SetDisplayObjectivePacket;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.exceptions.CancelSignalException;
 import pe.waterdog.utils.types.TranslationContainer;
 
 public class ConnectedDownstreamHandler implements BedrockPacketHandler {
@@ -37,19 +38,19 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(SetDisplayObjectivePacket packet) {
+    public final boolean handle(SetDisplayObjectivePacket packet) {
         this.player.getScoreboards().add(packet.getObjectiveId());
         return false;
     }
 
     @Override
-    public boolean handle(RemoveObjectivePacket packet) {
+    public final boolean handle(RemoveObjectivePacket packet) {
         this.player.getScoreboards().remove(packet.getObjectiveId());
         return false;
     }
 
     @Override
-    public boolean handle(BossEventPacket packet) {
+    public final boolean handle(BossEventPacket packet) {
         switch (packet.getAction()){
             case CREATE:
                 this.player.getBossbars().add(packet.getBossUniqueEntityId());
@@ -60,13 +61,13 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
-    public boolean handle(DisconnectPacket packet) {
+    public final boolean handle(DisconnectPacket packet) {
         ServerInfo serverInfo = this.player.getProxy().getReconnectHandler().getFallbackServer(this.player, this.server.getInfo());
         if (serverInfo != null) {
             this.player.connect(serverInfo);
-            return true;
+            throw CancelSignalException.CANCEL;
         }
         this.player.disconnect(new TranslationContainer("waterdog.downstream.kicked") + packet.getKickMessage());
-        return true;
+        throw CancelSignalException.CANCEL;
     }
 }

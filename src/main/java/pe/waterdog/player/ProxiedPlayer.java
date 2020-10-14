@@ -24,12 +24,10 @@ import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
 import com.nukkitx.protocol.bedrock.packet.TextPacket;
+import com.nukkitx.protocol.bedrock.packet.TransferPacket;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
+import it.unimi.dsi.fastutil.objects.*;
 import lombok.NonNull;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.command.CommandSender;
@@ -37,9 +35,12 @@ import pe.waterdog.event.defaults.PlayerDisconnectEvent;
 import pe.waterdog.event.defaults.PlayerLoginEvent;
 import pe.waterdog.event.defaults.PreTransferEvent;
 import pe.waterdog.logger.MainLogger;
+import pe.waterdog.network.bridge.UpstreamBridge;
+import pe.waterdog.utils.types.PacketHandler;
+import pe.waterdog.utils.types.Permission;
+import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
-import pe.waterdog.network.bridge.ProxyBatchBridge;
 import pe.waterdog.network.bridge.TransferBatchBridge;
 import pe.waterdog.network.downstream.InitialHandler;
 import pe.waterdog.network.downstream.SwitchDownstreamHandler;
@@ -51,9 +52,6 @@ import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
-import pe.waterdog.network.upstream.UpstreamHandler;
-import pe.waterdog.utils.types.Permission;
-import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.utils.types.TranslationContainer;
 
 import java.util.Collection;
@@ -87,6 +85,13 @@ public class ProxiedPlayer implements CommandSender {
 
     private boolean canRewrite = false;
 
+    /**
+     * Additional downstream and upstream handlers can be set by plugin.
+     * Do not set directly BedrockPacketHandler to sessions!
+     */
+    private PacketHandler pluginUpstreamHandler = null;
+    private PacketHandler pluginDownstreamHandler = null;
+
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData) {
         this.proxy = proxy;
         this.upstream = session;
@@ -105,8 +110,7 @@ public class ProxiedPlayer implements CommandSender {
                 this.disconnect(event.getCancelReason());
                 return;
             }
-            this.upstream.setPacketHandler(new UpstreamHandler(this));
-            this.upstream.addDisconnectHandler((reason) -> this.disconnect(null, true));
+            SessionInjections.injectUpstreamHandlers(this.upstream, this);
 
             ServerInfo serverInfo = this.getProxy().getJoinHandler().determineServer(this);
             if (serverInfo != null) {
@@ -138,7 +142,7 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        CompletableFuture<BedrockClient> future = this.proxy.getPlayerManager().bindClient();
+        CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
         future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
                 this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
@@ -154,7 +158,7 @@ public class ProxiedPlayer implements CommandSender {
 
                 downstream.setPacketHandler(new InitialHandler(this));
                 downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
-                this.upstream.setBatchHandler(new ProxyBatchBridge(this, downstream));
+                this.upstream.setBatchHandler(new UpstreamBridge(this, downstream));
             } else {
                 this.pendingConnection = targetServer;
 
@@ -300,6 +304,18 @@ public class ProxiedPlayer implements CommandSender {
         this.setTitle(Strings.isNullOrEmpty(title) ? " " : title);
     }
 
+    /**
+     * Transfer player to another server using "slow" reconnect method
+     * @param serverInfo destination server
+     */
+    public void redirectServer(ServerInfo serverInfo){
+        Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
+        TransferPacket packet = new TransferPacket();
+        packet.setAddress(serverInfo.getPublicAddress().getAddress().getHostAddress());;
+        packet.setPort(serverInfo.getPublicAddress().getPort());
+        this.sendPacket(packet);
+    }
+
     public boolean addPermission(String permission){
         return this.addPermission(new Permission(permission, true));
     }
@@ -338,7 +354,7 @@ public class ProxiedPlayer implements CommandSender {
         return this.permissions.get(permission.toLowerCase());
     }
 
-    public void setAdmin(boolean admin) {
+    public void setIsAdmin(boolean admin) {
         this.admin = admin;
     }
 
@@ -439,5 +455,21 @@ public class ProxiedPlayer implements CommandSender {
 
     public ObjectSet<String> getScoreboards() {
         return this.scoreboards;
+    }
+
+    public void setPluginUpstreamHandler(PacketHandler pluginUpstreamHandler) {
+        this.pluginUpstreamHandler = pluginUpstreamHandler;
+    }
+
+    public PacketHandler getPluginUpstreamHandler() {
+        return this.pluginUpstreamHandler;
+    }
+
+    public void setPluginDownstreamHandler(PacketHandler pluginDownstreamHandler) {
+        this.pluginDownstreamHandler = pluginDownstreamHandler;
+    }
+
+    public PacketHandler getPluginDownstreamHandler() {
+        return this.pluginDownstreamHandler;
     }
 }
