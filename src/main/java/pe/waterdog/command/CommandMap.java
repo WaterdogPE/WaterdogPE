@@ -19,7 +19,7 @@ package pe.waterdog.command;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 
 /**
- * base interface for a CommandMap. provides required methods for all command maps that should exist
+ * Base interface for a CommandMap. provides required methods for all command maps that should exist
  */
 public interface CommandMap {
 

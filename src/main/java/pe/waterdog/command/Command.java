@@ -17,16 +17,16 @@
 package pe.waterdog.command;
 
 /**
- * base class for proxy commands
+ * Base class for proxy commands
  */
 public abstract class Command {
 
     /**
-     * the name of the command
+     * The name of the command
      */
     private final String name;
     /**
-     * the command settings assigned to it
+     * The command settings assigned to it
      */
     private final CommandSettings settings;
 

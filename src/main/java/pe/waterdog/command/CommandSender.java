@@ -20,7 +20,7 @@ import pe.waterdog.ProxyServer;
 import pe.waterdog.utils.types.TextContainer;
 
 /**
- * base interface for all instances that are able to issue commands.
+ * Base interface for all instances that are able to issue commands.
  */
 public interface CommandSender {
 
