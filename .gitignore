@@ -34,4 +34,4 @@ target/
 #IntelliJ IDEA files
 out/
 .idea/
-WaterdogPe.iml
+*.iml
