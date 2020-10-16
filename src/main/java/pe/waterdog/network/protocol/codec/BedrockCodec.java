@@ -31,6 +31,13 @@ public abstract class BedrockCodec {
         return this.createBuilder(defaultCodec.getProtocolVersion(), defaultCodec.getRaknetProtocolVersion(), defaultCodec.getMinecraftVersion());
     }
 
+    /**
+     * Creates default builder that will be used in buildCodec() method.
+     * @param protocol protocol number.
+     * @param raknetVersion version number of RakNet that client uses.
+     * @param minecraftVer name of version in string.
+     * @return BedrockPacketCodec builder.
+     */
     public BedrockPacketCodec.Builder createBuilder(int protocol, int raknetVersion, String minecraftVer){
         Preconditions.checkArgument(this.packetCodec == null, "Packet codec has been already built!");
         BedrockPacketCodec.Builder builder = BedrockPacketCodec.builder();
@@ -40,6 +47,11 @@ public abstract class BedrockCodec {
         return builder;
     }
 
+    /**
+     * This method should be implemented in parent.
+     * Some common packets may be implemented here later.
+     * @param builder can be edited inside of teh function. Builder is used to register or deregister packets.
+     */
     public void buildCodec(BedrockPacketCodec.Builder builder){
         //Maybe later put common packets here
     }

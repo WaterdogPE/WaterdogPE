@@ -39,6 +39,9 @@ public class ProtocolConstants {
         return protocol2CodecMap.get(protocol);
     }
 
+    /**
+     * Here we register customized, performance improved codecs for supported game versions.
+     */
     public static void registerCodecs(){
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_13, new BedrockCodec388());
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_14_30, new BedrockCodec389());
@@ -46,6 +49,12 @@ public class ProtocolConstants {
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_16_20, new BedrockCodec408());
     }
 
+    /**
+     * Register BedrockCodec for specific protocol version.
+     * @param protocol protocol version matched for instance of BedrockCodec.
+     * @param bedrockCodec must match same protocol version as protocol or exception will be thrown.
+     * @return if registration was not canceled by plugin.
+     */
     protected static boolean registerCodec(ProtocolVersion protocol, BedrockCodec bedrockCodec){
         Preconditions.checkArgument(!protocol2CodecMap.containsKey(protocol), "BedrockCodec "+protocol+" is registered!");
         Preconditions.checkArgument(protocol == bedrockCodec.getProtocol(), "Protocol versions does not match!");
