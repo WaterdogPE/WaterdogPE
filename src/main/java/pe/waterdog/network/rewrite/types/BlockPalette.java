@@ -26,6 +26,7 @@ import it.unimi.dsi.fastutil.shorts.Short2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectMap;
 import org.apache.commons.lang3.tuple.Pair;
 import pe.waterdog.network.protocol.ProtocolConstants;
+import pe.waterdog.network.protocol.ProtocolVersion;
 
 public class BlockPalette {
 
@@ -33,7 +34,7 @@ public class BlockPalette {
     private final Object2ShortMap<BlockPair> entryToId = new Object2ShortLinkedOpenHashMap<>();
     private final Short2ObjectMap<BlockPair> idToEntry = new Short2ObjectLinkedOpenHashMap<>();
 
-    public BlockPalette(NbtList<NbtMap> paletteData, ProtocolConstants.Protocol protocol) {
+    public BlockPalette(NbtList<NbtMap> paletteData, ProtocolVersion protocol) {
         short id = 0;
         for (NbtMap item : paletteData) {
             final NbtMap block = item.getCompound("block");
@@ -41,7 +42,7 @@ public class BlockPalette {
         }
     }
 
-    public static BlockPalette getPalette(NbtList<NbtMap> paletteData, ProtocolConstants.Protocol protocol) {
+    public static BlockPalette getPalette(NbtList<NbtMap> paletteData, ProtocolVersion protocol) {
         int hashId = paletteData.hashCode();
         if (paletteCache.containsKey(hashId)) {
             return paletteCache.get(hashId);

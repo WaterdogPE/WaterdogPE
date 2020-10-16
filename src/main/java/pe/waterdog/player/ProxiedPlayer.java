@@ -36,6 +36,7 @@ import pe.waterdog.event.defaults.PlayerLoginEvent;
 import pe.waterdog.event.defaults.PreTransferEvent;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.bridge.UpstreamBridge;
+import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.utils.types.PacketHandler;
 import pe.waterdog.utils.types.Permission;
 import pe.waterdog.utils.types.TextContainer;
@@ -425,7 +426,7 @@ public class ProxiedPlayer implements CommandSender {
         return this.loginData.getXuid();
     }
 
-    public ProtocolConstants.Protocol getProtocol() {
+    public ProtocolVersion getProtocol() {
         return this.loginData.getProtocol();
     }
 

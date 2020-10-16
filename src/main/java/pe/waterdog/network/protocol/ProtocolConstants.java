@@ -1,68 +1,64 @@
 package pe.waterdog.network.protocol;
 
+import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
-import com.nukkitx.protocol.bedrock.v388.Bedrock_v388;
-import com.nukkitx.protocol.bedrock.v389.Bedrock_v389;
-import com.nukkitx.protocol.bedrock.v390.Bedrock_v390;
-import com.nukkitx.protocol.bedrock.v407.Bedrock_v407;
-import com.nukkitx.protocol.bedrock.v408.Bedrock_v408;
+import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
+import pe.waterdog.logger.MainLogger;
+import pe.waterdog.network.protocol.codec.BedrockCodec;
+import pe.waterdog.network.protocol.codec.BedrockCodec408;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ProtocolConstants {
 
     public static final int DEFAULT_RAKNET_VER = 10;
-    public static final Map<Integer, Protocol> protocolMap = new HashMap<>();
+
+    public static final Map<Integer, ProtocolVersion> protocolMap = new HashMap<>();
+    public static final Map<ProtocolVersion, BedrockCodec> protocol2CodecMap = new EnumMap<>(ProtocolVersion.class);
 
     static {
-        for (Protocol protocol : Protocol.values()) protocolMap.put(protocol.getProtocol(), protocol);
+        for (ProtocolVersion protocol : ProtocolVersion.values()){
+            protocolMap.put(protocol.getProtocol(), protocol);
+        }
     }
 
     public static boolean isAccepted(int protocol) {
         return protocolMap.containsKey(protocol);
     }
 
-    public static Protocol get(int protocol) {
+    public static ProtocolVersion get(int protocol) {
         return protocolMap.get(protocol);
     }
 
-    public static Protocol getLatestProtocol() {
+    public static ProtocolVersion getLatestProtocol() {
         return protocolMap.get(VersionInfo.LATEST_PROTOCOL_VERSION);
     }
 
-    public enum Protocol {
-        MINECRAFT_PE_1_13(388, Bedrock_v388.V388_CODEC, 9),
-        MINECRAFT_PE_1_14_30(389, Bedrock_v389.V389_CODEC, 9),
-        MINECRAFT_PE_1_14_60(390, Bedrock_v390.V390_CODEC, 9),
-        MINECRAFT_PE_1_16(407, Bedrock_v407.V407_CODEC),
-        MINECRAFT_PE_1_16_20(408, Bedrock_v408.V408_CODEC);
+    public static BedrockCodec getBedrockCodec(ProtocolVersion protocol){
+        return protocol2CodecMap.get(protocol);
+    }
 
-        private final int protocol;
-        private final BedrockPacketCodec codec;
-        private final int raknetVersion;
+    public static void registerCodecs(ProxyServer proxy){
+        BedrockCodec codec_408 = new BedrockCodec408(ProtocolVersion.MINECRAFT_PE_1_16_20);
+        registerCodec(codec_408);
+    }
 
-        Protocol(int protocol, BedrockPacketCodec codec) {
-            this(protocol, codec, DEFAULT_RAKNET_VER);
-        }
+    public static void registerCodec(BedrockCodec bedrockCodec){
+        Preconditions.checkNotNull(bedrockCodec.getProtocol(), "Protocol version can not be null!");
+        Preconditions.checkArgument(!protocol2CodecMap.containsKey(bedrockCodec.getProtocol()), "BedrockCodec "+bedrockCodec.getProtocol()+" is registered!");
 
-        Protocol(int protocol, BedrockPacketCodec codec, int raknetVersion) {
-            this.protocol = protocol;
-            this.codec = codec;
-            this.raknetVersion = raknetVersion;
-        }
+        //TODO: bedrock codec register event
 
-        public int getProtocol() {
-            return this.protocol;
-        }
+        ProtocolVersion protocol = bedrockCodec.getProtocol();
+        BedrockPacketCodec.Builder builder = bedrockCodec.createBuilder(protocol.getDefaultCodec());
+        bedrockCodec.buildCodec(builder);
 
-        public BedrockPacketCodec getCodec() {
-            return this.codec;
-        }
+        protocol.setBedrockCodec(bedrockCodec);
+        protocol2CodecMap.put(bedrockCodec.getProtocol(), bedrockCodec);
 
-        public int getRaknetVersion() {
-            return this.raknetVersion;
-        }
+        MainLogger.getLogger().debug("Registered custom BedrockCodec "+protocol);
     }
 }

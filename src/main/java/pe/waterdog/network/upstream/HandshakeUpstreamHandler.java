@@ -32,6 +32,7 @@ import pe.waterdog.VersionInfo;
 import pe.waterdog.event.defaults.PlayerCreationEvent;
 import pe.waterdog.event.defaults.PlayerPreLoginEvent;
 import pe.waterdog.network.protocol.ProtocolConstants;
+import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.session.LoginData;
 import pe.waterdog.player.HandshakeUtils;
 import pe.waterdog.player.ProxiedPlayer;
@@ -56,7 +57,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
         int protocolVersion = packet.getProtocolVersion();
         this.proxy.getLogger().info("[" + session.getAddress() + "] <-> Upstream has connected (protocol="+protocolVersion+")");
 
-        ProtocolConstants.Protocol protocol = ProtocolConstants.get(protocolVersion);
+        ProtocolVersion protocol = ProtocolConstants.get(protocolVersion);
         session.setPacketCodec(protocol == null ? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
         if (protocolVersion != VersionInfo.LATEST_PROTOCOL_VERSION && protocol == null) {
             PlayStatusPacket status = new PlayStatusPacket();
