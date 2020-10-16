@@ -41,6 +41,7 @@ public abstract class BedrockCodec {
     }
 
     public void buildCodec(BedrockPacketCodec.Builder builder){
+        //Maybe later put common packets here
     }
 
     public abstract ProtocolVersion getProtocol();

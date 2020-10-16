@@ -6,8 +6,7 @@ import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
 import pe.waterdog.event.defaults.ProtocolCodecRegisterEvent;
 import pe.waterdog.logger.MainLogger;
-import pe.waterdog.network.protocol.codec.BedrockCodec;
-import pe.waterdog.network.protocol.codec.BedrockCodec408;
+import pe.waterdog.network.protocol.codec.*;
 
 import java.util.*;
 
@@ -41,11 +40,14 @@ public class ProtocolConstants {
     }
 
     public static void registerCodecs(){
+        registerCodec(ProtocolVersion.MINECRAFT_PE_1_13, new BedrockCodec388());
+        registerCodec(ProtocolVersion.MINECRAFT_PE_1_14_30, new BedrockCodec389());
+        registerCodec(ProtocolVersion.MINECRAFT_PE_1_14_60, new BedrockCodec390());
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_16_20, new BedrockCodec408());
     }
 
     protected static boolean registerCodec(ProtocolVersion protocol, BedrockCodec bedrockCodec){
-        Preconditions.checkArgument(protocol2CodecMap.containsKey(protocol), "BedrockCodec "+protocol+" is registered!");
+        Preconditions.checkArgument(!protocol2CodecMap.containsKey(protocol), "BedrockCodec "+protocol+" is registered!");
         Preconditions.checkArgument(protocol == bedrockCodec.getProtocol(), "Protocol versions does not match!");
 
         BedrockPacketCodec.Builder builder = bedrockCodec.createBuilder(protocol.getDefaultCodec());
@@ -59,7 +61,7 @@ public class ProtocolConstants {
 
         bedrockCodec.setPacketCodec(builder.build());
         protocol.setBedrockCodec(bedrockCodec);
-        protocol2CodecMap.put(bedrockCodec.getProtocol(), bedrockCodec);
+        protocol2CodecMap.put(protocol, bedrockCodec);
 
         MainLogger.getLogger().debug("Registered custom BedrockCodec "+protocol);
         return true;
