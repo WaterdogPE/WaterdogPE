@@ -148,7 +148,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         bossbars.clear();
 
         PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
-        //TODO: SetDifficultyPacket
+        PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
 
         /*//send DIM ID 1 & than original dim
         if (this.rewrite.getDimension() == packet.getDimensionId()){
