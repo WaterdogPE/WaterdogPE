@@ -34,8 +34,9 @@ import pe.waterdog.network.protocol.ProtocolVersion;
 
 public class BedrockCodec408 extends BedrockCodec {
 
-    public BedrockCodec408(ProtocolVersion protocol) {
-        super(protocol);
+    @Override
+    public ProtocolVersion getProtocol() {
+        return ProtocolVersion.MINECRAFT_PE_1_16_20;
     }
 
     @Override

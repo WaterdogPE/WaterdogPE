@@ -16,40 +16,39 @@
 
 package pe.waterdog.network.protocol.codec;
 
+import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import pe.waterdog.network.protocol.ProtocolVersion;
 
 public abstract class BedrockCodec {
 
-    private final ProtocolVersion protocol;
     private BedrockPacketCodec packetCodec;
 
-    public BedrockCodec(ProtocolVersion protocol){
-        this.protocol = protocol;
+    public BedrockCodec(){
     }
 
-    public BedrockPacketCodec.Builder createBuilder(String minecraftVer){
+    public BedrockPacketCodec.Builder createBuilder(BedrockPacketCodec defaultCodec){
+        return this.createBuilder(defaultCodec.getProtocolVersion(), defaultCodec.getRaknetProtocolVersion(), defaultCodec.getMinecraftVersion());
+    }
+
+    public BedrockPacketCodec.Builder createBuilder(int protocol, int raknetVersion, String minecraftVer){
+        Preconditions.checkArgument(this.packetCodec == null, "Packet codec has been already built!");
         BedrockPacketCodec.Builder builder = BedrockPacketCodec.builder();
-        builder.protocolVersion(this.protocol.getProtocol());
-        builder.raknetProtocolVersion(this.protocol.getRaknetVersion());
+        builder.protocolVersion(protocol);
+        builder.raknetProtocolVersion(raknetVersion);
         builder.minecraftVersion(minecraftVer);
         return builder;
     }
 
-    public BedrockPacketCodec.Builder createBuilder(BedrockPacketCodec defaultCodec){
-        BedrockPacketCodec.Builder builder = BedrockPacketCodec.builder();
-        builder.protocolVersion(defaultCodec.getProtocolVersion());
-        builder.raknetProtocolVersion(defaultCodec.getRaknetProtocolVersion());
-        builder.minecraftVersion(defaultCodec.getMinecraftVersion());
-        return builder;
-    }
-
     public void buildCodec(BedrockPacketCodec.Builder builder){
-        this.packetCodec = builder.build();
     }
 
-    public ProtocolVersion getProtocol() {
-        return this.protocol;
+    public abstract ProtocolVersion getProtocol();
+
+    public void setPacketCodec(BedrockPacketCodec packetCodec) {
+        Preconditions.checkNotNull(packetCodec, "New packet codec can not be null!");
+        Preconditions.checkArgument(this.packetCodec == null, "Packet codec can not ");
+        this.packetCodec = packetCodec;
     }
 
     public BedrockPacketCodec getPacketCodec() {

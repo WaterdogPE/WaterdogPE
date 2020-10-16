@@ -126,7 +126,7 @@ public class ProxyServer {
     private void boot() {
         this.console.getConsoleThread().start();
         this.pluginManager.enableAllPlugins();
-        ProtocolConstants.registerCodecs(this);
+        ProtocolConstants.registerCodecs();
 
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
         this.logger.info("Binding to " + bindAddress);

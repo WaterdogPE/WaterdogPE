@@ -4,13 +4,12 @@ import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
+import pe.waterdog.event.defaults.ProtocolCodecRegisterEvent;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.protocol.codec.BedrockCodec;
 import pe.waterdog.network.protocol.codec.BedrockCodec408;
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ProtocolConstants {
 
@@ -41,24 +40,28 @@ public class ProtocolConstants {
         return protocol2CodecMap.get(protocol);
     }
 
-    public static void registerCodecs(ProxyServer proxy){
-        BedrockCodec codec_408 = new BedrockCodec408(ProtocolVersion.MINECRAFT_PE_1_16_20);
-        registerCodec(codec_408);
+    public static void registerCodecs(){
+        registerCodec(ProtocolVersion.MINECRAFT_PE_1_16_20, new BedrockCodec408());
     }
 
-    public static void registerCodec(BedrockCodec bedrockCodec){
-        Preconditions.checkNotNull(bedrockCodec.getProtocol(), "Protocol version can not be null!");
-        Preconditions.checkArgument(!protocol2CodecMap.containsKey(bedrockCodec.getProtocol()), "BedrockCodec "+bedrockCodec.getProtocol()+" is registered!");
+    protected static boolean registerCodec(ProtocolVersion protocol, BedrockCodec bedrockCodec){
+        Preconditions.checkArgument(protocol2CodecMap.containsKey(protocol), "BedrockCodec "+protocol+" is registered!");
+        Preconditions.checkArgument(protocol == bedrockCodec.getProtocol(), "Protocol versions does not match!");
 
-        //TODO: bedrock codec register event
-
-        ProtocolVersion protocol = bedrockCodec.getProtocol();
         BedrockPacketCodec.Builder builder = bedrockCodec.createBuilder(protocol.getDefaultCodec());
         bedrockCodec.buildCodec(builder);
 
+        ProtocolCodecRegisterEvent event = new ProtocolCodecRegisterEvent(protocol, builder);
+        ProxyServer.getInstance().getEventManager().callEvent(event);
+        if (event.isCancelled()){
+            return false;
+        }
+
+        bedrockCodec.setPacketCodec(builder.build());
         protocol.setBedrockCodec(bedrockCodec);
         protocol2CodecMap.put(bedrockCodec.getProtocol(), bedrockCodec);
 
         MainLogger.getLogger().debug("Registered custom BedrockCodec "+protocol);
+        return true;
     }
 }
