@@ -84,6 +84,7 @@ public class ProxiedPlayer implements CommandSender {
     private boolean admin = false;
 
     private boolean canRewrite = false;
+    private boolean acceptPlayStatus = false;
 
     /**
      * Additional downstream and upstream handlers can be set by plugin.
@@ -471,5 +472,13 @@ public class ProxiedPlayer implements CommandSender {
 
     public PacketHandler getPluginDownstreamHandler() {
         return this.pluginDownstreamHandler;
+    }
+
+    public void setAcceptPlayStatus(boolean acceptPlayStatus) {
+        this.acceptPlayStatus = acceptPlayStatus;
+    }
+
+    public boolean acceptPlayStatus() {
+        return this.acceptPlayStatus;
     }
 }

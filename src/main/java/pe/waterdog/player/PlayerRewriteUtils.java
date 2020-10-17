@@ -69,6 +69,12 @@ public class PlayerRewriteUtils {
         session.sendPacketImmediately(stopThunder);
     }
 
+    public static void injectSetDifficulty(BedrockSession session, int difficulty){
+        SetDifficultyPacket packet = new SetDifficultyPacket();
+        packet.setDifficulty(difficulty);
+        session.sendPacket(packet);
+    }
+
     public static void injectRemoveEntity(BedrockSession session, long runtimeId) {
         RemoveEntityPacket packet = new RemoveEntityPacket();
         packet.setUniqueEntityId(runtimeId);
