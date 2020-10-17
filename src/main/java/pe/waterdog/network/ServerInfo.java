@@ -17,7 +17,7 @@
 package pe.waterdog.network;
 
 import com.nukkitx.network.raknet.RakNetPong;
-import com.nukkitx.protocol.bedrock.BedrockClient;
+import com.nukkitx.protocol.bedrock.packet.TransferPacket;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.player.ProxiedPlayer;
@@ -37,12 +37,14 @@ public class ServerInfo {
 
     private final String serverName;
     private final InetSocketAddress address;
+    private final InetSocketAddress publicAddress;
 
     private final List<ProxiedPlayer> players = new ArrayList<>();
 
-    public ServerInfo(String serverName, InetSocketAddress address) {
+    public ServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {
         this.serverName = serverName;
         this.address = address;
+        this.publicAddress = publicAddress;
     }
 
     /**
@@ -74,5 +76,9 @@ public class ServerInfo {
 
     public InetSocketAddress getAddress() {
         return this.address;
+    }
+
+    public InetSocketAddress getPublicAddress() {
+        return this.publicAddress;
     }
 }

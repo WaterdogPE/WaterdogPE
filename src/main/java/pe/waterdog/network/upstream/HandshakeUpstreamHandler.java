@@ -88,7 +88,6 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
             JSONObject extraData = HandshakeUtils.parseExtraData(packet, payload);
             KeyPair keyPair = EncryptionUtils.createKeyPair();
 
-
             LoginData loginData = new LoginData(
                     extraData.getAsString("displayName"),
                     UUID.fromString(extraData.getAsString("identity")),
@@ -101,7 +100,6 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
 
             PlayerPreLoginEvent event = new PlayerPreLoginEvent(loginData);
             this.proxy.getEventManager().callEvent(event);
-
             if (event.isCancelled()) {
                 // Pre Login was cancelled
                 session.disconnect(event.getCancelReason());

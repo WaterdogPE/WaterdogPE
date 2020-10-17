@@ -126,11 +126,10 @@ public class BlockMap implements BedrockPacketHandler {
     @Override
     public boolean handle(LevelEventPacket packet) {
         LevelEventType type = packet.getType();
-
-        //TODO: what is LEVEL_EVENT_EVENT_PARTICLE_PUNCH_BLOCK
         switch (type) {
             case PARTICLE_TERRAIN:
             case PARTICLE_DESTROY_BLOCK:
+            case PARTICLE_CRACK_BLOCK:
                 break;
             default:
                 return false;

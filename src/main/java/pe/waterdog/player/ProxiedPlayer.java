@@ -24,6 +24,7 @@ import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
 import com.nukkitx.protocol.bedrock.packet.TextPacket;
+import com.nukkitx.protocol.bedrock.packet.TransferPacket;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -94,6 +95,13 @@ public class ProxiedPlayer implements CommandSender {
     private boolean admin = false;
 
     private boolean canRewrite = false;
+    /**
+     * Some downstream server softwares require strict packet sending policy (like PMMP4).
+     * To pass packet handler dedicated to SetLocalPlayerAsInitializedPacket only, proxy has to post-complete server transfer.
+     * Using this bool allows tells us if we except post-complete phase operation.
+     * See ConnectedDownstreamHandler and SwitchDownstreamHandler for exact usage.
+     */
+    private boolean acceptPlayStatus = false;
 
     /**
      * Additional downstream and upstream handlers can be set by plugin.
@@ -382,6 +390,17 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     /**
+     * Transfer player to another server using "slow" reconnect method
+     * @param serverInfo destination server
+     */
+    public void redirectServer(ServerInfo serverInfo){
+        Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
+        TransferPacket packet = new TransferPacket();
+        packet.setAddress(serverInfo.getPublicAddress().getAddress().getHostAddress());;
+        packet.setPort(serverInfo.getPublicAddress().getPort());
+        this.sendPacket(packet);
+    }
+    /**
      * Adds a permission to the player
      * @param permission the permission to give him
      * @return whether the update was successful or not
@@ -559,5 +578,13 @@ public class ProxiedPlayer implements CommandSender {
 
     public PacketHandler getPluginDownstreamHandler() {
         return this.pluginDownstreamHandler;
+    }
+
+    public void setAcceptPlayStatus(boolean acceptPlayStatus) {
+        this.acceptPlayStatus = acceptPlayStatus;
+    }
+
+    public boolean acceptPlayStatus() {
+        return this.acceptPlayStatus;
     }
 }

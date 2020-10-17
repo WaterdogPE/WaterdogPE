@@ -16,6 +16,8 @@
 
 package pe.waterdog.network.rewrite.types;
 
+import com.nukkitx.math.vector.Vector2f;
+import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 
@@ -49,6 +51,9 @@ public class RewriteData {
      */
     private int dimension = 0;
     private RequestChunkRadiusPacket chunkRadius;
+
+    private Vector3f spawnPosition;
+    private Vector2f rotation;
 
     public RewriteData() {
     }
@@ -107,5 +112,21 @@ public class RewriteData {
 
     public void setChunkRadius(RequestChunkRadiusPacket chunkRadius) {
         this.chunkRadius = chunkRadius;
+    }
+
+    public void setSpawnPosition(Vector3f spawnPosition) {
+        this.spawnPosition = spawnPosition;
+    }
+
+    public Vector3f getSpawnPosition() {
+        return this.spawnPosition;
+    }
+
+    public void setRotation(Vector2f rotation) {
+        this.rotation = rotation;
+    }
+
+    public Vector2f getRotation() {
+        return this.rotation;
     }
 }

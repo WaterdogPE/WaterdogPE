@@ -2,9 +2,11 @@
 #
 # Map of servers that will be indexed after proxy starts.
 # Server address must be in format address:port
+# Public server address can be used to specify address that is used when connecting though
 servers:
   lobby1:
     address: 192.168.0.50:19133
+    public_address: pvp.waterdog.io:19133
   lobby2:
     address: 192.168.0.50:19134
 
@@ -47,6 +49,6 @@ replace_username_spaces: true
 # Compression settings
 # Compression level between downstream and proxy may be lower, depends on your private network configuration.
 # Higher level = more CPU, less bandwidth usage.
-# Set to 0 to no compression , 9 to highest compression ratio.
+# Set to 0 to no compression, 9 to highest compression ratio.
 upstream_compression_level: 6
 downstream_compression_level: 2
