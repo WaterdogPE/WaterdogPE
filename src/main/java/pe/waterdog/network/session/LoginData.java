@@ -33,18 +33,20 @@ public class LoginData {
     private final boolean xboxAuthed;
     private final InetSocketAddress address;
     private final ProtocolConstants.Protocol protocol;
+    private final String joinIp;
 
     private final KeyPair keyPair;
     private AsciiString chainData;
     private JWSObject signedClientData;
 
-    public LoginData(String displayName, UUID uuid, String xuid, boolean xboxAuthed, ProtocolConstants.Protocol protocol, InetSocketAddress address, KeyPair keyPair) {
+    public LoginData(String displayName, UUID uuid, String xuid, boolean xboxAuthed, ProtocolConstants.Protocol protocol, String joinIp, InetSocketAddress address, KeyPair keyPair) {
         this.displayName = displayName;
         this.uuid = uuid;
         this.xuid = xuid;
         this.xboxAuthed = xboxAuthed;
         this.protocol = protocol;
         this.address = address;
+        this.joinIp = joinIp;
         this.keyPair = keyPair;
     }
 
@@ -89,6 +91,9 @@ public class LoginData {
         this.chainData = chainData;
     }
 
+    public String getJoinIp() {
+        return joinIp;
+    }
     public JWSObject getSignedClientData() {
         return this.signedClientData;
     }

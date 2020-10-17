@@ -24,6 +24,12 @@ listener:
   forced_hosts:
     pvp.waterdog.io: pvp
 
+# Maps the IP players use to join to players
+# if a player joins with a forced host, this will skip the join server detection and will directly
+# move the player to the target server.
+forced-hosts: {}
+
+
 # Simple permission map to assign player permissions.
 # Player permissions should be list of strings player_name: ["permission", "permission1"]
 permissions:

@@ -33,7 +33,7 @@ public class ProxyConfig extends YamlConfig {
     private final boolean onlineMode;
     private final boolean replaceUsernameSpaces;
     private boolean useLoginExtras;
-    private boolean enableQuery = true;
+    private boolean enableQuery;
     private boolean ipForward;
 
     private final InetSocketAddress bindAddress;
@@ -60,6 +60,7 @@ public class ProxyConfig extends YamlConfig {
         this.priorities = this.getStringList("listener.priorities");
         this.defaultPermissions = this.getStringList("permissions_default");
         this.playerPermissions.putAll(this.getPlayerPermissions("permissions"));
+        this.forcedHosts = (Map<String, String>) this.get("forced-hosts");
         this.upstreamCompression = this.getInt("upstream_compression_level");
         this.downstreamCompression = this.getInt("downstream_compression_level");
     }
@@ -79,7 +80,7 @@ public class ProxyConfig extends YamlConfig {
         for (String server : map.keySet()) {
             Map<String, String> serverData = map.get(server);
 
-            InetSocketAddress address = null;
+            InetSocketAddress address;
             InetSocketAddress publicAddress = null;
 
             try {
