@@ -84,6 +84,12 @@ public class ProxiedPlayer implements CommandSender {
     private boolean admin = false;
 
     private boolean canRewrite = false;
+    /**
+     * Some downstream server softwares require strict packet sending policy (like PMMP4).
+     * To pass packet handler dedicated to SetLocalPlayerAsInitializedPacket only, proxy has to post-complete server transfer.
+     * Using this bool allows tells us if we except post-complete phase operation.
+     * See ConnectedDownstreamHandler and SwitchDownstreamHandler for exact usage.
+     */
     private boolean acceptPlayStatus = false;
 
     /**
