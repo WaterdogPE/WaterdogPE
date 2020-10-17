@@ -49,6 +49,6 @@ replace_username_spaces: true
 # Compression settings
 # Compression level between downstream and proxy may be lower, depends on your private network configuration.
 # Higher level = more CPU, less bandwidth usage.
-# Set to 0 to no compression , 9 to highest compression ratio.
+# Set to 0 to no compression, 9 to highest compression ratio.
 upstream_compression_level: 6
 downstream_compression_level: 2

@@ -93,13 +93,12 @@ public class QueryHandler {
             reply.writeByte(STATISTICS);
             reply.writeInt(sessionId);
 
-            ByteBuf queryData = this.buildData(address, packet.readableBytes() == 8);
-            reply.writeBytes(queryData);
+            this.writeData(address, packet.readableBytes() == 8, reply);
             this.proxy.getBedrockServer().getRakNet().send(address, reply);
         }
     }
 
-    private ByteBuf buildData(InetSocketAddress address, boolean simple){
+    private void writeData(InetSocketAddress address, boolean simple, ByteBuf buf){
         ProxyConfig config = this.proxy.getConfiguration();
         ProxyQueryEvent event = new ProxyQueryEvent(
                 config.getMotd(),
@@ -113,7 +112,6 @@ public class QueryHandler {
         );
         this.proxy.getEventManager().callEvent(event);
 
-        ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
         if (simple){
             this.writeString(buf, event.getMotd());
             this.writeString(buf, event.getGameType());
@@ -122,10 +120,10 @@ public class QueryHandler {
             this.writeString(buf, Integer.toString(event.getMaximumPlayerCount()));
             buf.writeShortLE(this.bindAddress.getPort());
             this.writeString(buf, this.bindAddress.getHostName());
-            return buf;
+            return;
         }
 
-        Map<String, String> map = new HashMap();
+        Map<String, String> map = new HashMap<>();
         map.put("hostname", event.getMotd());
         map.put("gametype", event.getGameType());
         map.put("map", event.getMap());
@@ -151,10 +149,9 @@ public class QueryHandler {
             }
         }
         buf.writeByte(0);
-        return buf;
     }
 
-    private class QuerySession{
+    private static class QuerySession{
 
         public final int token;
         public final long time;

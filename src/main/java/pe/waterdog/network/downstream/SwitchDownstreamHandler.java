@@ -97,11 +97,27 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
+    public boolean handle(PlayStatusPacket packet) {
+        switch (packet.getStatus()){
+            case LOGIN_SUCCESS:
+                throw CancelSignalException.CANCEL;
+            case LOGIN_FAILED_CLIENT_OLD:
+            case LOGIN_FAILED_SERVER_OLD:
+            case FAILED_SERVER_FULL_SUB_CLIENT:
+                //TODO: handle error
+                throw CancelSignalException.CANCEL;
+        }
+        return false;
+    }
+
+    @Override
     public final boolean handle(StartGamePacket packet) {
         RewriteData rewriteData = player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
         rewriteData.setDimension(packet.getDimensionId());
         rewriteData.setGameRules(packet.getGamerules());
+        rewriteData.setSpawnPosition(packet.getPlayerPosition());
+        rewriteData.setRotation(packet.getRotation());
 
         BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
         rewriteData.setPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
@@ -168,6 +184,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         ServerConnection server = new ServerConnection(this.client, this.getDownstream(), this.serverInfo);
         SessionInjections.injectDownstreamHandlers(server, this.player);
         this.player.setServer(server);
+        this.player.setAcceptPlayStatus(true);
 
         TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
         ProxyServer.getInstance().getEventManager().callEvent(event);
