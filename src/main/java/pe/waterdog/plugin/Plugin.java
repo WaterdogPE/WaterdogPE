@@ -49,19 +49,19 @@ public abstract class Plugin {
     public Plugin() {
     }
 
-    protected void init(PluginYAML description, ProxyServer proxy, File pluginFile){
-        if (!this.initialized){
-            this.description = description;
-            this.proxy = proxy;
-            this.logger = new PluginLogger(this);
+    protected final void init(PluginYAML description, ProxyServer proxy, File pluginFile){
+        Preconditions.checkArgument(!this.initialized, "Plugin has been already initialized!");
+        this.initialized = true;
+        this.description = description;
+        this.proxy = proxy;
+        this.logger = new PluginLogger(this);
 
-            this.pluginFile = pluginFile;
-            this.dataFolder = new File(proxy.getPluginPath()+"/"+description.getName().toLowerCase()+"/");
-            if (!this.dataFolder.exists()){
-                this.dataFolder.mkdirs();
-            }
-            this.configFile = new File(this.dataFolder, "config.yml");
+        this.pluginFile = pluginFile;
+        this.dataFolder = new File(proxy.getPluginPath()+"/"+description.getName().toLowerCase()+"/");
+        if (!this.dataFolder.exists()){
+            this.dataFolder.mkdirs();
         }
+        this.configFile = new File(this.dataFolder, "config.yml");
     }
 
     public void onStartup(){
