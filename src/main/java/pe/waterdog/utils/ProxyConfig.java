@@ -60,12 +60,7 @@ public class ProxyConfig extends YamlConfig {
         this.priorities = this.getStringList("listener.priorities");
         this.defaultPermissions = this.getStringList("permissions_default");
         this.playerPermissions.putAll(this.getPlayerPermissions("permissions"));
-        Map<String, String> forcedHosts = (Map<String, String>) this.get("listener.forced_hosts");
-        if (forcedHosts != null) {
-            this.forcedHosts = forcedHosts;
-        } else {
-            this.forcedHosts = new HashMap<>();
-        }
+        this.forcedHosts = (Map<String, String>) this.get("listener.forced_hosts", new HashMap<>());
         this.upstreamCompression = this.getInt("upstream_compression_level");
         this.downstreamCompression = this.getInt("downstream_compression_level");
     }
