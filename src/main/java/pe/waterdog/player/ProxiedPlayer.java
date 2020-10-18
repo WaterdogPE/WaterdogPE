@@ -116,22 +116,17 @@ public class ProxiedPlayer implements CommandSender {
             }
             SessionInjections.injectUpstreamHandlers(this.upstream, this);
 
-            final String forcedHost = this.proxy.getConfiguration().getForcedHosts().get(loginData.getJoinIp());
-            final ServerInfo initialServer;
+            final ServerInfo forcedHost = this.proxy.getForcedHost(this.loginData.getJoinHostname());
             if (forcedHost != null) {
-                // Connection address is in the forced host list
-                initialServer = getProxy().getServer(forcedHost);
-                if (initialServer == null) {
-                    this.disconnect(new TranslationContainer("waterdog.forced_host.server_missing", forcedHost).getTranslated());
-                    return;
-                }
-            } else {
-                initialServer = this.getProxy().getJoinHandler().determineServer(this);
+                this.connect(forcedHost);
+                return;
             }
+
+            final ServerInfo initialServer = this.proxy.getJoinHandler().determineServer(this);
             if (initialServer != null) {
                 this.connect(initialServer);
             } else {
-                this.disconnect(new TranslationContainer("waterdog.no.initial.server").getTranslated());
+                this.disconnect(new TranslationContainer("waterdog.no.initial.server"));
             }
         });
     }
@@ -192,6 +187,14 @@ public class ProxiedPlayer implements CommandSender {
 
     public void disconnect() {
         this.disconnect(null, false);
+    }
+
+    public void disconnect(TextContainer message) {
+        if (message instanceof TranslationContainer){
+            this.disconnect(((TranslationContainer) message).getTranslated());
+        }else {
+            this.disconnect(message.getMessage());
+        }
     }
 
     public void disconnect(String reason) {

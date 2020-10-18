@@ -38,7 +38,7 @@ public class ProxyConfig extends YamlConfig {
 
     private final InetSocketAddress bindAddress;
     private final List<String> priorities;
-    private Map<String, String> forcedHosts;
+    private final Map<String, String> forcedHosts;
 
     private final Map<String, List<String>> playerPermissions = new HashMap<>();
     private List<String> defaultPermissions;
@@ -60,7 +60,7 @@ public class ProxyConfig extends YamlConfig {
         this.priorities = this.getStringList("listener.priorities");
         this.defaultPermissions = this.getStringList("permissions_default");
         this.playerPermissions.putAll(this.getPlayerPermissions("permissions"));
-        this.forcedHosts = (Map<String, String>) this.get("forced-hosts");
+        this.forcedHosts = (Map<String, String>) this.get("listener.forced_hosts");
         this.upstreamCompression = this.getInt("upstream_compression_level");
         this.downstreamCompression = this.getInt("downstream_compression_level");
     }
