@@ -19,9 +19,7 @@ package pe.waterdog.network.downstream;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
-import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.PostTransferCompleteEvent;
-import pe.waterdog.event.defaults.TransferCompleteEvent;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.ServerConnection;
@@ -103,7 +101,7 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(DisconnectPacket packet) {
-        ServerInfo serverInfo = this.player.getProxy().getReconnectHandler().getFallbackServer(this.player, this.server.getInfo());
+        ServerInfo serverInfo = this.player.getProxy().getReconnectHandler().getFallbackServer(this.player, this.server.getInfo(), packet.getKickMessage());
         if (serverInfo != null) {
             this.player.connect(serverInfo);
             throw CancelSignalException.CANCEL;
