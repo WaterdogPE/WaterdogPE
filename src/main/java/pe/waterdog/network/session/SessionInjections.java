@@ -30,7 +30,7 @@ public class SessionInjections {
     public static void injectUpstreamHandlers(BedrockSession upstream, ProxiedPlayer player){
         upstream.setCompressionLevel(player.getProxy().getConfiguration().getUpstreamCompression());
         upstream.setPacketHandler(new UpstreamHandler(player));
-        upstream.addDisconnectHandler((reason) -> player.disconnect(null, true));
+        upstream.addDisconnectHandler((reason) -> player.disconnect((String) null));
     }
 
     public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server) {

@@ -27,6 +27,10 @@ import it.unimi.dsi.fastutil.shorts.Short2ObjectMap;
 import org.apache.commons.lang3.tuple.Pair;
 import pe.waterdog.network.protocol.ProtocolConstants;
 
+/**
+ * Class used to map Block Palettes, as some server-softwares are randomizing them.
+ * Prevents glitches with blocks.
+ */
 public class BlockPalette {
 
     private static final Int2ObjectMap<BlockPalette> paletteCache = new Int2ObjectOpenHashMap<>();

@@ -20,6 +20,11 @@ import pe.waterdog.event.CancellableEvent;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.ProxiedPlayer;
 
+/**
+ * This event will be called before an initial connection to the downstream target is made.
+ * This gives us the option to completely cancel a transfer, for example to restrict access to a server.
+ * Cancelling this event will simply interrupt and cancel the transfer procedure and the player will stay on the old downstream server.
+ */
 public class PreTransferEvent extends PlayerEvent implements CancellableEvent {
 
     private ServerInfo targetServer;

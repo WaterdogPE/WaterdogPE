@@ -30,6 +30,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Collection of functions to remove various client-sided data sets when switching servers.
+ * For example removing client-sided weather, effects, effect particles etc..
+ */
 public class PlayerRewriteUtils {
 
     public static long rewriteId(long from, long rewritten, long origin) {

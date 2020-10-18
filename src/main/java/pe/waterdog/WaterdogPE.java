@@ -16,6 +16,7 @@
 
 package pe.waterdog;
 
+import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
@@ -32,6 +33,10 @@ public class WaterdogPE {
         Thread.currentThread().setName("WaterdogPE-main");
         System.out.println("Starting WaterdogPE....");
         System.setProperty("log4j.skipJansi", "false");
+        System.setSecurityManager(null);
+        System.setProperty("java.net.preferIPv4Stack", "true");
+        System.setProperty("io.netty.selectorAutoRebuildThreshold", "0");
+        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
 
         MainLogger logger = MainLogger.getLogger();
         logger.info("§bStarting WaterDogPE proxy software!");

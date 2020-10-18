@@ -20,6 +20,11 @@ import pe.waterdog.command.CommandSender;
 import pe.waterdog.event.CancellableEvent;
 import pe.waterdog.event.Event;
 
+/**
+ * Called whenever a command is called right before a player dispatches a proxy command.
+ * Cancelling it will lead to it not executing the command.
+ * Can be used to restrict access to command.
+ */
 public class DispatchCommandEvent extends Event implements CancellableEvent {
 
     private final CommandSender sender;

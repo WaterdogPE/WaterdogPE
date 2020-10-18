@@ -31,6 +31,9 @@ import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
 import java.util.UUID;
 
+/**
+ * Various utilities for parsing Handshake data
+ */
 public class HandshakeUtils {
 
     public static JWSObject createExtraData(KeyPair pair, JSONObject extraData) {

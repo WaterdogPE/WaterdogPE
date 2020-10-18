@@ -27,6 +27,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Base informative class for servers.
+ * Every server registered to the Proxy has one instance of this class, holding its name aswell as its address(ip&port)
+ * Also holds a list of all ProxiedPlayers connected.
+ */
 public class ServerInfo {
 
     private final String serverName;
