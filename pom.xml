@@ -8,7 +8,6 @@
     <artifactId>waterdog</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-
     <properties>
         <raklib.version>1.6.20</raklib.version>
         <protocol.protocol>bedrock-v408</protocol.protocol>
