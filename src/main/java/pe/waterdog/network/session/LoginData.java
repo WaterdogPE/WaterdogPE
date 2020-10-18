@@ -33,18 +33,20 @@ public class LoginData {
     private final boolean xboxAuthed;
     private final InetSocketAddress address;
     private final ProtocolConstants.Protocol protocol;
+    private final String joinHostname;
 
     private final KeyPair keyPair;
     private AsciiString chainData;
     private JWSObject signedClientData;
 
-    public LoginData(String displayName, UUID uuid, String xuid, boolean xboxAuthed, ProtocolConstants.Protocol protocol, InetSocketAddress address, KeyPair keyPair) {
+    public LoginData(String displayName, UUID uuid, String xuid, boolean xboxAuthed, ProtocolConstants.Protocol protocol, String joinHostname, InetSocketAddress address, KeyPair keyPair) {
         this.displayName = displayName;
         this.uuid = uuid;
         this.xuid = xuid;
         this.xboxAuthed = xboxAuthed;
         this.protocol = protocol;
         this.address = address;
+        this.joinHostname = joinHostname;
         this.keyPair = keyPair;
     }
 
@@ -87,6 +89,10 @@ public class LoginData {
     public void setChainData(AsciiString chainData) {
         Preconditions.checkArgument(this.chainData == null, "ChainData can not be changed!");
         this.chainData = chainData;
+    }
+
+    public String getJoinHostname() {
+        return this.joinHostname;
     }
 
     public JWSObject getSignedClientData() {
