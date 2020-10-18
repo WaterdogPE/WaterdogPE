@@ -15,6 +15,7 @@
         <log4j2.version>2.13.3</log4j2.version>
         <jline.version>3.9.0</jline.version>
     </properties>
+         
     <repositories>
         <repository>
             <id>nukkitx-repo-release</id>
