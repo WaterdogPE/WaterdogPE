@@ -16,6 +16,10 @@
 
 package pe.waterdog.event;
 
+/**
+ * Extending this class will implement base utilities to cancel this event.
+ * Cancelled events should, after passing the handler pipeline, not execute at all.
+ */
 public interface CancellableEvent {
 
     boolean isCancelled();

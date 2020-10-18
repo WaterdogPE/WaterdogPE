@@ -17,12 +17,18 @@
 package pe.waterdog.network.upstream;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.*;
+import com.nukkitx.protocol.bedrock.packet.CommandRequestPacket;
+import com.nukkitx.protocol.bedrock.packet.PacketViolationWarningPacket;
+import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
+import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.PlayerChatEvent;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
+/**
+ * Main handler for handling packets received from upstream.
+ */
 public class UpstreamHandler implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;

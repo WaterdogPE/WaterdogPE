@@ -24,6 +24,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
+/**
+ * Event Manager
+ * Enables Plugins to subscribe to Events, either vanilla events already implemented
+ * or custom ones which are loaded as part of a plugin.
+ */
 public class EventManager {
 
     private final ExecutorService threadedExecutor;
@@ -39,6 +44,16 @@ public class EventManager {
         this.subscribe(event, handler, EventPriority.NORMAL);
     }
 
+    /**
+     * Can be used to subscribe to events. Once subscribed, the handler will be called each time the event is called.
+     *
+     * @param event    A class reference to the target event you want to subscribe to, for example ProxyPingEvent.class
+     * @param handler  A method reference or lambda with one parameter, the event which you want to handle
+     * @param priority The Priority of your event handler. Can be used to execute one handler after / before another
+     * @param <T>      The class reference to the event you want to subscribe to
+     * @see AsyncEvent
+     * @see EventPriority
+     */
     public <T extends Event> void subscribe(Class<? extends Event> event, Consumer<T> handler, EventPriority priority) {
         EventHandler eventHandler = this.handlerMap.computeIfAbsent(event, e -> new EventHandler(event, this));
 
@@ -46,6 +61,15 @@ public class EventManager {
         eventHandler.subscribe(func, priority);
     }
 
+    /**
+     * Used to call an provided event.
+     * If the target event has the annotation AsyncEvent present, the CompletableFuture.whenComplete can be used to
+     * execute code once the event has passed the whole event pipeline. If the annotation is not present, you can
+     * ignore the return and use the direct variable reference of your event
+     *
+     * @param event the instance of an event to be called
+     * @return CompletableFuture<Event> if event has AsyncEvent annotation present or null in case of non-async event
+     */
     public CompletableFuture<Event> callEvent(Event event) {
         EventHandler eventHandler = this.handlerMap.computeIfAbsent(event.getClass(), e -> new EventHandler(event.getClass(), this));
         return eventHandler.handle(event);

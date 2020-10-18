@@ -20,6 +20,12 @@ import pe.waterdog.event.CancellableEvent;
 import pe.waterdog.event.Event;
 import pe.waterdog.network.session.LoginData;
 
+/**
+ * Called in the moment we receive the LoginPacket from the Client.
+ * (After decoding the LoginData)
+ * loginData contains most relevant information on the client connecting
+ * Cancelling this event will lead to the player being kicked for the set cancelReason
+ */
 public class PlayerPreLoginEvent extends Event implements CancellableEvent {
 
     private LoginData loginData;

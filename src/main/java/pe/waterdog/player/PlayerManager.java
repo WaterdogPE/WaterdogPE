@@ -27,6 +27,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 
+/**
+ * Base Player Manager, managing the registration, binding and removal of instances of ProxiedPlayer.
+ */
 public class PlayerManager {
 
     private final ProxyServer proxy;

@@ -62,6 +62,10 @@ import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Base Player class.
+ * Base Management of the Player System is done in here.
+ */
 public class ProxiedPlayer implements CommandSender {
 
     private final ProxyServer proxy;
@@ -113,6 +117,10 @@ public class ProxiedPlayer implements CommandSender {
         this.proxy.getPlayerManager().subscribePermissions(this);
     }
 
+    /**
+     * Called only on the initial connect.
+     * Determines the first player the player gets transferred to based on the currently present JoinHandler.
+     */
     public void initialConnect() {
         PlayerLoginEvent event = new PlayerLoginEvent(this);
         this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, ignored) -> {
@@ -127,7 +135,6 @@ public class ProxiedPlayer implements CommandSender {
                 this.connect(forcedHost);
                 return;
             }
-
             final ServerInfo initialServer = this.proxy.getJoinHandler().determineServer(this);
             if (initialServer != null) {
                 this.connect(initialServer);
@@ -137,6 +144,11 @@ public class ProxiedPlayer implements CommandSender {
         });
     }
 
+    /**
+     * Transfers the player to another downstream server
+     *
+     * @param serverInfo ServerInfo of the target downstream server, can be received using ProxyServer#getServer
+     */
     public void connect(ServerInfo serverInfo) {
         Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
 
@@ -191,23 +203,28 @@ public class ProxiedPlayer implements CommandSender {
         }));
     }
 
+    /**
+     * Disconnects the player, showing no reason
+     */
     public void disconnect() {
-        this.disconnect(null, false);
+        this.disconnect("");
     }
 
     public void disconnect(TextContainer message) {
-        if (message instanceof TranslationContainer){
+        if (message instanceof TranslationContainer) {
             this.disconnect(((TranslationContainer) message).getTranslated());
-        }else {
+        } else {
             this.disconnect(message.getMessage());
         }
     }
 
+    /**
+     * Calls the PlayerDisconnectEvent and disconnects the player from downstream.
+     * Kicks the player with the provided reason and closes the connection
+     *
+     * @param reason The disconnect reason the player will see on his disconnect screen (Supports Color Codes)
+     */
     public void disconnect(String reason) {
-        this.disconnect(reason, false);
-    }
-
-    public void disconnect(String reason, boolean force) {
         PlayerDisconnectEvent event = new PlayerDisconnectEvent(this);
         ProxyServer.getInstance().getEventManager().callEvent(event);
 
@@ -226,28 +243,49 @@ public class ProxiedPlayer implements CommandSender {
         if (reason != null) this.getLogger().info("[" + this.getName() + "] -> Disconnected with: §c" + reason);
     }
 
+    /**
+     * Sends a packet to the upstream connection (client)
+     *
+     * @param packet the packet to send
+     */
     public void sendPacket(BedrockPacket packet) {
         if (this.upstream != null && !this.upstream.isClosed()) {
             this.upstream.sendPacket(packet);
         }
     }
 
+    /**
+     * Sends a TextContainer as a message to a player
+     *
+     * @param message the text container to send, will be translated if instanceof TranslationContainer
+     */
     @Override
     public void sendMessage(TextContainer message) {
-        if (message instanceof TranslationContainer){
+        if (message instanceof TranslationContainer) {
             this.sendTranslation((TranslationContainer) message);
-        }else {
+        } else {
             this.sendMessage(message.getMessage());
         }
     }
 
-    public void sendTranslation(TranslationContainer textContainer){
+
+    /**
+     * Submethod for sending a TranslationContainer to the player's chat window, translates the container and sends the result as a string
+     *
+     * @param textContainer the TranslationContainer to translate
+     */
+    public void sendTranslation(TranslationContainer textContainer) {
         this.sendMessage(this.proxy.translate(textContainer));
     }
 
+    /**
+     * Sends a message to the player, which will be displayed in the chat window
+     *
+     * @param message
+     */
     @Override
     public void sendMessage(String message) {
-        if (message.trim().isEmpty()){
+        if (message.trim().isEmpty()) {
             return; //Client wont accept empty string
         }
 
@@ -258,6 +296,12 @@ public class ProxiedPlayer implements CommandSender {
         this.sendPacket(packet);
     }
 
+    /**
+     * Sends a popup to the player
+     *
+     * @param message  the popup message
+     * @param subtitle the subtitle, which will be displayed below the popup
+     */
     public void sendPopup(String message, String subtitle) {
         TextPacket packet = new TextPacket();
         packet.setType(TextPacket.Type.POPUP);
@@ -266,6 +310,11 @@ public class ProxiedPlayer implements CommandSender {
         this.sendPacket(packet);
     }
 
+    /**
+     * Sends a tip message to the player
+     *
+     * @param message the tip message to send
+     */
     public void sendTip(String message) {
         TextPacket packet = new TextPacket();
         packet.setType(TextPacket.Type.TIP);
@@ -274,6 +323,11 @@ public class ProxiedPlayer implements CommandSender {
         this.sendPacket(packet);
     }
 
+    /**
+     * Sends a subtitle in addition to a title
+     *
+     * @param subtitle the subtitle to send as a string
+     */
     public void setSubtitle(String subtitle) {
         SetTitlePacket packet = new SetTitlePacket();
         packet.setType(SetTitlePacket.Type.SUBTITLE);
@@ -281,6 +335,13 @@ public class ProxiedPlayer implements CommandSender {
         this.sendPacket(packet);
     }
 
+    /**
+     * Sets the animation time of a title
+     *
+     * @param fadein   the fade-in time of the title
+     * @param duration the display duration of the title
+     * @param fadeout  the fade-out time of the title
+     */
     public void setTitleAnimationTimes(int fadein, int duration, int fadeout) {
         SetTitlePacket packet = new SetTitlePacket();
         packet.setType(SetTitlePacket.Type.TIMES);
@@ -291,6 +352,11 @@ public class ProxiedPlayer implements CommandSender {
         this.sendPacket(packet);
     }
 
+    /**
+     * Sets the current displayed title
+     *
+     * @param text the text to send
+     */
     private void setTitle(String text) {
         SetTitlePacket packet = new SetTitlePacket();
         packet.setType(SetTitlePacket.Type.TITLE);
@@ -298,6 +364,9 @@ public class ProxiedPlayer implements CommandSender {
         this.sendPacket(packet);
     }
 
+    /**
+     * Clears the title of the player
+     */
     public void clearTitle() {
         SetTitlePacket packet = new SetTitlePacket();
         packet.setType(SetTitlePacket.Type.CLEAR);
@@ -305,6 +374,9 @@ public class ProxiedPlayer implements CommandSender {
         this.sendPacket(packet);
     }
 
+    /**
+     * Resets all currently applied title settings
+     */
     public void resetTitleSettings() {
         SetTitlePacket packet = new SetTitlePacket();
         packet.setType(SetTitlePacket.Type.RESET);
@@ -320,6 +392,15 @@ public class ProxiedPlayer implements CommandSender {
         this.sendTitle(title, subtitle, 20, 20, 5);
     }
 
+    /**
+     * Sends a title with the provided animation details and the given subtitle to the player
+     *
+     * @param title    the main title text
+     * @param subtitle the subtitle displayed below
+     * @param fadeIn   the time it takes the title to fade in
+     * @param stay     the time it takes until fadeOut-time is starting
+     * @param fadeOut  the time it takes until the title disappeared
+     */
     public void sendTitle(String title, String subtitle, int fadeIn, int stay, int fadeOut) {
         this.setTitleAnimationTimes(fadeIn, stay, fadeOut);
         if (!Strings.isNullOrEmpty(subtitle)) {
@@ -330,9 +411,10 @@ public class ProxiedPlayer implements CommandSender {
 
     /**
      * Transfer player to another server using "slow" reconnect method
+     *
      * @param serverInfo destination server
      */
-    public void redirectServer(ServerInfo serverInfo){
+    public void redirectServer(ServerInfo serverInfo) {
         Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
         TransferPacket packet = new TransferPacket();
         packet.setAddress(serverInfo.getPublicAddress().getAddress().getHostAddress());
@@ -340,26 +422,37 @@ public class ProxiedPlayer implements CommandSender {
         this.sendPacket(packet);
     }
 
-    public boolean addPermission(String permission){
+    /**
+     * Adds a permission to the player
+     *
+     * @param permission the permission to give him
+     * @return whether the update was successful or not
+     */
+    public boolean addPermission(String permission) {
         return this.addPermission(new Permission(permission, true));
     }
 
     /**
-     * Add permission to player
+     * Add permission to the player
+     *
      * @return if the update was successful
      */
-    public boolean addPermission(Permission permission){
+    public boolean addPermission(Permission permission) {
         Permission oldPerm = this.permissions.get(permission.getName());
-        if (oldPerm == null){
+        if (oldPerm == null) {
             this.permissions.put(permission.getName(), permission);
             return true;
         }
         return oldPerm.getAtomicValue().getAndSet(permission.getValue()) != permission.getValue();
     }
 
+    /**
+     * @param permission the permission to check for
+     * @return Returns whether the player has the passed permission or not
+     */
     @Override
     public boolean hasPermission(String permission) {
-        if (this.admin){
+        if (this.admin) {
             return true;
         }
         Permission perm = this.permissions.get(permission.toLowerCase());
@@ -368,23 +461,38 @@ public class ProxiedPlayer implements CommandSender {
 
     /**
      * Remove permission from player
+     *
      * @return if player had this permission
      */
-    public boolean removePermission(String permission){
+    public boolean removePermission(String permission) {
         return this.permissions.remove(permission.toLowerCase()) != null;
     }
 
-    public Permission getPermission(String permission){
+    /**
+     * @param permission the permission name to search for
+     * @return the Instance of Permission if present
+     */
+    public Permission getPermission(String permission) {
         return this.permissions.get(permission.toLowerCase());
     }
 
-    public void setIsAdmin(boolean admin) {
-        this.admin = admin;
-    }
-
+    /**
+     * @return true if the player has administrator status, false if not
+     */
     public boolean isAdmin() {
         return this.admin;
     }
+
+    /**
+     * Sets whether this player should have Administrator Status.
+     * Players with administrator status are granted every permissions, even if not specificly applied
+     *
+     * @param admin Whether the player is admin or not
+     */
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
+    }
+
 
     @Override
     public boolean isPlayer() {

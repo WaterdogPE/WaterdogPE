@@ -19,6 +19,9 @@ package pe.waterdog.event.defaults;
 import pe.waterdog.event.Event;
 import pe.waterdog.player.ProxiedPlayer;
 
+/**
+ * Base class for Events referencing player / with a player origin.
+ */
 public abstract class PlayerEvent extends Event {
 
     protected ProxiedPlayer player;

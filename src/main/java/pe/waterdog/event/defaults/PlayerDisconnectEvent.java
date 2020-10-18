@@ -17,9 +17,11 @@
 package pe.waterdog.event.defaults;
 
 import pe.waterdog.event.AsyncEvent;
-import pe.waterdog.event.Event;
 import pe.waterdog.player.ProxiedPlayer;
 
+/**
+ * Called whenever a player gets kicked from the Server (ProxiedPlayer#disconnect)
+ */
 @AsyncEvent
 public class PlayerDisconnectEvent extends PlayerEvent {
 

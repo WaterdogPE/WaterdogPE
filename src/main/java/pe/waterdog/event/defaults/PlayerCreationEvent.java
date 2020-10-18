@@ -22,6 +22,10 @@ import pe.waterdog.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
 
+/**
+ * Called when the ProxiedPlayer Class is being created.
+ * Can be used to create custom Player classes to override or extend the original class. (No Support)
+ */
 public class PlayerCreationEvent extends Event {
 
     private Class<? extends ProxiedPlayer> baseClass;
