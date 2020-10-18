@@ -284,6 +284,20 @@ public class ProxyServer {
     }
 
     /**
+     * Get ServerInfo by address and port
+     * @return ServerInfo instance of matched server
+     */
+    public ServerInfo getServerInfo(String address, int port){
+        Preconditions.checkNotNull(address, "Address can not be null!");
+        for (ServerInfo serverInfo : this.serverInfoMap.values()){
+            if (serverInfo.matchAddress(address, port)){
+                return serverInfo;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Get ServerInfo instance using hostname
      * @return ServerInfo assigned to forced host
      */

@@ -35,6 +35,7 @@ public class ProxyConfig extends YamlConfig {
     private boolean useLoginExtras;
     private boolean enableQuery;
     private boolean ipForward;
+    private boolean fastTransfer;
 
     private final InetSocketAddress bindAddress;
     private final List<String> priorities;
@@ -56,6 +57,7 @@ public class ProxyConfig extends YamlConfig {
         this.enableQuery = this.getBoolean("enable_query");
         this.ipForward = this.getBoolean("ip_forward");
         this.replaceUsernameSpaces = this.getBoolean("replace_username_spaces");
+        this.fastTransfer = this.getBoolean("prefer_fast_transfer");
         this.bindAddress = this.getInetAddress("listener.host");
         this.priorities = this.getStringList("listener.priorities");
         this.defaultPermissions = this.getStringList("permissions_default");
@@ -148,6 +150,14 @@ public class ProxyConfig extends YamlConfig {
 
     public boolean isReplaceUsernameSpaces() {
         return this.replaceUsernameSpaces;
+    }
+
+    public void setUseFastTransfer(boolean fastTransfer) {
+        this.fastTransfer = fastTransfer;
+    }
+
+    public boolean useFastTransfer() {
+        return this.fastTransfer;
     }
 
     public boolean isIpForward() {

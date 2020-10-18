@@ -47,6 +47,9 @@ enable_query: true
 ip_forward: false
 # Replace spaces in player's username.
 replace_username_spaces: true
+# Use fast transfer option if possible. Proxy will catch TransferServer packet and
+# will use fast transfer is any server matches by address.
+prefer_fast_transfer: true
 
 # Compression settings
 # Compression level between downstream and proxy may be lower, depends on your private network configuration.

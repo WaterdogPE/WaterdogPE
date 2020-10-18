@@ -73,4 +73,8 @@ public class ServerInfo {
     public InetSocketAddress getPublicAddress() {
         return this.publicAddress;
     }
+
+    public boolean matchAddress(String address, int port){
+        return this.publicAddress.getAddress().getHostName().equals(address) && this.publicAddress.getPort() == port;
+    }
 }

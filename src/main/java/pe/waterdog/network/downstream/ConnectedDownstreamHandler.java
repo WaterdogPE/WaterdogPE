@@ -88,6 +88,20 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
+    public boolean handle(TransferPacket packet) {
+        if (!this.player.getProxy().getConfiguration().useFastTransfer()){
+            return false;
+        }
+
+        ServerInfo serverInfo = this.player.getProxy().getServerInfo(packet.getAddress(), packet.getPort());
+        if (serverInfo != null){
+            this.player.connect(serverInfo);
+            throw CancelSignalException.CANCEL;
+        }
+        return false;
+    }
+
+    @Override
     public final boolean handle(DisconnectPacket packet) {
         ServerInfo serverInfo = this.player.getProxy().getReconnectHandler().getFallbackServer(this.player, this.server.getInfo());
         if (serverInfo != null) {
