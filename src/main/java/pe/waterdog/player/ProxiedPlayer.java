@@ -207,7 +207,7 @@ public class ProxiedPlayer implements CommandSender {
      * Disconnects the player, showing no reason
      */
     public void disconnect() {
-        this.disconnect("");
+        this.disconnect((String) null);
     }
 
     public void disconnect(TextContainer message) {
