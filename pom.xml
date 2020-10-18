@@ -9,7 +9,6 @@
     <artifactId>waterdog</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-
     <properties>
         <raklib.version>1.6.20</raklib.version>
         <protocol.protocol>bedrock-v408</protocol.protocol>
@@ -17,7 +16,6 @@
         <log4j2.version>2.13.3</log4j2.version>
         <jline.version>3.9.0</jline.version>
     </properties>
-
     <repositories>
         <repository>
             <id>nukkitx-repo-release</id>
@@ -28,7 +26,6 @@
             <url>https://repo.nukkitx.com/maven-snapshots/</url>
         </repository>
     </repositories>
-
     <dependencies>
         <dependency>
             <groupId>org.fusesource.jansi</groupId>
@@ -43,7 +40,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>4.39.2</version>
+            <version>5.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

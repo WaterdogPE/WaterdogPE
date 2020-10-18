@@ -286,6 +286,16 @@ public class ProxyServer {
         return this.serverInfoMap.get(serverName);
     }
 
+    /**
+     * Get ServerInfo instance using hostname
+     * @return ServerInfo assigned to forced host
+     */
+    public ServerInfo getForcedHost(String serverHostname){
+        Preconditions.checkNotNull(serverHostname, "ServerHostname can not be null!");
+        String serverName = this.getConfiguration().getForcedHosts().get(serverHostname);
+        return serverName == null? null : this.serverInfoMap.get(serverName);
+    }
+
     public Collection<ServerInfo> getServers() {
         return this.serverInfoMap.values();
     }

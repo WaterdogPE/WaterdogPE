@@ -94,6 +94,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
                     extraData.getAsString("XUID"),
                     extraData.containsKey("XUID"), //XBOX auth
                     protocol,
+                    clientData.getAsString("ServerAddress").split(":")[0],
                     this.session.getAddress(),
                     keyPair
             );

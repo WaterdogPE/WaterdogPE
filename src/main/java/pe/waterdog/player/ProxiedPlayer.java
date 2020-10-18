@@ -38,7 +38,6 @@ import pe.waterdog.event.defaults.PlayerDisconnectEvent;
 import pe.waterdog.event.defaults.PlayerLoginEvent;
 import pe.waterdog.event.defaults.PreTransferEvent;
 import pe.waterdog.logger.MainLogger;
-
 import pe.waterdog.network.bridge.UpstreamBridge;
 import pe.waterdog.utils.types.PacketHandler;
 import pe.waterdog.utils.types.Permission;
@@ -46,6 +45,7 @@ import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
 import pe.waterdog.network.bridge.TransferBatchBridge;
+import pe.waterdog.network.bridge.UpstreamBridge;
 import pe.waterdog.network.downstream.InitialHandler;
 import pe.waterdog.network.downstream.SwitchDownstreamHandler;
 import pe.waterdog.network.protocol.ProtocolConstants;
@@ -57,6 +57,7 @@ import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.network.upstream.UpstreamHandler;
+import pe.waterdog.utils.types.PacketHandler;
 import pe.waterdog.utils.types.Permission;
 import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.utils.types.TranslationContainer;
@@ -133,11 +134,17 @@ public class ProxiedPlayer implements CommandSender {
                 return;
             }
             SessionInjections.injectUpstreamHandlers(this.upstream, this);
-            ServerInfo serverInfo = this.getProxy().getJoinHandler().determineServer(this);
-            if (serverInfo != null) {
-                this.connect(serverInfo);
+
+            final ServerInfo forcedHost = this.proxy.getForcedHost(this.loginData.getJoinHostname());
+            if (forcedHost != null) {
+                this.connect(forcedHost);
+                return;
+            }
+            final ServerInfo initialServer = this.proxy.getJoinHandler().determineServer(this);
+            if (initialServer != null) {
+                this.connect(initialServer);
             } else {
-                this.disconnect(new TranslationContainer("waterdog.no.initial.server").getTranslated());
+                this.disconnect(new TranslationContainer("waterdog.no.initial.server"));
             }
         });
     }
@@ -208,6 +215,13 @@ public class ProxiedPlayer implements CommandSender {
         this.disconnect(null);
     }
 
+    public void disconnect(TextContainer message) {
+        if (message instanceof TranslationContainer){
+            this.disconnect(((TranslationContainer) message).getTranslated());
+        }else {
+            this.disconnect(message.getMessage());
+        }
+    }
 
     /**
      * Calls the PlayerDisconnectEvent and disconnects the player from downstream.
@@ -396,7 +410,7 @@ public class ProxiedPlayer implements CommandSender {
     public void redirectServer(ServerInfo serverInfo){
         Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
         TransferPacket packet = new TransferPacket();
-        packet.setAddress(serverInfo.getPublicAddress().getAddress().getHostAddress());;
+        packet.setAddress(serverInfo.getPublicAddress().getAddress().getHostAddress());
         packet.setPort(serverInfo.getPublicAddress().getPort());
         this.sendPacket(packet);
     }
