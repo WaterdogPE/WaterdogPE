@@ -17,7 +17,6 @@
 package pe.waterdog.network;
 
 import com.nukkitx.network.raknet.RakNetPong;
-import com.nukkitx.protocol.bedrock.packet.TransferPacket;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.player.ProxiedPlayer;
@@ -47,9 +46,7 @@ public class ServerInfo {
      * @return CompletableFuture with RakNetPong.
      */
     public CompletableFuture<RakNetPong> ping(long timeout, TimeUnit unit){
-        return ProxyServer.getInstance().bindClient(ProtocolConstants.getLatestProtocol()).thenCompose(client -> {
-            return client.getRakNet().ping(this.address, timeout, unit);
-        });
+        return ProxyServer.getInstance().bindClient(ProtocolConstants.getLatestProtocol()).thenCompose(client -> client.getRakNet().ping(this.address, timeout, unit));
     }
 
     public void addPlayer(ProxiedPlayer player) {
