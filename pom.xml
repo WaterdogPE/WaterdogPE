@@ -25,7 +25,6 @@
             <url>https://repo.nukkitx.com/maven-snapshots/</url>
         </repository>
     </repositories>
-
     <dependencies>
         <dependency>
             <groupId>org.fusesource.jansi</groupId>
