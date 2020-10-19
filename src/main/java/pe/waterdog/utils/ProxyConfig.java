@@ -33,12 +33,13 @@ public class ProxyConfig extends YamlConfig {
     private final boolean onlineMode;
     private final boolean replaceUsernameSpaces;
     private boolean useLoginExtras;
-    private boolean enableQuery = true;
+    private boolean enableQuery;
     private boolean ipForward;
+    private boolean fastTransfer;
 
     private final InetSocketAddress bindAddress;
     private final List<String> priorities;
-    private Map<String, String> forcedHosts;
+    private final Map<String, String> forcedHosts;
 
     private final Map<String, List<String>> playerPermissions = new HashMap<>();
     private List<String> defaultPermissions;
@@ -56,10 +57,12 @@ public class ProxyConfig extends YamlConfig {
         this.enableQuery = this.getBoolean("enable_query");
         this.ipForward = this.getBoolean("ip_forward");
         this.replaceUsernameSpaces = this.getBoolean("replace_username_spaces");
+        this.fastTransfer = this.getBoolean("prefer_fast_transfer");
         this.bindAddress = this.getInetAddress("listener.host");
         this.priorities = this.getStringList("listener.priorities");
         this.defaultPermissions = this.getStringList("permissions_default");
         this.playerPermissions.putAll(this.getPlayerPermissions("permissions"));
+        this.forcedHosts = (Map<String, String>) this.get("listener.forced_hosts", new HashMap<>());
         this.upstreamCompression = this.getInt("upstream_compression_level");
         this.downstreamCompression = this.getInt("downstream_compression_level");
     }
@@ -79,7 +82,7 @@ public class ProxyConfig extends YamlConfig {
         for (String server : map.keySet()) {
             Map<String, String> serverData = map.get(server);
 
-            InetSocketAddress address = null;
+            InetSocketAddress address;
             InetSocketAddress publicAddress = null;
 
             try {
@@ -147,6 +150,14 @@ public class ProxyConfig extends YamlConfig {
 
     public boolean isReplaceUsernameSpaces() {
         return this.replaceUsernameSpaces;
+    }
+
+    public void setUseFastTransfer(boolean fastTransfer) {
+        this.fastTransfer = fastTransfer;
+    }
+
+    public boolean useFastTransfer() {
+        return this.fastTransfer;
     }
 
     public boolean isIpForward() {

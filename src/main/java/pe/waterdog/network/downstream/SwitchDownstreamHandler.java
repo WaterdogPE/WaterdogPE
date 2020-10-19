@@ -187,7 +187,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         this.player.setAcceptPlayStatus(true);
 
         TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
-        ProxyServer.getInstance().getEventManager().callEvent(event);
+        this.player.getProxy().getEventManager().callEvent(event);
         throw CancelSignalException.CANCEL;
     }
 }

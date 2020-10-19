@@ -18,6 +18,11 @@ package pe.waterdog.event;
 
 import pe.waterdog.utils.exceptions.EventException;
 
+/**
+ * Base Event Class
+ * Events can be subscribed to in order to listen for activities on the proxy regarding players aswell
+ * as other components
+ */
 public abstract class Event {
 
     private boolean cancelled = false;

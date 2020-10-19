@@ -10,6 +10,9 @@ import pe.waterdog.network.protocol.codec.*;
 
 import java.util.*;
 
+/**
+ * Constants for all currently supported versions of the Minecraft: Bedrock Edition
+ */
 public class ProtocolConstants {
 
     public static final int DEFAULT_RAKNET_VER = 10;

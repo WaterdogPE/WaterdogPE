@@ -16,27 +16,22 @@
 
 package pe.waterdog.event.defaults;
 
-import pe.waterdog.event.CancellableEvent;
+import pe.waterdog.event.AsyncEvent;
+import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.player.ProxiedPlayer;
 
-/**
- * Called before a player send a message to the chat.
- * At this point it is possible to cancel or modify the message.
- */
-public class PlayerChatEvent extends PlayerEvent implements CancellableEvent {
+@AsyncEvent
+public class PostTransferCompleteEvent extends PlayerEvent {
 
-    private String message;
+    private final ServerConnection server;
 
-    public PlayerChatEvent(ProxiedPlayer player, String message) {
+    public PostTransferCompleteEvent(ServerConnection server, ProxiedPlayer player) {
         super(player);
-        this.message = message;
+        this.server = server;
     }
 
-    public String getMessage() {
-        return this.message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
+    public ServerConnection getServer() {
+        return this.server;
     }
 }
+

@@ -42,7 +42,7 @@ import pe.waterdog.scheduler.WaterdogScheduler;
 import pe.waterdog.utils.ConfigurationManager;
 import pe.waterdog.utils.LangConfig;
 import pe.waterdog.utils.ProxyConfig;
-import pe.waterdog.utils.types.TextContainer;
+import pe.waterdog.utils.types.*;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -131,7 +131,7 @@ public class ProxyServer {
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
         this.logger.info("Binding to " + bindAddress);
 
-        if (this.getConfiguration().isEnabledQuery()){
+        if (this.getConfiguration().isEnabledQuery()) {
             this.queryHandler = new QueryHandler(this, bindAddress);
         }
 
@@ -159,44 +159,53 @@ public class ProxyServer {
         }
     }
 
-    private void onTick(int currentTick){
+    private void onTick(int currentTick) {
         this.scheduler.onTick(currentTick);
     }
 
     @SneakyThrows
     public void shutdown() {
+        if (this.shutdown){
+            return;
+        }
+
         this.shutdown = true;
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
-            player.getValue().disconnect("Proxy Shutdown", true);
+            player.getValue().disconnect("Proxy Shutdown");
+            Thread.sleep(400); // Give the packet pipeline time
         }
 
         this.console.getConsoleThread().interrupt();
         this.pluginManager.disableAllPlugins();
 
+        this.bedrockServer.close();
+        this.tickExecutor.shutdown();
+        this.scheduler.shutdown();
+
         if (!this.tickFuture.isCancelled()){
-            Thread.sleep(400);
             this.logger.info("Interrupting scheduler!");
+            Thread.sleep(500); // Give some time to finish tasks
             this.tickFuture.cancel(true);
         }
     }
 
-    public String translate(TextContainer textContainer){
+    public String translate(TextContainer textContainer) {
         return this.getLanguageConfig().translateContainer(textContainer);
     }
 
-    public boolean handlePlayerCommand(ProxiedPlayer player, String message){
-        if (!this.commandMap.handleMessage(player, message)){
+    public boolean handlePlayerCommand(ProxiedPlayer player, String message) {
+        if (!this.commandMap.handleMessage(player, message)) {
             return false;
         }
         return this.dispatchCommand(player, message.substring(this.commandMap.getCommandPrefix().length()));
     }
 
-    public boolean dispatchCommand(CommandSender sender, String message){
+    public boolean dispatchCommand(CommandSender sender, String message) {
         DispatchCommandEvent event = new DispatchCommandEvent(sender, message);
         this.eventManager.callEvent(event);
 
-        if (event.isCancelled()){
+        if (event.isCancelled()) {
             return false;
         }
         String[] args = message.split(" ");
@@ -234,7 +243,7 @@ public class ProxyServer {
         return this.configurationManager.getProxyConfig();
     }
 
-    public LangConfig getLanguageConfig(){
+    public LangConfig getLanguageConfig() {
         return this.configurationManager.getLangConfig();
     }
 
@@ -264,6 +273,7 @@ public class ProxyServer {
 
     /**
      * Allows to add servers dynamically to server map
+     *
      * @return if server was registered
      */
     public boolean registerServerInfo(ServerInfo serverInfo) {
@@ -273,6 +283,7 @@ public class ProxyServer {
 
     /**
      * Remove server from server map
+     *
      * @return removed ServerInfo or null
      */
     public ServerInfo removeServerInfo(String serverName) {
@@ -283,6 +294,30 @@ public class ProxyServer {
     public ServerInfo getServerInfo(String serverName) {
         Preconditions.checkNotNull(serverName, "ServerName can not be null!");
         return this.serverInfoMap.get(serverName);
+    }
+
+    /**
+     * Get ServerInfo by address and port
+     * @return ServerInfo instance of matched server
+     */
+    public ServerInfo getServerInfo(String address, int port){
+        Preconditions.checkNotNull(address, "Address can not be null!");
+        for (ServerInfo serverInfo : this.serverInfoMap.values()){
+            if (serverInfo.matchAddress(address, port)){
+                return serverInfo;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get ServerInfo instance using hostname
+     * @return ServerInfo assigned to forced host
+     */
+    public ServerInfo getForcedHost(String serverHostname){
+        Preconditions.checkNotNull(serverHostname, "ServerHostname can not be null!");
+        String serverName = this.getConfiguration().getForcedHosts().get(serverHostname);
+        return serverName == null? null : this.serverInfoMap.get(serverName);
     }
 
     public Collection<ServerInfo> getServers() {

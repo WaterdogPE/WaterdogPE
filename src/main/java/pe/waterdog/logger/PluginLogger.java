@@ -19,6 +19,11 @@ package pe.waterdog.logger;
 import lombok.extern.log4j.Log4j2;
 import pe.waterdog.plugin.Plugin;
 
+/**
+ * Plugin-specific loggers.
+ * Every plugin has its own logger, to identify log outputs from different plugins
+ * without the need to manually prepend a prefix every time
+ */
 @Log4j2
 public class PluginLogger implements Logger {
 

@@ -17,15 +17,19 @@
 package pe.waterdog.event.defaults;
 
 import pe.waterdog.event.AsyncEvent;
-import pe.waterdog.event.Event;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.player.ProxiedPlayer;
 
+/**
+ * Called when the transfer from one server to the next is completed.
+ * At this point, the player is already logged in and registered to the new downstream target and the old downstream is already
+ * disconnected.
+ */
 @AsyncEvent
 public class TransferCompleteEvent extends PlayerEvent {
 
-    private ServerConnection oldServer;
-    private ServerConnection newServer;
+    private final ServerConnection oldServer;
+    private final ServerConnection newServer;
 
     public TransferCompleteEvent(ServerConnection oldServer, ServerConnection newServer, ProxiedPlayer player) {
         super(player);

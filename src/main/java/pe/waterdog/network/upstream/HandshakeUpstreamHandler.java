@@ -41,6 +41,9 @@ import java.security.KeyPair;
 import java.util.Collections;
 import java.util.UUID;
 
+/**
+ * The Pipeline Handler handling the login handshake part of the initial connect. Will be replaced after success.
+ */
 public class HandshakeUpstreamHandler implements BedrockPacketHandler {
 
     private final ProxyServer proxy;
@@ -92,6 +95,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
                     extraData.getAsString("XUID"),
                     extraData.containsKey("XUID"), //XBOX auth
                     protocol,
+                    clientData.getAsString("ServerAddress").split(":")[0],
                     this.session.getAddress(),
                     keyPair
             );

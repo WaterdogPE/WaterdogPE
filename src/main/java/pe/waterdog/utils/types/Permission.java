@@ -20,6 +20,9 @@ import lombok.ToString;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Permission container for assigning permissions to players.
+ */
 @ToString
 public class Permission {
 

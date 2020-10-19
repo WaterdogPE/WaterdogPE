@@ -21,6 +21,10 @@ import pe.waterdog.player.ProxiedPlayer;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 
+/**
+ * Called when the Proxy receives an MCPEQuery. Returns, in addition to the ProxyPingEvent, a map and whether a whitelist is present.
+ * Can be modified to change the returned values.
+ */
 public class ProxyQueryEvent extends ProxyPingEvent{
 
     private String map;

@@ -18,6 +18,9 @@ package pe.waterdog.logger;
 
 import lombok.extern.log4j.Log4j2;
 
+/**
+ * Main Server logger
+ */
 @Log4j2
 public class MainLogger extends Thread implements Logger {
 

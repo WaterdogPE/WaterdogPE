@@ -27,6 +27,9 @@ import pe.waterdog.player.ProxiedPlayer;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class to map the proper entityIds to entity-related packets.
+ */
 public class EntityMap implements BedrockPacketHandler {
 
     private final ProxiedPlayer player;

@@ -24,6 +24,11 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
+/**
+ * Internal EventHandler Class
+ * Manages Event Calling, priorities, execution ordering.
+ * Should not be modified if not necessary
+ */
 public class EventHandler {
 
     private final EventManager eventManager;

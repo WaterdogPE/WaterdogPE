@@ -39,7 +39,7 @@ public class ServerCommand extends Command {
             return false;
         }
 
-        ServerInfo server = sender.getProxy().getServer(args[0]);
+        ServerInfo server = sender.getProxy().getServerInfo(args[0]);
         if (server == null){
             sender.sendMessage("§cServer not found!");
             return true;

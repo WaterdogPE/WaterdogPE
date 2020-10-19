@@ -50,6 +50,7 @@ public class TerminalConsole extends SimpleTerminalConsole {
 
     @Override
     protected void shutdown() {
+        ProxyServer.getInstance().shutdown();
     }
 
     @Override
