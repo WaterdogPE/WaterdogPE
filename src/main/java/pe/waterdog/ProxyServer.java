@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
-import io.netty.util.ResourceLeakDetector;
 import lombok.SneakyThrows;
 import pe.waterdog.command.*;
 import pe.waterdog.console.TerminalConsole;
@@ -30,10 +29,6 @@ import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.protocol.ProtocolConstants;
-import pe.waterdog.utils.types.IJoinHandler;
-import pe.waterdog.utils.types.IReconnectHandler;
-import pe.waterdog.utils.types.VanillaJoinHandler;
-import pe.waterdog.utils.types.VanillaReconnectHandler;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.plugin.PluginManager;
@@ -164,19 +159,26 @@ public class ProxyServer {
 
     @SneakyThrows
     public void shutdown() {
+        if (shutdown) return;
         this.shutdown = true;
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
             player.getValue().disconnect("Proxy Shutdown");
+            Thread.sleep(400); // Give the packet pipeline time
         }
 
         this.console.getConsoleThread().interrupt();
         this.pluginManager.disableAllPlugins();
-
+        this.bedrockServer.close();
+        this.tickExecutor.shutdownNow();
+        this.scheduler.shutdown();
         if (!this.tickFuture.isCancelled()){
-            Thread.sleep(400);
             this.logger.info("Interrupting scheduler!");
-            this.tickFuture.cancel(true);
+            try {
+                this.tickFuture.cancel(true);
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
         }
     }
 

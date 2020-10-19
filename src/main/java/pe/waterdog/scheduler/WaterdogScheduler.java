@@ -148,6 +148,12 @@ public class WaterdogScheduler {
         removed.cancel();
     }
 
+    public void shutdown() {
+        this.threadedExecutor.shutdownNow();
+        this.pendingTasks.clear();
+    }
+
+
     public int getCurrentTick() {
         return this.proxy.getCurrentTick();
     }
