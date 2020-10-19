@@ -6,7 +6,7 @@ import pe.waterdog.player.ProxiedPlayer;
 public class VanillaReconnectHandler implements IReconnectHandler {
 
     @Override
-    public ServerInfo getFallbackServer(ProxiedPlayer p, ServerInfo oldServer, String message) {
+    public ServerInfo getFallbackServer(ProxiedPlayer player, ServerInfo oldServer, String message) {
         return null;
     }
 }

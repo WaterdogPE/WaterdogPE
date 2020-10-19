@@ -159,7 +159,10 @@ public class ProxyServer {
 
     @SneakyThrows
     public void shutdown() {
-        if (shutdown) return;
+        if (this.shutdown){
+            return;
+        }
+
         this.shutdown = true;
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
@@ -169,11 +172,14 @@ public class ProxyServer {
 
         this.console.getConsoleThread().interrupt();
         this.pluginManager.disableAllPlugins();
+
         this.bedrockServer.close();
-        this.tickExecutor.shutdownNow();
+        this.tickExecutor.shutdown();
         this.scheduler.shutdown();
+
         if (!this.tickFuture.isCancelled()){
             this.logger.info("Interrupting scheduler!");
+            Thread.sleep(500); // Give some time to finish tasks
             this.tickFuture.cancel(true);
         }
     }
