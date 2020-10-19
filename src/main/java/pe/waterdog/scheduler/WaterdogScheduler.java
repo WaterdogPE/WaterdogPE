@@ -149,8 +149,7 @@ public class WaterdogScheduler {
     }
 
     public void shutdown() {
-        this.threadedExecutor.shutdownNow();
-        this.pendingTasks.clear();
+        this.threadedExecutor.shutdown();
     }
 
 
