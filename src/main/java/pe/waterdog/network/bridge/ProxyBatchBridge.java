@@ -63,12 +63,6 @@ public class ProxyBatchBridge implements BatchHandler {
         }else {
             this.session.sendWrapped(allPackets, true);
         }
-
-        for (BedrockPacket packet : packets) {
-            if ((packet instanceof UnknownPacket) && ((UnknownPacket) packet).refCnt() > 0){
-                ((UnknownPacket) packet).release();
-            }
-        }
     }
 
     /**
