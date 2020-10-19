@@ -24,10 +24,11 @@ import pe.waterdog.network.bridge.UpstreamBridge;
 import pe.waterdog.network.downstream.ConnectedDownstreamHandler;
 import pe.waterdog.network.upstream.UpstreamHandler;
 import pe.waterdog.player.ProxiedPlayer;
+import pe.waterdog.utils.types.TranslationContainer;
 
 public class SessionInjections {
 
-    public static void injectUpstreamHandlers(BedrockSession upstream, ProxiedPlayer player){
+    public static void injectUpstreamHandlers(BedrockSession upstream, ProxiedPlayer player) {
         upstream.setCompressionLevel(player.getProxy().getConfiguration().getUpstreamCompression());
         upstream.setPacketHandler(new UpstreamHandler(player));
         upstream.addDisconnectHandler((reason) -> player.disconnect((String) null));
@@ -37,6 +38,12 @@ public class SessionInjections {
         downstream.setCompressionLevel(player.getProxy().getConfiguration().getDownstreamCompression());
         downstream.addDisconnectHandler((reason) -> {
             player.getLogger().info("[" + downstream.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
+            ServerInfo s = player.getProxy().getReconnectHandler().getFallbackServer(player, player.getServer().getInfo(), reason.name());
+            if (s != null) {
+                player.connect(s);
+            } else {
+                player.disconnect(new TranslationContainer("waterdog.downstream.down", player.getServer().getInfo().getServerName(), reason.toString()).getTranslated());
+            }
         });
     }
 

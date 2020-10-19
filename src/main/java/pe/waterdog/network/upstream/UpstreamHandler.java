@@ -45,7 +45,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(PacketViolationWarningPacket packet) {
-        this.player.getLogger().warning("Received "+packet.toString());
+        this.player.getLogger().warning("Received " + packet.toString());
         throw CancelSignalException.CANCEL;
     }
 
@@ -55,7 +55,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
         ProxyServer.getInstance().getEventManager().callEvent(event);
         packet.setMessage(event.getMessage());
 
-        if (event.isCancelled()){
+        if (event.isCancelled()) {
             throw CancelSignalException.CANCEL;
         }
         return true;
@@ -64,9 +64,10 @@ public class UpstreamHandler implements BedrockPacketHandler {
     @Override
     public final boolean handle(CommandRequestPacket packet) {
         String message = packet.getCommand();
-        if (this.player.getProxy().handlePlayerCommand(this.player, message)){
+        if (this.player.getProxy().handlePlayerCommand(this.player, message)) {
             throw CancelSignalException.CANCEL;
         }
         return false;
     }
+
 }
