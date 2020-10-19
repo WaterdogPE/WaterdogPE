@@ -174,11 +174,7 @@ public class ProxyServer {
         this.scheduler.shutdown();
         if (!this.tickFuture.isCancelled()){
             this.logger.info("Interrupting scheduler!");
-            try {
-                this.tickFuture.cancel(true);
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            }
+            this.tickFuture.cancel(true);
         }
     }
 
