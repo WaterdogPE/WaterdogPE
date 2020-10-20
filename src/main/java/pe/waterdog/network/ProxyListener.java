@@ -84,6 +84,7 @@ public class ProxyListener implements BedrockServerEventHandler {
     @Override
     public void onSessionCreation(BedrockServerSession session) {
         this.proxy.getLogger().debug("[" + session.getAddress() + "] <-> Received first data");
+        session.addDisconnectHandler((reason) -> proxy.getLogger().info("[" + session.getAddress().getAddress().getHostAddress() + ":" + session.getAddress().getPort() + "] -> Upstream has disconnected"));
         session.setPacketHandler(new HandshakeUpstreamHandler(this.proxy, session));
     }
 
