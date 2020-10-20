@@ -115,6 +115,10 @@ public class ProxiedPlayer implements CommandSender {
         this.entityMap = new EntityMap(this);
         this.blockMap = new BlockMap(this);
         this.proxy.getPlayerManager().subscribePermissions(this);
+        this.upstream.addDisconnectHandler((reason) -> {
+            this.getProxy().getPlayerManager().removePlayer(this);
+            this.getProxy().getLogger().info("[" + this.getName() + "] -> Player disconnected");
+        });
     }
 
     /**
@@ -233,13 +237,11 @@ public class ProxiedPlayer implements CommandSender {
             this.upstream.disconnect(reason);
         }
 
-        if (this.serverConnection != null) {
+        if (this.serverConnection != null && !this.serverConnection.getDownstream().isClosed()) {
             this.serverConnection.getInfo().removePlayer(this);
             this.serverConnection.disconnect();
         }
 
-        this.proxy.getPlayerManager().removePlayer(this);
-        this.getLogger().info("[" + this.getName() + "] -> Upstream has disconnected");
         if (reason != null) this.getLogger().info("[" + this.getName() + "] -> Disconnected with: §c" + reason);
     }
 
