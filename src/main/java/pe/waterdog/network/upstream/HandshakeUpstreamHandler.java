@@ -58,7 +58,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
     @Override
     public boolean handle(LoginPacket packet) {
         int protocolVersion = packet.getProtocolVersion();
-        this.proxy.getLogger().info("[" + session.getAddress() + "] <-> Upstream has connected (protocol="+protocolVersion+")");
+        this.proxy.getLogger().info("[" + session.getAddress() + "] <-> Upstream has connected (protocol=" + protocolVersion + ")");
 
         ProtocolVersion protocol = ProtocolConstants.get(protocolVersion);
         session.setPacketCodec(protocol == null ? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
@@ -93,12 +93,17 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
                     extraData.getAsString("displayName"),
                     UUID.fromString(extraData.getAsString("identity")),
                     extraData.getAsString("XUID"),
-                    extraData.containsKey("XUID"), //XBOX auth
+                    (extraData.containsKey("XUID") && !extraData.getAsString("XUID").equals("")), //XBOX auth
                     protocol,
                     clientData.getAsString("ServerAddress").split(":")[0],
                     this.session.getAddress(),
                     keyPair
             );
+            if (!loginData.isXboxAuthed() && this.proxy.getConfiguration().isOnlineMode()) {
+                this.proxy.getLogger().info("[" + session.getAddress() + "] <-> Upstream has disconnected due to failed XBOX authentication!");
+                session.disconnect("disconnectionScreen.notAuthenticated");
+                return false;
+            }
 
             PlayerPreLoginEvent event = new PlayerPreLoginEvent(loginData);
             this.proxy.getEventManager().callEvent(event);

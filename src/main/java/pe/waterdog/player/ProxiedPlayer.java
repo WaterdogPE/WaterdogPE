@@ -233,12 +233,11 @@ public class ProxiedPlayer implements CommandSender {
         PlayerDisconnectEvent event = new PlayerDisconnectEvent(this);
         ProxyServer.getInstance().getEventManager().callEvent(event);
 
-
         if (this.upstream != null && !this.upstream.isClosed()) {
             this.upstream.disconnect(reason);
         }
 
-        if (this.serverConnection != null) {
+        if (this.serverConnection != null && !this.serverConnection.getDownstream().isClosed()) {
             this.serverConnection.getInfo().removePlayer(this);
             this.serverConnection.disconnect();
         }
