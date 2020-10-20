@@ -99,6 +99,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
                     keyPair
             );
             if (!loginData.isXboxAuthed() && this.proxy.getConfiguration().isOnlineMode()) {
+                this.proxy.getLogger().info("[" + session.getAddress() + "] <-> Upstream has disconnected due to failed XBOX authentication!");
                 session.disconnect("disconnectionScreen.notAuthenticated");
                 return false;
             }

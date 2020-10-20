@@ -174,7 +174,7 @@ public class ProxyServer {
         this.pluginManager.disableAllPlugins();
 
         try {
-            this.bedrockServer.close();
+            this.bedrockServer.getRakNet().close();
         } catch (Exception e) {
             this.getLogger().error("Error while shutting down ProxyServer", e);
         }
