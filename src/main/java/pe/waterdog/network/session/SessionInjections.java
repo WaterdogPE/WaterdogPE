@@ -24,27 +24,26 @@ import pe.waterdog.network.bridge.UpstreamBridge;
 import pe.waterdog.network.downstream.ConnectedDownstreamHandler;
 import pe.waterdog.network.upstream.UpstreamHandler;
 import pe.waterdog.player.ProxiedPlayer;
-import pe.waterdog.utils.types.TranslationContainer;
 
 public class SessionInjections {
 
     public static void injectUpstreamHandlers(BedrockSession upstream, ProxiedPlayer player) {
         upstream.setCompressionLevel(player.getProxy().getConfiguration().getUpstreamCompression());
         upstream.setPacketHandler(new UpstreamHandler(player));
-        upstream.addDisconnectHandler((reason) -> player.disconnect((String) null));
+        upstream.addDisconnectHandler((reason) -> {
+            ServerConnection i;
+            if ((i = player.getServer()) != null) {
+                ServerConnection c = player.getServer();
+                if (c != null && !c.getDownstream().isClosed()) {
+                    c.getDownstream().disconnect();
+                }
+            }
+        });
     }
 
     public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server) {
         downstream.setCompressionLevel(player.getProxy().getConfiguration().getDownstreamCompression());
-        downstream.addDisconnectHandler((reason) -> {
-            player.getLogger().info("[" + downstream.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
-            ServerInfo s = player.getProxy().getReconnectHandler().getFallbackServer(player, player.getServer().getInfo(), reason.name());
-            if (s != null) {
-                player.connect(s);
-            } else {
-                player.disconnect(new TranslationContainer("waterdog.downstream.down", player.getServer().getInfo().getServerName(), reason.toString()).getTranslated());
-            }
-        });
+        downstream.addDisconnectHandler((reason) -> player.getLogger().info("[" + downstream.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected"));
     }
 
     public static void injectDownstreamHandlers(ServerConnection server, ProxiedPlayer player) {
