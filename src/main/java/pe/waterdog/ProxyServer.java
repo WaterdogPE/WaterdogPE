@@ -173,7 +173,12 @@ public class ProxyServer {
         this.console.getConsoleThread().interrupt();
         this.pluginManager.disableAllPlugins();
 
-        this.bedrockServer.close();
+        try {
+            this.bedrockServer.close();
+        } catch (Exception e) {
+            this.getLogger().error("Error while shutting down ProxyServer", e);
+        }
+
         this.tickExecutor.shutdown();
         this.scheduler.shutdown();
 
