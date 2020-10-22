@@ -23,7 +23,9 @@ import pe.waterdog.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -38,7 +40,7 @@ public class ServerInfo {
     private final InetSocketAddress address;
     private final InetSocketAddress publicAddress;
 
-    private final List<ProxiedPlayer> players = new ArrayList<>();
+    private final Set<ProxiedPlayer> players = new HashSet<>();
 
     public ServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {
         this.serverName = serverName;
@@ -63,7 +65,7 @@ public class ServerInfo {
         this.players.remove(player);
     }
 
-    public List<ProxiedPlayer> getPlayers() {
+    public Set<ProxiedPlayer> getPlayers() {
         return this.players;
     }
 

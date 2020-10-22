@@ -166,14 +166,6 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
         PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
 
-        /*//send DIM ID 1 & than original dim
-        if (this.rewrite.getDimension() == packet.getDimensionId()){
-            this.player.setDimensionChange(true);
-            PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), packet.getDimensionId() == 0 ? 1 : 0);
-            //PlayerRewriteUtils.injectStatusChange(this.player.getUpstream(), PlayStatusPacket.Status.PLAYER_SPAWN);
-        }*/
-        //this.player.transferServer(serverInfo);
-
         ServerConnection oldServer = this.player.getServer();
         oldServer.getInfo().removePlayer(this.player);
         oldServer.disconnect();

@@ -232,7 +232,7 @@ public class ProxiedPlayer implements CommandSender {
             this.upstream.disconnect(reason);
         }
 
-        if (this.serverConnection != null && !this.serverConnection.getDownstream().isClosed()) {
+        if (this.serverConnection != null) {
             this.serverConnection.getInfo().removePlayer(this);
             this.serverConnection.disconnect();
         }
