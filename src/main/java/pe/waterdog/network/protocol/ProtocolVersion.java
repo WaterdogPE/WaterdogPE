@@ -31,7 +31,7 @@ public enum ProtocolVersion {
     MINECRAFT_PE_1_13(388, Bedrock_v388.V388_CODEC, 9),
     MINECRAFT_PE_1_14_30(389, Bedrock_v389.V389_CODEC, 9),
     MINECRAFT_PE_1_14_60(390, Bedrock_v390.V390_CODEC, 9),
-    MINECRAFT_PE_1_16(407, Bedrock_v407.V407_CODEC),
+    MINECRAFT_PE_1_16(407, Bedrock_v407.V407_CODEC, 10),
     MINECRAFT_PE_1_16_20(408, Bedrock_v408.V408_CODEC, 10);
 
     private final int protocol;

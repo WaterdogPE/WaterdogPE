@@ -50,7 +50,7 @@ public abstract class BedrockCodec {
     /**
      * This method should be implemented in parent.
      * Some common packets may be implemented here later.
-     * @param builder can be edited inside of teh function. Builder is used to register or deregister packets.
+     * @param builder can be edited inside of the function. Builder is used to register or deregister packets.
      */
     public void buildCodec(BedrockPacketCodec.Builder builder){
         //Maybe later put common packets here
@@ -60,7 +60,7 @@ public abstract class BedrockCodec {
 
     public void setPacketCodec(BedrockPacketCodec packetCodec) {
         Preconditions.checkNotNull(packetCodec, "New packet codec can not be null!");
-        Preconditions.checkArgument(this.packetCodec == null, "Packet codec can not ");
+        Preconditions.checkNotNull(this.packetCodec, "Packet codec can not be null!");
         this.packetCodec = packetCodec;
     }
 
