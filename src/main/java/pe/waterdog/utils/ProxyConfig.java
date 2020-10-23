@@ -32,6 +32,7 @@ public class ProxyConfig extends YamlConfig {
 
     private final boolean onlineMode;
     private final boolean replaceUsernameSpaces;
+    private final boolean fastCodec;
     private boolean useLoginExtras;
     private boolean enableQuery;
     private boolean ipForward;
@@ -57,6 +58,7 @@ public class ProxyConfig extends YamlConfig {
         this.enableQuery = this.getBoolean("enable_query");
         this.ipForward = this.getBoolean("ip_forward");
         this.replaceUsernameSpaces = this.getBoolean("replace_username_spaces");
+        this.fastCodec = this.getBoolean("use_fast_codec");
         this.fastTransfer = this.getBoolean("prefer_fast_transfer");
         this.bindAddress = this.getInetAddress("listener.host");
         this.priorities = this.getStringList("listener.priorities");
@@ -150,6 +152,10 @@ public class ProxyConfig extends YamlConfig {
 
     public boolean isReplaceUsernameSpaces() {
         return this.replaceUsernameSpaces;
+    }
+
+    public boolean useFastCodec() {
+        return this.fastCodec;
     }
 
     public void setUseFastTransfer(boolean fastTransfer) {

@@ -20,6 +20,7 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import io.netty.buffer.ByteBuf;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
@@ -48,7 +49,7 @@ public class ProxyBatchBridge implements BatchHandler {
 
         for (BedrockPacket packet : packets) {
             try {
-                if (this.handlePacket(packet, handler)) {
+                if (!(packet instanceof UnknownPacket) && this.handlePacket(packet, handler)) {
                     changed = true;
                 }
                 allPackets.add(packet);

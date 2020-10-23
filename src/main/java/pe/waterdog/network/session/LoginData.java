@@ -21,6 +21,7 @@ import com.nimbusds.jose.JWSObject;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import io.netty.util.AsciiString;
 import pe.waterdog.network.protocol.ProtocolConstants;
+import pe.waterdog.network.protocol.ProtocolVersion;
 
 import java.net.InetSocketAddress;
 import java.security.KeyPair;
@@ -35,14 +36,14 @@ public class LoginData {
     private final String xuid;
     private final boolean xboxAuthed;
     private final InetSocketAddress address;
-    private final ProtocolConstants.Protocol protocol;
+    private final ProtocolVersion protocol;
     private final String joinHostname;
 
     private final KeyPair keyPair;
     private AsciiString chainData;
     private JWSObject signedClientData;
 
-    public LoginData(String displayName, UUID uuid, String xuid, boolean xboxAuthed, ProtocolConstants.Protocol protocol, String joinHostname, InetSocketAddress address, KeyPair keyPair) {
+    public LoginData(String displayName, UUID uuid, String xuid, boolean xboxAuthed, ProtocolVersion protocol, String joinHostname, InetSocketAddress address, KeyPair keyPair) {
         this.displayName = displayName;
         this.uuid = uuid;
         this.xuid = xuid;
@@ -81,7 +82,7 @@ public class LoginData {
         return this.address;
     }
 
-    public ProtocolConstants.Protocol getProtocol() {
+    public ProtocolVersion getProtocol() {
         return this.protocol;
     }
 

@@ -29,6 +29,11 @@ import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.protocol.ProtocolConstants;
+import pe.waterdog.network.protocol.ProtocolVersion;
+import pe.waterdog.utils.types.IJoinHandler;
+import pe.waterdog.utils.types.IReconnectHandler;
+import pe.waterdog.utils.types.VanillaJoinHandler;
+import pe.waterdog.utils.types.VanillaReconnectHandler;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.plugin.PluginManager;
@@ -121,6 +126,10 @@ public class ProxyServer {
     private void boot() {
         this.console.getConsoleThread().start();
         this.pluginManager.enableAllPlugins();
+        if (this.getConfiguration().useFastCodec()){
+            this.logger.debug("Using fast codec! Please ensure plugin compatibility!");
+            ProtocolConstants.registerCodecs();
+        }
 
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
         this.logger.info("Binding to " + bindAddress);
@@ -211,7 +220,7 @@ public class ProxyServer {
         return this.commandMap.handleCommand(sender, args[0], Arrays.copyOfRange(args, 1, args.length));
     }
 
-    public CompletableFuture<BedrockClient> bindClient(ProtocolConstants.Protocol protocol) {
+    public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
         InetSocketAddress address = new InetSocketAddress("0.0.0.0", ThreadLocalRandom.current().nextInt(20000, 60000));
         BedrockClient client = new BedrockClient(address);
         client.setRakNetVersion(protocol.getRaknetVersion());
