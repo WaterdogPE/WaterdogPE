@@ -60,7 +60,7 @@ public abstract class BedrockCodec {
 
     public void setPacketCodec(BedrockPacketCodec packetCodec) {
         Preconditions.checkNotNull(packetCodec, "New packet codec can not be null!");
-        Preconditions.checkArgument(this.packetCodec != null, "Packet Codec cannot be overwritten on Runtime!");
+        Preconditions.checkArgument(this.packetCodec == null, "Packet Codec cannot be overwritten on Runtime!");
         this.packetCodec = packetCodec;
     }
 
