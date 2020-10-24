@@ -18,9 +18,9 @@ package pe.waterdog;
 
 public interface VersionInfo {
 
-    public static String BASE_VERSION = "1.0.0";
-    public static String BUILD_VERSION = "#build";
-    public static int LATEST_PROTOCOL_VERSION = 408;
-    public static boolean IS_DEVELOPMENT = true;
-    public static String AUTHOR = "WaterdogTEAM";
+    String BASE_VERSION = "1.0.0";
+    String BUILD_VERSION = "#build";
+    int LATEST_PROTOCOL_VERSION = 408;
+    boolean IS_DEVELOPMENT = true;
+    String AUTHOR = "WaterdogTEAM";
 }
