@@ -60,6 +60,7 @@ public abstract class BedrockCodec {
 
     public void setPacketCodec(BedrockPacketCodec packetCodec) {
         Preconditions.checkNotNull(packetCodec, "New packet codec can not be null!");
+        Preconditions.checkNotNull(this.packetCodec, "Packet codec can not be null!");
         this.packetCodec = packetCodec;
     }
 
