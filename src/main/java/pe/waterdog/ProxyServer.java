@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.SneakyThrows;
+import org.apache.logging.log4j.Level;
 import pe.waterdog.command.*;
 import pe.waterdog.console.TerminalConsole;
 import pe.waterdog.event.EventManager;
@@ -30,10 +31,6 @@ import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.protocol.ProtocolVersion;
-import pe.waterdog.utils.types.IJoinHandler;
-import pe.waterdog.utils.types.IReconnectHandler;
-import pe.waterdog.utils.types.VanillaJoinHandler;
-import pe.waterdog.utils.types.VanillaReconnectHandler;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.plugin.PluginManager;
@@ -102,6 +99,9 @@ public class ProxyServer {
 
         this.configurationManager = new ConfigurationManager(this);
         configurationManager.loadProxyConfig();
+        if (this.getConfiguration().isDebug()) {
+            WaterdogPE.setLoggerLevel(Level.DEBUG);
+        }
         configurationManager.loadLanguage();
         // Default Handlers
         this.reconnectHandler = new VanillaReconnectHandler();
@@ -126,7 +126,7 @@ public class ProxyServer {
     private void boot() {
         this.console.getConsoleThread().start();
         this.pluginManager.enableAllPlugins();
-        if (this.getConfiguration().useFastCodec()){
+        if (this.getConfiguration().useFastCodec()) {
             this.logger.debug("Using fast codec! Please ensure plugin compatibility!");
             ProtocolConstants.registerCodecs();
         }
@@ -142,22 +142,22 @@ public class ProxyServer {
         bedrockServer.setHandler(new ProxyListener(this));
         bedrockServer.bind().join();
 
-        this.logger.debug("Upstream <-> Proxy compression level "+this.getConfiguration().getUpstreamCompression());
-        this.logger.debug("Downstream <-> Proxy compression level "+this.getConfiguration().getDownstreamCompression());
+        this.logger.debug("Upstream <-> Proxy compression level " + this.getConfiguration().getUpstreamCompression());
+        this.logger.debug("Downstream <-> Proxy compression level " + this.getConfiguration().getDownstreamCompression());
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
         this.tickFuture = this.tickExecutor.scheduleAtFixedRate(this::tickProcessor, 50, 50, TimeUnit.MILLISECONDS);
     }
 
     private void tickProcessor() {
-        if (this.shutdown && !this.tickFuture.isCancelled()){
+        if (this.shutdown && !this.tickFuture.isCancelled()) {
             this.tickFuture.cancel(false);
             this.bedrockServer.close();
         }
 
         try {
             this.onTick(++this.currentTick);
-        }catch (Exception e){
+        } catch (Exception e) {
             this.logger.error("Error while ticking proxy!", e);
         }
     }
@@ -168,7 +168,7 @@ public class ProxyServer {
 
     @SneakyThrows
     public void shutdown() {
-        if (this.shutdown){
+        if (this.shutdown) {
             return;
         }
 
@@ -191,7 +191,7 @@ public class ProxyServer {
         this.tickExecutor.shutdown();
         this.scheduler.shutdown();
 
-        if (!this.tickFuture.isCancelled()){
+        if (!this.tickFuture.isCancelled()) {
             this.logger.info("Interrupting scheduler!");
             Thread.sleep(500); // Give some time to finish tasks
             this.tickFuture.cancel(true);
@@ -227,7 +227,7 @@ public class ProxyServer {
         return client.bind().thenApply(i -> client);
     }
 
-    public boolean isRunning(){
+    public boolean isRunning() {
         return !this.shutdown;
     }
 
@@ -306,12 +306,13 @@ public class ProxyServer {
 
     /**
      * Get ServerInfo by address and port
+     *
      * @return ServerInfo instance of matched server
      */
-    public ServerInfo getServerInfo(String address, int port){
+    public ServerInfo getServerInfo(String address, int port) {
         Preconditions.checkNotNull(address, "Address can not be null!");
-        for (ServerInfo serverInfo : this.serverInfoMap.values()){
-            if (serverInfo.matchAddress(address, port)){
+        for (ServerInfo serverInfo : this.serverInfoMap.values()) {
+            if (serverInfo.matchAddress(address, port)) {
                 return serverInfo;
             }
         }
@@ -320,12 +321,13 @@ public class ProxyServer {
 
     /**
      * Get ServerInfo instance using hostname
+     *
      * @return ServerInfo assigned to forced host
      */
-    public ServerInfo getForcedHost(String serverHostname){
+    public ServerInfo getForcedHost(String serverHostname) {
         Preconditions.checkNotNull(serverHostname, "ServerHostname can not be null!");
         String serverName = this.getConfiguration().getForcedHosts().get(serverHostname);
-        return serverName == null? null : this.serverInfoMap.get(serverName);
+        return serverName == null ? null : this.serverInfoMap.get(serverName);
     }
 
     public Collection<ServerInfo> getServers() {

@@ -54,6 +54,10 @@ prefer_fast_transfer: true
 # original payload without encoding or decoding it. To save performance enable fast codec.
 use_fast_codec: true
 
+# if this is enabled, the default log level will be set to DEBUG, outputting all kinds of useful information for debugging
+enable_debug: false
+
+
 # Compression settings
 # Compression level between downstream and proxy may be lower, depends on your private network configuration.
 # Higher level = more CPU, less bandwidth usage.

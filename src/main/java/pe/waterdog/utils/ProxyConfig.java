@@ -33,6 +33,7 @@ public class ProxyConfig extends YamlConfig {
     private final boolean onlineMode;
     private final boolean replaceUsernameSpaces;
     private final boolean fastCodec;
+    private final boolean debug;
     private boolean useLoginExtras;
     private boolean enableQuery;
     private boolean ipForward;
@@ -60,6 +61,7 @@ public class ProxyConfig extends YamlConfig {
         this.replaceUsernameSpaces = this.getBoolean("replace_username_spaces");
         this.fastCodec = this.getBoolean("use_fast_codec");
         this.fastTransfer = this.getBoolean("prefer_fast_transfer");
+        this.debug = this.getBoolean("enable_debug");
         this.bindAddress = this.getInetAddress("listener.host");
         this.priorities = this.getStringList("listener.priorities");
         this.defaultPermissions = this.getStringList("permissions_default");
@@ -204,5 +206,9 @@ public class ProxyConfig extends YamlConfig {
 
     public int getDownstreamCompression() {
         return this.downstreamCompression;
+    }
+
+    public boolean isDebug() {
+        return debug;
     }
 }
