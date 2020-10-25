@@ -503,6 +503,10 @@ public class ProxiedPlayer implements CommandSender {
         return true;
     }
 
+    public long getPing() {
+        return this.upstream.getLatency();
+    }
+
     @Override
     public ProxyServer getProxy() {
         return this.proxy;
