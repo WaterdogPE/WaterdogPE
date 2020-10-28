@@ -536,6 +536,10 @@ public class ProxiedPlayer implements CommandSender {
         return this.upstream;
     }
 
+    public boolean isConnected(){
+        return this.upstream != null && !this.upstream.isClosed();
+    }
+
     public EntityTracker getEntityTracker() {
         return this.entityTracker;
     }

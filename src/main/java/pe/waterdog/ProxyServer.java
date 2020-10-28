@@ -183,7 +183,9 @@ public class ProxyServer {
         this.pluginManager.disableAllPlugins();
 
         try {
-            this.bedrockServer.getRakNet().close();
+            if (this.bedrockServer != null){
+                this.bedrockServer.getRakNet().close();
+            }
         } catch (Exception e) {
             this.getLogger().error("Error while shutting down ProxyServer", e);
         }
@@ -381,5 +383,9 @@ public class ProxyServer {
 
     public IReconnectHandler getReconnectHandler() {
         return this.reconnectHandler;
+    }
+
+    public boolean isDebug() {
+        return VersionInfo.IS_DEVELOPMENT || this.getConfiguration().isDebug();
     }
 }
