@@ -40,6 +40,9 @@ public class PluginManager {
     private final Map<String, Plugin> pluginMap = new HashMap<>();
     private final Yaml yamlLoader = new Yaml(new CustomClassLoaderConstructor(this.getClass().getClassLoader()));
 
+    private final Map<String, Class<?>> cachedClasses = new HashMap<>();
+    protected final Map<String, PluginClassLoader> pluginClassLoaders = new HashMap<>();
+
     public PluginManager(ProxyServer proxy) {
         this.proxy = proxy;
         this.pluginLoader = new PluginLoader(this);
@@ -63,43 +66,48 @@ public class PluginManager {
         }
     }
 
-    public Plugin loadPlugin(Path p) {
-        return this.loadPlugin(p, false);
+    public Plugin loadPlugin(Path path) {
+        return this.loadPlugin(path, false);
     }
 
-    public Plugin loadPlugin(Path p, boolean directStartup) {
-        if (!Files.isRegularFile(p) || !PluginLoader.isJarFile(p)) {
-            this.proxy.getLogger().warning("Cannot load plugin: Provided file is no jar file: " + p.getFileName());
+    public Plugin loadPlugin(Path path, boolean directStartup) {
+        if (!Files.isRegularFile(path) || !PluginLoader.isJarFile(path)) {
+            this.proxy.getLogger().warning("Cannot load plugin: Provided file is no jar file: " + path.getFileName());
             return null;
         }
 
-        File pluginFile = p.toFile();
-        if (pluginFile.exists()) {
-            PluginYAML config = this.pluginLoader.loadPluginData(pluginFile, this.yamlLoader);
-            if (config == null) return null;
+        File pluginFile = path.toFile();
+        if (!pluginFile.exists()) {
+            return null;
+        }
 
-            if (this.getPluginByName(config.getName()) != null) {
-                this.proxy.getLogger().warning("Plugin is already loaded: " + config.getName());
-                return null;
-            }
+        PluginYAML config = this.pluginLoader.loadPluginData(pluginFile, this.yamlLoader);
+        if (config == null){
+            return null;
+        }
 
-            Plugin plugin = this.pluginLoader.loadPluginJAR(config, pluginFile);
-            if (plugin != null) {
-                this.proxy.getLogger().info("Loaded plugin " + config.getName() + " successfully! (version=" + config.getVersion() + ",author=" + config.getAuthor() + ")");
-                this.pluginMap.put(config.getName(), plugin);
+        if (this.getPluginByName(config.getName()) != null) {
+            this.proxy.getLogger().warning("Plugin is already loaded: " + config.getName());
+            return null;
+        }
 
-                plugin.onStartup();
-                if (directStartup) {
-                    try {
-                        plugin.setEnabled(true);
-                    } catch (Exception e) {
-                        this.proxy.getLogger().error("Direct startup failed!", e);
-                    }
-                }
-                return plugin;
+        Plugin plugin = this.pluginLoader.loadPluginJAR(config, pluginFile);
+        if (plugin == null) {
+            return null;
+        }
+
+        this.proxy.getLogger().info("Loaded plugin " + config.getName() + " successfully! (version=" + config.getVersion() + ",author=" + config.getAuthor() + ")");
+        this.pluginMap.put(config.getName(), plugin);
+
+        plugin.onStartup();
+        if (directStartup) {
+            try {
+                plugin.setEnabled(true);
+            } catch (Exception e) {
+                this.proxy.getLogger().error("Direct startup failed!", e);
             }
         }
-        return null;
+        return plugin;
     }
 
     public void enableAllPlugins() {
@@ -165,6 +173,28 @@ public class PluginManager {
                 this.proxy.getLogger().error(e.getMessage(), e.getCause());
             }
         }
+    }
+
+    public Class<?> getClassFromCache(String className){
+        Class<?> clazz = this.cachedClasses.get(className);
+        if (clazz != null){
+            return clazz;
+        }
+
+        for (PluginClassLoader loader : this.pluginClassLoaders.values()){
+            try {
+                if ((clazz = loader.findClass(className, false)) != null){
+                    return clazz;
+                }
+            }catch (ClassNotFoundException e){
+                //ignore
+            }
+        }
+        return null;
+    }
+
+    protected void cacheClass(String className, Class<?> clazz){
+        this.cachedClasses.putIfAbsent(className, clazz);
     }
 
     public Map<String, Plugin> getPluginMap() {

@@ -23,8 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -42,28 +40,27 @@ public class PluginLoader {
     }
 
     protected Plugin loadPluginJAR(PluginYAML pluginConfig, File pluginJar) {
+        PluginClassLoader loader;
         try {
-            URLClassLoader loader = new URLClassLoader(new URL[]{pluginJar.toURI().toURL()}, this.getClass().getClassLoader());
-            try {
-                Class<?> mainClass = loader.loadClass(pluginConfig.getMain());
-
-                if (Plugin.class.isAssignableFrom(mainClass)) {
-                    // Main Class extends Plugin class
-                    // TODO Init Method?
-                    Class<? extends Plugin> castedMain = mainClass.asSubclass(Plugin.class);
-                    Plugin plugin = castedMain.newInstance();
-                    plugin.init(pluginConfig, this.pluginManager.getProxy(), pluginJar);
-                    return plugin;
-                }
-            } catch (ClassCastException e) {
-                MainLogger.getLogger().error("Error while loading plugin main class(main=" + pluginConfig.getMain() + ",plugin=" + pluginConfig.getName() + ")", e);
-            } catch (IllegalAccessException | InstantiationException e) {
-                MainLogger.getLogger().error("Error while creating main class instance(plugin=" + pluginConfig.getName() + ",main=" + pluginConfig.getMain() + ")", e);
-            } catch (ClassNotFoundException e) {
-                MainLogger.getLogger().error("Main Class " + pluginConfig.getMain() + " not found", e);
-            }
+            loader = new PluginClassLoader(this.pluginManager, this.getClass().getClassLoader(), pluginJar);
+            this.pluginManager.pluginClassLoaders.put(pluginConfig.getName(), loader);
         } catch (MalformedURLException e) {
             MainLogger.getLogger().error("Error while creating class loader(plugin=" + pluginConfig.getName() + ")");
+            return null;
+        }
+
+        try {
+            Class<?> mainClass = loader.loadClass(pluginConfig.getMain());
+            if (!Plugin.class.isAssignableFrom(mainClass)) {
+                return null;
+            }
+
+            Class<? extends Plugin> castedMain = mainClass.asSubclass(Plugin.class);
+            Plugin plugin = castedMain.getDeclaredConstructor().newInstance();
+            plugin.init(pluginConfig, this.pluginManager.getProxy(), pluginJar);
+            return plugin;
+        } catch (Exception e) {
+            MainLogger.getLogger().error("Error while loading plugin main class(main=" + pluginConfig.getMain() + ",plugin=" + pluginConfig.getName() + ")", e);
         }
         return null;
     }
