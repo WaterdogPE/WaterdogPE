@@ -35,6 +35,7 @@ import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
+import pe.waterdog.utils.types.TranslationContainer;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -166,6 +167,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
         PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
 
+
         ServerConnection oldServer = this.player.getServer();
         oldServer.getInfo().removePlayer(this.player);
         oldServer.disconnect();
@@ -181,5 +183,13 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
         this.player.getProxy().getEventManager().callEvent(event);
         throw CancelSignalException.CANCEL;
+    }
+
+    @Override
+    public boolean handle(DisconnectPacket packet) {
+        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), packet.getKickMessage()));
+        this.client.close();
+        this.player.setPendingConnection(null);
+        return false;
     }
 }

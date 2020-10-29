@@ -178,10 +178,12 @@ public class ProxiedPlayer implements CommandSender {
         CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
         future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
             if (throwable != null) {
-                this.getLogger().error("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
-                this.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), throwable.getLocalizedMessage()));
-                //TODO: reconnect handler
+                this.getLogger().debug("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
                 this.pendingConnection = null;
+
+                String message = throwable.getLocalizedMessage();
+                this.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), message));
+                this.sendToFallback(targetServer, message);
                 return;
             }
 
@@ -245,6 +247,20 @@ public class ProxiedPlayer implements CommandSender {
         this.proxy.getPlayerManager().removePlayer(this);
         this.getLogger().info("[" + this.getName() + "] -> Upstream has disconnected");
         if (reason != null) this.getLogger().info("[" + this.getName() + "] -> Disconnected with: §c" + reason);
+    }
+
+    /**
+     * Send player to fallback server if any exists.
+     * @param oldServer server from which was player disconnected.
+     * @param reason disconnected reason.
+     */
+    public boolean sendToFallback(ServerInfo oldServer, String reason){
+        ServerInfo fallbackServer = this.proxy.getReconnectHandler().getFallbackServer(this, oldServer, reason);
+        if (fallbackServer != null) {
+            this.connect(fallbackServer);
+            return true;
+        }
+        return false;
     }
 
     /**

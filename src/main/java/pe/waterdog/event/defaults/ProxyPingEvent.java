@@ -94,7 +94,7 @@ public class ProxyPingEvent extends Event {
     }
 
     public int getPlayerCount() {
-        return this.playerCount < 1? this.players.size() : this.players.size();
+        return this.playerCount > 0 ? this.playerCount : this.players.size();
     }
 
     public void setMaximumPlayerCount(int maximumPlayerCount) {

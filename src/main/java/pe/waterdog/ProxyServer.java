@@ -45,10 +45,7 @@ import java.io.File;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class ProxyServer {
@@ -313,7 +310,7 @@ public class ProxyServer {
      */
     public ServerInfo getServerInfo(String address, int port) {
         Preconditions.checkNotNull(address, "Address can not be null!");
-        for (ServerInfo serverInfo : this.serverInfoMap.values()) {
+        for (ServerInfo serverInfo : this.getServers()) {
             if (serverInfo.matchAddress(address, port)) {
                 return serverInfo;
             }
@@ -333,7 +330,7 @@ public class ProxyServer {
     }
 
     public Collection<ServerInfo> getServers() {
-        return this.serverInfoMap.values();
+        return new HashSet<>(this.serverInfoMap.values());
     }
 
     public Path getPluginPath() {

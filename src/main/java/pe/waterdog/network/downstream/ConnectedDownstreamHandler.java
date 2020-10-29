@@ -101,9 +101,7 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(DisconnectPacket packet) {
-        ServerInfo serverInfo = this.player.getProxy().getReconnectHandler().getFallbackServer(this.player, this.server.getInfo(), packet.getKickMessage());
-        if (serverInfo != null) {
-            this.player.connect(serverInfo);
+        if (this.player.sendToFallback(this.server.getInfo(), packet.getKickMessage())) {
             throw CancelSignalException.CANCEL;
         }
         this.player.disconnect(new TranslationContainer("waterdog.downstream.kicked") + packet.getKickMessage());
