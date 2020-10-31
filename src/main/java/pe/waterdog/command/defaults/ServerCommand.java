@@ -67,7 +67,7 @@ public class ServerCommand extends Command {
     }
 
     @Override
-    public CommandData craftNetworkData() {
+    public CommandData craftNetwork() {
         CommandParamData[][] parameterData = new CommandParamData[1][2];
         parameterData[0][0] = new CommandParamData("server", false, null, CommandParamType.TEXT, null, Collections.emptyList());
         parameterData[0][1] = new CommandParamData("player", true, null, CommandParamType.TARGET, null, Collections.emptyList());
