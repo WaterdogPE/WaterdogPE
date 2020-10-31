@@ -63,6 +63,10 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(AvailableCommandsPacket packet) {
+        if (!this.player.getProxy().getConfiguration().injectCommands()){
+            return false;
+        }
+
         for (Command cmd : this.player.getProxy().getCommandMap().getCommands().values()) {
             if (cmd.getPermission() != null || (this.player.hasPermission(cmd.getPermission()))) {
                 packet.getCommands().add(cmd.getData());
