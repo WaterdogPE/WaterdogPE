@@ -16,12 +16,17 @@
 
 package pe.waterdog.command.defaults;
 
+import com.nukkitx.protocol.bedrock.data.command.CommandData;
+import com.nukkitx.protocol.bedrock.data.command.CommandParamData;
+import com.nukkitx.protocol.bedrock.data.command.CommandParamType;
 import pe.waterdog.command.Command;
 import pe.waterdog.command.CommandSender;
 import pe.waterdog.command.CommandSettings;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.types.TextContainer;
+
+import java.util.Collections;
 
 public class ServerCommand extends Command {
 
@@ -59,5 +64,13 @@ public class ServerCommand extends Command {
 
         player.connect(server);
         return true;
+    }
+
+    @Override
+    public CommandData craftNetwork() {
+        CommandParamData[][] parameterData = new CommandParamData[1][2];
+        parameterData[0][0] = new CommandParamData("server", false, null, CommandParamType.TEXT, null, Collections.emptyList());
+        parameterData[0][1] = new CommandParamData("player", true, null, CommandParamType.TARGET, null, Collections.emptyList());
+        return new CommandData(getName(), getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
     }
 }

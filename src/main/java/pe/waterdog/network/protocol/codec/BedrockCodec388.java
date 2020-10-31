@@ -85,6 +85,7 @@ public class BedrockCodec388 extends BedrockCodec {
                 .registerPacket(RequestChunkRadiusPacket.class, RequestChunkRadiusSerializer_v291.INSTANCE, 69)
                 .registerPacket(GameRulesChangedPacket.class, GameRulesChangedSerializer_v291.INSTANCE, 72)
                 .registerPacket(BossEventPacket.class, BossEventSerializer_v291.INSTANCE, 74)
+                .registerPacket(AvailableCommandsPacket.class, AvailableCommandsSerializer_v388.INSTANCE, 76)
                 .registerPacket(CommandRequestPacket.class, CommandRequestSerializer_v291.INSTANCE, 77)
                 .registerPacket(UpdateTradePacket.class, UpdateTradeSerializer_v354.INSTANCE, 80)
                 .registerPacket(TransferPacket.class, TransferSerializer_v291.INSTANCE, 85)

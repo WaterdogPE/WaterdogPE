@@ -16,6 +16,12 @@
 
 package pe.waterdog.command;
 
+import com.nukkitx.protocol.bedrock.data.command.CommandData;
+import com.nukkitx.protocol.bedrock.data.command.CommandParamData;
+import com.nukkitx.protocol.bedrock.data.command.CommandParamType;
+
+import java.util.Collections;
+
 /**
  * Base class for proxy commands
  */
@@ -30,9 +36,12 @@ public abstract class Command {
      */
     private final CommandSettings settings;
 
+    private final CommandData commandData;
+
     public Command(String name, CommandSettings settings){
         this.name = name;
         this.settings = settings;
+        this.commandData = craftNetwork();
     }
 
     public abstract boolean onExecute(CommandSender sender, String alias, String[] args);
@@ -57,11 +66,22 @@ public abstract class Command {
         return this.settings.getPermissionMessage();
     }
 
+    public CommandData getCommandData() {
+        return commandData;
+    }
+
     public String getPermission(){
         return this.settings.getPermission();
     }
 
     public String[] getAliases() {
         return this.settings.getAliases();
+    }
+
+
+    public CommandData craftNetwork() {
+        CommandParamData[][] parameterData = new CommandParamData[1][1];
+        parameterData[0][0] = new CommandParamData(getName(), true, null, CommandParamType.TEXT, null, Collections.emptyList());
+        return new CommandData(getName(), getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
     }
 }

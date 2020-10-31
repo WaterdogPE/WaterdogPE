@@ -19,6 +19,7 @@ package pe.waterdog.network.downstream;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
+import pe.waterdog.command.Command;
 import pe.waterdog.event.defaults.PostTransferCompleteEvent;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.rewrite.types.RewriteData;
@@ -58,6 +59,15 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
                 this.player.getBossbars().remove(packet.getBossUniqueEntityId());
         }
         return false;
+    }
+
+    public boolean handle(AvailableCommandsPacket packet) {
+        for (Command cmd : this.player.getProxy().getCommandMap().getCommands().values()) {
+            if (cmd.getPermission() != null || (this.player.hasPermission(cmd.getPermission()))) {
+                packet.getCommands().add(cmd.getCommandData());
+            }
+        }
+        return true;
     }
 
     @Override
