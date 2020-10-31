@@ -55,6 +55,9 @@ prefer_fast_transfer: true
 # Proxy needs to encode and decode only some packets. Enabling this option will allow the proxy to pass
 # original payload without encoding or decoding it. To save performance enable fast codec.
 use_fast_codec: true
+# Proxy can inject its commands to handled AvailableCommandsPacket from downstream.
+# Using this option players will be able to see proxy commands in command list if they have permission.
+inject_proxy_commands: true
 
 
 # Compression settings
