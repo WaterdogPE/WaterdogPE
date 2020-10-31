@@ -36,12 +36,12 @@ public abstract class Command {
      */
     private final CommandSettings settings;
 
-    private final CommandData commandData;
+    private final CommandData data;
 
     public Command(String name, CommandSettings settings){
         this.name = name;
         this.settings = settings;
-        this.commandData = craftNetwork();
+        this.data = craftNetwork();
     }
 
     public abstract boolean onExecute(CommandSender sender, String alias, String[] args);
@@ -66,8 +66,8 @@ public abstract class Command {
         return this.settings.getPermissionMessage();
     }
 
-    public CommandData getCommandData() {
-        return commandData;
+    public CommandData getData() {
+        return data;
     }
 
     public String getPermission(){
