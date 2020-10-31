@@ -36,12 +36,12 @@ public abstract class Command {
      */
     private final CommandSettings settings;
 
-    private final CommandData data;
+    private final CommandData networkData;
 
     public Command(String name, CommandSettings settings){
         this.name = name;
         this.settings = settings;
-        this.data = craftNetwork();
+        this.networkData = craftNetworkData();
     }
 
     public abstract boolean onExecute(CommandSender sender, String alias, String[] args);
@@ -66,8 +66,8 @@ public abstract class Command {
         return this.settings.getPermissionMessage();
     }
 
-    public CommandData getData() {
-        return data;
+    public CommandData getNetworkData() {
+        return networkData;
     }
 
     public String getPermission(){
@@ -78,8 +78,12 @@ public abstract class Command {
         return this.settings.getAliases();
     }
 
-
-    public CommandData craftNetwork() {
+    /**
+     * Override this method if you want to add custom parameters / autocomplete settings
+     *
+     * @return a CommandData object with network-related command information
+     */
+    public CommandData craftNetworkData() {
         CommandParamData[][] parameterData = new CommandParamData[1][1];
         parameterData[0][0] = new CommandParamData(getName(), true, null, CommandParamType.TEXT, null, Collections.emptyList());
         return new CommandData(getName(), getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
