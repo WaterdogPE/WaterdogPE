@@ -68,9 +68,10 @@ public class ServerCommand extends Command {
 
     @Override
     public CommandData craftNetwork() {
-        CommandParamData[][] parameterData = new CommandParamData[1][2];
-        parameterData[0][0] = new CommandParamData("server", false, null, CommandParamType.TEXT, null, Collections.emptyList());
-        parameterData[0][1] = new CommandParamData("player", true, null, CommandParamType.TARGET, null, Collections.emptyList());
-        return new CommandData(getName(), getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
+        CommandParamData[][] parameterData = new CommandParamData[][]{{
+                new CommandParamData("server", false, null, CommandParamType.TEXT, null, Collections.emptyList()),
+                new CommandParamData("player", true, null, CommandParamType.TARGET, null, Collections.emptyList())
+        }};
+        return new CommandData(this.getName(), this.getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
     }
 }

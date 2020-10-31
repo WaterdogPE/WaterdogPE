@@ -31,6 +31,7 @@ public abstract class Command {
      * The name of the command
      */
     private final String name;
+
     /**
      * The command settings assigned to it
      */
@@ -41,7 +42,7 @@ public abstract class Command {
     public Command(String name, CommandSettings settings){
         this.name = name;
         this.settings = settings;
-        this.data = craftNetwork();
+        this.data = this.craftNetwork();
     }
 
     public abstract boolean onExecute(CommandSender sender, String alias, String[] args);
@@ -67,7 +68,7 @@ public abstract class Command {
     }
 
     public CommandData getData() {
-        return data;
+        return this.data;
     }
 
     public String getPermission(){
@@ -80,8 +81,9 @@ public abstract class Command {
 
 
     public CommandData craftNetwork() {
-        CommandParamData[][] parameterData = new CommandParamData[1][1];
-        parameterData[0][0] = new CommandParamData(getName(), true, null, CommandParamType.TEXT, null, Collections.emptyList());
-        return new CommandData(getName(), getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
+        CommandParamData[][] parameterData = new CommandParamData[][]{{
+            new CommandParamData(this.name, true, null, CommandParamType.TEXT, null, Collections.emptyList())
+        }};
+        return new CommandData(this.name, this.getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
     }
 }
