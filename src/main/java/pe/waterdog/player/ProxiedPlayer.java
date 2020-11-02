@@ -34,6 +34,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.command.CommandSender;
+import pe.waterdog.event.defaults.InitialServerDeterminationEvent;
 import pe.waterdog.event.defaults.PlayerDisconnectEvent;
 import pe.waterdog.event.defaults.PlayerLoginEvent;
 import pe.waterdog.event.defaults.PreTransferEvent;
@@ -133,19 +134,24 @@ public class ProxiedPlayer implements CommandSender {
                 this.disconnect(event.getCancelReason());
                 return;
             }
-            SessionInjections.injectUpstreamHandlers(this.upstream, this);
 
-            final ServerInfo forcedHost = this.proxy.getForcedHost(this.loginData.getJoinHostname());
-            if (forcedHost != null) {
-                this.connect(forcedHost);
+            // Determine forced host first
+            ServerInfo initialServer = this.proxy.getForcedHost(this.loginData.getJoinHostname());
+            if (initialServer == null) {
+                initialServer = this.proxy.getJoinHandler().determineServer(this);
+            }
+
+            if (initialServer == null) {
+                this.disconnect(new TranslationContainer("waterdog.no.initial.server"));
                 return;
             }
-            final ServerInfo initialServer = this.proxy.getJoinHandler().determineServer(this);
-            if (initialServer != null) {
-                this.connect(initialServer);
-            } else {
-                this.disconnect(new TranslationContainer("waterdog.no.initial.server"));
-            }
+
+            // Event should not change initial server. For we use join handler.
+            InitialServerDeterminationEvent serverEvent = new InitialServerDeterminationEvent(this, initialServer);
+            this.proxy.getEventManager().callEvent(serverEvent);
+
+            SessionInjections.injectUpstreamHandlers(this.upstream, this);
+            this.connect(initialServer);
         });
     }
 
