@@ -181,9 +181,12 @@ public class ProxiedPlayer implements CommandSender {
                 this.getLogger().debug("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
                 this.pendingConnection = null;
 
-                String message = throwable.getLocalizedMessage();
-                this.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), message));
-                this.sendToFallback(targetServer, message);
+                String exceptionMessage = throwable.getLocalizedMessage();
+                if (this.sendToFallback(targetServer, exceptionMessage)){
+                    this.sendMessage(new TranslationContainer("waterdog.connected.fallback", serverInfo.getServerName()));
+                }else {
+                    this.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), exceptionMessage));
+                }
                 return;
             }
 
