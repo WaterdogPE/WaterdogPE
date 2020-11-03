@@ -81,7 +81,8 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
         JSONArray certChain = (JSONArray) chainObject;
 
         try {
-            EncryptionUtils.verifyChain(certChain);
+            // Cert chain should be signed by Mojang is is client xbox authenticated
+            boolean xboxAuth = EncryptionUtils.verifyChain(certChain);
             JWSObject jwt = JWSObject.parse((String) certChain.get(certChain.size() - 1));
             JSONObject payload = jwt.getPayload().toJSONObject();
 
@@ -93,7 +94,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
                     extraData.getAsString("displayName"),
                     UUID.fromString(extraData.getAsString("identity")),
                     extraData.getAsString("XUID"),
-                    (extraData.containsKey("XUID") && !extraData.getAsString("XUID").equals("")), //XBOX auth
+                    xboxAuth,
                     protocol,
                     clientData.getAsString("ServerAddress").split(":")[0],
                     this.session.getAddress(),
