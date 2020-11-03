@@ -265,7 +265,7 @@ public class ProxiedPlayer implements CommandSender {
      */
     public boolean sendToFallback(ServerInfo oldServer, String reason){
         ServerInfo fallbackServer = this.proxy.getReconnectHandler().getFallbackServer(this, oldServer, reason);
-        if (fallbackServer != null) {
+        if (fallbackServer != null && fallbackServer != this.serverConnection.getInfo()) {
             this.connect(fallbackServer);
             return true;
         }
