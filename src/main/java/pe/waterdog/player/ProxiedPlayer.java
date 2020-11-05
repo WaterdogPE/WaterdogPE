@@ -532,6 +532,16 @@ public class ProxiedPlayer implements CommandSender {
         return this.upstream.getLatency();
     }
 
+    /**
+     * Safe way to get player's ServerInfo and to prevent NullPointer exception
+     * Server connection may be null when player is connecting first time.
+     *
+     * @return ServerInfo if player is connected to downstream
+     */
+    public ServerInfo getServerInfo(){
+        return this.serverConnection == null? null : this.serverConnection.getInfo();
+    }
+
     @Override
     public ProxyServer getProxy() {
         return this.proxy;

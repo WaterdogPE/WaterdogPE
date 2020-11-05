@@ -168,16 +168,18 @@ public class ProxyServer {
         if (this.shutdown) {
             return;
         }
-
         this.shutdown = true;
+        this.pluginManager.disableAllPlugins();
+
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
             player.getValue().disconnect("Proxy Shutdown");
-            Thread.sleep(400); // Give the packet pipeline time
         }
+        Thread.sleep(500); // Give small delay to send packet
 
         this.console.getConsoleThread().interrupt();
-        this.pluginManager.disableAllPlugins();
+        this.tickExecutor.shutdown();
+        this.scheduler.shutdown();
 
         try {
             if (this.bedrockServer != null){
@@ -187,14 +189,11 @@ public class ProxyServer {
             this.getLogger().error("Error while shutting down ProxyServer", e);
         }
 
-        this.tickExecutor.shutdown();
-        this.scheduler.shutdown();
-
         if (!this.tickFuture.isCancelled()) {
             this.logger.info("Interrupting scheduler!");
-            Thread.sleep(500); // Give some time to finish tasks
             this.tickFuture.cancel(true);
         }
+        this.logger.info("Shutdown complete!");
     }
 
     public String translate(TextContainer textContainer) {

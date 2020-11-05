@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WaterdogScheduler {
@@ -149,7 +150,17 @@ public class WaterdogScheduler {
     }
 
     public void shutdown() {
+        this.proxy.getLogger().debug("Scheduler shutdown initialized!");
         this.threadedExecutor.shutdown();
+
+        int count = 25;
+        while (!this.threadedExecutor.isTerminated() && count-- > 0){
+            try {
+                this.threadedExecutor.awaitTermination(100, TimeUnit.MILLISECONDS);
+            }catch (InterruptedException e){
+                // Ignore
+            }
+        }
     }
 
 
