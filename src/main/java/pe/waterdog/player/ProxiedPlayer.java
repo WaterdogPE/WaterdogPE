@@ -67,6 +67,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Base Player class.
@@ -79,6 +80,7 @@ public class ProxiedPlayer implements CommandSender {
     private final BedrockServerSession upstream;
     private ServerConnection serverConnection;
     private ServerInfo pendingConnection;
+    private final AtomicBoolean disconnected = new AtomicBoolean(false);
 
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
@@ -241,6 +243,10 @@ public class ProxiedPlayer implements CommandSender {
      * @param reason The disconnect reason the player will see on his disconnect screen (Supports Color Codes)
      */
     public void disconnect(String reason) {
+        if (!this.disconnected.compareAndSet(false, true)){
+            return;
+        }
+
         PlayerDisconnectEvent event = new PlayerDisconnectEvent(this);
         ProxyServer.getInstance().getEventManager().callEvent(event);
 
@@ -270,6 +276,13 @@ public class ProxiedPlayer implements CommandSender {
             return true;
         }
         return false;
+    }
+
+    public void onDownstreamTimeout(){
+        ServerInfo serverInfo = this.serverConnection.getInfo();
+        if (!this.sendToFallback(serverInfo, "Downstream Timeout")){
+            this.disconnect(new TranslationContainer("waterdog.downstream.down", serverInfo.getServerName(), "Timeout"));
+        }
     }
 
     /**
@@ -572,7 +585,7 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public boolean isConnected(){
-        return this.upstream != null && !this.upstream.isClosed();
+        return !this.disconnected.get() && this.upstream != null && !this.upstream.isClosed();
     }
 
     public EntityTracker getEntityTracker() {
