@@ -99,7 +99,7 @@ public class PackManager {
             return null;
         }
 
-        if (this.proxy.getConfiguration().getPackCacheSize() >= pack.getPackSize()){
+        if (this.proxy.getConfiguration().getPackCacheSize() >= (pack.getPackSize() * FileUtils.INT_MEGABYTE)){
             pack.saveToCache();
         }
         return pack;
