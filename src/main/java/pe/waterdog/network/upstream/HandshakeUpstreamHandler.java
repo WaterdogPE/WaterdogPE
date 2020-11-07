@@ -136,7 +136,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
             status.setStatus(PlayStatusPacket.Status.LOGIN_SUCCESS);
             this.session.sendPacket(status);
 
-            player.initialConnect();
+            player.initPlayer();
         } catch (Exception e) {
             session.disconnect("disconnectionScreen.internalError.cantConnect");
             throw new RuntimeException("Unable to complete login", e);

@@ -18,9 +18,7 @@ package pe.waterdog.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.ClientToServerHandshakePacket;
-import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
-import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
@@ -59,6 +57,28 @@ public class InitialHandler implements BedrockPacketHandler {
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
         this.player.getServer().sendPacket(clientToServerHandshake);
+        throw CancelSignalException.CANCEL;
+    }
+
+    @Override
+    public final boolean handle(ResourcePacksInfoPacket packet) {
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()){
+            return false;
+        }
+        ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
+        response.setStatus(ResourcePackClientResponsePacket.Status.HAVE_ALL_PACKS);
+        this.player.getServer().getDownstream().sendPacketImmediately(response);
+        throw CancelSignalException.CANCEL;
+    }
+
+    @Override
+    public final boolean handle(ResourcePackStackPacket packet) {
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()){
+            return false;
+        }
+        ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
+        response.setStatus(ResourcePackClientResponsePacket.Status.COMPLETED);
+        this.player.getServer().getDownstream().sendPacketImmediately(response);
         throw CancelSignalException.CANCEL;
     }
 

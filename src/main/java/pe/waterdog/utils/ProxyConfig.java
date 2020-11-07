@@ -35,10 +35,12 @@ public class ProxyConfig extends YamlConfig {
     private final boolean fastCodec;
     private final boolean debug;
     private final boolean injectCommands;
+    private final boolean enableResourcePacks;
     private boolean useLoginExtras;
     private boolean enableQuery;
     private boolean ipForward;
     private boolean fastTransfer;
+    protected boolean forcePacks;
 
     private final InetSocketAddress bindAddress;
     private final List<String> priorities;
@@ -71,6 +73,8 @@ public class ProxyConfig extends YamlConfig {
         this.forcedHosts = (Map<String, String>) this.get("listener.forced_hosts", new HashMap<>());
         this.upstreamCompression = this.getInt("upstream_compression_level");
         this.downstreamCompression = this.getInt("downstream_compression_level");
+        this.enableResourcePacks = this.getBoolean("enable_packs");
+        this.forcePacks = this.getBoolean("force_apply_packs");
     }
 
     public InetSocketAddress getInetAddress(String key) {
@@ -216,5 +220,17 @@ public class ProxyConfig extends YamlConfig {
 
     public boolean injectCommands() {
         return this.injectCommands;
+    }
+
+    public boolean enabledResourcePacks() {
+        return this.enableResourcePacks;
+    }
+
+    public void setForcePacks(boolean forcePacks) {
+        this.forcePacks = forcePacks;
+    }
+
+    public boolean forcePacks() {
+        return this.forcePacks;
     }
 }

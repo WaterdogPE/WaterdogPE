@@ -21,10 +21,7 @@ import com.google.common.base.Strings;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
-import com.nukkitx.protocol.bedrock.packet.LoginPacket;
-import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
-import com.nukkitx.protocol.bedrock.packet.TextPacket;
-import com.nukkitx.protocol.bedrock.packet.TransferPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -97,6 +94,7 @@ public class ProxiedPlayer implements CommandSender {
     private boolean admin = false;
 
     private boolean canRewrite = false;
+    private boolean hasUpstreamBridge = false;
     /**
      * Some downstream server softwares require strict packet sending policy (like PMMP4).
      * To pass packet handler dedicated to SetLocalPlayerAsInitializedPacket only, proxy has to post-complete server transfer.
@@ -124,6 +122,18 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     /**
+     * Called after sending LOGIN_SUCCESS paket.
+     */
+    public void initPlayer(){
+        SessionInjections.injectUpstreamHandlers(this.upstream, this);
+        if (this.proxy.getConfiguration().enabledResourcePacks()){
+            ResourcePacksInfoPacket packet = this.proxy.getPackManager().getPacksInfoPacket();
+            this.upstream.sendPacket(packet);
+        }else {
+            this.initialConnect();
+        }
+    }
+    /**
      * Called only on the initial connect.
      * Determines the first player the player gets transferred to based on the currently present JoinHandler.
      */
@@ -149,8 +159,6 @@ public class ProxiedPlayer implements CommandSender {
             // Event should not change initial server. For we use join handler.
             InitialServerDeterminationEvent serverEvent = new InitialServerDeterminationEvent(this, initialServer);
             this.proxy.getEventManager().callEvent(serverEvent);
-
-            SessionInjections.injectUpstreamHandlers(this.upstream, this);
             this.connect(initialServer);
         });
     }
@@ -203,6 +211,7 @@ public class ProxiedPlayer implements CommandSender {
                 downstream.setPacketHandler(new InitialHandler(this));
                 downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
                 this.upstream.setBatchHandler(new UpstreamBridge(this, downstream));
+                this.hasUpstreamBridge = true;
             } else {
                 this.pendingConnection = targetServer;
 
@@ -618,6 +627,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public boolean canRewrite() {
         return this.canRewrite;
+    }
+
+    public boolean hasUpstreamBridge() {
+        return this.hasUpstreamBridge;
     }
 
     public LongSet getEntities() {

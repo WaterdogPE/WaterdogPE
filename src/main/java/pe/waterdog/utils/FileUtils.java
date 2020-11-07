@@ -16,10 +16,24 @@
 
 package pe.waterdog.utils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import pe.waterdog.packs.types.PackedVersion;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class FileUtils {
+
+    public static final int INT_MEGABYTE = 1048576;
+    public static final Gson GSON;
+
+    static {
+        GsonBuilder builder = new GsonBuilder();
+        builder.registerTypeAdapter(PackedVersion.class, new PackedVersion.Serializer());
+        builder.registerTypeAdapter(PackedVersion.class, new PackedVersion.Deserializer());
+        GSON = builder.create();
+    }
 
     public static void saveFromResources(String fileName, File targetFile) throws IOException {
         if (targetFile.exists()){

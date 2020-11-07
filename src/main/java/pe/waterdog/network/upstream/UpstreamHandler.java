@@ -17,12 +17,11 @@
 package pe.waterdog.network.upstream;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.CommandRequestPacket;
-import com.nukkitx.protocol.bedrock.packet.PacketViolationWarningPacket;
-import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
-import com.nukkitx.protocol.bedrock.packet.TextPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.PlayerChatEvent;
+import pe.waterdog.event.defaults.PlayerResourcePackApplyEvent;
+import pe.waterdog.packs.PackManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
@@ -38,6 +37,59 @@ public class UpstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
+    public boolean handle(ResourcePackClientResponsePacket packet) {
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()){
+            return false;
+        }
+        PackManager packManager = this.player.getProxy().getPackManager();
+
+        switch (packet.getStatus()) {
+            case REFUSED:
+                this.player.disconnect("disconnectionScreen.noReason");
+                break;
+            case SEND_PACKS:
+                for (String packIdVer : packet.getPackIds()) {
+                    ResourcePackDataInfoPacket response = packManager.packInfoFromIdVer(packIdVer);
+                    if (response == null){
+                        this.player.disconnect("disconnectionScreen.resourcePack");
+                        break;
+                    }
+                    this.player.getUpstream().sendPacket(response);
+                }
+                break;
+            case HAVE_ALL_PACKS:
+                PlayerResourcePackApplyEvent event = new PlayerResourcePackApplyEvent(this.player, packManager.getStackPacket());
+                this.player.getProxy().getEventManager().callEvent(event);
+                this.player.getUpstream().sendPacket(event.getStackPacket());
+                break;
+            case COMPLETED:
+                if (!this.player.hasUpstreamBridge()){
+                    this.player.initialConnect(); // First connection
+                }
+                break;
+        }
+
+        return this.cancel();
+    }
+
+    @Override
+    public boolean handle(ResourcePackChunkRequestPacket packet) {
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()){
+            return false;
+        }
+        PackManager packManager = this.player.getProxy().getPackManager();
+        ResourcePackChunkDataPacket response = packManager.packChunkDataPacket(packet.getPackId()+"_"+packet.getPackVersion(), packet);
+
+        if (response == null){
+            this.player.disconnect("disconnectionScreen.noReason");
+            return this.cancel();
+        }
+
+        this.player.getUpstream().sendPacket(response);
+        return this.cancel();
+    }
+
+    @Override
     public final boolean handle(RequestChunkRadiusPacket packet) {
         this.player.getRewriteData().setChunkRadius(packet);
         return false;
@@ -46,7 +98,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
     @Override
     public final boolean handle(PacketViolationWarningPacket packet) {
         this.player.getLogger().warning("Received " + packet.toString());
-        throw CancelSignalException.CANCEL;
+        return this.cancel();
     }
 
     @Override
@@ -68,6 +120,17 @@ public class UpstreamHandler implements BedrockPacketHandler {
             throw CancelSignalException.CANCEL;
         }
         return false;
+    }
+
+    /**
+     * If connection has bridge we cancel packet to prevent sending it to downstream.
+     * @return true is we can't use CancelSignalException.
+     */
+    private boolean cancel(){
+        if (this.player.hasUpstreamBridge()){
+            throw CancelSignalException.CANCEL;
+        }
+        return true;
     }
 
 }
