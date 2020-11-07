@@ -122,7 +122,7 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     /**
-     * Called after sending LOGIN_SUCCESS paket.
+     * Called after sending LOGIN_SUCCESS in PlayStatusPacket.
      */
     public void initPlayer(){
         SessionInjections.injectUpstreamHandlers(this.upstream, this);
