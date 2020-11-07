@@ -112,14 +112,14 @@ public class WaterdogScheduler {
     }
 
     public void onTick(int currentTick){
-        //1. Assign all tasks to queue by nextRunTick
+        // 1. Assign all tasks to queue by nextRunTick
         TaskHandler task;
         while ((task = this.pendingTasks.poll()) != null) {
             int tick = Math.max(currentTick, task.getNextRunTick());
             this.assignedTasks.computeIfAbsent(tick, integer -> new LinkedList<>()).add(task);
         }
 
-        //2. Run all tasks assigned to current tick
+        // 2. Run all tasks assigned to current tick
         LinkedList<TaskHandler> queued = this.assignedTasks.remove(currentTick);
         if (queued == null) return;
 

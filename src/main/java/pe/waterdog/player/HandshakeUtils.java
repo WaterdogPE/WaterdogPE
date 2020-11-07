@@ -83,7 +83,7 @@ public class HandshakeUtils {
 
         JSONObject clientData = clientJwt.getPayload().toJSONObject();
 
-        /* Add WaterdogAttributes*/
+        /* Add WaterdogAttributes */
         ProxyConfig config = ProxyServer.getInstance().getConfiguration();
         if (config.useLoginExtras() && config.isIpForward()) {
             clientData.put("Waterdog_IP", session.getAddress().getAddress().getHostAddress());
@@ -99,7 +99,7 @@ public class HandshakeUtils {
         }
 
         JSONObject extraData = (JSONObject) extraDataObject;
-        /* Replace spaces in name*/
+        /* Replace spaces in name */
         if (ProxyServer.getInstance().getConfiguration().isReplaceUsernameSpaces()) {
             String playerName = extraData.getAsString("displayName");
             extraData.put("displayName", playerName.replaceAll(" ", "_"));

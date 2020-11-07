@@ -74,10 +74,8 @@ public class PluginLoader {
                 if (pluginConfig.getMain() != null && pluginConfig.getName() != null) {
                     // Valid plugin.yml, main and name set
                     return pluginConfig;
-
-                } else {
-                    MainLogger.getLogger().warning("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
                 }
+                MainLogger.getLogger().warning("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
             } else {
                 MainLogger.getLogger().warning("Jar file " + file.getName() + " doesnt contain a plugin.yml!");
             }

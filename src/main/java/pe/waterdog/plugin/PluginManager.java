@@ -54,13 +54,11 @@ public class PluginManager {
     }
 
     public void loadPluginsIn(Path folderPath, boolean directStartup) {
-        try (Stream<Path> pluginPaths = Files.walk(folderPath)) {
-            pluginPaths
-                    .filter(Files::isRegularFile)
+        try {
+            Stream<Path> pluginPaths = Files.walk(folderPath);
+            pluginPaths.filter(Files::isRegularFile)
                     .filter(PluginLoader::isJarFile)
-                    .forEach(jarPath -> {
-                        this.loadPlugin(jarPath, directStartup);
-                    });
+                    .forEach(jarPath -> this.loadPlugin(jarPath, directStartup));
         } catch (IOException e) {
             MainLogger.getLogger().error("Error while filtering plugin files", e);
         }

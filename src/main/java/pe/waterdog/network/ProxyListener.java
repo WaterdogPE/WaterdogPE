@@ -40,7 +40,7 @@ public class ProxyListener implements BedrockServerEventHandler {
 
     private static final ThreadLocal<BedrockPong> PONG_THREAD_LOCAL = ThreadLocal.withInitial(BedrockPong::new);
 
-    private ProxyServer proxy;
+    private final ProxyServer proxy;
 
     public ProxyListener(ProxyServer proxy) {
         this.proxy = proxy;

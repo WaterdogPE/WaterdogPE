@@ -20,6 +20,11 @@ import pe.waterdog.event.AsyncEvent;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.player.ProxiedPlayer;
 
+/**
+ * Called when PlayStatusPacket with PLAYER_SPAWN from downstream server is received.
+ * At this point player is really connected to downstream server. Some downstream servers have different handlers per login stage.
+ * To signalize last stage of login, we can use this event. For example applies on PMMP4 downstream servers.
+ */
 @AsyncEvent
 public class PostTransferCompleteEvent extends PlayerEvent {
 

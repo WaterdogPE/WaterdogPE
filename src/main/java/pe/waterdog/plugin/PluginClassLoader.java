@@ -22,6 +22,10 @@ import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Simple class loader which holds classes of plugins.
+ * It allows plugins to access each other.
+ */
 public class PluginClassLoader extends URLClassLoader {
 
     private final PluginManager pluginManager;

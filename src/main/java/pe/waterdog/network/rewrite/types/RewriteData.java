@@ -31,11 +31,11 @@ import java.util.List;
 public class RewriteData {
 
     /**
-     * the downstream-known entityId
+     * The downstream-known entityId
      */
     private long entityId;
     /**
-     * the original entityId known to the client
+     * The original entityId known to the client
      */
     private long originalEntityId;
 

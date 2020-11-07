@@ -31,6 +31,7 @@ import java.util.UUID;
  * Holds relevant information passed to the proxy on the first connection (initial) in the LoginPacket.
  */
 public class LoginData {
+
     private final String displayName;
     private final UUID uuid;
     private final String xuid;

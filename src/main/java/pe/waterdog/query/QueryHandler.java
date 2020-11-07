@@ -137,9 +137,7 @@ public class QueryHandler {
         map.put("whitelist", event.hasWhitelist() ? "on" : "off");
 
         buf.writeBytes(LONG_RESPONSE_PADDING_TOP);
-        map.forEach((key, value) -> {
-            this.writeString(buf, value);
-        });
+        map.forEach((key, value) -> this.writeString(buf, value));
         buf.writeByte(0);
         buf.writeBytes(LONG_RESPONSE_PADDING_BOTTOM);
 

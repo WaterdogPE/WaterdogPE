@@ -97,10 +97,13 @@ public class ProxiedPlayer implements CommandSender {
 
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private boolean admin = false;
-
+    /**
+     * Signalizes if connection bridges can do entity and block rewrite.
+     * Since first StarGamePacket was received we start with entity id and block rewrite.
+     */
     private boolean canRewrite = false;
     /**
-     * Some downstream server softwares require strict packet sending policy (like PMMP4).
+     * Some downstream server software require strict packet sending policy (like PMMP4).
      * To pass packet handler dedicated to SetLocalPlayerAsInitializedPacket only, proxy has to post-complete server transfer.
      * Using this bool allows tells us if we except post-complete phase operation.
      * See ConnectedDownstreamHandler and SwitchDownstreamHandler for exact usage.

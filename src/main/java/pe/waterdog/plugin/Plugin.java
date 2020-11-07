@@ -69,7 +69,7 @@ public abstract class Plugin {
 
     /**
      * Called when the plugin is loaded into the server, but before it was enabled.
-     * Can be used to load important informations or to establish connections
+     * Can be used to load important information or to establish connections
      */
     public void onStartup(){
     }
@@ -81,7 +81,7 @@ public abstract class Plugin {
     public abstract void onEnable();
 
     /**
-     * Called on server shutdown, or when the plugin gets disabled, for example by another plugin or when an error occured.
+     * Called on server shutdown, or when the plugin gets disabled, for example by another plugin or when an error occurred.
      * Also gets called when the plugin state changes to disabled
      */
     public void onDisable(){
@@ -137,7 +137,7 @@ public abstract class Plugin {
      * @param filename the name of the file in the jar's resources
      * @param outputName the name the file should be saved as in the plugin folder
      * @param replace whether the file should be replaced even if present already
-     * @return returns false if an exception occured, the file already exists and shouldn't be replaced, and when the file could
+     * @return returns false if an exception occurred, the file already exists and shouldn't be replaced, and when the file could
      *         not be found in the jar
      *         returns true if the file overwrite / copy was successful
      */
