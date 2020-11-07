@@ -15,8 +15,6 @@
 
 package pe.waterdog.packs.types;
 
-import com.nukkitx.protocol.bedrock.data.ResourcePackType;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
