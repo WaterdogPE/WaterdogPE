@@ -15,6 +15,7 @@
 
 package pe.waterdog.packs.types;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -27,6 +28,7 @@ public class ZipResourcePack extends ResourcePack{
 
     private final ZipFile zipFile;
     private byte[] cachedHash;
+    private byte[] cachedPack;
 
     public ZipResourcePack(Path file) throws IOException {
         super(file);
@@ -48,6 +50,17 @@ public class ZipResourcePack extends ResourcePack{
             return null;
         }
         return this.zipFile.getInputStream(entry);
+    }
+
+    @Override
+    public void saveToCache() throws IOException {
+        InputStream inputStream = Files.newInputStream(this.packPath);
+        this.cachedPack = inputStream.readAllBytes();
+    }
+
+    @Override
+    public InputStream getCachedPack() {
+        return this.cachedPack == null? null : new ByteArrayInputStream(this.cachedPack);
     }
 
     @Override
@@ -74,8 +87,12 @@ public class ZipResourcePack extends ResourcePack{
     @Override
     public byte[] getChunk(int offset, int length) {
         byte[] chunkData = (this.getPackSize() - offset > length)? new byte[length] : new byte[(int) (this.getPackSize() - offset)];
+        InputStream inputStream = this.getCachedPack();
+
         try {
-            InputStream inputStream = Files.newInputStream(this.packPath);
+            if (inputStream == null){
+                Files.newInputStream(this.packPath);
+            }
             inputStream.skip(offset);
             inputStream.read(chunkData);
         }catch (Exception e){

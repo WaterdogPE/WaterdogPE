@@ -51,6 +51,7 @@ public class ProxyConfig extends YamlConfig {
 
     private final int upstreamCompression;
     private final int downstreamCompression;
+    private int packCacheSize;
 
     public ProxyConfig(File file){
         super(file);
@@ -75,6 +76,7 @@ public class ProxyConfig extends YamlConfig {
         this.downstreamCompression = this.getInt("downstream_compression_level");
         this.enableResourcePacks = this.getBoolean("enable_packs");
         this.forcePacks = this.getBoolean("force_apply_packs");
+        this.packCacheSize = this.getInt("pack_cache_size");
     }
 
     public InetSocketAddress getInetAddress(String key) {
@@ -232,5 +234,13 @@ public class ProxyConfig extends YamlConfig {
 
     public boolean forcePacks() {
         return this.forcePacks;
+    }
+
+    public void setPackCacheSize(int packCacheSize) {
+        this.packCacheSize = packCacheSize;
+    }
+
+    public int getPackCacheSize() {
+        return this.packCacheSize;
     }
 }

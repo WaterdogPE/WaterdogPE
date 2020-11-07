@@ -35,6 +35,9 @@ public abstract class ResourcePack {
     public abstract byte[] getHash();
     public abstract byte[] getChunk(int off, int len);
 
+    public abstract void saveToCache() throws IOException;
+    public abstract InputStream getCachedPack();
+
     public abstract InputStream getStream(Path path) throws IOException;
 
     public void loadManifest() throws IOException {

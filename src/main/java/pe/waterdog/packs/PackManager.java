@@ -94,7 +94,15 @@ public class PackManager {
         }catch (IOException e) {
             throw new IOException("Can not load manifest!");
         }
-        return pack.getPackManifest().validate()? pack : null;
+
+        if (!pack.getPackManifest().validate()){
+            return null;
+        }
+
+        if (this.proxy.getConfiguration().getPackCacheSize() >= pack.getPackSize()){
+            pack.saveToCache();
+        }
+        return pack;
     }
 
     /**
