@@ -15,12 +15,12 @@
 
 package pe.waterdog.plugin;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Simple class loader which holds classes of plugins.
@@ -29,7 +29,7 @@ import java.util.Map;
 public class PluginClassLoader extends URLClassLoader {
 
     private final PluginManager pluginManager;
-    private final Map<String, Class<?>> classes = new HashMap<>();
+    private final Object2ObjectOpenHashMap<String, Class<?>> classes = new Object2ObjectOpenHashMap<>();
 
     public PluginClassLoader(PluginManager pluginManager, ClassLoader parent, File file) throws MalformedURLException {
         super(new URL[]{file.toURI().toURL()}, parent);

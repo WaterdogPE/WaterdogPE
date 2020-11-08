@@ -16,6 +16,8 @@
 
 package pe.waterdog.plugin;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 import pe.waterdog.ProxyServer;
@@ -27,19 +29,20 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Stream;
 
 public class PluginManager {
 
-    protected final Map<String, PluginClassLoader> pluginClassLoaders = new HashMap<>();
     private final ProxyServer proxy;
     private final PluginLoader pluginLoader;
-    private final Map<String, Plugin> pluginMap = new HashMap<>();
+
+
     private final Yaml yamlLoader = new Yaml(new CustomClassLoaderConstructor(this.getClass().getClassLoader()));
-    private final Map<String, Class<?>> cachedClasses = new HashMap<>();
+    private final Object2ObjectMap<String, Plugin> pluginMap = new Object2ObjectArrayMap<>();
+    private final Object2ObjectMap<String, Class<?>> cachedClasses = new Object2ObjectArrayMap<>();
+    final Object2ObjectMap<String, PluginClassLoader> pluginClassLoaders = new Object2ObjectArrayMap<>();
 
     public PluginManager(ProxyServer proxy) {
         this.proxy = proxy;
@@ -78,7 +81,7 @@ public class PluginManager {
         }
 
         PluginYAML config = this.pluginLoader.loadPluginData(pluginFile, this.yamlLoader);
-        if (config == null) {
+        if (config == null){
             return null;
         }
 
@@ -171,25 +174,25 @@ public class PluginManager {
         }
     }
 
-    public Class<?> getClassFromCache(String className) {
+    public Class<?> getClassFromCache(String className){
         Class<?> clazz = this.cachedClasses.get(className);
-        if (clazz != null) {
+        if (clazz != null){
             return clazz;
         }
 
-        for (PluginClassLoader loader : this.pluginClassLoaders.values()) {
+        for (PluginClassLoader loader : this.pluginClassLoaders.values()){
             try {
-                if ((clazz = loader.findClass(className, false)) != null) {
+                if ((clazz = loader.findClass(className, false)) != null){
                     return clazz;
                 }
-            } catch (ClassNotFoundException e) {
+            }catch (ClassNotFoundException e){
                 //ignore
             }
         }
         return null;
     }
 
-    protected void cacheClass(String className, Class<?> clazz) {
+    protected void cacheClass(String className, Class<?> clazz){
         this.cachedClasses.putIfAbsent(className, clazz);
     }
 

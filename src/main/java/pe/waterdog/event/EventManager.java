@@ -17,8 +17,8 @@
 package pe.waterdog.event;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
-import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 public class EventManager {
 
     private final ExecutorService threadedExecutor;
-    private final HashMap<Class<? extends Event>, EventHandler> handlerMap = new HashMap<>();
+    private final Object2ObjectOpenHashMap<Class<? extends Event>, EventHandler> handlerMap = new Object2ObjectOpenHashMap<>();
 
     public EventManager() {
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
