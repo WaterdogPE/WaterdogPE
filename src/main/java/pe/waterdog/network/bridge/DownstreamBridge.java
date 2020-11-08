@@ -34,7 +34,7 @@ public class DownstreamBridge extends ProxyBatchBridge {
         boolean rewrote = this.player.getBlockMap().doRewrite(packet);
 
         boolean pluginHandled = false;
-        if (this.player.getPluginDownstreamHandler() != null){
+        if (this.player.getPluginDownstreamHandler() != null) {
             pluginHandled = this.player.getPluginDownstreamHandler().handlePacket(packet);
         }
         return changed || rewrote || pluginHandled;

@@ -52,14 +52,14 @@ public class PlayerManager {
         return true;
     }
 
-    public void subscribePermissions(ProxiedPlayer player){
+    public void subscribePermissions(ProxiedPlayer player) {
         List<String> permissions = new ArrayList<>(this.proxy.getConfiguration().getDefaultPermissions());
         List<String> playerPermissions = this.proxy.getConfiguration().getPlayerPermissions().get(player.getName());
-        if (playerPermissions != null){
+        if (playerPermissions != null) {
             permissions.addAll(playerPermissions);
         }
 
-        for (String perm : permissions){
+        for (String perm : permissions) {
             player.addPermission(new Permission(perm, true));
         }
     }
@@ -77,7 +77,7 @@ public class PlayerManager {
         if (playerName == null) return null;
 
         for (ProxiedPlayer player : this.players.values()) {
-            if (!player.getName().toLowerCase().startsWith(playerName.toLowerCase())){
+            if (!player.getName().toLowerCase().startsWith(playerName.toLowerCase())) {
                 continue;
             }
 

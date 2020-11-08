@@ -17,7 +17,7 @@
 package pe.waterdog.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
-import com.nukkitx.protocol.bedrock.packet.*;
+import com.nukkitx.protocol.bedrock.packet.PlayerListPacket;
 import com.nukkitx.protocol.bedrock.v390.BedrockPacketHelper_v390;
 import com.nukkitx.protocol.bedrock.v390.serializer.PlayerListSerializer_v390;
 import pe.waterdog.network.protocol.ProtocolVersion;

@@ -29,23 +29,23 @@ public class PluginLogger implements Logger {
 
     private final String prefix;
 
-    public PluginLogger(Plugin plugin){
-        this.prefix = "["+plugin.getName()+"] ";
+    public PluginLogger(Plugin plugin) {
+        this.prefix = "[" + plugin.getName() + "] ";
     }
 
     @Override
     public void emergency(String message) {
-        log.fatal(this.prefix+message);
+        log.fatal(this.prefix + message);
     }
 
     @Override
     public void alert(String message) {
-        log.warn(this.prefix+message);
+        log.warn(this.prefix + message);
     }
 
     @Override
     public void critical(String message) {
-        log.fatal(this.prefix+message);
+        log.fatal(this.prefix + message);
     }
 
     @Override
@@ -55,22 +55,22 @@ public class PluginLogger implements Logger {
 
     @Override
     public void warning(String message) {
-        log.warn(this.prefix+message);
+        log.warn(this.prefix + message);
     }
 
     @Override
     public void notice(String message) {
-        log.warn(this.prefix+message);
+        log.warn(this.prefix + message);
     }
 
     @Override
     public void info(String message) {
-        log.info(this.prefix+message);
+        log.info(this.prefix + message);
     }
 
     @Override
     public void debug(String message) {
-        log.debug(this.prefix+message);
+        log.debug(this.prefix + message);
     }
 
     public void logException(Throwable t) {
@@ -79,41 +79,41 @@ public class PluginLogger implements Logger {
 
     @Override
     public void emergency(String message, Throwable t) {
-        log.fatal(this.prefix+message, t);
+        log.fatal(this.prefix + message, t);
     }
 
     @Override
     public void alert(String message, Throwable t) {
-        log.warn(this.prefix+message, t);
+        log.warn(this.prefix + message, t);
     }
 
     @Override
     public void critical(String message, Throwable t) {
-        log.fatal(this.prefix+message, t);
+        log.fatal(this.prefix + message, t);
     }
 
     @Override
     public void error(String message, Throwable t) {
-        log.error(this.prefix+message, t);
+        log.error(this.prefix + message, t);
     }
 
     @Override
     public void warning(String message, Throwable t) {
-        log.warn(this.prefix+message, t);
+        log.warn(this.prefix + message, t);
     }
 
     @Override
     public void notice(String message, Throwable t) {
-        log.warn(this.prefix+message, t);
+        log.warn(this.prefix + message, t);
     }
 
     @Override
     public void info(String message, Throwable t) {
-        log.info(this.prefix+message, t);
+        log.info(this.prefix + message, t);
     }
 
     @Override
     public void debug(String message, Throwable t) {
-        log.debug(this.prefix+message, t);
+        log.debug(this.prefix + message, t);
     }
 }

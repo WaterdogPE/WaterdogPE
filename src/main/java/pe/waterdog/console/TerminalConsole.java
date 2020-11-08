@@ -27,7 +27,7 @@ public class TerminalConsole extends SimpleTerminalConsole {
     private final ProxyServer proxy;
     private final ConsoleThread consoleThread;
 
-    public TerminalConsole(ProxyServer proxy){
+    public TerminalConsole(ProxyServer proxy) {
         this.proxy = proxy;
         this.consoleThread = new ConsoleThread(this);
     }

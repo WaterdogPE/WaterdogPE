@@ -21,6 +21,7 @@ public abstract class Task implements Runnable {
     private TaskHandler handler = null;
 
     public abstract void onRun(int currentTick);
+
     public abstract void onCancel();
 
     @Override
@@ -28,22 +29,22 @@ public abstract class Task implements Runnable {
         this.onRun(this.handler.getLastRunTick());
     }
 
-    public int getTaskId(){
-        return this.handler == null? -1 : this.handler.getTaskId();
+    public int getTaskId() {
+        return this.handler == null ? -1 : this.handler.getTaskId();
     }
 
-    public void cancel(){
+    public void cancel() {
         this.handler.cancel();
-    }
-
-    public void setHandler(TaskHandler handler) {
-        if (this.handler != null){
-            throw new SecurityException("Can not change task handler!");
-        }
-        this.handler = handler;
     }
 
     public TaskHandler getHandler() {
         return this.handler;
+    }
+
+    public void setHandler(TaskHandler handler) {
+        if (this.handler != null) {
+            throw new SecurityException("Can not change task handler!");
+        }
+        this.handler = handler;
     }
 }

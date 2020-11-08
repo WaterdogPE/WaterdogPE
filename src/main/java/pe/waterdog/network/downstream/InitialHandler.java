@@ -62,7 +62,7 @@ public class InitialHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(ResourcePacksInfoPacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()){
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()) {
             return false;
         }
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
@@ -73,7 +73,7 @@ public class InitialHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(ResourcePackStackPacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()){
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()) {
             return false;
         }
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();

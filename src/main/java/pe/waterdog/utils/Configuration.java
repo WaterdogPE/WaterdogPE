@@ -52,9 +52,10 @@ public abstract class Configuration {
     }
 
     public abstract void load();
+
     public abstract void save();
 
-    public void loadFrom(Map<String, Object> values){
+    public void loadFrom(Map<String, Object> values) {
         this.values = values;
     }
 

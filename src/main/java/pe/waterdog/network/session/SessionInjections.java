@@ -38,7 +38,7 @@ public class SessionInjections {
         downstream.setCompressionLevel(player.getProxy().getConfiguration().getDownstreamCompression());
         downstream.addDisconnectHandler((reason) -> {
             player.getLogger().info("[" + downstream.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
-            if (reason == DisconnectReason.TIMED_OUT){
+            if (reason == DisconnectReason.TIMED_OUT) {
                 player.onDownstreamTimeout();
             }
         });

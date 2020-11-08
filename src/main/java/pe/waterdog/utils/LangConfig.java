@@ -27,10 +27,10 @@ import java.io.IOException;
 
 public class LangConfig {
 
-    private final File file;
     protected final Object2ObjectMap<String, String> transactionMap = new Object2ObjectOpenHashMap<>();
+    private final File file;
 
-    public LangConfig(File file){
+    public LangConfig(File file) {
         this.file = file;
         this.load();
     }
@@ -64,26 +64,26 @@ public class LangConfig {
         }
     }
 
-    public String translateString(String key, String... args){
+    public String translateString(String key, String... args) {
         String string = this.getTransaction(key);
         if (string == null) return "";
 
-        if (args != null){
-            for (int i = 0; i < args.length; i++){
-                string = string.replace("{%"+i+"}", args[i]);
+        if (args != null) {
+            for (int i = 0; i < args.length; i++) {
+                string = string.replace("{%" + i + "}", args[i]);
             }
         }
         return string;
     }
 
-    public String translateContainer(TextContainer textContainer){
-        if (!(textContainer instanceof TranslationContainer)){
+    public String translateContainer(TextContainer textContainer) {
+        if (!(textContainer instanceof TranslationContainer)) {
             return textContainer.getMessage();
         }
         return this.translateString(textContainer.getMessage(), ((TranslationContainer) textContainer).getParams());
     }
 
-    public String getTransaction(String key){
+    public String getTransaction(String key) {
         return this.transactionMap.get(key);
     }
 

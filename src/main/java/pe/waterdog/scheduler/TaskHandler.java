@@ -33,34 +33,34 @@ public class TaskHandler {
 
     private boolean cancelled;
 
-    public TaskHandler(Runnable task, int taskId, boolean async){
+    public TaskHandler(Runnable task, int taskId, boolean async) {
         this.task = task;
         this.taskId = taskId;
         this.async = async;
     }
 
-    public void onRun(int currentTick){
+    public void onRun(int currentTick) {
         this.lastRunTick = currentTick;
         try {
             this.task.run();
-        }catch (Exception e){
+        } catch (Exception e) {
             MainLogger.getLogger().error("Exception while running task!", e);
         }
     }
 
-    public void cancel(){
-        if (this.cancelled){
+    public void cancel() {
+        if (this.cancelled) {
             return;
         }
 
-        if (this.task instanceof Task){
+        if (this.task instanceof Task) {
             ((Task) task).onCancel();
         }
         this.cancelled = true;
     }
 
-    public boolean calculateNextTick(int currentTick){
-        if (this.isCancelled() || !this.isRepeating()){
+    public boolean calculateNextTick(int currentTick) {
+        if (this.isCancelled() || !this.isRepeating()) {
             return false;
         }
         this.nextRunTick = currentTick + this.period;
@@ -83,24 +83,24 @@ public class TaskHandler {
         return this.cancelled;
     }
 
-    public void setDelay(int delay) {
-        this.delay = delay;
-    }
-
     public int getDelay() {
         return this.delay;
+    }
+
+    public void setDelay(int delay) {
+        this.delay = delay;
     }
 
     public boolean isDelayed() {
         return this.delay > 0;
     }
 
-    public void setPeriod(int period) {
-        this.period = period;
-    }
-
     public int getPeriod() {
         return this.period;
+    }
+
+    public void setPeriod(int period) {
+        this.period = period;
     }
 
     public boolean isRepeating() {
@@ -111,11 +111,11 @@ public class TaskHandler {
         return this.lastRunTick;
     }
 
-    public void setNextRunTick(int nextRunTick) {
-        this.nextRunTick = nextRunTick;
-    }
-
     public int getNextRunTick() {
         return this.nextRunTick;
+    }
+
+    public void setNextRunTick(int nextRunTick) {
+        this.nextRunTick = nextRunTick;
     }
 }

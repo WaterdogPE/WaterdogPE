@@ -16,9 +16,9 @@
 
 package pe.waterdog.utils.exceptions;
 
-public class PluginChangeStateException extends Exception{
+public class PluginChangeStateException extends Exception {
 
-    public PluginChangeStateException(String message, Exception source){
+    public PluginChangeStateException(String message, Exception source) {
         super(message, source);
     }
 }

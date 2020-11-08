@@ -49,7 +49,7 @@ public class WaterdogPE {
             logger.warning("Unknown build id. Custom build? Unofficial builds should be not run in production!");
         }
 
-        if (VersionInfo.IS_DEVELOPMENT){
+        if (VersionInfo.IS_DEVELOPMENT) {
             setLoggerLevel(Level.DEBUG);
         }
 
@@ -60,7 +60,7 @@ public class WaterdogPE {
         }
     }
 
-    public static void setLoggerLevel(Level level){
+    public static void setLoggerLevel(Level level) {
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         Configuration log4jConfig = context.getConfiguration();
         LoggerConfig loggerConfig = log4jConfig.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);

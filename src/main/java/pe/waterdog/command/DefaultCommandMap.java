@@ -19,14 +19,14 @@ package pe.waterdog.command;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.command.defaults.*;
 
-public class DefaultCommandMap extends SimpleCommandMap{
+public class DefaultCommandMap extends SimpleCommandMap {
 
     public DefaultCommandMap(ProxyServer proxy, String prefix) {
         super(proxy, prefix);
         this.registerDefaults();
     }
 
-    public void registerDefaults(){
+    public void registerDefaults() {
         this.registerCommand("wdhelp", new HelpCommand());
         this.registerCommand("wdlist", new ListCommand());
         this.registerCommand("wdinfo", new InfoCommand());

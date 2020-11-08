@@ -26,7 +26,7 @@ public class ProtocolCodecRegisterEvent extends Event implements CancellableEven
     private final ProtocolVersion protocolVersion;
     private final BedrockPacketCodec.Builder codecBuilder;
 
-    public ProtocolCodecRegisterEvent(ProtocolVersion protocolVersion, BedrockPacketCodec.Builder codecBuilder){
+    public ProtocolCodecRegisterEvent(ProtocolVersion protocolVersion, BedrockPacketCodec.Builder codecBuilder) {
         this.protocolVersion = protocolVersion;
         this.codecBuilder = codecBuilder;
     }

@@ -34,7 +34,7 @@ public class EventManager {
     private final ExecutorService threadedExecutor;
     private final HashMap<Class<? extends Event>, EventHandler> handlerMap = new HashMap<>();
 
-    public EventManager(){
+    public EventManager() {
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
         builder.setNameFormat("WaterdogEvents Executor");
         this.threadedExecutor = Executors.newCachedThreadPool(builder.build());

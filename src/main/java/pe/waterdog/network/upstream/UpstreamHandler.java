@@ -38,7 +38,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(ResourcePackClientResponsePacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()){
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()) {
             return false;
         }
         PackManager packManager = this.player.getProxy().getPackManager();
@@ -50,7 +50,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
             case SEND_PACKS:
                 for (String packIdVer : packet.getPackIds()) {
                     ResourcePackDataInfoPacket response = packManager.packInfoFromIdVer(packIdVer);
-                    if (response == null){
+                    if (response == null) {
                         this.player.disconnect("disconnectionScreen.resourcePack");
                         break;
                     }
@@ -63,7 +63,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
                 this.player.getUpstream().sendPacket(event.getStackPacket());
                 break;
             case COMPLETED:
-                if (!this.player.hasUpstreamBridge()){
+                if (!this.player.hasUpstreamBridge()) {
                     this.player.initialConnect(); // First connection
                 }
                 break;
@@ -74,12 +74,12 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(ResourcePackChunkRequestPacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()){
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()) {
             return false;
         }
         PackManager packManager = this.player.getProxy().getPackManager();
-        ResourcePackChunkDataPacket response = packManager.packChunkDataPacket(packet.getPackId()+"_"+packet.getPackVersion(), packet);
-        if (response == null){
+        ResourcePackChunkDataPacket response = packManager.packChunkDataPacket(packet.getPackId() + "_" + packet.getPackVersion(), packet);
+        if (response == null) {
             this.player.disconnect("Unknown resource pack!");
             return this.cancel();
         }
@@ -123,10 +123,11 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     /**
      * If connection has bridge we cancel packet to prevent sending it to downstream.
+     *
      * @return true is we can't use CancelSignalException.
      */
-    private boolean cancel(){
-        if (this.player.hasUpstreamBridge()){
+    private boolean cancel() {
+        if (this.player.hasUpstreamBridge()) {
             throw CancelSignalException.CANCEL;
         }
         return true;

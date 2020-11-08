@@ -31,7 +31,7 @@ public class SimpleCommandMap implements CommandMap {
     private final Object2ObjectMap<String, Command> commandsMap = new Object2ObjectOpenHashMap<>();
     private final Object2ObjectMap<String, Command> aliasesMap = new Object2ObjectOpenHashMap<>();
 
-    public SimpleCommandMap(ProxyServer proxy, String prefix){
+    public SimpleCommandMap(ProxyServer proxy, String prefix) {
         this.proxy = proxy;
         this.commandPrefix = prefix;
     }
@@ -51,7 +51,7 @@ public class SimpleCommandMap implements CommandMap {
         Command command = this.commandsMap.get(name.toLowerCase());
         if (command == null) return false;
 
-        for (String alias : command.getAliases()){
+        for (String alias : command.getAliases()) {
             this.aliasesMap.remove(alias.toLowerCase());
         }
         return true;
@@ -70,36 +70,36 @@ public class SimpleCommandMap implements CommandMap {
     @Override
     public boolean handleCommand(CommandSender sender, String commandName, String[] args) {
         Command command = this.commandsMap.get(commandName.toLowerCase());
-        if (command != null){
+        if (command != null) {
             this.execute(command, sender, null, args);
             return true;
         }
 
         Command aliasCommand = this.aliasesMap.get(commandName.toLowerCase());
-        if (aliasCommand != null){
+        if (aliasCommand != null) {
             this.execute(aliasCommand, sender, commandName, args);
             return true;
         }
 
-        if (!sender.isPlayer()){ //Player commands may be handled by servers
+        if (!sender.isPlayer()) { //Player commands may be handled by servers
             sender.sendMessage(new TranslationContainer("waterdog.command.unknown"));
         }
         return false;
     }
 
-    private void execute(Command command, CommandSender sender, String alias, String[] args){
+    private void execute(Command command, CommandSender sender, String alias, String[] args) {
         boolean permission = sender.hasPermission(command.getPermission());
-        if (!permission){
+        if (!permission) {
             sender.sendMessage(command.getPermissionMessage());
             return;
         }
 
         try {
             boolean success = command.onExecute(sender, alias, args);
-            if (!success){
-                sender.sendMessage("§cCommand usage: "+this.commandPrefix+command.getUsageMessage());
+            if (!success) {
+                sender.sendMessage("§cCommand usage: " + this.commandPrefix + command.getUsageMessage());
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             this.proxy.getLogger().error("Error appeared while processing command!", e);
         }
     }

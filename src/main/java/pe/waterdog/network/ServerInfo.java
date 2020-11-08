@@ -22,9 +22,7 @@ import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -50,9 +48,10 @@ public class ServerInfo {
 
     /**
      * CompletableFuture may throw exception if ping fails. Therefore it is recommended to handle using whenComplete().
+     *
      * @return CompletableFuture with RakNetPong.
      */
-    public CompletableFuture<RakNetPong> ping(long timeout, TimeUnit unit){
+    public CompletableFuture<RakNetPong> ping(long timeout, TimeUnit unit) {
         return ProxyServer.getInstance().bindClient(ProtocolConstants.getLatestProtocol()).thenCompose(client -> client.getRakNet().ping(this.address, timeout, unit));
     }
 
@@ -81,7 +80,7 @@ public class ServerInfo {
         return this.publicAddress;
     }
 
-    public boolean matchAddress(String address, int port){
+    public boolean matchAddress(String address, int port) {
         return this.publicAddress.getAddress().getHostName().equals(address) && this.publicAddress.getPort() == port;
     }
 }

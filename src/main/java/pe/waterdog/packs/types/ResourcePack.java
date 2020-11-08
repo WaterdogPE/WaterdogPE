@@ -27,15 +27,18 @@ public abstract class ResourcePack {
     protected final Path packPath;
     protected PackManifest packManifest;
 
-    public ResourcePack(Path packPath){
+    public ResourcePack(Path packPath) {
         this.packPath = packPath;
     }
 
     public abstract long getPackSize();
+
     public abstract byte[] getHash();
+
     public abstract byte[] getChunk(int off, int len);
 
     public abstract void saveToCache() throws IOException;
+
     public abstract InputStream getCachedPack();
 
     public abstract InputStream getStream(Path path) throws IOException;
@@ -49,11 +52,11 @@ public abstract class ResourcePack {
         return this.packManifest;
     }
 
-    public String getPackName(){
+    public String getPackName() {
         return this.packManifest.getHeader().getName();
     }
 
-    public UUID getPackId(){
+    public UUID getPackId() {
         return this.packManifest.getHeader().getUuid();
     }
 
@@ -61,7 +64,7 @@ public abstract class ResourcePack {
         return this.packManifest.getHeader().getVersion();
     }
 
-    public String getType(){
+    public String getType() {
         return this.packManifest.getModules().get(0).getType();
     }
 

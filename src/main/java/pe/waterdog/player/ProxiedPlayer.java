@@ -36,18 +36,13 @@ import pe.waterdog.event.defaults.PlayerDisconnectEvent;
 import pe.waterdog.event.defaults.PlayerLoginEvent;
 import pe.waterdog.event.defaults.PreTransferEvent;
 import pe.waterdog.logger.MainLogger;
-import pe.waterdog.network.bridge.UpstreamBridge;
-import pe.waterdog.network.protocol.ProtocolVersion;
-import pe.waterdog.utils.types.PacketHandler;
-import pe.waterdog.utils.types.Permission;
-import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
 import pe.waterdog.network.bridge.TransferBatchBridge;
 import pe.waterdog.network.bridge.UpstreamBridge;
 import pe.waterdog.network.downstream.InitialHandler;
 import pe.waterdog.network.downstream.SwitchDownstreamHandler;
-import pe.waterdog.network.protocol.ProtocolConstants;
+import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.rewrite.BlockMap;
 import pe.waterdog.network.rewrite.EntityMap;
 import pe.waterdog.network.rewrite.EntityTracker;
@@ -75,24 +70,20 @@ public class ProxiedPlayer implements CommandSender {
     private final ProxyServer proxy;
 
     private final BedrockServerSession upstream;
-    private ServerConnection serverConnection;
-    private ServerInfo pendingConnection;
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
-
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
-    private LoginPacket loginPacket;
-
     private final EntityTracker entityTracker;
     private final EntityMap entityMap;
     private final BlockMap blockMap;
-
     private final LongSet entities = new LongOpenHashSet();
     private final LongSet bossbars = new LongOpenHashSet();
     private final Collection<UUID> players = new HashSet<>();
     private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
-
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
+    private ServerConnection serverConnection;
+    private ServerInfo pendingConnection;
+    private LoginPacket loginPacket;
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
@@ -129,15 +120,16 @@ public class ProxiedPlayer implements CommandSender {
     /**
      * Called after sending LOGIN_SUCCESS in PlayStatusPacket.
      */
-    public void initPlayer(){
+    public void initPlayer() {
         SessionInjections.injectUpstreamHandlers(this.upstream, this);
-        if (this.proxy.getConfiguration().enabledResourcePacks()){
+        if (this.proxy.getConfiguration().enabledResourcePacks()) {
             ResourcePacksInfoPacket packet = this.proxy.getPackManager().getPacksInfoPacket();
             this.upstream.sendPacket(packet);
-        }else {
+        } else {
             this.initialConnect();
         }
     }
+
     /**
      * Called only on the initial connect.
      * Determines the first player the player gets transferred to based on the currently present JoinHandler.
@@ -201,9 +193,9 @@ public class ProxiedPlayer implements CommandSender {
                 this.pendingConnection = null;
 
                 String exceptionMessage = throwable.getLocalizedMessage();
-                if (this.sendToFallback(targetServer, exceptionMessage)){
+                if (this.sendToFallback(targetServer, exceptionMessage)) {
                     this.sendMessage(new TranslationContainer("waterdog.connected.fallback", serverInfo.getServerName()));
-                }else {
+                } else {
                     this.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), exceptionMessage));
                 }
                 return;
@@ -255,7 +247,7 @@ public class ProxiedPlayer implements CommandSender {
      * @param reason The disconnect reason the player will see on his disconnect screen (Supports Color Codes)
      */
     public void disconnect(String reason) {
-        if (!this.disconnected.compareAndSet(false, true)){
+        if (!this.disconnected.compareAndSet(false, true)) {
             return;
         }
 
@@ -278,10 +270,11 @@ public class ProxiedPlayer implements CommandSender {
 
     /**
      * Send player to fallback server if any exists.
+     *
      * @param oldServer server from which was player disconnected.
-     * @param reason disconnected reason.
+     * @param reason    disconnected reason.
      */
-    public boolean sendToFallback(ServerInfo oldServer, String reason){
+    public boolean sendToFallback(ServerInfo oldServer, String reason) {
         ServerInfo fallbackServer = this.proxy.getReconnectHandler().getFallbackServer(this, oldServer, reason);
         if (fallbackServer != null && fallbackServer != this.serverConnection.getInfo()) {
             this.connect(fallbackServer);
@@ -290,9 +283,9 @@ public class ProxiedPlayer implements CommandSender {
         return false;
     }
 
-    public void onDownstreamTimeout(){
+    public void onDownstreamTimeout() {
         ServerInfo serverInfo = this.serverConnection.getInfo();
-        if (!this.sendToFallback(serverInfo, "Downstream Timeout")){
+        if (!this.sendToFallback(serverInfo, "Downstream Timeout")) {
             this.disconnect(new TranslationContainer("waterdog.downstream.down", serverInfo.getServerName(), "Timeout"));
         }
     }
@@ -563,8 +556,8 @@ public class ProxiedPlayer implements CommandSender {
      *
      * @return ServerInfo if player is connected to downstream
      */
-    public ServerInfo getServerInfo(){
-        return this.serverConnection == null? null : this.serverConnection.getInfo();
+    public ServerInfo getServerInfo() {
+        return this.serverConnection == null ? null : this.serverConnection.getInfo();
     }
 
     @Override
@@ -596,7 +589,7 @@ public class ProxiedPlayer implements CommandSender {
         return this.upstream;
     }
 
-    public boolean isConnected(){
+    public boolean isConnected() {
         return !this.disconnected.get() && this.upstream != null && !this.upstream.isClosed();
     }
 
@@ -665,20 +658,20 @@ public class ProxiedPlayer implements CommandSender {
         return this.scoreboards;
     }
 
-    public void setPluginUpstreamHandler(PacketHandler pluginUpstreamHandler) {
-        this.pluginUpstreamHandler = pluginUpstreamHandler;
-    }
-
     public PacketHandler getPluginUpstreamHandler() {
         return this.pluginUpstreamHandler;
     }
 
-    public void setPluginDownstreamHandler(PacketHandler pluginDownstreamHandler) {
-        this.pluginDownstreamHandler = pluginDownstreamHandler;
+    public void setPluginUpstreamHandler(PacketHandler pluginUpstreamHandler) {
+        this.pluginUpstreamHandler = pluginUpstreamHandler;
     }
 
     public PacketHandler getPluginDownstreamHandler() {
         return this.pluginDownstreamHandler;
+    }
+
+    public void setPluginDownstreamHandler(PacketHandler pluginDownstreamHandler) {
+        this.pluginDownstreamHandler = pluginDownstreamHandler;
     }
 
     public void setAcceptPlayStatus(boolean acceptPlayStatus) {

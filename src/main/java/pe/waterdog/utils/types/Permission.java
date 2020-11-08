@@ -29,7 +29,7 @@ public class Permission {
     private final String name;
     private final AtomicBoolean value = new AtomicBoolean(false);
 
-    public Permission(String name, boolean value){
+    public Permission(String name, boolean value) {
         this.name = name.toLowerCase();
         this.value.set(value);
     }
@@ -38,12 +38,12 @@ public class Permission {
         return this.name;
     }
 
-    public void setValue(boolean value) {
-        this.value.set(value);
-    }
-
     public boolean getValue() {
         return this.value.get();
+    }
+
+    public void setValue(boolean value) {
+        this.value.set(value);
     }
 
     public AtomicBoolean getAtomicValue() {

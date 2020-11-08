@@ -18,7 +18,7 @@ package pe.waterdog.utils.exceptions;
 
 public class SchedulerException extends RuntimeException {
 
-    public SchedulerException(String message){
+    public SchedulerException(String message) {
         super(message);
     }
 }

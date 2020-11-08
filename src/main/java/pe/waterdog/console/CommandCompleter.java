@@ -32,32 +32,32 @@ public class CommandCompleter implements Completer {
 
     private final ProxyServer proxy;
 
-    public CommandCompleter(ProxyServer proxy){
+    public CommandCompleter(ProxyServer proxy) {
         this.proxy = proxy;
     }
 
     @Override
     public void complete(LineReader lineReader, ParsedLine parsedLine, List<Candidate> candidates) {
         if (parsedLine.wordIndex() == 0) {
-            if (parsedLine.word().isEmpty()){
+            if (parsedLine.word().isEmpty()) {
                 this.addOptions(command -> candidates.add(new Candidate(command)));
                 return;
             }
 
             List<String> commands = new ArrayList<>();
             this.addOptions(commands::add);
-            for (String command : commands){
-                if (command.startsWith(parsedLine.word())){
+            for (String command : commands) {
+                if (command.startsWith(parsedLine.word())) {
                     candidates.add(new Candidate(command));
                 }
             }
             return;
         }
 
-        if (parsedLine.wordIndex() > 1 && !parsedLine.word().isEmpty()){
+        if (parsedLine.wordIndex() > 1 && !parsedLine.word().isEmpty()) {
             String world = parsedLine.word();
-            for (ProxiedPlayer player : this.proxy.getPlayers().values()){
-                if (player.getName().toLowerCase().startsWith(world)){
+            for (ProxiedPlayer player : this.proxy.getPlayers().values()) {
+                if (player.getName().toLowerCase().startsWith(world)) {
                     candidates.add(new Candidate(player.getName()));
                 }
 
@@ -65,9 +65,9 @@ public class CommandCompleter implements Completer {
         }
     }
 
-    private void addOptions(Consumer<String> commandConsumer){
+    private void addOptions(Consumer<String> commandConsumer) {
         CommandMap commandMap = this.proxy.getCommandMap();
-        for (String command : commandMap.getCommands().keySet()){
+        for (String command : commandMap.getCommands().keySet()) {
             commandConsumer.accept(command);
         }
     }

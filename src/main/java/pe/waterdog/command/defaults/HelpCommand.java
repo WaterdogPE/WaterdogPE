@@ -22,7 +22,8 @@ import pe.waterdog.command.CommandSender;
 import pe.waterdog.command.CommandSettings;
 import pe.waterdog.utils.types.TranslationContainer;
 
-import java.util.*;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class HelpCommand extends Command {
 
@@ -37,28 +38,28 @@ public class HelpCommand extends Command {
     @Override
     public boolean onExecute(CommandSender sender, String alias, String[] args) {
         int pageNumber = 1;
-        if (sender.isPlayer()){
-            if (args.length >= 1){
+        if (sender.isPlayer()) {
+            if (args.length >= 1) {
                 try {
                     pageNumber = Integer.parseInt(args[0]);
                     if (pageNumber < 1) pageNumber = 1;
-                }catch (NumberFormatException e){
+                } catch (NumberFormatException e) {
                 }
             }
-        }else {
+        } else {
             pageNumber = Integer.MAX_VALUE;
         }
 
         CommandMap commandMap = sender.getProxy().getCommandMap();
         Map<String, Command> commands = new TreeMap<>();
-        for (Command command : commandMap.getCommands().values()){
-            if (sender.hasPermission(command.getPermission())){
+        for (Command command : commandMap.getCommands().values()) {
+            if (sender.hasPermission(command.getPermission())) {
                 commands.put(command.getName(), command);
             }
         }
 
         int pageHeight = 8;
-        int pages = commands.size() % pageHeight == 0? commands.size() / pageHeight : commands.size() / pageHeight + 1;
+        int pages = commands.size() % pageHeight == 0 ? commands.size() / pageHeight : commands.size() / pageHeight + 1;
         pageNumber = Math.min(pageNumber, pages);
         if (pageNumber < 1) {
             pageNumber = 1;
@@ -67,9 +68,9 @@ public class HelpCommand extends Command {
         sender.sendMessage(new TranslationContainer("waterdog.command.help.format", String.valueOf(pageNumber), String.valueOf(pages)));
 
         int i = 1;
-        for (Command command : commands.values()){
+        for (Command command : commands.values()) {
             if (i >= (pageNumber - 1) * pageHeight + 1 && i <= Math.min(commands.size(), pageNumber * pageHeight)) {
-                sender.sendMessage("§6"+commandMap.getCommandPrefix() + command.getName() + ": §r"+command.getDescription());
+                sender.sendMessage("§6" + commandMap.getCommandPrefix() + command.getName() + ": §r" + command.getDescription());
             }
             i++;
         }

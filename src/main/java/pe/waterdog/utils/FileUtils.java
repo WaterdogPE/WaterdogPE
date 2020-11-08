@@ -36,7 +36,7 @@ public class FileUtils {
     }
 
     public static void saveFromResources(String fileName, File targetFile) throws IOException {
-        if (targetFile.exists()){
+        if (targetFile.exists()) {
             return;
         }
         targetFile.createNewFile();

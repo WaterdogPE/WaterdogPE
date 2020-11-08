@@ -26,7 +26,7 @@ public abstract class PlayerEvent extends Event {
 
     protected ProxiedPlayer player;
 
-    public PlayerEvent(ProxiedPlayer player){
+    public PlayerEvent(ProxiedPlayer player) {
         this.player = player;
     }
 

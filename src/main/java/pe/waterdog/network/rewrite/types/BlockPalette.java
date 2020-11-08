@@ -25,7 +25,6 @@ import it.unimi.dsi.fastutil.objects.Object2ShortMap;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectMap;
 import org.apache.commons.lang3.tuple.Pair;
-import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.protocol.ProtocolVersion;
 
 /**

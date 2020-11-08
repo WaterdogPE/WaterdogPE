@@ -90,7 +90,7 @@ public class ProxyListener implements BedrockServerEventHandler {
     @Override
     public void onUnhandledDatagram(ChannelHandlerContext ctx, DatagramPacket packet) {
         ByteBuf buf = packet.content();
-        if (!buf.isReadable(3)){
+        if (!buf.isReadable(3)) {
             return;
         }
 
@@ -102,7 +102,7 @@ public class ProxyListener implements BedrockServerEventHandler {
             if (queryHandler != null && Arrays.equals(prefix, QueryHandler.QUERY_SIGNATURE)) {
                 queryHandler.onQuery(packet.sender(), buf, ctx);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             this.proxy.getLogger().error("Can not handle packet!", e);
         }
     }

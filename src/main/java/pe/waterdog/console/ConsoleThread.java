@@ -16,11 +16,11 @@
 
 package pe.waterdog.console;
 
-public class ConsoleThread extends Thread{
+public class ConsoleThread extends Thread {
 
     private final TerminalConsole console;
 
-    public ConsoleThread(TerminalConsole console){
+    public ConsoleThread(TerminalConsole console) {
         super("WaterdogPE Console");
         this.console = console;
     }

@@ -38,6 +38,7 @@ public interface CommandMap {
 
     /**
      * WARNING: Will return true even if command was handled but thrown exception!
+     *
      * @return true if command was handled.
      */
     boolean handleCommand(CommandSender sender, String command, String[] args);

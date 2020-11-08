@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.nimbusds.jose.JWSObject;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import io.netty.util.AsciiString;
-import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.protocol.ProtocolVersion;
 
 import java.net.InetSocketAddress;

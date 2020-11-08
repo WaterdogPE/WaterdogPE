@@ -27,11 +27,11 @@ public class PlayerResourcePackApplyEvent extends PlayerEvent {
         this.stackPacket = stackPacket;
     }
 
-    public void setStackPacket(ResourcePackStackPacket stackPacket) {
-        this.stackPacket = stackPacket;
-    }
-
     public ResourcePackStackPacket getStackPacket() {
         return this.stackPacket;
+    }
+
+    public void setStackPacket(ResourcePackStackPacket stackPacket) {
+        this.stackPacket = stackPacket;
     }
 }

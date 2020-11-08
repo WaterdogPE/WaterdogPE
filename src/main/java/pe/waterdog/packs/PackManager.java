@@ -20,7 +20,6 @@ import com.nukkitx.protocol.bedrock.data.ResourcePackType;
 import com.nukkitx.protocol.bedrock.packet.*;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.ResourcePacksRebuildEvent;
-import pe.waterdog.packs.types.PackManifest;
 import pe.waterdog.packs.types.ResourcePack;
 import pe.waterdog.packs.types.ZipResourcePack;
 import pe.waterdog.utils.FileUtils;
@@ -42,64 +41,64 @@ public class PackManager {
     private final ResourcePacksInfoPacket packsInfoPacket = new ResourcePacksInfoPacket();
     private final ResourcePackStackPacket stackPacket = new ResourcePackStackPacket();
 
-    public PackManager(ProxyServer proxy){
+    public PackManager(ProxyServer proxy) {
         this.proxy = proxy;
     }
 
-    public void loadPacks(Path packsDirectory){
+    public void loadPacks(Path packsDirectory) {
         Preconditions.checkNotNull(packsDirectory, "Packs directory can not be null!");
-        Preconditions.checkArgument(Files.isDirectory(packsDirectory), packsDirectory+" must be directory!");
+        Preconditions.checkArgument(Files.isDirectory(packsDirectory), packsDirectory + " must be directory!");
         this.proxy.getLogger().info("Loading resource packs!");
 
         try {
             DirectoryStream<Path> stream = Files.newDirectoryStream(packsDirectory);
-            for (Path path : stream){
+            for (Path path : stream) {
                 ResourcePack resourcePack = this.constructPack(path);
-                if (resourcePack != null){
-                    String packIdVer = resourcePack.getPackId()+ "_"+ resourcePack.getPackManifest().getHeader().getVersion();
+                if (resourcePack != null) {
+                    String packIdVer = resourcePack.getPackId() + "_" + resourcePack.getPackManifest().getHeader().getVersion();
                     this.packsByIdVer.put(packIdVer, resourcePack);
                     this.packs.put(resourcePack.getPackId(), resourcePack);
                 }
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             this.proxy.getLogger().error("Can not load packs!", e);
         }
 
         this.rebuildPackets();
-        this.proxy.getLogger().info("Loaded "+this.packs.size()+" packs!");
+        this.proxy.getLogger().info("Loaded " + this.packs.size() + " packs!");
     }
 
-    private ResourcePack constructPack(Path packPath){
+    private ResourcePack constructPack(Path packPath) {
         Class<? extends ResourcePack> loader = this.getPackLoader(packPath);
-        if (loader == null){
+        if (loader == null) {
             return null;
         }
 
         try {
             ResourcePack pack = this.loadPack(packPath, loader);
-            if (pack != null){
+            if (pack != null) {
                 return pack;
             }
             this.proxy.getLogger().error("Resource pack has invalid manifest file!");
-        }catch (Exception e){
+        } catch (Exception e) {
             this.proxy.getLogger().error("Can not load resource pack!", e);
         }
         return null;
     }
 
-    private ResourcePack loadPack(Path packPath, Class<? extends ResourcePack> clazz) throws Exception{
+    private ResourcePack loadPack(Path packPath, Class<? extends ResourcePack> clazz) throws Exception {
         ResourcePack pack = clazz.getDeclaredConstructor(Path.class).newInstance(packPath);
         try {
             pack.loadManifest();
-        }catch (IOException e) {
+        } catch (IOException e) {
             throw new IOException("Can not load manifest!");
         }
 
-        if (!pack.getPackManifest().validate()){
+        if (!pack.getPackManifest().validate()) {
             return null;
         }
 
-        if (this.proxy.getConfiguration().getPackCacheSize() >= (pack.getPackSize() * FileUtils.INT_MEGABYTE)){
+        if (this.proxy.getConfiguration().getPackCacheSize() >= (pack.getPackSize() * FileUtils.INT_MEGABYTE)) {
             pack.saveToCache();
         }
         return pack;
@@ -107,44 +106,45 @@ public class PackManager {
 
     /**
      * We are currently supporting only zipped resource packs
+     *
      * @param path to resource pack.
      * @return class which will be used to load pack.
      */
     public Class<? extends ResourcePack> getPackLoader(Path path) {
-        if (ZIP_PACK_MATCHER.matches(path)){
+        if (ZIP_PACK_MATCHER.matches(path)) {
             return ZipResourcePack.class;
         }
         return null;
     }
 
-    public boolean registerPack(ResourcePack resourcePack){
+    public boolean registerPack(ResourcePack resourcePack) {
         Preconditions.checkNotNull(resourcePack, "Resource pack can not be null!");
         Preconditions.checkArgument(resourcePack.getPackManifest().validate(), "Resource pack has invalid manifest!");
 
-        if (this.packs.get(resourcePack.getPackId()) != null){
+        if (this.packs.get(resourcePack.getPackId()) != null) {
             return false;
         }
 
-        String packIdVer = resourcePack.getPackId()+ "_"+ resourcePack.getVersion();
+        String packIdVer = resourcePack.getPackId() + "_" + resourcePack.getVersion();
         this.packsByIdVer.put(packIdVer, resourcePack);
         this.packs.put(resourcePack.getPackId(), resourcePack);
         this.rebuildPackets();
         return true;
     }
 
-    public boolean unregisterPack(UUID packId){
+    public boolean unregisterPack(UUID packId) {
         ResourcePack resourcePack = this.packs.remove(packId);
-        if (resourcePack == null){
+        if (resourcePack == null) {
             return false;
         }
 
-        String packIdVer = resourcePack.getPackId()+ "_"+ resourcePack.getVersion();
+        String packIdVer = resourcePack.getPackId() + "_" + resourcePack.getVersion();
         this.packsByIdVer.remove(packIdVer);
         this.rebuildPackets();
         return true;
     }
 
-    public void rebuildPackets(){
+    public void rebuildPackets() {
         boolean forcePacks = this.proxy.getConfiguration().forcePacks();
         this.packsInfoPacket.setForcedToAccept(forcePacks);
         this.stackPacket.setForcedToAccept(forcePacks);
@@ -156,8 +156,8 @@ public class PackManager {
         this.stackPacket.getResourcePacks().clear();
         this.stackPacket.setGameVersion("");
 
-        for (ResourcePack pack : this.packs.values()){
-            if (!pack.getType().equals(ResourcePack.TYPE_RESOURCES)){
+        for (ResourcePack pack : this.packs.values()) {
+            if (!pack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
                 continue;
             }
             ResourcePacksInfoPacket.Entry infoEntry = new ResourcePacksInfoPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(),
@@ -171,9 +171,9 @@ public class PackManager {
         this.proxy.getEventManager().callEvent(event);
     }
 
-    public ResourcePackDataInfoPacket packInfoFromIdVer(String idVersion){
+    public ResourcePackDataInfoPacket packInfoFromIdVer(String idVersion) {
         ResourcePack resourcePack = this.packsByIdVer.get(idVersion);
-        if (resourcePack == null){
+        if (resourcePack == null) {
             return null;
         }
 
@@ -188,9 +188,9 @@ public class PackManager {
         return packet;
     }
 
-    public ResourcePackChunkDataPacket packChunkDataPacket(String idVersion, ResourcePackChunkRequestPacket from){
+    public ResourcePackChunkDataPacket packChunkDataPacket(String idVersion, ResourcePackChunkRequestPacket from) {
         ResourcePack resourcePack = this.packsByIdVer.get(idVersion);
-        if (resourcePack == null){
+        if (resourcePack == null) {
             return null;
         }
 

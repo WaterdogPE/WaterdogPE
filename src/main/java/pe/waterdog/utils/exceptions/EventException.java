@@ -16,13 +16,13 @@
 
 package pe.waterdog.utils.exceptions;
 
-public class EventException extends RuntimeException{
+public class EventException extends RuntimeException {
 
-    public EventException(){
+    public EventException() {
         super();
     }
 
-    public EventException(String message){
+    public EventException(String message) {
         super(message);
     }
 }

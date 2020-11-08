@@ -53,14 +53,14 @@ public class ProxyBatchBridge implements BatchHandler {
                     changed = true;
                 }
                 allPackets.add(packet);
-            }catch (CancelSignalException e){
+            } catch (CancelSignalException e) {
             }
         }
 
-        if (!changed && allPackets.size() == packets.size()){
+        if (!changed && allPackets.size() == packets.size()) {
             buf.readerIndex(1);
             this.session.sendWrapped(buf, this.session.isEncrypted());
-        }else {
+        } else {
             this.session.sendWrapped(allPackets, true);
         }
     }
@@ -73,12 +73,12 @@ public class ProxyBatchBridge implements BatchHandler {
         boolean handled = false, canceled = false;
         try {
             handled = packet.handle(handler);
-        }catch (CancelSignalException e){
+        } catch (CancelSignalException e) {
             canceled = true;
         }
 
         boolean changed = this.player.getEntityMap().doRewrite(packet) || handled;
-        if (!changed && canceled){
+        if (!changed && canceled) {
             throw CancelSignalException.CANCEL;
         }
 

@@ -25,7 +25,7 @@ import java.util.Collection;
  * Called when the Proxy receives an MCPEQuery. Returns, in addition to the ProxyPingEvent, a map and whether a whitelist is present.
  * Can be modified to change the returned values.
  */
-public class ProxyQueryEvent extends ProxyPingEvent{
+public class ProxyQueryEvent extends ProxyPingEvent {
 
     private String map;
     private boolean hasWhitelist = false;
@@ -35,12 +35,12 @@ public class ProxyQueryEvent extends ProxyPingEvent{
         this.map = map;
     }
 
-    public void setMap(String map) {
-        this.map = map;
-    }
-
     public String getMap() {
         return this.map;
+    }
+
+    public void setMap(String map) {
+        this.map = map;
     }
 
     public void setHasWhitelist(boolean hasWhitelist) {

@@ -73,7 +73,7 @@ public class PlayerRewriteUtils {
         session.sendPacketImmediately(stopThunder);
     }
 
-    public static void injectSetDifficulty(BedrockSession session, int difficulty){
+    public static void injectSetDifficulty(BedrockSession session, int difficulty) {
         SetDifficultyPacket packet = new SetDifficultyPacket();
         packet.setDifficulty(difficulty);
         session.sendPacket(packet);
@@ -122,7 +122,7 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
-    public static void injectRemoveBossbar(BedrockSession session, long bossbarId){
+    public static void injectRemoveBossbar(BedrockSession session, long bossbarId) {
         BossEventPacket packet = new BossEventPacket();
         packet.setAction(BossEventPacket.Action.REMOVE);
         packet.setBossUniqueEntityId(bossbarId);

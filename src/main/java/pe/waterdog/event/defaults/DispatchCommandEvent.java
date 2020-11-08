@@ -30,7 +30,7 @@ public class DispatchCommandEvent extends Event implements CancellableEvent {
     private final CommandSender sender;
     private final String command;
 
-    public DispatchCommandEvent(CommandSender sender, String command){
+    public DispatchCommandEvent(CommandSender sender, String command) {
         this.sender = sender;
         this.command = command;
     }

@@ -30,7 +30,7 @@ public class MainLogger extends Thread implements Logger {
         return instance;
     }
 
-    public static MainLogger getLogger(){
+    public static MainLogger getLogger() {
         return instance;
     }
 

@@ -40,20 +40,20 @@ public class ServerCommand extends Command {
 
     @Override
     public boolean onExecute(CommandSender sender, String alias, String[] args) {
-        if (args.length < 1 || !sender.isPlayer() && args.length < 2){
+        if (args.length < 1 || !sender.isPlayer() && args.length < 2) {
             return false;
         }
 
         ServerInfo server = sender.getProxy().getServerInfo(args[0]);
-        if (server == null){
+        if (server == null) {
             sender.sendMessage("§cServer not found!");
             return true;
         }
 
         ProxiedPlayer player;
-        if (sender.isPlayer() && args.length < 2){
+        if (sender.isPlayer() && args.length < 2) {
             player = (ProxiedPlayer) sender;
-        }else {
+        } else {
             player = sender.getProxy().getPlayer(args[1]);
             if (player == null) {
                 sender.sendMessage("§cPlayer not found!");

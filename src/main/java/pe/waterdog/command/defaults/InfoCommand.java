@@ -33,11 +33,11 @@ public class InfoCommand extends Command {
 
     @Override
     public boolean onExecute(CommandSender sender, String alias, String[] args) {
-        sender.sendMessage("§bRunning WaterdogPE version §3"+VersionInfo.BASE_VERSION+"§b!\n" +
-                "§3Build Version: §b"+VersionInfo.BUILD_VERSION+"\n" +
-                "§3Latest Protocol: §b"+VersionInfo.LATEST_PROTOCOL_VERSION+"\n" +
-                "§3Author: §b"+VersionInfo.AUTHOR+"\n" +
-                "§3Developer Mode: "+(VersionInfo.IS_DEVELOPMENT? "§cenabled" : "§adisabled"));
+        sender.sendMessage("§bRunning WaterdogPE version §3" + VersionInfo.BASE_VERSION + "§b!\n" +
+                "§3Build Version: §b" + VersionInfo.BUILD_VERSION + "\n" +
+                "§3Latest Protocol: §b" + VersionInfo.LATEST_PROTOCOL_VERSION + "\n" +
+                "§3Author: §b" + VersionInfo.AUTHOR + "\n" +
+                "§3Developer Mode: " + (VersionInfo.IS_DEVELOPMENT ? "§cenabled" : "§adisabled"));
         return true;
     }
 }

@@ -36,33 +36,33 @@ public class EventHandler {
 
     private final EnumMap<EventPriority, ArrayList<Consumer<Event>>> priority2handlers = new EnumMap<>(EventPriority.class);
 
-    public EventHandler(Class<? extends Event> eventClass, EventManager eventManager){
+    public EventHandler(Class<? extends Event> eventClass, EventManager eventManager) {
         this.eventClass = eventClass;
         this.eventManager = eventManager;
     }
 
-    public CompletableFuture<Event> handle(Event event){
-        if (!this.eventClass.isInstance(event)){
+    public CompletableFuture<Event> handle(Event event) {
+        if (!this.eventClass.isInstance(event)) {
             throw new EventException("Tried to handle invalid event type!");
         }
 
         boolean async = event.getClass().isAnnotationPresent(AsyncEvent.class);
-        if (async){
+        if (async) {
             return CompletableFuture.supplyAsync(() -> {
-                for (EventPriority priority : EventPriority.values()){
+                for (EventPriority priority : EventPriority.values()) {
                     this.handlePriority(priority, event);
                 }
                 return event;
             }, this.eventManager.getThreadedExecutor());
         }
 
-        for (EventPriority priority : EventPriority.values()){
+        for (EventPriority priority : EventPriority.values()) {
             this.handlePriority(priority, event);
         }
         return null;
     }
 
-    private void handlePriority(EventPriority priority, Event event){
+    private void handlePriority(EventPriority priority, Event event) {
         ArrayList<Consumer<Event>> handlerList = this.priority2handlers.get(priority);
         if (handlerList != null) {
             for (Consumer<Event> eventHandler : handlerList) {
@@ -71,11 +71,11 @@ public class EventHandler {
         }
     }
 
-    public void subscribe(Consumer<Event> handler, EventPriority priority){
+    public void subscribe(Consumer<Event> handler, EventPriority priority) {
         List<Consumer<Event>> handlerList = this.priority2handlers.computeIfAbsent(priority, priority1 -> new ArrayList<>());
 
         //Check if event is already registered
-        if (!handlerList.contains(handler)){
+        if (!handlerList.contains(handler)) {
             //Handler is not registered yet
             handlerList.add(handler);
         }

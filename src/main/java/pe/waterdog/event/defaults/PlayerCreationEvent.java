@@ -28,22 +28,22 @@ import java.net.InetSocketAddress;
  */
 public class PlayerCreationEvent extends Event {
 
-    private Class<? extends ProxiedPlayer> baseClass;
     private final LoginData loginData;
     private final InetSocketAddress address;
+    private Class<? extends ProxiedPlayer> baseClass;
 
-    public PlayerCreationEvent(Class<? extends ProxiedPlayer> baseClass, LoginData loginData, InetSocketAddress address){
+    public PlayerCreationEvent(Class<? extends ProxiedPlayer> baseClass, LoginData loginData, InetSocketAddress address) {
         this.baseClass = baseClass;
         this.loginData = loginData;
         this.address = address;
     }
 
-    public void setBaseClass(Class<? extends ProxiedPlayer> baseClass) {
-        this.baseClass = baseClass;
-    }
-
     public Class<? extends ProxiedPlayer> getBaseClass() {
         return this.baseClass;
+    }
+
+    public void setBaseClass(Class<? extends ProxiedPlayer> baseClass) {
+        this.baseClass = baseClass;
     }
 
     public LoginData getLoginData() {

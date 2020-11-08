@@ -28,7 +28,7 @@ public abstract class PacketHandler implements BedrockPacketHandler {
 
     private final BedrockSession session;
 
-    public PacketHandler(BedrockSession session){
+    public PacketHandler(BedrockSession session) {
         this.session = session;
     }
 

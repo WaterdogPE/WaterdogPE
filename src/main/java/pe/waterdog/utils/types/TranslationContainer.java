@@ -18,7 +18,7 @@ package pe.waterdog.utils.types;
 
 import pe.waterdog.ProxyServer;
 
-public class TranslationContainer extends TextContainer{
+public class TranslationContainer extends TextContainer {
 
     private String[] params;
 
@@ -36,7 +36,7 @@ public class TranslationContainer extends TextContainer{
         return message;
     }
 
-    public String getTranslated(){
+    public String getTranslated() {
         return ProxyServer.getInstance().translate(this);
     }
 

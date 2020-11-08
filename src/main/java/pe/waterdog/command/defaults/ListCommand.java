@@ -23,7 +23,10 @@ import pe.waterdog.network.ServerInfo;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.types.TranslationContainer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.StringJoiner;
 
 public class ListCommand extends Command {
 
@@ -37,9 +40,9 @@ public class ListCommand extends Command {
 
     @Override
     public boolean onExecute(CommandSender sender, String alias, String[] args) {
-        if (args.length >= 1){
+        if (args.length >= 1) {
             ServerInfo serverInfo = sender.getProxy().getServer(args[0]);
-            sender.sendMessage(serverInfo == null? "§cServer not found!" : this.buildServerList(serverInfo));
+            sender.sendMessage(serverInfo == null ? "§cServer not found!" : this.buildServerList(serverInfo));
             return true;
         }
 
@@ -47,7 +50,7 @@ public class ListCommand extends Command {
         servers.sort(Comparator.comparing(ServerInfo::getServerName));
 
         StringBuilder builder = new StringBuilder("§aShowing all servers:\n");
-        for (ServerInfo serverInfo : servers){
+        for (ServerInfo serverInfo : servers) {
             builder.append(this.buildServerList(serverInfo)).append("\n§r");
         }
 
@@ -56,9 +59,9 @@ public class ListCommand extends Command {
         return true;
     }
 
-    private String buildServerList(ServerInfo serverInfo){
+    private String buildServerList(ServerInfo serverInfo) {
         StringJoiner joiner = new StringJoiner(",");
-        for (ProxiedPlayer player : serverInfo.getPlayers()){
+        for (ProxiedPlayer player : serverInfo.getPlayers()) {
             joiner.add(player.getName());
         }
 

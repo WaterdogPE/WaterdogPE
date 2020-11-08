@@ -52,7 +52,7 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(BossEventPacket packet) {
-        switch (packet.getAction()){
+        switch (packet.getAction()) {
             case CREATE:
                 this.player.getBossbars().add(packet.getBossUniqueEntityId());
             case REMOVE:
@@ -63,7 +63,7 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(AvailableCommandsPacket packet) {
-        if (!this.player.getProxy().getConfiguration().injectCommands()){
+        if (!this.player.getProxy().getConfiguration().injectCommands()) {
             return false;
         }
 
@@ -77,7 +77,7 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(PlayStatusPacket packet) {
-        if (!this.player.acceptPlayStatus() | packet.getStatus() != PlayStatusPacket.Status.PLAYER_SPAWN){
+        if (!this.player.acceptPlayStatus() | packet.getStatus() != PlayStatusPacket.Status.PLAYER_SPAWN) {
             return false;
         }
 
@@ -102,12 +102,12 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(TransferPacket packet) {
-        if (!this.player.getProxy().getConfiguration().useFastTransfer()){
+        if (!this.player.getProxy().getConfiguration().useFastTransfer()) {
             return false;
         }
 
         ServerInfo serverInfo = this.player.getProxy().getServerInfo(packet.getAddress(), packet.getPort());
-        if (serverInfo != null){
+        if (serverInfo != null) {
             this.player.connect(serverInfo);
             throw CancelSignalException.CANCEL;
         }

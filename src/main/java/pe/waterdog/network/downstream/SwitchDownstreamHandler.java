@@ -25,7 +25,6 @@ import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.TransferCompleteEvent;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.rewrite.types.BlockPalette;
@@ -99,7 +98,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(PlayStatusPacket packet) {
-        switch (packet.getStatus()){
+        switch (packet.getStatus()) {
             case LOGIN_SUCCESS:
                 throw CancelSignalException.CANCEL;
             case LOGIN_FAILED_CLIENT_OLD:
@@ -159,7 +158,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         scoreboards.clear();
 
         LongSet bossbars = this.player.getBossbars();
-        for (long bossbarId : bossbars){
+        for (long bossbarId : bossbars) {
             PlayerRewriteUtils.injectRemoveBossbar(this.player.getUpstream(), bossbarId);
         }
         bossbars.clear();

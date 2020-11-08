@@ -41,8 +41,8 @@ public class WaterdogScheduler {
 
     private final AtomicInteger currentId = new AtomicInteger();
 
-    public WaterdogScheduler(ProxyServer proxy){
-        if (instance != null){
+    public WaterdogScheduler(ProxyServer proxy) {
+        if (instance != null) {
             throw new RuntimeException("Scheduler was already initialized!");
         }
         instance = this;
@@ -57,39 +57,39 @@ public class WaterdogScheduler {
         return instance;
     }
 
-    public TaskHandler scheduleAsync(Runnable task){
+    public TaskHandler scheduleAsync(Runnable task) {
         return this.scheduleTask(task, true);
     }
 
-    public TaskHandler scheduleTask(Runnable task, boolean async){
+    public TaskHandler scheduleTask(Runnable task, boolean async) {
         return this.addTask(task, 0, 0, async);
     }
 
-    public TaskHandler scheduleDelayed(Runnable task, int delay){
+    public TaskHandler scheduleDelayed(Runnable task, int delay) {
         return this.scheduleDelayed(task, delay, false);
     }
 
-    public TaskHandler scheduleDelayed(Runnable task, int delay, boolean async){
+    public TaskHandler scheduleDelayed(Runnable task, int delay, boolean async) {
         return this.addTask(task, delay, 0, async);
     }
 
-    public TaskHandler scheduleRepeating(Runnable task, int period){
+    public TaskHandler scheduleRepeating(Runnable task, int period) {
         return this.scheduleRepeating(task, period, false);
     }
 
-    public TaskHandler scheduleRepeating(Runnable task, int period, boolean async){
+    public TaskHandler scheduleRepeating(Runnable task, int period, boolean async) {
         return this.addTask(task, 0, period, async);
     }
 
-    public TaskHandler scheduleDelayedRepeating(Runnable task, int delay, int period){
+    public TaskHandler scheduleDelayedRepeating(Runnable task, int delay, int period) {
         return this.scheduleDelayedRepeating(task, delay, period, false);
     }
 
-    public TaskHandler scheduleDelayedRepeating(Runnable task, int delay, int period, boolean async){
+    public TaskHandler scheduleDelayedRepeating(Runnable task, int delay, int period, boolean async) {
         return this.addTask(task, delay, period, async);
     }
 
-    public TaskHandler addTask(Runnable task, int delay, int period, boolean async){
+    public TaskHandler addTask(Runnable task, int delay, int period, boolean async) {
         if (delay < 0 || period < 0) {
             throw new SchedulerException("Attempted to register a task with negative delay or period!");
         }
@@ -100,9 +100,9 @@ public class WaterdogScheduler {
         TaskHandler handler = new TaskHandler(task, taskId, async);
         handler.setDelay(delay);
         handler.setPeriod(period);
-        handler.setNextRunTick(handler.isDelayed()? currentTick + delay : currentTick);
+        handler.setNextRunTick(handler.isDelayed() ? currentTick + delay : currentTick);
 
-        if (task instanceof Task){
+        if (task instanceof Task) {
             ((Task) task).setHandler(handler);
         }
 
@@ -111,7 +111,7 @@ public class WaterdogScheduler {
         return handler;
     }
 
-    public void onTick(int currentTick){
+    public void onTick(int currentTick) {
         // 1. Assign all tasks to queue by nextRunTick
         TaskHandler task;
         while ((task = this.pendingTasks.poll()) != null) {
@@ -123,24 +123,24 @@ public class WaterdogScheduler {
         LinkedList<TaskHandler> queued = this.assignedTasks.remove(currentTick);
         if (queued == null) return;
 
-        for (TaskHandler taskHandler : queued){
+        for (TaskHandler taskHandler : queued) {
             this.runTask(taskHandler, currentTick);
         }
     }
 
-    private void runTask(TaskHandler taskHandler, int currentTick){
-        if (taskHandler.isCancelled()){
+    private void runTask(TaskHandler taskHandler, int currentTick) {
+        if (taskHandler.isCancelled()) {
             this.taskHandlerMap.remove(taskHandler.getTaskId());
             return;
         }
 
-        if (taskHandler.isAsync()){
+        if (taskHandler.isAsync()) {
             this.threadedExecutor.execute(() -> taskHandler.onRun(currentTick));
-        }else {
+        } else {
             taskHandler.onRun(currentTick);
         }
 
-        if (taskHandler.calculateNextTick(currentTick)){
+        if (taskHandler.calculateNextTick(currentTick)) {
             this.pendingTasks.add(taskHandler);
             return;
         }
@@ -154,10 +154,10 @@ public class WaterdogScheduler {
         this.threadedExecutor.shutdown();
 
         int count = 25;
-        while (!this.threadedExecutor.isTerminated() && count-- > 0){
+        while (!this.threadedExecutor.isTerminated() && count-- > 0) {
             try {
                 this.threadedExecutor.awaitTermination(100, TimeUnit.MILLISECONDS);
-            }catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 // Ignore
             }
         }

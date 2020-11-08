@@ -26,7 +26,7 @@ public class ResourcePacksRebuildEvent extends Event {
     private final ResourcePacksInfoPacket packsInfoPacket;
     private final ResourcePackStackPacket stackPacket;
 
-    public ResourcePacksRebuildEvent(ResourcePacksInfoPacket packsInfoPacket, ResourcePackStackPacket stackPacket){
+    public ResourcePacksRebuildEvent(ResourcePacksInfoPacket packsInfoPacket, ResourcePackStackPacket stackPacket) {
         this.packsInfoPacket = packsInfoPacket;
         this.stackPacket = stackPacket;
     }

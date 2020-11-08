@@ -64,7 +64,7 @@ public enum ProtocolVersion {
     }
 
     public BedrockPacketCodec getCodec() {
-        return this.bedrockCodec == null? this.defaultCodec : this.bedrockCodec.getPacketCodec();
+        return this.bedrockCodec == null ? this.defaultCodec : this.bedrockCodec.getPacketCodec();
     }
 
     public void setBedrockCodec(BedrockCodec bedrockCodec) {

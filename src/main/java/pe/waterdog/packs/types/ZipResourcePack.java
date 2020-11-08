@@ -24,7 +24,7 @@ import java.security.MessageDigest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class ZipResourcePack extends ResourcePack{
+public class ZipResourcePack extends ResourcePack {
 
     private final ZipFile zipFile;
     private byte[] cachedHash;
@@ -34,19 +34,19 @@ public class ZipResourcePack extends ResourcePack{
         super(file);
         try {
             this.zipFile = new ZipFile(this.packPath.toFile());
-        }catch (IOException e){
+        } catch (IOException e) {
             throw new IOException("ResourcePack is not zip file!");
         }
     }
 
-    public ZipEntry getZipEntry(Path path){
+    public ZipEntry getZipEntry(Path path) {
         return this.zipFile.getEntry(path.toString());
     }
 
     @Override
     public InputStream getStream(Path path) throws IOException {
         ZipEntry entry = this.getZipEntry(path);
-        if (entry == null){
+        if (entry == null) {
             return null;
         }
         return this.zipFile.getInputStream(entry);
@@ -60,24 +60,24 @@ public class ZipResourcePack extends ResourcePack{
 
     @Override
     public InputStream getCachedPack() {
-        return this.cachedPack == null? null : new ByteArrayInputStream(this.cachedPack);
+        return this.cachedPack == null ? null : new ByteArrayInputStream(this.cachedPack);
     }
 
     @Override
     public long getPackSize() {
         try {
             return Files.size(this.packPath);
-        }catch (IOException e){
+        } catch (IOException e) {
             throw new IllegalStateException("Unable to get size of pack", e);
         }
     }
 
     @Override
     public byte[] getHash() {
-        if (this.cachedHash == null){
+        if (this.cachedHash == null) {
             try {
                 this.cachedHash = MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(this.packPath));
-            }catch (Exception e){
+            } catch (Exception e) {
                 throw new IllegalStateException("Unable to get hash of pack", e);
             }
         }
@@ -86,16 +86,16 @@ public class ZipResourcePack extends ResourcePack{
 
     @Override
     public byte[] getChunk(int offset, int length) {
-        byte[] chunkData = (this.getPackSize() - offset > length)? new byte[length] : new byte[(int) (this.getPackSize() - offset)];
+        byte[] chunkData = (this.getPackSize() - offset > length) ? new byte[length] : new byte[(int) (this.getPackSize() - offset)];
         InputStream inputStream = this.getCachedPack();
 
         try {
-            if (inputStream == null){
+            if (inputStream == null) {
                 Files.newInputStream(this.packPath);
             }
             inputStream.skip(offset);
             inputStream.read(chunkData);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new IllegalStateException("Unable to read pack chunk");
         }
         return chunkData;

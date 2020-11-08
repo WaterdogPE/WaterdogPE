@@ -39,7 +39,7 @@ public class CommandSettings {
         this.aliases = aliases;
     }
 
-    public static Builder builder(){
+    public static Builder builder() {
         return new Builder();
     }
 
@@ -70,14 +70,18 @@ public class CommandSettings {
         private String permissionMessage = "waterdog.command.permission.failed";
         private String[] aliases = new String[0];
 
-        public CommandSettings build(){
+        public CommandSettings build() {
             return new CommandSettings(
                     this.usageMessage,
-                    this.description == null? this.usageMessage : this.description,
+                    this.description == null ? this.usageMessage : this.description,
                     this.permission,
                     this.aliases,
                     this.permissionMessage
             );
+        }
+
+        public String getUsageMessage() {
+            return this.usageMessage;
         }
 
         public Builder setUsageMessage(String usageMessage) {
@@ -85,8 +89,8 @@ public class CommandSettings {
             return this;
         }
 
-        public String getUsageMessage() {
-            return this.usageMessage;
+        public String getDescription() {
+            return this.description;
         }
 
         public Builder setDescription(String description) {
@@ -94,8 +98,8 @@ public class CommandSettings {
             return this;
         }
 
-        public String getDescription() {
-            return this.description;
+        public String getPermission() {
+            return this.permission;
         }
 
         public Builder setPermission(String permission) {
@@ -103,8 +107,8 @@ public class CommandSettings {
             return this;
         }
 
-        public String getPermission() {
-            return this.permission;
+        public String getPermissionMessage() {
+            return this.permissionMessage;
         }
 
         public Builder setPermissionMessage(String permissionMessage) {
@@ -112,17 +116,13 @@ public class CommandSettings {
             return this;
         }
 
-        public String getPermissionMessage() {
-            return this.permissionMessage;
+        public String[] getAliases() {
+            return this.aliases;
         }
 
         public Builder setAliases(String[] aliases) {
             this.aliases = aliases;
             return this;
-        }
-
-        public String[] getAliases() {
-            return this.aliases;
         }
     }
 }

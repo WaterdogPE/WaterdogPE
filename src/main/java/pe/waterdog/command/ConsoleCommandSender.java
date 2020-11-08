@@ -25,7 +25,7 @@ public class ConsoleCommandSender implements CommandSender {
 
     private final ProxyServer proxy;
 
-    public ConsoleCommandSender(ProxyServer proxy){
+    public ConsoleCommandSender(ProxyServer proxy) {
         this.proxy = proxy;
     }
 
@@ -47,7 +47,7 @@ public class ConsoleCommandSender implements CommandSender {
     @Override
     public void sendMessage(String message) {
         MainLogger logger = ProxyServer.getInstance().getLogger();
-        for (String line : message.trim().split("\n")){
+        for (String line : message.trim().split("\n")) {
             logger.info(line);
         }
     }
@@ -55,9 +55,9 @@ public class ConsoleCommandSender implements CommandSender {
     @Override
     public void sendMessage(TextContainer message) {
         String msg;
-        if (message instanceof TranslationContainer){
+        if (message instanceof TranslationContainer) {
             msg = ((TranslationContainer) message).getTranslated();
-        }else {
+        } else {
             msg = message.getMessage();
         }
         this.sendMessage(msg);

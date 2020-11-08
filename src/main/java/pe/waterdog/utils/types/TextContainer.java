@@ -19,24 +19,24 @@ package pe.waterdog.utils.types;
 import pe.waterdog.logger.Color;
 import pe.waterdog.logger.MainLogger;
 
-public class TextContainer implements Cloneable{
+public class TextContainer implements Cloneable {
 
     private String message;
 
-    public TextContainer(String message){
+    public TextContainer(String message) {
         this(message, new String[0]);
     }
 
-    public TextContainer(String message, String... args){
-        if (args != null && args.length >= 1){
+    public TextContainer(String message, String... args) {
+        if (args != null && args.length >= 1) {
             message = this.translate(message, args);
         }
         this.message = message;
     }
 
-    protected String translate(String message, String... args){
-        for (int i = 0; i < args.length; i++){
-            message = message.replace("{%"+i+"}", args[i]);
+    protected String translate(String message, String... args) {
+        for (int i = 0; i < args.length; i++) {
+            message = message.replace("{%" + i + "}", args[i]);
         }
         return message;
     }
@@ -45,7 +45,7 @@ public class TextContainer implements Cloneable{
         return this.message;
     }
 
-    public String clean(){
+    public String clean() {
         return Color.clean(this.message);
     }
 

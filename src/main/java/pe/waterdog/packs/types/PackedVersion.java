@@ -24,7 +24,7 @@ public class PackedVersion {
 
     private final int[] version;
 
-    public PackedVersion(int major, int minor, int patch){
+    public PackedVersion(int major, int minor, int patch) {
         this.version = new int[]{major, minor, patch};
     }
 

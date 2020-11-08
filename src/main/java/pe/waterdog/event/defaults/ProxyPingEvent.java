@@ -28,18 +28,16 @@ import java.util.Collection;
  */
 public class ProxyPingEvent extends Event {
 
+    private final InetSocketAddress address;
     private String motd;
     private String gameType;
     private String edition;
     private String version;
-
     private Collection<ProxiedPlayer> players;
     private int playerCount = -1;
     private int maximumPlayerCount;
 
-    private final InetSocketAddress address;
-
-    public ProxyPingEvent(String motd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, InetSocketAddress address){
+    public ProxyPingEvent(String motd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, InetSocketAddress address) {
         this.motd = motd;
         this.gameType = gameType;
         this.edition = edition;
@@ -49,60 +47,60 @@ public class ProxyPingEvent extends Event {
         this.address = address;
     }
 
-    public void setMotd(String motd) {
-        this.motd = motd;
-    }
-
     public String getMotd() {
         return this.motd;
     }
 
-    public void setGameType(String gameType) {
-        this.gameType = gameType;
+    public void setMotd(String motd) {
+        this.motd = motd;
     }
 
     public String getGameType() {
         return this.gameType;
     }
 
-    public void setEdition(String edition) {
-        this.edition = edition;
+    public void setGameType(String gameType) {
+        this.gameType = gameType;
     }
 
     public String getEdition() {
         return this.edition;
     }
 
-    public void setVersion(String version) {
-        this.version = version;
+    public void setEdition(String edition) {
+        this.edition = edition;
     }
 
     public String getVersion() {
         return this.version;
     }
 
-    public void setPlayers(Collection<ProxiedPlayer> players) {
-        this.players = players;
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public Collection<ProxiedPlayer> getPlayers() {
         return this.players;
     }
 
-    public void setPlayerCount(int playerCount) {
-        this.playerCount = playerCount;
+    public void setPlayers(Collection<ProxiedPlayer> players) {
+        this.players = players;
     }
 
     public int getPlayerCount() {
         return this.playerCount > 0 ? this.playerCount : this.players.size();
     }
 
-    public void setMaximumPlayerCount(int maximumPlayerCount) {
-        this.maximumPlayerCount = maximumPlayerCount;
+    public void setPlayerCount(int playerCount) {
+        this.playerCount = playerCount;
     }
 
     public int getMaximumPlayerCount() {
         return this.maximumPlayerCount;
+    }
+
+    public void setMaximumPlayerCount(int maximumPlayerCount) {
+        this.maximumPlayerCount = maximumPlayerCount;
     }
 
     public InetSocketAddress getAddress() {

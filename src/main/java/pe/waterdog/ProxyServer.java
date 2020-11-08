@@ -59,26 +59,21 @@ public class ProxyServer {
 
     private final MainLogger logger;
     private final TerminalConsole console;
-
-    private BedrockServer bedrockServer;
-    private QueryHandler queryHandler;
-
     private final ConfigurationManager configurationManager;
     private final WaterdogScheduler scheduler;
     private final PlayerManager playerManager;
     private final PluginManager pluginManager;
     private final EventManager eventManager;
     private final PackManager packManager;
+    private final Map<String, ServerInfo> serverInfoMap;
+    private final ConsoleCommandSender commandSender;
+    private final ScheduledExecutorService tickExecutor;
+    private BedrockServer bedrockServer;
+    private QueryHandler queryHandler;
     private boolean shutdown = false;
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
-
-    private final Map<String, ServerInfo> serverInfoMap;
-
-    private final ConsoleCommandSender commandSender;
     private CommandMap commandMap;
-
-    private final ScheduledExecutorService tickExecutor;
     private ScheduledFuture<?> tickFuture;
     private int currentTick = 0;
 
@@ -138,7 +133,7 @@ public class ProxyServer {
             ProtocolConstants.registerCodecs();
         }
 
-        if (this.getConfiguration().enabledResourcePacks()){
+        if (this.getConfiguration().enabledResourcePacks()) {
             this.packManager.loadPacks(this.packsPath);
         }
 
@@ -196,7 +191,7 @@ public class ProxyServer {
         this.scheduler.shutdown();
 
         try {
-            if (this.bedrockServer != null){
+            if (this.bedrockServer != null) {
                 this.bedrockServer.getRakNet().close();
             }
         } catch (Exception e) {
@@ -383,20 +378,20 @@ public class ProxyServer {
         return this.commandSender;
     }
 
-    public void setJoinHandler(IJoinHandler joinHandler) {
-        this.joinHandler = joinHandler;
-    }
-
     public IJoinHandler getJoinHandler() {
         return this.joinHandler;
     }
 
-    public void setReconnectHandler(IReconnectHandler reconnectHandler) {
-        this.reconnectHandler = reconnectHandler;
+    public void setJoinHandler(IJoinHandler joinHandler) {
+        this.joinHandler = joinHandler;
     }
 
     public IReconnectHandler getReconnectHandler() {
         return this.reconnectHandler;
+    }
+
+    public void setReconnectHandler(IReconnectHandler reconnectHandler) {
+        this.reconnectHandler = reconnectHandler;
     }
 
     public boolean isDebug() {

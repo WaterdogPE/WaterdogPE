@@ -27,33 +27,29 @@ import java.util.Map;
 
 public class ProxyConfig extends YamlConfig {
 
-    private String motd;
-    private int maxPlayerCount;
-
     private final boolean onlineMode;
     private final boolean replaceUsernameSpaces;
     private final boolean fastCodec;
     private final boolean debug;
     private final boolean injectCommands;
     private final boolean enableResourcePacks;
+    private final InetSocketAddress bindAddress;
+    private final List<String> priorities;
+    private final Map<String, String> forcedHosts;
+    private final Map<String, List<String>> playerPermissions = new HashMap<>();
+    private final int upstreamCompression;
+    private final int downstreamCompression;
+    protected boolean forcePacks;
+    private String motd;
+    private int maxPlayerCount;
     private boolean useLoginExtras;
     private boolean enableQuery;
     private boolean ipForward;
     private boolean fastTransfer;
-    protected boolean forcePacks;
-
-    private final InetSocketAddress bindAddress;
-    private final List<String> priorities;
-    private final Map<String, String> forcedHosts;
-
-    private final Map<String, List<String>> playerPermissions = new HashMap<>();
     private List<String> defaultPermissions;
-
-    private final int upstreamCompression;
-    private final int downstreamCompression;
     private int packCacheSize;
 
-    public ProxyConfig(File file){
+    public ProxyConfig(File file) {
         super(file);
 
         this.motd = this.getString("listener.motd");
@@ -105,22 +101,22 @@ public class ProxyConfig extends YamlConfig {
                 continue;
             }
 
-            if (serverData.containsKey("public_address")){
+            if (serverData.containsKey("public_address")) {
                 try {
                     String[] data = serverData.get("public_address").split(":");
                     publicAddress = new InetSocketAddress(data[0], Integer.parseInt(data[1]));
-                }catch (Exception e){
-                    MainLogger.getLogger().warning("Can not parse public server address! Server name: "+server);
+                } catch (Exception e) {
+                    MainLogger.getLogger().warning("Can not parse public server address! Server name: " + server);
                 }
             }
 
-            ServerInfo serverInfo = new ServerInfo(server.toLowerCase(), address, publicAddress == null? address : publicAddress);
+            ServerInfo serverInfo = new ServerInfo(server.toLowerCase(), address, publicAddress == null ? address : publicAddress);
             servers.put(server.toLowerCase(), serverInfo);
         }
         return servers;
     }
 
-    private Map<String, List<String>> getPlayerPermissions(String key){
+    private Map<String, List<String>> getPlayerPermissions(String key) {
         return (Map<String, List<String>>) this.get(key);
     }
 
@@ -200,12 +196,12 @@ public class ProxyConfig extends YamlConfig {
         return this.playerPermissions;
     }
 
-    public void setDefaultPermissions(List<String> defaultPermissions) {
-        this.defaultPermissions = defaultPermissions;
-    }
-
     public List<String> getDefaultPermissions() {
         return this.defaultPermissions;
+    }
+
+    public void setDefaultPermissions(List<String> defaultPermissions) {
+        this.defaultPermissions = defaultPermissions;
     }
 
     public int getUpstreamCompression() {
@@ -236,11 +232,11 @@ public class ProxyConfig extends YamlConfig {
         return this.forcePacks;
     }
 
-    public void setPackCacheSize(int packCacheSize) {
-        this.packCacheSize = packCacheSize;
-    }
-
     public int getPackCacheSize() {
         return this.packCacheSize;
+    }
+
+    public void setPackCacheSize(int packCacheSize) {
+        this.packCacheSize = packCacheSize;
     }
 }

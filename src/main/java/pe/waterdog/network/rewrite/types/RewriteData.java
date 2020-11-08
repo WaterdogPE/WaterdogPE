@@ -114,19 +114,19 @@ public class RewriteData {
         this.chunkRadius = chunkRadius;
     }
 
-    public void setSpawnPosition(Vector3f spawnPosition) {
-        this.spawnPosition = spawnPosition;
-    }
-
     public Vector3f getSpawnPosition() {
         return this.spawnPosition;
     }
 
-    public void setRotation(Vector2f rotation) {
-        this.rotation = rotation;
+    public void setSpawnPosition(Vector3f spawnPosition) {
+        this.spawnPosition = spawnPosition;
     }
 
     public Vector2f getRotation() {
         return this.rotation;
+    }
+
+    public void setRotation(Vector2f rotation) {
+        this.rotation = rotation;
     }
 }

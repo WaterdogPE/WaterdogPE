@@ -39,28 +39,26 @@ public class QueryHandler {
     public static final byte[] QUERY_SIGNATURE = new byte[]{(byte) 0xFE, (byte) 0xFD};
     public static final byte[] LONG_RESPONSE_PADDING_TOP = new byte[]{115, 112, 108, 105, 116, 110, 117, 109, 0, -128, 0};
     public static final byte[] LONG_RESPONSE_PADDING_BOTTOM = new byte[]{1, 112, 108, 97, 121, 101, 114, 95, 0, 0};
-
-    private static final String GAME_ID = "MINECRAFTPE";
     public static final int HANDSHAKE = 0x09;
     public static final short STATISTICS = 0x00;
-
+    private static final String GAME_ID = "MINECRAFTPE";
     private final ProxyServer proxy;
     private final InetSocketAddress bindAddress;
 
     private final Object2ObjectMap<InetAddress, QuerySession> querySessions = new Object2ObjectOpenHashMap<>();
 
-    public QueryHandler(ProxyServer proxy, InetSocketAddress bindAddress){
+    public QueryHandler(ProxyServer proxy, InetSocketAddress bindAddress) {
         this.proxy = proxy;
         this.bindAddress = bindAddress;
         this.proxy.getLogger().info(new TranslationContainer("waterdog.query.start", bindAddress.toString()).getTranslated());
     }
 
-    private void writeInt(ByteBuf buf, int i){
+    private void writeInt(ByteBuf buf, int i) {
         this.writeString(buf, Integer.toString(i));
     }
 
-    private void writeString(ByteBuf buf, String string){
-        for (char c : string.toCharArray()){
+    private void writeString(ByteBuf buf, String string) {
+        for (char c : string.toCharArray()) {
             buf.writeByte(c);
         }
         buf.writeByte(0);
@@ -70,7 +68,7 @@ public class QueryHandler {
         short packetId = packet.readUnsignedByte();
         int sessionId = packet.readInt();
 
-        if (packetId == HANDSHAKE){
+        if (packetId == HANDSHAKE) {
             ByteBuf reply = ByteBufAllocator.DEFAULT.ioBuffer(10);
             reply.writeByte(HANDSHAKE);
             reply.writeInt(sessionId);
@@ -82,10 +80,10 @@ public class QueryHandler {
             return;
         }
 
-        if (packetId == STATISTICS){
+        if (packetId == STATISTICS) {
             QuerySession session = this.querySessions.remove(address.getAddress());
             int token = packet.readInt();
-            if (session == null || session.token != token){
+            if (session == null || session.token != token) {
                 return;
             }
 
@@ -98,7 +96,7 @@ public class QueryHandler {
         }
     }
 
-    private void writeData(InetSocketAddress address, boolean simple, ByteBuf buf){
+    private void writeData(InetSocketAddress address, boolean simple, ByteBuf buf) {
         ProxyConfig config = this.proxy.getConfiguration();
         ProxyQueryEvent event = new ProxyQueryEvent(
                 config.getMotd(),
@@ -112,7 +110,7 @@ public class QueryHandler {
         );
         this.proxy.getEventManager().callEvent(event);
 
-        if (simple){
+        if (simple) {
             this.writeString(buf, event.getMotd());
             this.writeString(buf, event.getGameType());
             this.writeString(buf, event.getMap());
@@ -141,20 +139,20 @@ public class QueryHandler {
         buf.writeByte(0);
         buf.writeBytes(LONG_RESPONSE_PADDING_BOTTOM);
 
-        if (event.getPlayers().size() >= 1){
-            for (ProxiedPlayer player : event.getPlayers()){
+        if (event.getPlayers().size() >= 1) {
+            for (ProxiedPlayer player : event.getPlayers()) {
                 this.writeString(buf, player.getName());
             }
         }
         buf.writeByte(0);
     }
 
-    private static class QuerySession{
+    private static class QuerySession {
 
         public final int token;
         public final long time;
 
-        public QuerySession(int token, long time){
+        public QuerySession(int token, long time) {
             this.token = token;
             this.time = time;
         }

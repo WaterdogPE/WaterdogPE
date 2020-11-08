@@ -51,23 +51,23 @@ public class ConfigurationManager {
     }
 
     public void loadProxyConfig() {
-        File configFile = new File(this.proxy.getDataPath().toString()+"/config.yml");
-        if (!configFile.exists()){
+        File configFile = new File(this.proxy.getDataPath().toString() + "/config.yml");
+        if (!configFile.exists()) {
             try {
                 FileUtils.saveFromResources("config.yml", configFile);
-            }catch (IOException e){
+            } catch (IOException e) {
                 this.proxy.getLogger().error("Unable to save proxy config file!", e);
             }
         }
         this.proxyConfig = new ProxyConfig(configFile);
     }
 
-    public void loadLanguage(){
-        File langFile = new File(this.proxy.getDataPath().toString()+"/lang.ini");
-        if (!langFile.exists()){
+    public void loadLanguage() {
+        File langFile = new File(this.proxy.getDataPath().toString() + "/lang.ini");
+        if (!langFile.exists()) {
             try {
                 FileUtils.saveFromResources("lang.ini", langFile);
-            }catch (IOException e){
+            } catch (IOException e) {
                 this.proxy.getLogger().error("Can not save lang file!", e);
             }
         }
