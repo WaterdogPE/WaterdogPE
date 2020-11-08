@@ -119,7 +119,7 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
         if (this.player.sendToFallback(this.server.getInfo(), packet.getKickMessage())) {
             throw CancelSignalException.CANCEL;
         }
-        this.player.disconnect(new TranslationContainer("waterdog.downstream.kicked") + packet.getKickMessage());
+        this.player.disconnect(new TranslationContainer("waterdog.downstream.kicked", packet.getKickMessage()));
         throw CancelSignalException.CANCEL;
     }
 }
