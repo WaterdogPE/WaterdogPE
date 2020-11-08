@@ -79,9 +79,8 @@ public class UpstreamHandler implements BedrockPacketHandler {
         }
         PackManager packManager = this.player.getProxy().getPackManager();
         ResourcePackChunkDataPacket response = packManager.packChunkDataPacket(packet.getPackId()+"_"+packet.getPackVersion(), packet);
-
         if (response == null){
-            this.player.disconnect("disconnectionScreen.noReason");
+            this.player.disconnect("Unknown resource pack!");
             return this.cancel();
         }
 
