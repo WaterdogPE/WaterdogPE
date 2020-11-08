@@ -17,7 +17,6 @@
 package pe.waterdog.player;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.utils.types.Permission;
 
@@ -25,7 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Base Player Manager, managing the registration, binding and removal of instances of ProxiedPlayer.
@@ -36,13 +36,9 @@ public class PlayerManager {
 
     private final ConcurrentMap<UUID, ProxiedPlayer> players = new ConcurrentHashMap<>();
 
-    private final Executor internalThreadPool;
 
     public PlayerManager(ProxyServer proxy) {
         this.proxy = proxy;
-        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
-        builder.setNameFormat("WaterdogInternal Executor");
-        this.internalThreadPool = Executors.newCachedThreadPool(builder.build());
     }
 
     public boolean registerPlayer(ProxiedPlayer player) {
@@ -94,10 +90,5 @@ public class PlayerManager {
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
         return ImmutableMap.copyOf(this.players);
-    }
-
-
-    public Executor getInternalThreadPool() {
-        return this.internalThreadPool;
     }
 }
