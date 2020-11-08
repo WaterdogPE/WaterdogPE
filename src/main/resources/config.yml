@@ -58,11 +58,18 @@ use_fast_codec: true
 # Proxy can inject its commands to handled AvailableCommandsPacket from downstream.
 # Using this option players will be able to see proxy commands in command list if they have permission.
 inject_proxy_commands: true
-
-
 # Compression settings
 # Compression level between downstream and proxy may be lower, depends on your private network configuration.
 # Higher level = more CPU, less bandwidth usage.
 # Set to 0 to no compression, 9 to highest compression ratio.
 upstream_compression_level: 6
 downstream_compression_level: 2
+# Resource packs settings
+# Enable resource packs
+enable_packs: true
+# Client must accept resource packs to join
+force_apply_packs: false
+# Enabling resource pack caching may save disk IO,
+# but caching bigger packs may be more RAM intensive.
+# You can set maximum pack size in MB to be cached.
+pack_cache_size: 16

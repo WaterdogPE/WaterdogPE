@@ -29,6 +29,7 @@ import com.nukkitx.protocol.bedrock.v332.serializer.TextSerializer_v332;
 import com.nukkitx.protocol.bedrock.v354.serializer.UpdateTradeSerializer_v354;
 import com.nukkitx.protocol.bedrock.v361.serializer.AddPaintingSerializer_v361;
 import com.nukkitx.protocol.bedrock.v361.serializer.LevelChunkSerializer_v361;
+import com.nukkitx.protocol.bedrock.v361.serializer.ResourcePackDataInfoSerializer_v361;
 import com.nukkitx.protocol.bedrock.v388.BedrockPacketHelper_v388;
 import com.nukkitx.protocol.bedrock.v388.serializer.*;
 import pe.waterdog.network.protocol.ProtocolVersion;
@@ -88,6 +89,9 @@ public class BedrockCodec388 extends BedrockCodec {
                 .registerPacket(AvailableCommandsPacket.class, AvailableCommandsSerializer_v388.INSTANCE, 76)
                 .registerPacket(CommandRequestPacket.class, CommandRequestSerializer_v291.INSTANCE, 77)
                 .registerPacket(UpdateTradePacket.class, UpdateTradeSerializer_v354.INSTANCE, 80)
+                .registerPacket(ResourcePackDataInfoPacket.class, ResourcePackDataInfoSerializer_v361.INSTANCE, 82)
+                .registerPacket(ResourcePackChunkDataPacket.class, ResourcePackChunkDataSerializer_v388.INSTANCE, 83)
+                .registerPacket(ResourcePackChunkRequestPacket.class, ResourcePackChunkRequestSerializer_v291.INSTANCE, 84)
                 .registerPacket(TransferPacket.class, TransferSerializer_v291.INSTANCE, 85)
                 .registerPacket(SetTitlePacket.class, SetTitleSerializer_v291.INSTANCE, 88)
                 .registerPacket(RemoveObjectivePacket.class, RemoveObjectiveSerializer_v291.INSTANCE, 106)
