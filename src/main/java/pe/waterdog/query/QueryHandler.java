@@ -123,7 +123,7 @@ public class QueryHandler {
             return;
         }
 
-        Map<String, String> map = new Object2ObjectArrayMap<>(11);
+        Map<String, String> map = new Object2ObjectArrayMap<>();
         map.put("hostname", event.getMotd());
         map.put("gametype", event.getGameType());
         map.put("map", event.getMap());
