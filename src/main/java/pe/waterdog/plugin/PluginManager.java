@@ -16,6 +16,8 @@
 
 package pe.waterdog.plugin;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 import pe.waterdog.ProxyServer;
@@ -27,7 +29,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -37,11 +38,11 @@ public class PluginManager {
     private final ProxyServer proxy;
     private final PluginLoader pluginLoader;
 
-    private final Map<String, Plugin> pluginMap = new HashMap<>();
-    private final Yaml yamlLoader = new Yaml(new CustomClassLoaderConstructor(this.getClass().getClassLoader()));
 
-    private final Map<String, Class<?>> cachedClasses = new HashMap<>();
-    protected final Map<String, PluginClassLoader> pluginClassLoaders = new HashMap<>();
+    private final Yaml yamlLoader = new Yaml(new CustomClassLoaderConstructor(this.getClass().getClassLoader()));
+    private final Object2ObjectMap<String, Plugin> pluginMap = new Object2ObjectArrayMap<>();
+    private final Object2ObjectMap<String, Class<?>> cachedClasses = new Object2ObjectArrayMap<>();
+    final Object2ObjectMap<String, PluginClassLoader> pluginClassLoaders = new Object2ObjectArrayMap<>();
 
     public PluginManager(ProxyServer proxy) {
         this.proxy = proxy;

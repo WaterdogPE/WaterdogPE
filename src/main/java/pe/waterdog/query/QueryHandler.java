@@ -19,6 +19,7 @@ package pe.waterdog.query;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import pe.waterdog.ProxyServer;
@@ -30,7 +31,6 @@ import pe.waterdog.utils.types.TranslationContainer;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -123,7 +123,7 @@ public class QueryHandler {
             return;
         }
 
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new Object2ObjectArrayMap<>();
         map.put("hostname", event.getMotd());
         map.put("gametype", event.getGameType());
         map.put("map", event.getMap());

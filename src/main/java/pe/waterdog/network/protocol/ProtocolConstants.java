@@ -2,13 +2,15 @@ package pe.waterdog.network.protocol;
 
 import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
 import pe.waterdog.event.defaults.ProtocolCodecRegisterEvent;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.protocol.codec.*;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * Constants for all currently supported versions of the Minecraft: Bedrock Edition
@@ -17,7 +19,7 @@ public class ProtocolConstants {
 
     public static final int DEFAULT_RAKNET_VER = 10;
 
-    public static final Map<Integer, ProtocolVersion> protocolMap = new HashMap<>();
+    public static final Object2ObjectArrayMap<Integer, ProtocolVersion> protocolMap = new Object2ObjectArrayMap<>();
     public static final Map<ProtocolVersion, BedrockCodec> protocol2CodecMap = new EnumMap<>(ProtocolVersion.class);
 
     static {
