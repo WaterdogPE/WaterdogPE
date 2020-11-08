@@ -65,16 +65,19 @@ public class ProxyServer {
     private final PluginManager pluginManager;
     private final EventManager eventManager;
     private final PackManager packManager;
-    private final Map<String, ServerInfo> serverInfoMap;
-    private final ConsoleCommandSender commandSender;
-    private final ScheduledExecutorService tickExecutor;
+
     private BedrockServer bedrockServer;
+    private final Map<String, ServerInfo> serverInfoMap;
     private QueryHandler queryHandler;
-    private boolean shutdown = false;
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
+
+    private final ConsoleCommandSender commandSender;
     private CommandMap commandMap;
+
+    private final ScheduledExecutorService tickExecutor;
     private ScheduledFuture<?> tickFuture;
+    private boolean shutdown = false;
     private int currentTick = 0;
 
     public ProxyServer(MainLogger logger, String filePath, String pluginPath) {

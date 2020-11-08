@@ -16,11 +16,15 @@
 
 package pe.waterdog.player;
 
+import com.google.common.base.Preconditions;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.nimbusds.jose.*;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
-import net.minidev.json.JSONObject;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.utils.ProxyConfig;
 
@@ -36,75 +40,90 @@ import java.util.UUID;
  */
 public class HandshakeUtils {
 
-    public static JWSObject createExtraData(KeyPair pair, JSONObject extraData) {
-        String publicKeyBase64 = Base64.getEncoder().encodeToString(pair.getPublic().getEncoded());
+    public static boolean validateChain(JsonArray chainArray) throws Exception {
+        ECPublicKey lastKey = null;
+        boolean validChain = false;
 
+        for (JsonElement element : chainArray){
+            JWSObject jwt = JWSObject.parse(element.getAsString());
+            if (!validChain) {
+                validChain = EncryptionUtils.verifyJwt(jwt, EncryptionUtils.getMojangPublicKey());
+            }
+
+            if (lastKey != null) {
+                EncryptionUtils.verifyJwt(jwt, lastKey);
+            }
+
+            JsonObject payload = (JsonObject) JsonParser.parseString(jwt.getPayload().toString());
+            Preconditions.checkArgument(payload.has("identityPublicKey"), "IdentityPublicKey node is missing in chain!");
+            JsonElement ipkNode = payload.get("identityPublicKey");
+            lastKey = EncryptionUtils.generateKey(ipkNode.getAsString());
+        }
+        return validChain;
+    }
+
+    public static JWSObject createExtraData(KeyPair pair, JsonObject extraData) {
+        String publicKeyBase64 = Base64.getEncoder().encodeToString(pair.getPublic().getEncoded());
         long timestamp = System.currentTimeMillis() / 1000;
 
-        JSONObject dataChain = new JSONObject();
-        dataChain.put("nbf", timestamp - 3600);
-        dataChain.put("exp", timestamp + 24 * 3600);
-        dataChain.put("iat", timestamp);
-        dataChain.put("iss", "self");
-        dataChain.put("certificateAuthority", true);
-        dataChain.put("extraData", extraData);
-        dataChain.put("randomNonce", UUID.randomUUID().getLeastSignificantBits());
-        dataChain.put("identityPublicKey", publicKeyBase64);
-
+        JsonObject dataChain = new JsonObject();
+        dataChain.addProperty("nbf", timestamp - 3600);
+        dataChain.addProperty("exp", timestamp + 24 * 3600);
+        dataChain.addProperty("iat", timestamp);
+        dataChain.addProperty("iss", "self");
+        dataChain.addProperty("certificateAuthority", true);
+        dataChain.add("extraData", extraData);
+        dataChain.addProperty("randomNonce", UUID.randomUUID().getLeastSignificantBits());
+        dataChain.addProperty("identityPublicKey", publicKeyBase64);
         return encodeJWT(pair, dataChain);
     }
 
-    public static JWSObject encodeJWT(KeyPair pair, JSONObject payload) {
+    public static JWSObject encodeJWT(KeyPair pair, JsonObject payload) {
         String publicKeyBase64 = Base64.getEncoder().encodeToString(pair.getPublic().getEncoded());
         URI x5u = URI.create(publicKeyBase64);
         JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES384).x509CertURL(x5u).build();
-
-        JWSObject jwsObject = new JWSObject(header, new Payload(payload));
+        JWSObject jwsObject = new JWSObject(header, new Payload(payload.toString()));
 
         try {
             EncryptionUtils.signJwt(jwsObject, (ECPrivateKey) pair.getPrivate());
         } catch (JOSEException e) {
             throw new RuntimeException(e);
         }
-
         return jwsObject;
     }
 
-    public static JSONObject parseClientData(LoginPacket packet, JSONObject payload, BedrockSession session) throws Exception {
-        String identityPublicKeyString = payload.getAsString("identityPublicKey");
+    public static JsonObject parseClientData(LoginPacket packet, JsonObject payload, BedrockSession session) throws Exception {
+        String identityPublicKeyString = payload.get("identityPublicKey").getAsString();
         if (identityPublicKeyString == null) {
             throw new RuntimeException("Identity Public Key was not found!");
         }
 
         ECPublicKey identityPublicKey = EncryptionUtils.generateKey(identityPublicKeyString);
-
         JWSObject clientJwt = JWSObject.parse(packet.getSkinData().toString());
         EncryptionUtils.verifyJwt(clientJwt, identityPublicKey);
 
-        JSONObject clientData = clientJwt.getPayload().toJSONObject();
+        JsonObject clientData = (JsonObject) JsonParser.parseString(clientJwt.getPayload().toString());
 
         /* Add WaterdogAttributes */
         ProxyConfig config = ProxyServer.getInstance().getConfiguration();
         if (config.useLoginExtras() && config.isIpForward()) {
-            clientData.put("Waterdog_IP", session.getAddress().getAddress().getHostAddress());
+            clientData.addProperty("Waterdog_IP", session.getAddress().getAddress().getHostAddress());
         }
-
         return clientData;
     }
 
-    public static JSONObject parseExtraData(LoginPacket packet, JSONObject payload) {
-        Object extraDataObject = payload.get("extraData");
-        if (!(extraDataObject instanceof JSONObject)) {
+    public static JsonObject parseExtraData(LoginPacket packet, JsonObject payload) {
+        JsonElement extraDataElement = payload.get("extraData");
+        if (!extraDataElement.isJsonObject()) {
             throw new IllegalStateException("Invalid 'extraData'");
         }
 
-        JSONObject extraData = (JSONObject) extraDataObject;
+        JsonObject extraData = extraDataElement.getAsJsonObject();
         /* Replace spaces in name */
         if (ProxyServer.getInstance().getConfiguration().isReplaceUsernameSpaces()) {
-            String playerName = extraData.getAsString("displayName");
-            extraData.put("displayName", playerName.replaceAll(" ", "_"));
+            String playerName = extraData.get("displayName").getAsString();
+            extraData.addProperty("displayName", playerName.replaceAll(" ", "_"));
         }
-
         return extraData;
     }
 }

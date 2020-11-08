@@ -16,6 +16,9 @@
 
 package pe.waterdog.network.upstream;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.nimbusds.jose.JWSObject;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
@@ -23,10 +26,8 @@ import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import io.netty.util.AsciiString;
-import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONStyle;
-import net.minidev.json.JSONValue;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
 import pe.waterdog.event.defaults.PlayerCreationEvent;
@@ -38,6 +39,8 @@ import pe.waterdog.network.session.LoginData;
 import pe.waterdog.player.HandshakeUtils;
 import pe.waterdog.player.ProxiedPlayer;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.security.KeyPair;
 import java.util.Collections;
 import java.util.UUID;
@@ -54,7 +57,6 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
         this.proxy = proxy;
         this.session = session;
     }
-
 
     @Override
     public boolean handle(LoginPacket packet) {
@@ -75,31 +77,32 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
 
         session.setLogging(true);
 
-        JSONObject certData = (JSONObject) JSONValue.parse(packet.getChainData().toByteArray());
-        Object chainObject = certData.get("chain");
-
-        if (!(chainObject instanceof JSONArray)) throw new RuntimeException("Certificate data is not valid");
-        JSONArray certChain = (JSONArray) chainObject;
+        JsonObject certJson = (JsonObject) JsonParser.parseReader(new InputStreamReader(new ByteArrayInputStream(packet.getChainData().toByteArray())));
+        if (!certJson.has("chain") || !certJson.getAsJsonObject().get("chain").isJsonArray()){
+            throw new RuntimeException("Certificate data is not valid");
+        }
+        JsonArray certChain = certJson.getAsJsonArray("chain");
 
         try {
             // Cert chain should be signed by Mojang is is client xbox authenticated
-            boolean xboxAuth = EncryptionUtils.verifyChain(certChain);
-            JWSObject jwt = JWSObject.parse((String) certChain.get(certChain.size() - 1));
-            JSONObject payload = jwt.getPayload().toJSONObject();
+            boolean xboxAuth = HandshakeUtils.validateChain(certChain);
+            JWSObject jwt = JWSObject.parse(certChain.get(certChain.size() - 1).getAsString());
+            JsonObject payload = (JsonObject) JsonParser.parseString(jwt.getPayload().toString());
 
-            JSONObject clientData = HandshakeUtils.parseClientData(packet, payload, session);
-            JSONObject extraData = HandshakeUtils.parseExtraData(packet, payload);
-            PreClientDataSetEvent event = new PreClientDataSetEvent(clientData, extraData, this.session);
-            this.proxy.getEventManager().callEvent(event);
+            JsonObject clientData = HandshakeUtils.parseClientData(packet, payload, session);
+            JsonObject extraData = HandshakeUtils.parseExtraData(packet, payload);
             KeyPair keyPair = EncryptionUtils.createKeyPair();
 
+            PreClientDataSetEvent event = new PreClientDataSetEvent(clientData, extraData, this.session);
+            this.proxy.getEventManager().callEvent(event);
+
             LoginData loginData = new LoginData(
-                    extraData.getAsString("displayName"),
-                    UUID.fromString(extraData.getAsString("identity")),
-                    extraData.getAsString("XUID"),
+                    extraData.get("displayName").getAsString(),
+                    UUID.fromString(extraData.get("identity").getAsString()),
+                    extraData.get("XUID").getAsString(),
                     xboxAuth,
                     protocol,
-                    clientData.getAsString("ServerAddress").split(":")[0],
+                    clientData.get("ServerAddress").getAsString().split(":")[0],
                     this.session.getAddress(),
                     keyPair
             );
@@ -109,11 +112,10 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
                 return false;
             }
 
-            PlayerPreLoginEvent evt = new PlayerPreLoginEvent(loginData);
-            this.proxy.getEventManager().callEvent(evt);
-            if (evt.isCancelled()) {
-                // Pre Login was cancelled
-                session.disconnect(evt.getCancelReason());
+            PlayerPreLoginEvent preLoginEvent = new PlayerPreLoginEvent(loginData);
+            this.proxy.getEventManager().callEvent(preLoginEvent);
+            if (preLoginEvent.isCancelled()) {
+                session.disconnect(preLoginEvent.getCancelReason());
                 return true;
             }
 
