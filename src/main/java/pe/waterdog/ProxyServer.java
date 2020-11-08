@@ -31,6 +31,7 @@ import pe.waterdog.network.ProxyListener;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.protocol.ProtocolVersion;
+import pe.waterdog.packs.PackManager;
 import pe.waterdog.player.PlayerManager;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.plugin.PluginManager;
@@ -54,6 +55,7 @@ public class ProxyServer {
 
     private final Path dataPath;
     private final Path pluginPath;
+    private final Path packsPath;
 
     private final MainLogger logger;
     private final TerminalConsole console;
@@ -66,6 +68,7 @@ public class ProxyServer {
     private final PlayerManager playerManager;
     private final PluginManager pluginManager;
     private final EventManager eventManager;
+    private final PackManager packManager;
     private boolean shutdown = false;
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
@@ -84,10 +87,16 @@ public class ProxyServer {
         this.logger = logger;
         this.dataPath = Paths.get(filePath);
         this.pluginPath = Paths.get(pluginPath);
+        this.packsPath = this.dataPath.resolve("packs");
 
         if (!new File(pluginPath).exists()) {
             this.logger.info("Created Plugin Folder at " + this.pluginPath.toString());
             new File(pluginPath).mkdirs();
+        }
+
+        if (!this.packsPath.toFile().exists()) {
+            this.logger.info("Created Packs Folder at " + this.packsPath.toString());
+            this.packsPath.toFile().mkdirs();
         }
 
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
@@ -109,6 +118,7 @@ public class ProxyServer {
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
         this.eventManager = new EventManager();
+        this.packManager = new PackManager(this);
 
         this.commandSender = new ConsoleCommandSender(this);
         this.commandMap = new DefaultCommandMap(this, SimpleCommandMap.DEFAULT_PREFIX);
@@ -126,6 +136,10 @@ public class ProxyServer {
         if (this.getConfiguration().useFastCodec()) {
             this.logger.debug("Using fast codec! Please ensure plugin compatibility!");
             ProtocolConstants.registerCodecs();
+        }
+
+        if (this.getConfiguration().enabledResourcePacks()){
+            this.packManager.loadPacks(this.packsPath);
         }
 
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
@@ -346,6 +360,10 @@ public class ProxyServer {
 
     public EventManager getEventManager() {
         return this.eventManager;
+    }
+
+    public PackManager getPackManager() {
+        return this.packManager;
     }
 
     public QueryHandler getQueryHandler() {

@@ -9,6 +9,7 @@ logs/
 plugins/
 config.yml
 lang.ini
+packs/
 
 # BlueJ files
 *.ctxt
