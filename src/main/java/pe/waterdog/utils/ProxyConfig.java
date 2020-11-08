@@ -16,6 +16,7 @@
 
 package pe.waterdog.utils;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ServerInfo;
 
@@ -44,7 +45,7 @@ public class ProxyConfig extends YamlConfig {
     private final List<String> priorities;
     private final Map<String, String> forcedHosts;
 
-    private final Map<String, List<String>> playerPermissions = new HashMap<>();
+    private final Object2ObjectOpenHashMap<String, List<String>> playerPermissions = new Object2ObjectOpenHashMap<>();
     private List<String> defaultPermissions;
 
     private final int upstreamCompression;
@@ -68,7 +69,7 @@ public class ProxyConfig extends YamlConfig {
         this.priorities = this.getStringList("listener.priorities");
         this.defaultPermissions = this.getStringList("permissions_default");
         this.playerPermissions.putAll(this.getPlayerPermissions("permissions"));
-        this.forcedHosts = (Map<String, String>) this.get("listener.forced_hosts", new HashMap<>());
+        this.forcedHosts = (Map<String, String>) this.get("listener.forced_hosts", new Object2ObjectOpenHashMap<>());
         this.upstreamCompression = this.getInt("upstream_compression_level");
         this.downstreamCompression = this.getInt("downstream_compression_level");
     }
