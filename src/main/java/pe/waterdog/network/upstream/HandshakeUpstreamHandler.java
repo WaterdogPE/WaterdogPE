@@ -31,6 +31,7 @@ import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
 import pe.waterdog.event.defaults.PlayerCreationEvent;
 import pe.waterdog.event.defaults.PlayerPreLoginEvent;
+import pe.waterdog.event.defaults.PreClientDataSetEvent;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.session.LoginData;
@@ -88,6 +89,8 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
 
             JSONObject clientData = HandshakeUtils.parseClientData(packet, payload, session);
             JSONObject extraData = HandshakeUtils.parseExtraData(packet, payload);
+            PreClientDataSetEvent event = new PreClientDataSetEvent(clientData, extraData, this.session);
+            this.proxy.getEventManager().callEvent(event);
             KeyPair keyPair = EncryptionUtils.createKeyPair();
 
             LoginData loginData = new LoginData(
@@ -106,11 +109,11 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
                 return false;
             }
 
-            PlayerPreLoginEvent event = new PlayerPreLoginEvent(loginData);
-            this.proxy.getEventManager().callEvent(event);
-            if (event.isCancelled()) {
+            PlayerPreLoginEvent evt = new PlayerPreLoginEvent(loginData);
+            this.proxy.getEventManager().callEvent(evt);
+            if (evt.isCancelled()) {
                 // Pre Login was cancelled
-                session.disconnect(event.getCancelReason());
+                session.disconnect(evt.getCancelReason());
                 return true;
             }
 
