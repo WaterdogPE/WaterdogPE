@@ -91,12 +91,12 @@ public class ZipResourcePack extends ResourcePack {
 
         try {
             if (inputStream == null) {
-                Files.newInputStream(this.packPath);
+                inputStream = Files.newInputStream(this.packPath);
             }
             inputStream.skip(offset);
             inputStream.read(chunkData);
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to read pack chunk");
+            throw new IllegalStateException("Unable to read pack chunk", e);
         }
         return chunkData;
     }
