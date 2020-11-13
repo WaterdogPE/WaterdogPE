@@ -192,7 +192,7 @@ public class ProxyServer {
         this.console.getConsoleThread().interrupt();
         this.tickExecutor.shutdown();
         this.scheduler.shutdown();
-
+        this.eventManager.getThreadedExecutor().shutdown();
         try {
             if (this.bedrockServer != null) {
                 this.bedrockServer.getRakNet().close();
