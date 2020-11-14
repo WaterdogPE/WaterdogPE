@@ -15,7 +15,10 @@
 
 package pe.waterdog.packs.types;
 
+import com.google.common.io.ByteStreams;
+
 import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -55,7 +58,10 @@ public class ZipResourcePack extends ResourcePack {
     @Override
     public void saveToCache() throws IOException {
         InputStream inputStream = Files.newInputStream(this.packPath);
-        this.cachedPack = inputStream.readAllBytes();
+        byte[] bytes = new byte[(int) Files.size(this.packPath)];
+        DataInputStream dataStream = new DataInputStream(inputStream);
+        dataStream.readFully(bytes);
+        this.cachedPack = bytes;
     }
 
     @Override
