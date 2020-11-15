@@ -87,6 +87,7 @@ public class ProxyConfig extends YamlConfig {
     private boolean useLoginExtras = true;
 
     @Path("ip_forward")
+    @Comment("Forward original address in client data under 'Waterdog_IP' attribute.")
     private boolean ipForward = false;
 
     @Path("replace_username_spaces")
