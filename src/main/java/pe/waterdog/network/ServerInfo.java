@@ -52,7 +52,8 @@ public class ServerInfo {
      * @return CompletableFuture with RakNetPong.
      */
     public CompletableFuture<RakNetPong> ping(long timeout, TimeUnit unit) {
-        return ProxyServer.getInstance().bindClient(ProtocolConstants.getLatestProtocol()).thenCompose(client -> client.getRakNet().ping(this.address, timeout, unit));
+        return ProxyServer.getInstance().bindClient(ProtocolConstants.getLatestProtocol()).thenCompose(client ->
+                client.getRakNet().ping(this.address, timeout, unit).whenComplete((pong, error) -> client.close()));
     }
 
     public void addPlayer(ProxiedPlayer player) {

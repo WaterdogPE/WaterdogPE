@@ -35,7 +35,7 @@ public class WaterdogPE {
         System.setProperty("log4j.skipJansi", "false");
         System.setSecurityManager(null);
         System.setProperty("java.net.preferIPv4Stack", "true");
-        System.setProperty("io.netty.selectorAutoRebuildThreshold", "0");
+        System.getProperties().putIfAbsent("io.netty.allocator.type", "unpooled");
         ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
 
         MainLogger logger = MainLogger.getLogger();

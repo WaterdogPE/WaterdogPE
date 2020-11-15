@@ -40,7 +40,7 @@ public class EventManager {
         this.threadedExecutor = Executors.newCachedThreadPool(builder.build());
     }
 
-    public <T extends Event> void subscribe(Class<? extends Event> event, Consumer<T> handler) {
+    public <T extends Event> void subscribe(Class<T> event, Consumer<T> handler) {
         this.subscribe(event, handler, EventPriority.NORMAL);
     }
 
@@ -54,7 +54,7 @@ public class EventManager {
      * @see AsyncEvent
      * @see EventPriority
      */
-    public <T extends Event> void subscribe(Class<? extends Event> event, Consumer<T> handler, EventPriority priority) {
+    public <T extends Event> void subscribe(Class<T> event, Consumer<T> handler, EventPriority priority) {
         EventHandler eventHandler = this.handlerMap.computeIfAbsent(event, e -> new EventHandler(event, this));
 
         Consumer<Event> func = (Consumer<Event>) handler;
