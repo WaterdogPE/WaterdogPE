@@ -15,16 +15,20 @@ public class InetSocketAddressConverter implements Converter {
     }
 
     @Override
-    public Object toConfig(Class<?> type, Object obj, ParameterizedType parameterizedType) throws Exception {
-        if (obj == null) return null;
-        InetSocketAddress addr = (InetSocketAddress) obj;
+    public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
+        if (object == null){
+            return null;
+        }
+        InetSocketAddress addr = (InetSocketAddress) object;
         return addr.getHostName() + ":" + addr.getPort();
     }
 
     @Override
-    public Object fromConfig(Class<?> type, Object obj, ParameterizedType parameterizedType) throws Exception {
-        if (obj == null) return null;
-        String str = (String) obj;
+    public Object fromConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
+        if (object == null) {
+            return null;
+        }
+        String str = (String) object;
         String[] parts = str.split(":");
         return new InetSocketAddress(parts[0], Integer.parseInt(parts[1]));
     }

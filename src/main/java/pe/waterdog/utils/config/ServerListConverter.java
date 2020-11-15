@@ -19,12 +19,13 @@ public class ServerListConverter implements Converter {
     }
 
     @Override
-    public Object toConfig(Class<?> type, Object obj, ParameterizedType parameterizedType) throws RuntimeException {
-        ServerList list = (ServerList) obj;
+    public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws RuntimeException {
+        ServerList list = (ServerList) object;
         ConfigSection section = new ConfigSection();
         Converter converter = internalConverter.getConverter(InetSocketAddress.class);
-        list.values().forEach(serverInfo -> {
-            Map<String, Object> map = new HashMap<>(2);
+
+        for (ServerInfo serverInfo : list.values()){
+            Map<String, Object> map = new HashMap<>();
             try {
                 map.put("address", converter.toConfig(InetSocketAddress.class, serverInfo.getAddress(), null));
                 if (serverInfo.getPublicAddress() != null) {
@@ -34,29 +35,27 @@ public class ServerListConverter implements Converter {
                 throw new RuntimeException("ServerListConverter#toConfig converter.toConfig threw exception", e);
             }
             section.set(serverInfo.getServerName(), map);
-
-        });
-
+        }
         return section;
     }
 
     @Override
-    public Object fromConfig(Class<?> type, Object obj, ParameterizedType parameterizedType) throws RuntimeException {
-        ConfigSection section = (ConfigSection) obj;
+    public Object fromConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws RuntimeException {
+        ConfigSection section = (ConfigSection) object;
         Map<Object, Object> values = section.getValues(true);
         ServerList list = new ServerList();
         Converter converter = this.internalConverter.getConverter(ServerInfo.class);
-        values.forEach((key, data) -> {
-            Map map = (Map) data;
-            String name = (String) key;
-            map.put("name", key);
+
+        for (Map.Entry<Object, Object> entry : values.entrySet()){
+            Map<String, Object> map = (Map<String, Object>) entry.getValue();
+            String name = (String) entry.getKey();
+            map.put("name", name);
             try {
                 list.putIfAbsent(name, (ServerInfo) converter.fromConfig(ServerInfo.class, map, null));
             } catch (Exception e) {
                 throw new RuntimeException("Cannot parse server info for " + name, e);
             }
-
-        });
+        }
         return list;
     }
 

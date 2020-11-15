@@ -19,38 +19,39 @@ public class ServerInfoConverter implements Converter {
     }
 
     @Override
-    public Object toConfig(Class<?> type, Object obj, ParameterizedType parameterizedType) throws Exception {
+    public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
         Map<String, String> map = new HashMap<>();
-        ServerInfo i = (ServerInfo) obj;
-        map.put("address", i.getAddress().getAddress().getHostAddress() + ":" + i.getAddress().getPort());
-        if (i.getPublicAddress() != null && i.getPublicAddress() != i.getAddress()) {
-            map.put("public_address", i.getAddress().getAddress().getHostAddress() + ":" + i.getAddress().getPort());
+        ServerInfo serverInfo = (ServerInfo) object;
+        map.put("address", serverInfo.getAddress().getAddress().getHostAddress() + ":" + serverInfo.getAddress().getPort());
+        if (serverInfo.getPublicAddress() != null && serverInfo.getPublicAddress() != serverInfo.getAddress()) {
+            map.put("public_address", serverInfo.getAddress().getAddress().getHostAddress() + ":" + serverInfo.getAddress().getPort());
         }
         return map;
     }
 
     @Override
-    public Object fromConfig(Class<?> type, Object obj, ParameterizedType parameterizedType) throws Exception {
-        if (obj == null) return null;
+    public Object fromConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
+        if (object == null){
+            return null;
+        }
         Converter inetConverter = internalConverter.getConverter(InetSocketAddress.class);
-        String name;
         InetSocketAddress address;
         InetSocketAddress publicAddress;
-        if (obj instanceof ConfigSection) {
-            ConfigSection section = (ConfigSection) obj;
-            name = section.get("name");
+
+        if (object instanceof ConfigSection) {
+            ConfigSection section = (ConfigSection) object;
             address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, section.get("address"), null);
             publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, section.get("public_address"), null);
-
-        } else if (obj instanceof Map) {
-            name = (String) ((Map) obj).get("name");
-            address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, ((Map) obj).get("address"), null);
-            publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, ((Map) obj).get("public_address"), null);
-        } else {
-            throw new IllegalArgumentException("ServerInfoConverter#fromConfig cannot parse obj: " + obj.getClass().getName());
+            return new ServerInfo(section.get("name"), address, publicAddress);
         }
-        return new ServerInfo(name, address, publicAddress);
 
+        if (object instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) object;
+            address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, map.get("address"), null);
+            publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, map.get("public_address"), null);
+            return new ServerInfo((String) map.get("name"), address, publicAddress);
+        }
+        throw new IllegalArgumentException("ServerInfoConverter#fromConfig cannot parse obj: " + object.getClass().getName());
     }
 
     @Override

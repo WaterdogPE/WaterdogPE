@@ -27,7 +27,7 @@ public class ServerList {
     }
 
     public ServerInfo put(String name, ServerInfo info) {
-        return this.put(name, info);
+        return this.serverList.put(name, info);
     }
 
     public Collection<ServerInfo> values() {
@@ -35,7 +35,10 @@ public class ServerList {
     }
 
     public ServerList initEmpty() {
-        putIfAbsent("lobby1", new ServerInfo("lobby1", new InetSocketAddress("127.0.0.1", 19133), new InetSocketAddress("play.myserver.com", 19133)));
+        this.putIfAbsent("lobby1", new ServerInfo("lobby1",
+                new InetSocketAddress("127.0.0.1", 19133),
+                new InetSocketAddress("play.myserver.com",
+                        19133)));
         return this;
     }
 }
