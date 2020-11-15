@@ -67,20 +67,20 @@ public class ProxyServer {
     private final PluginManager pluginManager;
     private final EventManager eventManager;
     private final PackManager packManager;
-    private final ServerList serverInfoMap;
-
 
     private BedrockServer bedrockServer;
-    private final ConsoleCommandSender commandSender;
+    private final ServerList serverInfoMap;
     private QueryHandler queryHandler;
+
+    private CommandMap commandMap;
+    private final ConsoleCommandSender commandSender;
 
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
-    private CommandMap commandMap;
 
     private final ScheduledExecutorService tickExecutor;
-    private boolean shutdown = false;
     private ScheduledFuture<?> tickFuture;
+    private boolean shutdown = false;
     private int currentTick = 0;
 
     public ProxyServer(MainLogger logger, String filePath, String pluginPath) throws InvalidConfigurationException {

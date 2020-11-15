@@ -45,7 +45,7 @@ public class ProxyConfig extends YamlConfig {
 
     @Path("listener.priorities")
     @Comment("The server priority list. if not changed by plugins, the proxy will connect the player to the first of those servers")
-    private List<String> priorities = new ArrayList<>(Arrays.asList("lobby1"));
+    private List<String> priorities = new ArrayList<>(Collections.singletonList("lobby1"));
 
     @Path("listener.host")
     @Comment("The address to bind the server to")
@@ -263,6 +263,6 @@ public class ProxyConfig extends YamlConfig {
     }
 
     public ServerList getServerInfoMap() {
-        return serverInfoMap;
+        return this.serverInfoMap;
     }
 }
