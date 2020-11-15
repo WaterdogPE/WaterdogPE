@@ -1,5 +1,6 @@
 package pe.waterdog.event.defaults;
 
+import com.google.gson.JsonObject;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import net.minidev.json.JSONObject;
 import pe.waterdog.event.Event;
@@ -10,27 +11,25 @@ import pe.waterdog.event.Event;
  */
 public class PreClientDataSetEvent extends Event {
 
-    private final JSONObject clientData;
-
-    private final JSONObject extraData;
-
     private final BedrockServerSession playerSession;
+    private final JsonObject clientData;
+    private final JsonObject extraData;
 
-    public PreClientDataSetEvent(JSONObject clientData, JSONObject extraData, BedrockServerSession playerSession) {
+    public PreClientDataSetEvent(JsonObject clientData, JsonObject extraData, BedrockServerSession playerSession) {
         this.clientData = clientData;
         this.extraData = extraData;
         this.playerSession = playerSession;
     }
 
-    public JSONObject getClientData() {
-        return clientData;
-    }
-
     public BedrockServerSession getPlayerSession() {
-        return playerSession;
+        return this.playerSession;
     }
 
-    public JSONObject getExtraData() {
-        return extraData;
+    public JsonObject getClientData() {
+        return this.clientData;
+    }
+
+    public JsonObject getExtraData() {
+        return this.extraData;
     }
 }

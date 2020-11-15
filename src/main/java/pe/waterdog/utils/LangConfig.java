@@ -66,7 +66,7 @@ public class LangConfig {
 
     public String translateString(String key, String... args) {
         String string = this.getTransaction(key);
-        if (string == null) return "";
+        if (string == null) return key;
 
         if (args != null) {
             for (int i = 0; i < args.length; i++) {

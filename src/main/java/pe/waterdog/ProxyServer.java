@@ -68,14 +68,18 @@ public class ProxyServer {
     private final EventManager eventManager;
     private final PackManager packManager;
     private final ServerList serverInfoMap;
-    private final ConsoleCommandSender commandSender;
-    private final ScheduledExecutorService tickExecutor;
+
+
     private BedrockServer bedrockServer;
+    private final ConsoleCommandSender commandSender;
     private QueryHandler queryHandler;
-    private boolean shutdown = false;
+
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
     private CommandMap commandMap;
+
+    private final ScheduledExecutorService tickExecutor;
+    private boolean shutdown = false;
     private ScheduledFuture<?> tickFuture;
     private int currentTick = 0;
 
@@ -191,7 +195,7 @@ public class ProxyServer {
         this.console.getConsoleThread().interrupt();
         this.tickExecutor.shutdown();
         this.scheduler.shutdown();
-
+        this.eventManager.getThreadedExecutor().shutdown();
         try {
             if (this.bedrockServer != null) {
                 this.bedrockServer.getRakNet().close();
