@@ -28,6 +28,16 @@
             <id>nukkitx-repo-snapshot</id>
             <url>https://repo.opencollab.dev/maven-snapshots/</url>
         </repository>
+        <repository>
+            <id>central</id>
+            <name>waterdog-releases</name>
+            <url>https://repo.waterdog.dev/artifactory/releases</url>
+        </repository>
+        <repository>
+            <id>snapshots</id>
+            <name>waterdog-snapshots</name>
+            <url>https://repo.waterdog.dev/artifactory/releases</url>
+        </repository>
     </repositories>
 
     <distributionManagement>
