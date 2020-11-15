@@ -31,7 +31,7 @@ public class ServerInfoConverter implements Converter {
 
     @Override
     public Object fromConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
-        if (object == null){
+        if (object == null) {
             return null;
         }
         Converter inetConverter = internalConverter.getConverter(InetSocketAddress.class);
@@ -46,10 +46,12 @@ public class ServerInfoConverter implements Converter {
         }
 
         if (object instanceof Map) {
-            Map<?, ?> map = (Map<?, ?>) object;
-            address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, map.get("address"), null);
-            publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, map.get("public_address"), null);
-            return new ServerInfo((String) map.get("name"), address, publicAddress);
+            Map<?, Map> map = (Map<?, Map>) object;
+            for (Map.Entry<?, Map> subMap : map.entrySet()) {
+                address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, subMap.getValue().get("address"), null);
+                publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, subMap.getValue().get("public_address"), null);
+                return new ServerInfo((String) subMap.getKey(), address, publicAddress);
+            }
         }
         throw new IllegalArgumentException("ServerInfoConverter#fromConfig cannot parse obj: " + object.getClass().getName());
     }

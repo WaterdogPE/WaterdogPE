@@ -114,7 +114,7 @@ public class ProxyServer {
         this.reconnectHandler = new VanillaReconnectHandler();
         this.joinHandler = new VanillaJoinHandler(this);
         this.serverInfoMap = configurationManager.getProxyConfig().getServerInfoMap();
-
+        this.serverInfoMap.values().forEach(si -> System.out.println(si.getServerName()));
         this.pluginManager = new PluginManager(this);
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);

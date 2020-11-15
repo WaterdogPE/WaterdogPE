@@ -24,7 +24,7 @@ public class ServerListConverter implements Converter {
         ConfigSection section = new ConfigSection();
         Converter converter = internalConverter.getConverter(InetSocketAddress.class);
 
-        for (ServerInfo serverInfo : list.values()){
+        for (ServerInfo serverInfo : list.values()) {
             Map<String, Object> map = new HashMap<>();
             try {
                 map.put("address", converter.toConfig(InetSocketAddress.class, serverInfo.getAddress(), null));
@@ -46,12 +46,13 @@ public class ServerListConverter implements Converter {
         ServerList list = new ServerList();
         Converter converter = this.internalConverter.getConverter(ServerInfo.class);
 
-        for (Map.Entry<Object, Object> entry : values.entrySet()){
+        for (Map.Entry<Object, Object> entry : values.entrySet()) {
             Map<String, Object> map = (Map<String, Object>) entry.getValue();
             String name = (String) entry.getKey();
-            map.put("name", name);
             try {
-                list.putIfAbsent(name, (ServerInfo) converter.fromConfig(ServerInfo.class, map, null));
+                list.putIfAbsent(name, (ServerInfo) converter.fromConfig(ServerInfo.class, new HashMap<>(1) {{
+                    put(name, map);
+                }}, null));
             } catch (Exception e) {
                 throw new RuntimeException("Cannot parse server info for " + name, e);
             }
