@@ -40,10 +40,10 @@ public class PlayerRewriteUtils {
         return from == origin ? rewritten : (from == rewritten ? origin : from);
     }
 
-    public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn) {
+    public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn, int radius) {
         NetworkChunkPublisherUpdatePacket packet = new NetworkChunkPublisherUpdatePacket();
         packet.setPosition(defaultSpawn);
-        packet.setRadius(160);
+        packet.setRadius(radius);
         session.sendPacket(packet);
     }
 
