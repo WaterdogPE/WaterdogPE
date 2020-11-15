@@ -127,6 +127,7 @@ public class ProxyConfig extends YamlConfig {
     private boolean forcePacks = false;
 
     @Path("pack_cache_size")
+    @Comment("You can set maximum pack size in MB to be cached.")
     private int packCacheSize = 16;
 
     public ProxyConfig(File file) {
