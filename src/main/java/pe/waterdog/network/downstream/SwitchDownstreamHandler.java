@@ -112,7 +112,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(StartGamePacket packet) {
-        RewriteData rewriteData = player.getRewriteData();
+        RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
         rewriteData.setDimension(packet.getDimensionId());
         rewriteData.setGameRules(packet.getGamerules());
@@ -121,18 +121,17 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
         BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
         rewriteData.setPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
-        long runtimeId = PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewriteData.getEntityId(), rewriteData.getOriginalEntityId());
 
-        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getDefaultSpawn());
+        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getPlayerPosition().toInt(), rewriteData.getChunkRadius().getRadius());
         PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(runtimeId);
+        initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
         this.getDownstream().sendPacket(initializedPacket);
 
         MovePlayerPacket movePlayerPacket = new MovePlayerPacket();
         movePlayerPacket.setPosition(packet.getPlayerPosition());
-        movePlayerPacket.setRuntimeEntityId(runtimeId);
+        movePlayerPacket.setRuntimeEntityId(rewriteData.getEntityId());
         movePlayerPacket.setRotation(Vector3f.from(packet.getRotation().getX(), packet.getRotation().getY(), packet.getRotation().getY()));
         movePlayerPacket.setMode(MovePlayerPacket.Mode.RESPAWN);
         this.player.sendPacket(movePlayerPacket);
