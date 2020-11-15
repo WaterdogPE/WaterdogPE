@@ -45,7 +45,7 @@ public class ProxyConfig extends YamlConfig {
 
     @Path("listener.priorities")
     @Comment("The server priority list. if not changed by plugins, the proxy will connect the player to the first of those servers")
-    private List<String> priorities = new ArrayList<>(Arrays.asList("lobby1"));
+    private List<String> priorities = new ArrayList<>(Collections.singletonList("lobby1"));
 
     @Path("listener.host")
     @Comment("The address to bind the server to")
@@ -87,6 +87,7 @@ public class ProxyConfig extends YamlConfig {
     private boolean useLoginExtras = true;
 
     @Path("ip_forward")
+    @Comment("Forward original address in client data under 'Waterdog_IP' attribute.")
     private boolean ipForward = false;
 
     @Path("replace_username_spaces")
@@ -126,6 +127,7 @@ public class ProxyConfig extends YamlConfig {
     private boolean forcePacks = false;
 
     @Path("pack_cache_size")
+    @Comment("You can set maximum pack size in MB to be cached.")
     private int packCacheSize = 16;
 
     public ProxyConfig(File file) {
@@ -261,6 +263,6 @@ public class ProxyConfig extends YamlConfig {
     }
 
     public ServerList getServerInfoMap() {
-        return serverInfoMap;
+        return this.serverInfoMap;
     }
 }

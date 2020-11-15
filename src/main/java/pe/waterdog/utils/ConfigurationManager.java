@@ -67,7 +67,6 @@ public class ConfigurationManager {
                 this.proxy.getLogger().error("Can not save lang file!", e);
             }
         }
-
         this.langConfig = new LangConfig(langFile);
     }
 

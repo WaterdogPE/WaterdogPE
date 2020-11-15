@@ -37,8 +37,7 @@ public class ServerList {
     public ServerList initEmpty() {
         this.putIfAbsent("lobby1", new ServerInfo("lobby1",
                 new InetSocketAddress("127.0.0.1", 19133),
-                new InetSocketAddress("play.myserver.com",
-                        19133)));
+                new InetSocketAddress("play.myserver.com", 19133)));
         return this;
     }
 }

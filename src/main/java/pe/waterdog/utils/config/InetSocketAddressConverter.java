@@ -19,8 +19,8 @@ public class InetSocketAddressConverter implements Converter {
         if (object == null){
             return null;
         }
-        InetSocketAddress addr = (InetSocketAddress) object;
-        return addr.getHostName() + ":" + addr.getPort();
+        InetSocketAddress address = (InetSocketAddress) object;
+        return address.getHostName() + ":" + address.getPort();
     }
 
     @Override
@@ -28,8 +28,8 @@ public class InetSocketAddressConverter implements Converter {
         if (object == null) {
             return null;
         }
-        String str = (String) object;
-        String[] parts = str.split(":");
+        String string = (String) object;
+        String[] parts = string.split(":");
         return new InetSocketAddress(parts[0], Integer.parseInt(parts[1]));
     }
 
