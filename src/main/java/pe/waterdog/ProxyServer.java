@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.SneakyThrows;
+import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.apache.logging.log4j.Level;
 import pe.waterdog.command.*;
 import pe.waterdog.console.TerminalConsole;
@@ -40,6 +41,7 @@ import pe.waterdog.scheduler.WaterdogScheduler;
 import pe.waterdog.utils.ConfigurationManager;
 import pe.waterdog.utils.LangConfig;
 import pe.waterdog.utils.ProxyConfig;
+import pe.waterdog.utils.config.ServerList;
 import pe.waterdog.utils.types.*;
 
 import java.io.File;
@@ -65,7 +67,7 @@ public class ProxyServer {
     private final PluginManager pluginManager;
     private final EventManager eventManager;
     private final PackManager packManager;
-    private final Map<String, ServerInfo> serverInfoMap;
+    private final ServerList serverInfoMap;
     private final ConsoleCommandSender commandSender;
     private final ScheduledExecutorService tickExecutor;
     private BedrockServer bedrockServer;
@@ -77,7 +79,7 @@ public class ProxyServer {
     private ScheduledFuture<?> tickFuture;
     private int currentTick = 0;
 
-    public ProxyServer(MainLogger logger, String filePath, String pluginPath) {
+    public ProxyServer(MainLogger logger, String filePath, String pluginPath) throws InvalidConfigurationException {
         instance = this;
         this.logger = logger;
         this.dataPath = Paths.get(filePath);
@@ -107,7 +109,7 @@ public class ProxyServer {
         // Default Handlers
         this.reconnectHandler = new VanillaReconnectHandler();
         this.joinHandler = new VanillaJoinHandler(this);
-        this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
+        this.serverInfoMap = configurationManager.getProxyConfig().getServerInfoMap();
 
         this.pluginManager = new PluginManager(this);
         this.scheduler = new WaterdogScheduler(this);

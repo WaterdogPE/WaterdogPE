@@ -17,113 +17,110 @@
 package pe.waterdog.utils;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import pe.waterdog.logger.MainLogger;
-import pe.waterdog.network.ServerInfo;
+import net.cubespace.Yamler.Config.YamlConfig;
+import net.cubespace.Yamler.Config.*;
+import pe.waterdog.ProxyServer;
+import pe.waterdog.utils.config.InetSocketAddressConverter;
+import pe.waterdog.utils.config.ServerInfoConverter;
+import pe.waterdog.utils.config.ServerList;
+import pe.waterdog.utils.config.ServerListConverter;
 
 import java.io.File;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ProxyConfig extends YamlConfig {
 
-    private String motd;
-    private int maxPlayerCount;
 
-    private final boolean onlineMode;
-    private final boolean replaceUsernameSpaces;
-    private final boolean fastCodec;
-    private final boolean debug;
-    private final boolean injectCommands;
-    private final boolean enableResourcePacks;
-    private boolean useLoginExtras;
-    private boolean enableQuery;
-    private boolean ipForward;
-    private boolean fastTransfer;
-    protected boolean forcePacks;
+    @Path("servers")
+    @Comments({
+            "A list of all downstream proxies that are available right after starting",
+            "address field is formatted using ip:port",
+            "publicAddress is optional and can be set to the ip players can directly connect through"
+    })
+    private ServerList serverInfoMap = new ServerList().initEmpty();
+    @Path("listener.motd")
+    @Comment("The Motd which will be displayed in the server tab of a player and returned during ping")
+    private String motd = "§bWaterdog§3PE";
+    @Path("listener.max_players")
+    @Comment("The maximum amount of players that can connect to this proxy instance")
+    private int maxPlayerCount = 20;
+    @Path("online_mode")
+    @Comment("If enabled, only players which are authenticated with XBOX Live can join. If disabled, anyone can connect *with any name*")
+    private boolean onlineMode = true;
+    @Path("replace_username_spaces")
+    @Comment("Replaces username spaces with underscores if enabled")
+    private boolean replaceUsernameSpaces = false;
+    @Path("use_fast_codec")
+    @Comment("Fast-codec only decodes the packets required by the proxy, everything else will be passed rawly. Disabling this can create a performance hit")
+    private boolean fastCodec = true;
+    @Path("enable_debug")
+    @Comment("Whether the debug output in the console should be enabled or not")
+    private boolean debug;
+    @Path("inject_proxy_commands")
+    @Comment("If enabled, the proxy will inject all the proxy commands in the AvailableCommandsPacket, enabling autocompletion")
+    private boolean injectCommands = true;
+    @Path("enable_packs")
+    @Comment("Enable/Disable the resource pack system")
+    private boolean enableResourcePacks = true;
+    @Path("use_login_extras")
+    @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")
+    private boolean useLoginExtras = true;
+    @Path("enable_query")
+    @Comment("Whether server query should be enabled")
+    private boolean enableQuery = true;
+    @Path("ip_forward")
+    private boolean ipForward = false;
+    @Path("prefer_fast_transfer")
+    @Comment("If enabled, when receiving a McpeTransferPacket, the proxy will check if the target server is in the downstream list, and if yes, use the fast transfer mechanism")
+    private boolean fastTransfer = true;
+    @Path("force_apply_packs")
+    @Comment("Whether texture packs should be enforced")
+    private boolean forcePacks = false;
+    @Path("listener.host")
+    @Comment("The address to bind the server to")
+    private InetSocketAddress bindAddress = new InetSocketAddress("0.0.0.0", 19132);
+    @Path("listener.priorities")
+    @Comment("The server priority list. if not changed by plugins, the proxy will connect the player to the first of those servers")
+    private List<String> priorities = new ArrayList<>(Arrays.asList("lobby1"));
+    @Path("listener.forced_hosts")
+    @Comments({
+            "Map the ip a player joined through to a specific server",
+            "for example skywars.xyz.com => SkyWars-1",
+            "when a player connects using skywars-xyz.com as the serverIp, he will be connected to SkyWars-1 directly"
+    })
+    private Map<String, String> forcedHosts = new HashMap<>();
+    @Path("permissions")
+    @Comment("Case-Sensitive permission list for players")
+    private Object2ObjectOpenHashMap<String, List<String>> playerPermissions = new Object2ObjectOpenHashMap<>() {{
+        put("alemiz003", Arrays.asList("waterdog.player.transfer", "waterdog.player.list"));
+        put("TobiasDev", Arrays.asList("waterdog.player.transfer", "waterdog.player.list"));
+    }};
+    @Path("permissions_default")
+    @Comment("List of permissions each player should get by default")
+    private List<String> defaultPermissions = new ArrayList<>(Arrays.asList("waterdog.command.help", "waterdog.command.info"));
+    @Path("upstream_compression_level")
+    @Comment("Upstream server compression ratio(proxy to client), higher = less bandwidth, more cpu, lower vice versa")
+    private int upstreamCompression = 6;
+    @Path("downstream_compression_level")
+    @Comment("Upstream server compression ratio(proxy to downstream server), higher = less bandwidth, more cpu, lower vice versa")
+    private int downstreamCompression = 2;
+    @Path("pack_cache_size")
+    private int packCacheSize = 16;
 
-    private final InetSocketAddress bindAddress;
-    private final List<String> priorities;
-    private final Map<String, String> forcedHosts;
-
-    private final Object2ObjectOpenHashMap<String, List<String>> playerPermissions = new Object2ObjectOpenHashMap<>();
-    private List<String> defaultPermissions;
-
-    private final int upstreamCompression;
-    private final int downstreamCompression;
-    private int packCacheSize;
-
-    public ProxyConfig(File file){
-        super(file);
-
-        this.motd = this.getString("listener.motd");
-        this.maxPlayerCount = this.getInt("listener.max_players");
-        this.useLoginExtras = this.getBoolean("use_login_extras");
-        this.onlineMode = this.getBoolean("online_mode");
-        this.enableQuery = this.getBoolean("enable_query");
-        this.ipForward = this.getBoolean("ip_forward");
-        this.replaceUsernameSpaces = this.getBoolean("replace_username_spaces");
-        this.fastCodec = this.getBoolean("use_fast_codec");
-        this.fastTransfer = this.getBoolean("prefer_fast_transfer");
-        this.debug = this.getBoolean("enable_debug");
-        this.injectCommands = this.getBoolean("inject_proxy_commands");
-        this.bindAddress = this.getInetAddress("listener.host");
-        this.priorities = this.getStringList("listener.priorities");
-        this.defaultPermissions = this.getStringList("permissions_default");
-        this.playerPermissions.putAll(this.getPlayerPermissions("permissions"));
-        this.forcedHosts = (Map<String, String>) this.get("listener.forced_hosts", new Object2ObjectOpenHashMap<>());
-        this.upstreamCompression = this.getInt("upstream_compression_level");
-        this.downstreamCompression = this.getInt("downstream_compression_level");
-        this.enableResourcePacks = this.getBoolean("enable_packs");
-        this.forcePacks = this.getBoolean("force_apply_packs");
-        this.packCacheSize = this.getInt("pack_cache_size");
-    }
-
-    public InetSocketAddress getInetAddress(String key) {
-        String addressString = this.getString(key);
-        if (addressString == null) return null;
-
-        String[] data = addressString.split(":");
-        return new InetSocketAddress(data[0], (data.length <= 1 ? 19132 : Integer.parseInt(data[1])));
-    }
-
-    public Map<String, ServerInfo> buildServerMap() {
-        Map<String, Map<String, String>> map = (Map<String, Map<String, String>>) this.get("servers");
-        Map<String, ServerInfo> servers = new HashMap<>();
-
-        for (String server : map.keySet()) {
-            Map<String, String> serverData = map.get(server);
-
-            InetSocketAddress address;
-            InetSocketAddress publicAddress = null;
-
-            try {
-                String[] data = serverData.get("address").split(":");
-                address = new InetSocketAddress(data[0], Integer.parseInt(data[1]));
-            } catch (Exception e) {
-                MainLogger.getLogger().error("Unable to parse server from config! Please check you configuration. Server name: " + server);
-                continue;
-            }
-
-            if (serverData.containsKey("public_address")){
-                try {
-                    String[] data = serverData.get("public_address").split(":");
-                    publicAddress = new InetSocketAddress(data[0], Integer.parseInt(data[1]));
-                }catch (Exception e){
-                    MainLogger.getLogger().warning("Can not parse public server address! Server name: "+server);
-                }
-            }
-
-            ServerInfo serverInfo = new ServerInfo(server.toLowerCase(), address, publicAddress == null? address : publicAddress);
-            servers.put(server.toLowerCase(), serverInfo);
+    public ProxyConfig(File f) {
+        CONFIG_HEADER = new String[]{"Waterdog Main Configuration file", "Configure your desired network settings here."};
+        CONFIG_FILE = f;
+        try {
+            addConverter(InetSocketAddressConverter.class);
+            addConverter(ServerInfoConverter.class);
+            addConverter(ServerListConverter.class);
+        } catch (InvalidConverterException e) {
+            ProxyServer.getInstance().getLogger().error("Error while initiating config converters", e);
         }
-        return servers;
     }
 
-    private Map<String, List<String>> getPlayerPermissions(String key){
-        return (Map<String, List<String>>) this.get(key);
-    }
+
 
     public String getMotd() {
         return this.motd;
@@ -243,5 +240,9 @@ public class ProxyConfig extends YamlConfig {
 
     public int getPackCacheSize() {
         return this.packCacheSize;
+    }
+
+    public ServerList getServerInfoMap() {
+        return serverInfoMap;
     }
 }
