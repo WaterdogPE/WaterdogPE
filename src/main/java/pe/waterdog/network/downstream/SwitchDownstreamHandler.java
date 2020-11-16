@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import pe.waterdog.event.defaults.TransferCompleteEvent;
 import pe.waterdog.network.ServerInfo;
+import pe.waterdog.network.bridge.TransferBatchBridge;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.ServerConnection;
@@ -112,7 +113,12 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(StartGamePacket packet) {
-        RewriteData rewriteData = this.player.getRewriteData();
+        if (this.getDownstream().getBatchHandler() instanceof TransferBatchBridge){
+            // Notify transfer bridge to queue new packets
+            ((TransferBatchBridge) this.getDownstream().getBatchHandler()).setHasStartGame(true);
+        }
+
+        RewriteData rewriteData = player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
         rewriteData.setDimension(packet.getDimensionId());
         rewriteData.setGameRules(packet.getGamerules());
