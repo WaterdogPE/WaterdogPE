@@ -20,11 +20,11 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import io.netty.buffer.ByteBuf;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TransferBatchBridge extends ProxyBatchBridge {
@@ -35,6 +35,16 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     public TransferBatchBridge(ProxiedPlayer player, BedrockSession session) {
         super(player, session);
         this.trackEntities = false;
+    }
+
+    @Override
+    public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
+        super.handle(session, buf, packets);
+
+        // Send queued packets to upstream if new bridge is used
+        if (this.hasStartGame.get() && (session.getBatchHandler() instanceof DownstreamBridge) && !this.packetQueue.isEmpty()){
+            this.session.sendWrapped(packetQueue, this.session.isEncrypted());
+        }
     }
 
     @Override

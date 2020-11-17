@@ -166,7 +166,6 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
         PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
 
-
         ServerConnection oldServer = this.player.getServer();
         oldServer.getInfo().removePlayer(this.player);
         oldServer.disconnect();

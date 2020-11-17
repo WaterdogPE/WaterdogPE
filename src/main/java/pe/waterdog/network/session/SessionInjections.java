@@ -18,18 +18,14 @@ package pe.waterdog.network.session;
 
 import com.google.common.base.Preconditions;
 import com.nukkitx.network.util.DisconnectReason;
-import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
-import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
-import pe.waterdog.network.bridge.TransferBatchBridge;
 import pe.waterdog.network.bridge.UpstreamBridge;
 import pe.waterdog.network.downstream.ConnectedDownstreamHandler;
 import pe.waterdog.network.upstream.UpstreamHandler;
 import pe.waterdog.player.ProxiedPlayer;
 
-import java.util.Queue;
 
 public class SessionInjections {
 
@@ -51,19 +47,8 @@ public class SessionInjections {
 
     public static void injectDownstreamHandlers(ServerConnection server, ProxiedPlayer player) {
         Preconditions.checkArgument(server != null && player != null, "Player and ServerConnection can not be null!");
-        BatchHandler transferHandler = server.getDownstream().getBatchHandler();
-        Queue<BedrockPacket> packetQueue = null;
-        if (transferHandler instanceof TransferBatchBridge){
-            packetQueue = ((TransferBatchBridge) transferHandler).getPacketQueue();
-        }
-
         player.getUpstream().setBatchHandler(new UpstreamBridge(player, server.getDownstream()));
         server.getDownstream().setBatchHandler(new DownstreamBridge(player, player.getUpstream()));
         server.getDownstream().setPacketHandler(new ConnectedDownstreamHandler(player, server));
-
-        // Send queued packets from downstream
-        if (packetQueue != null && !packetQueue.isEmpty()){
-            player.getUpstream().sendWrapped(packetQueue, player.getUpstream().isEncrypted());
-        }
     }
 }
