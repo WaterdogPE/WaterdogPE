@@ -113,11 +113,6 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(StartGamePacket packet) {
-        if (this.getDownstream().getBatchHandler() instanceof TransferBatchBridge){
-            // Notify transfer bridge to queue new packets
-            ((TransferBatchBridge) this.getDownstream().getBatchHandler()).setHasStartGame(true);
-        }
-
         RewriteData rewriteData = player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
         rewriteData.setDimension(packet.getDimensionId());

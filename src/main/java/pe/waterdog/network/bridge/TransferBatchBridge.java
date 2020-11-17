@@ -17,6 +17,7 @@
 package pe.waterdog.network.bridge;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
+import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import pe.waterdog.player.ProxiedPlayer;
@@ -24,11 +25,12 @@ import pe.waterdog.utils.exceptions.CancelSignalException;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TransferBatchBridge extends ProxyBatchBridge {
 
     private final Queue<BedrockPacket> packetQueue = new LinkedList<>();
-    private boolean hasStartGame = false;
+    private final AtomicBoolean hasStartGame = new AtomicBoolean(false);
 
     public TransferBatchBridge(ProxiedPlayer player, BedrockSession session) {
         super(player, session);
@@ -38,14 +40,14 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     @Override
     public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
         super.handlePacket(packet, handler);
-        if (this.hasStartGame){
+
+        // All packets after StartGamePacket should be queued
+        if (packet.getPacketType() == BedrockPacketType.START_GAME){
+            this.hasStartGame.set(true);
+        }else if (this.hasStartGame.get()){
             this.packetQueue.add(packet);
         }
         throw CancelSignalException.CANCEL;
-    }
-
-    public void setHasStartGame(boolean hasStartGame) {
-        this.hasStartGame = hasStartGame;
     }
 
     public Queue<BedrockPacket> getPacketQueue() {
