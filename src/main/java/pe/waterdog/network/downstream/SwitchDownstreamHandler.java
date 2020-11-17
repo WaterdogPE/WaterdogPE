@@ -113,7 +113,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(StartGamePacket packet) {
-        RewriteData rewriteData = player.getRewriteData();
+        RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
         rewriteData.setDimension(packet.getDimensionId());
         rewriteData.setGameRules(packet.getGamerules());
