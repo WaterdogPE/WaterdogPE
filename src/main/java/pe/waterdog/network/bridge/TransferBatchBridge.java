@@ -43,18 +43,20 @@ public class TransferBatchBridge extends ProxyBatchBridge {
 
         // Send queued packets to upstream if new bridge is used
         if (this.hasStartGame.get() && (session.getBatchHandler() instanceof DownstreamBridge) && !this.packetQueue.isEmpty()){
-            this.session.sendWrapped(packetQueue, this.session.isEncrypted());
+            this.session.sendWrapped(this.packetQueue, this.session.isEncrypted());
         }
     }
 
     @Override
     public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
+        boolean isStartGame = packet.getPacketType() == BedrockPacketType.START_GAME;
+        if (isStartGame){
+            this.hasStartGame.set(true);
+        }
         super.handlePacket(packet, handler);
 
         // All packets after StartGamePacket should be queued
-        if (packet.getPacketType() == BedrockPacketType.START_GAME){
-            this.hasStartGame.set(true);
-        }else if (this.hasStartGame.get()){
+        if (!isStartGame && this.hasStartGame.get()){
             this.packetQueue.add(packet);
         }
         throw CancelSignalException.CANCEL;
