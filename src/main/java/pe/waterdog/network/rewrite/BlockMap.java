@@ -32,10 +32,10 @@ import pe.waterdog.player.ProxiedPlayer;
 
 public class BlockMap implements BedrockPacketHandler {
 
-    private static final int nV8Blocks = 16 * 16 * 16;
+    protected static final int nV8Blocks = 16 * 16 * 16;
 
-    private final ProxiedPlayer player;
-    private final RewriteData rewrite;
+    protected final ProxiedPlayer player;
+    protected final RewriteData rewrite;
 
     public BlockMap(ProxiedPlayer player) {
         this.player = player;

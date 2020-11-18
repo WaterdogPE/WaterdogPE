@@ -30,8 +30,10 @@ public class DownstreamBridge extends ProxyBatchBridge {
 
     @Override
     public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
+        player.getProxy().getLogger().debug("Downstream :"+packet);
+
         boolean changed = super.handlePacket(packet, handler);
-        boolean rewrote = this.player.getBlockMap().doRewrite(packet);
+        boolean rewrote = this.player.getBlockMap() != null && this.player.getBlockMap().doRewrite(packet);
 
         boolean pluginHandled = false;
         if (this.player.getPluginDownstreamHandler() != null) {

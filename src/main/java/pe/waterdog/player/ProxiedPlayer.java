@@ -75,7 +75,7 @@ public class ProxiedPlayer implements CommandSender {
     private final LoginData loginData;
     private final EntityTracker entityTracker;
     private final EntityMap entityMap;
-    private final BlockMap blockMap;
+    private BlockMap blockMap;
     private final LongSet entities = new LongOpenHashSet();
     private final LongSet bossbars = new LongOpenHashSet();
     private final Collection<UUID> players = new HashSet<>();
@@ -113,7 +113,6 @@ public class ProxiedPlayer implements CommandSender {
         this.loginPacket = loginData.constructLoginPacket();
         this.entityTracker = new EntityTracker(this);
         this.entityMap = new EntityMap(this);
-        this.blockMap = new BlockMap(this);
         this.proxy.getPlayerManager().subscribePermissions(this);
     }
 
@@ -599,6 +598,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public EntityMap getEntityMap() {
         return this.entityMap;
+    }
+
+    public void setBlockMap(BlockMap blockMap) {
+        this.blockMap = blockMap;
     }
 
     public BlockMap getBlockMap() {
