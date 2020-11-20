@@ -28,6 +28,10 @@
             <id>nukkitx-repo-snapshot</id>
             <url>https://repo.opencollab.dev/maven-snapshots/</url>
         </repository>
+        <repository>
+            <id>waterdog</id>
+            <url>https://repo.waterdog.dev/artifactory/main/</url>
+        </repository>
     </repositories>
 
     <distributionManagement>
@@ -45,9 +49,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.fusesource.jansi</groupId>
-            <artifactId>jansi</artifactId>
-            <version>1.11</version>
+            <groupId>net.cubespace</groupId>
+            <artifactId>Yamler-Core</artifactId>
+            <version>2.4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>jline</groupId>
