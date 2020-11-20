@@ -25,6 +25,7 @@ import pe.waterdog.network.rewrite.BlockMap;
 import pe.waterdog.network.rewrite.BlockMapModed;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
+import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
@@ -92,6 +93,7 @@ public class InitialHandler implements BedrockPacketHandler {
         rewriteData.setEntityId(ThreadLocalRandom.current().nextInt(10000, 15000));
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setDimension(packet.getDimensionId());
+        rewriteData.parseItemIds(packet.getItemEntries());
 
         // Starting with 419 servers does not send vanilla blocks to client
         if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
@@ -109,7 +111,7 @@ public class InitialHandler implements BedrockPacketHandler {
         packet.setRuntimeEntityId(rewriteData.getEntityId());
         packet.setUniqueEntityId(rewriteData.getEntityId());
 
-        this.player.getServer().getDownstream().setPacketHandler(new ConnectedDownstreamHandler(this.player, this.player.getServer()));
+        SessionInjections.injectInitialHandlers(this.player.getServer(), player);;
         return true;
     }
 }

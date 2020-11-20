@@ -30,8 +30,6 @@ public class UpstreamBridge extends ProxyBatchBridge {
 
     @Override
     public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
-        player.getProxy().getLogger().debug("Upstream :"+packet);
-
         boolean changed = super.handlePacket(packet, handler);
         boolean pluginHandled = false;
         if (this.player.getPluginUpstreamHandler() != null) {
