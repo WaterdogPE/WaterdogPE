@@ -16,6 +16,7 @@
 
 package pe.waterdog.utils;
 
+import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import pe.waterdog.ProxyServer;
 
 import java.io.File;
@@ -50,16 +51,11 @@ public class ConfigurationManager {
         }
     }
 
-    public void loadProxyConfig() {
+    public void loadProxyConfig() throws InvalidConfigurationException {
         File configFile = new File(this.proxy.getDataPath().toString() + "/config.yml");
-        if (!configFile.exists()) {
-            try {
-                FileUtils.saveFromResources("config.yml", configFile);
-            } catch (IOException e) {
-                this.proxy.getLogger().error("Unable to save proxy config file!", e);
-            }
-        }
-        this.proxyConfig = new ProxyConfig(configFile);
+        ProxyConfig config = new ProxyConfig(configFile);
+        config.init();
+        this.proxyConfig = config;
     }
 
     public void loadLanguage() {
@@ -71,7 +67,6 @@ public class ConfigurationManager {
                 this.proxy.getLogger().error("Can not save lang file!", e);
             }
         }
-
         this.langConfig = new LangConfig(langFile);
     }
 
