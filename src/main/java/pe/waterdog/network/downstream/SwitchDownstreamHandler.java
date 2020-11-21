@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import pe.waterdog.event.defaults.TransferCompleteEvent;
 import pe.waterdog.network.ServerInfo;
+import pe.waterdog.network.bridge.TransferBatchBridge;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
@@ -170,7 +171,6 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
         PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
         PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
-
 
         ServerConnection oldServer = this.player.getServer();
         oldServer.getInfo().removePlayer(this.player);

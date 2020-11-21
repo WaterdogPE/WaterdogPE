@@ -26,6 +26,7 @@ import pe.waterdog.network.downstream.ConnectedDownstreamHandler;
 import pe.waterdog.network.upstream.UpstreamHandler;
 import pe.waterdog.player.ProxiedPlayer;
 
+
 public class SessionInjections {
 
     public static void injectUpstreamHandlers(BedrockSession upstream, ProxiedPlayer player) {
