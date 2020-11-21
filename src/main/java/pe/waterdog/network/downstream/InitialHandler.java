@@ -20,8 +20,12 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
+import pe.waterdog.network.protocol.ProtocolVersion;
+import pe.waterdog.network.rewrite.BlockMap;
+import pe.waterdog.network.rewrite.BlockMapModed;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
+import pe.waterdog.network.session.SessionInjections;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
@@ -84,22 +88,30 @@ public class InitialHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(StartGamePacket packet) {
-        RewriteData rewrite = this.player.getRewriteData();
-        rewrite.setOriginalEntityId(packet.getRuntimeEntityId());
-        rewrite.setEntityId(ThreadLocalRandom.current().nextInt(10000, 15000));
-        rewrite.setGameRules(packet.getGamerules());
-        rewrite.setDimension(packet.getDimensionId());
+        RewriteData rewriteData = this.player.getRewriteData();
+        rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
+        rewriteData.setEntityId(ThreadLocalRandom.current().nextInt(10000, 15000));
+        rewriteData.setGameRules(packet.getGamerules());
+        rewriteData.setDimension(packet.getDimensionId());
+        rewriteData.parseItemIds(packet.getItemEntries());
 
-        BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
-        rewrite.setBlockPalette(palette);
-        rewrite.setPaletteRewrite(palette.createRewrite(palette));
+        // Starting with 419 servers does not send vanilla blocks to client
+        if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
+            BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
+            rewriteData.setBlockPalette(palette);
+            rewriteData.setPaletteRewrite(palette.createRewrite(palette));
+            this.player.setBlockMap(new BlockMap(this.player));
+        }else {
+            rewriteData.setBlockProperties(packet.getBlockProperties());
+            this.player.setBlockMap(new BlockMapModed(this.player));
+        }
 
         this.player.setCanRewrite(true);
 
-        packet.setRuntimeEntityId(rewrite.getEntityId());
-        packet.setUniqueEntityId(rewrite.getEntityId());
+        packet.setRuntimeEntityId(rewriteData.getEntityId());
+        packet.setUniqueEntityId(rewriteData.getEntityId());
 
-        this.player.getServer().getDownstream().setPacketHandler(new ConnectedDownstreamHandler(this.player, this.player.getServer()));
+        SessionInjections.injectInitialHandlers(this.player.getServer(), player);;
         return true;
     }
 }
