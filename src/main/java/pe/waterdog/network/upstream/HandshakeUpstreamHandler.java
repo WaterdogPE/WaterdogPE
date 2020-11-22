@@ -71,7 +71,9 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
                     PlayStatusPacket.Status.LOGIN_FAILED_SERVER_OLD :
                     PlayStatusPacket.Status.LOGIN_FAILED_CLIENT_OLD));
 
-            session.sendPacket(status);
+            session.sendPacketImmediately(status);
+            session.disconnect();
+            this.proxy.getLogger().info("[" + session.getAddress() + "] <-> Upstream has disconnected due to incompatible protocol!");
             return true;
         }
 

@@ -30,6 +30,7 @@ import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.TransferBatchBridge;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.rewrite.types.BlockPalette;
+import pe.waterdog.network.rewrite.types.ItemPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
@@ -120,13 +121,18 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
         rewriteData.setRotation(packet.getRotation());
-        rewriteData.parseItemIds(packet.getItemEntries());
 
         if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
-            rewriteData.setPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
+            rewriteData.setBlockPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
         }else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
+
+            if (this.player.getProxy().getConfiguration().isItemRewrite()){
+                ItemPalette palette = ItemPalette.getPalette(packet.getItemEntries(), this.player.getProtocol());
+                rewriteData.getItemPalette().setDownstreamShieldBlockingId(palette.getShieldBlockingId());
+                rewriteData.setItemPaletteRewrite(palette.createRewrite(rewriteData.getItemPalette()));
+            }
         }
 
         PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getPlayerPosition().toInt(), rewriteData.getChunkRadius().getRadius());
