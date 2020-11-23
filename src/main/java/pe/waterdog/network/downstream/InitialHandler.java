@@ -22,7 +22,7 @@ import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.rewrite.BlockMap;
-import pe.waterdog.network.rewrite.BlockMapModed;
+import pe.waterdog.network.rewrite.BlockMapModded;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.SessionInjections;
@@ -103,7 +103,7 @@ public class InitialHandler implements BedrockPacketHandler {
             this.player.setBlockMap(new BlockMap(this.player));
         }else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
-            this.player.setBlockMap(new BlockMapModed(this.player));
+            this.player.setBlockMap(new BlockMapModded(this.player));
         }
 
         this.player.setCanRewrite(true);

@@ -24,8 +24,8 @@ import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityDataMap;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
+import io.netty.buffer.AbstractByteBufAllocator;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
 import pe.waterdog.network.rewrite.types.BlockPaletteRewrite;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.player.ProxiedPlayer;
@@ -54,8 +54,8 @@ public class BlockMap implements BedrockPacketHandler {
     public boolean handle(LevelChunkPacket packet) {
         int sections = packet.getSubChunksLength();
         byte[] oldData = packet.getData();
-        ByteBuf from = PooledByteBufAllocator.DEFAULT.directBuffer(oldData.length);
-        ByteBuf to = PooledByteBufAllocator.DEFAULT.directBuffer(oldData.length);
+        ByteBuf from = AbstractByteBufAllocator.DEFAULT.directBuffer(oldData.length);
+        ByteBuf to = AbstractByteBufAllocator.DEFAULT.directBuffer(oldData.length);
         from.writeBytes(oldData);
 
         boolean success = true;
