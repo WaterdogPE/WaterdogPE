@@ -71,6 +71,7 @@ public class BedrockCodec388 extends BedrockCodec {
                 .registerPacket(MobEffectPacket.class, MobEffectSerializer_v291.INSTANCE, 28)
                 .registerPacket(UpdateAttributesPacket.class, UpdateAttributesSerializer_v291.INSTANCE, 29)
                 .registerPacket(MobEquipmentPacket.class, MobEquipmentSerializer_v291.INSTANCE, 31)
+                .registerPacket(MobArmorEquipmentPacket.class, MobArmorEquipmentSerializer_v291.INSTANCE, 32)
                 .registerPacket(InteractPacket.class, InteractSerializer_v388.INSTANCE, 33)
                 .registerPacket(PlayerActionPacket.class, PlayerActionSerializer_v291.INSTANCE, 36)
                 .registerPacket(SetEntityDataPacket.class, SetEntityDataSerializer_v291.INSTANCE, 39)

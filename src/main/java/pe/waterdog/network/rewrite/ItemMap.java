@@ -17,18 +17,17 @@
 package pe.waterdog.network.rewrite;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
-import com.nukkitx.protocol.bedrock.data.inventory.CraftingData;
-import com.nukkitx.protocol.bedrock.data.inventory.ItemData;
+import com.nukkitx.protocol.bedrock.data.inventory.*;
+import com.nukkitx.protocol.bedrock.data.inventory.stackrequestactions.CraftResultsDeprecatedStackRequestActionData;
+import com.nukkitx.protocol.bedrock.data.inventory.stackrequestactions.StackRequestActionData;
+import com.nukkitx.protocol.bedrock.data.inventory.stackrequestactions.StackRequestActionType;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.AddItemEntityPacket;
-import com.nukkitx.protocol.bedrock.packet.AddPlayerPacket;
-import com.nukkitx.protocol.bedrock.packet.CraftingDataPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import pe.waterdog.network.rewrite.types.ItemPaletteRewrite;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.player.ProxiedPlayer;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ItemMap implements BedrockPacketHandler {
@@ -58,63 +57,133 @@ public class ItemMap implements BedrockPacketHandler {
         return this.reverse? this.getPaletteRewrite().fromDownstream(runtimeId) : this.getPaletteRewrite().fromUpstream(runtimeId);
     }
 
-    private ItemData duplicate(ItemData item, int runtimeId){
-        return ItemData.of(runtimeId, item.getDamage(), item.getCount(), item.getTag(), item.getCanPlace(), item.getCanBreak(), item.getBlockingTicks());
-    }
-
-    private ItemData duplicateNet(ItemData item, int runtimeId){
-        return ItemData.fromNet(item.getNetId(), runtimeId, item.getDamage(), item.getCount(), item.getTag(), item.getCanPlace(), item.getCanBreak(), item.getBlockingTicks());
-    }
-
-    private CraftingData duplicateCraftingData(CraftingData craftingData, List<ItemData> inputs, List<ItemData> outputs){
-        return new CraftingData(
-                craftingData.getType(),
-                craftingData.getRecipeId(),
-                craftingData.getWidth(),
-                craftingData.getHeight(),
-                craftingData.getInputId(), //TODO: verify if this is item id
-                craftingData.getInputDamage(),
-                inputs.toArray(new ItemData[0]),
-                outputs.toArray(new ItemData[0]),
-                craftingData.getUuid(),
-                craftingData.getCraftingTag(),
-                craftingData.getPriority()
-        );
-    }
-
     @Override
     public boolean handle(AddItemEntityPacket packet) {
         int runtimeId = packet.getItemInHand().getId();
-        packet.setItemInHand(this.duplicate(packet.getItemInHand(), this.translateId(runtimeId)));
+        packet.getItemInHand().setId(this.translateId(runtimeId));
         return true;
     }
 
     @Override
     public boolean handle(AddPlayerPacket packet) {
         int runtimeId = packet.getHand().getId();
-        packet.setHand(this.duplicate(packet.getHand(), this.translateId(runtimeId)));
+        packet.getHand().setId(this.translateId(runtimeId));
         return true;
     }
 
     @Override
     public boolean handle(CraftingDataPacket packet) {
-        List<CraftingData> craftingList = new ObjectArrayList<>();
         for (CraftingData craftingData : packet.getCraftingData()){
-            List<ItemData> inputs = new ArrayList<>();
-            for (ItemData itemData : craftingData.getInputs()){
-                inputs.add(this.duplicate(itemData, this.translateId(itemData.getId())));
+            if (craftingData.getInputs() != null){
+                for (ItemData itemData : craftingData.getInputs()){
+                    itemData.setId(this.translateId(itemData.getId()));
+                }
             }
-
-            List<ItemData> outputs = new ArrayList<>();
-            for (ItemData itemData : craftingData.getOutputs()){
-                outputs.add(this.duplicate(itemData, this.translateId(itemData.getId())));
+            if (craftingData.getOutputs() != null){
+                for (ItemData itemData : craftingData.getOutputs()){
+                    itemData.setId(this.translateId(itemData.getId()));
+                }
             }
-            craftingList.add(this.duplicateCraftingData(craftingData, inputs, outputs));
         }
-        packet.getCraftingData().clear();
-        packet.getCraftingData().addAll(craftingList);
 
-        //TODO: potionMixData, containerMixData
+        List<PotionMixData> potionMixData = new ObjectArrayList<>();
+        for (PotionMixData potion : packet.getPotionMixData()){
+            int inputId = this.translateId(potion.getInputId());
+            int reagentId = this.translateId(potion.getReagentId());
+            int outputId = this.translateId(potion.getOutputId());
+            potionMixData.add(new PotionMixData(inputId, potion.getInputMeta(), reagentId, potion.getReagentMeta(), outputId, potion.getOutputMeta()));
+        }
+        packet.getPotionMixData().clear();
+        packet.getPotionMixData().addAll(potionMixData);
+
+        List<ContainerMixData> containerMixData = new ObjectArrayList<>();
+        for (ContainerMixData container : packet.getContainerMixData()){
+            int inputId = this.translateId(container.getInputId());
+            int reagentId = this.translateId(container.getReagentId());
+            int outputId = this.translateId(container.getOutputId());
+            containerMixData.add(new ContainerMixData(inputId, reagentId, outputId));
+        }
+        packet.getContainerMixData().clear();
+        packet.getContainerMixData().addAll(containerMixData);
         return true;
+    }
+
+    @Override
+    public boolean handle(CraftingEventPacket packet) {
+        for (ItemData itemData : packet.getInputs()){
+            itemData.setId(this.translateId(itemData.getId()));
+        }
+
+        for (ItemData itemData : packet.getOutputs()){
+            itemData.setId(this.translateId(itemData.getId()));
+        }
+        return true;
+    }
+
+    @Override
+    public boolean handle(InventoryContentPacket packet) {
+        for (ItemData itemData : packet.getContents()){
+            itemData.setId(this.translateId(itemData.getId()));
+        }
+        return true;
+    }
+
+    @Override
+    public boolean handle(InventorySlotPacket packet) {
+        packet.getItem().setId(this.translateId(packet.getItem().getId()));
+        return true;
+    }
+
+    @Override
+    public boolean handle(InventoryTransactionPacket packet) {
+        if (packet.getItemInHand() != null){
+            packet.getItemInHand().setId(this.translateId(packet.getItemInHand().getId()));
+        }
+
+        for (InventoryActionData action : packet.getActions()){
+            action.getFromItem().setId(this.translateId(action.getFromItem().getId()));
+            action.getToItem().setId(this.translateId(action.getToItem().getId()));
+        }
+        return true;
+    }
+
+    @Override
+    public boolean handle(MobEquipmentPacket packet) {
+        packet.getItem().setId(this.translateId(packet.getItem().getId()));
+        return true;
+    }
+
+    @Override
+    public boolean handle(MobArmorEquipmentPacket packet) {
+        packet.getHelmet().setId(this.translateId(packet.getHelmet().getId()));
+        packet.getChestplate().setId(this.translateId(packet.getChestplate().getId()));
+        packet.getLeggings().setId(this.translateId(packet.getLeggings().getId()));
+        packet.getBoots().setId(this.translateId(packet.getBoots().getId()));
+        return true;
+    }
+
+    @Override
+    public boolean handle(CreativeContentPacket packet) {
+        for (ItemData itemData : packet.getContents()){
+            itemData.setId(this.translateId(itemData.getId()));
+        }
+        return true;
+    }
+
+    @Override
+    public boolean handle(ItemStackRequestPacket packet) {
+        boolean changed = false;
+        for (ItemStackRequestPacket.Request request : packet.getRequests()){
+            for (StackRequestActionData actionData : request.getActions()){
+                if (actionData.getType() != StackRequestActionType.CRAFT_RESULTS_DEPRECATED){
+                    continue;
+                }
+                changed = true;
+                for (ItemData itemData : ((CraftResultsDeprecatedStackRequestActionData) actionData).getResultItems()){
+                    itemData.setId(this.translateId(itemData.getId()));
+                }
+            }
+        }
+        return changed;
     }
 }

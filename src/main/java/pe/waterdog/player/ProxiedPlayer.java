@@ -46,6 +46,7 @@ import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.rewrite.BlockMap;
 import pe.waterdog.network.rewrite.EntityMap;
 import pe.waterdog.network.rewrite.EntityTracker;
+import pe.waterdog.network.rewrite.RewriteMaps;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.LoginData;
 import pe.waterdog.network.session.ServerConnection;
@@ -73,9 +74,7 @@ public class ProxiedPlayer implements CommandSender {
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
-    private final EntityTracker entityTracker;
-    private final EntityMap entityMap;
-    private BlockMap blockMap;
+    private final RewriteMaps rewriteMaps;
     private final LongSet entities = new LongOpenHashSet();
     private final LongSet bossbars = new LongOpenHashSet();
     private final Collection<UUID> players = new HashSet<>();
@@ -111,8 +110,7 @@ public class ProxiedPlayer implements CommandSender {
         this.upstream = session;
         this.loginData = loginData;
         this.loginPacket = loginData.constructLoginPacket();
-        this.entityTracker = new EntityTracker(this);
-        this.entityMap = new EntityMap(this);
+        this.rewriteMaps = new RewriteMaps(this);
         this.proxy.getPlayerManager().subscribePermissions(this);
     }
 
@@ -592,20 +590,8 @@ public class ProxiedPlayer implements CommandSender {
         return !this.disconnected.get() && this.upstream != null && !this.upstream.isClosed();
     }
 
-    public EntityTracker getEntityTracker() {
-        return this.entityTracker;
-    }
-
-    public EntityMap getEntityMap() {
-        return this.entityMap;
-    }
-
-    public void setBlockMap(BlockMap blockMap) {
-        this.blockMap = blockMap;
-    }
-
-    public BlockMap getBlockMap() {
-        return this.blockMap;
+    public RewriteMaps getRewriteMaps() {
+        return this.rewriteMaps;
     }
 
     public LoginData getLoginData() {

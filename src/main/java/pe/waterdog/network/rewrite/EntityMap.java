@@ -32,6 +32,8 @@ import java.util.List;
  */
 public class EntityMap implements BedrockPacketHandler {
 
+    //TODO: MobArmorEquipmentPacket
+
     private final ProxiedPlayer player;
     private final RewriteData rewrite;
 

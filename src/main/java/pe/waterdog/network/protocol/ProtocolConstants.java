@@ -69,8 +69,13 @@ public class ProtocolConstants {
         BedrockPacketCodec.Builder builder = bedrockCodec.createBuilder(protocol.getDefaultCodec());
         bedrockCodec.buildCodec(builder);
 
+        ProxyServer proxy = ProxyServer.getInstance();
+        if (proxy.getConfiguration().isItemRewrite()){
+            bedrockCodec.registerItemPackets(builder);
+        }
+
         ProtocolCodecRegisterEvent event = new ProtocolCodecRegisterEvent(protocol, builder);
-        ProxyServer.getInstance().getEventManager().callEvent(event);
+        proxy.getEventManager().callEvent(event);
         if (event.isCancelled()){
             return false;
         }
@@ -79,7 +84,7 @@ public class ProtocolConstants {
         protocol.setBedrockCodec(bedrockCodec);
         protocol2CodecMap.put(protocol, bedrockCodec);
 
-        MainLogger.getLogger().debug("Registered custom BedrockCodec "+protocol);
+        proxy.getLogger().debug("Registered custom BedrockCodec "+protocol);
         return true;
     }
 }

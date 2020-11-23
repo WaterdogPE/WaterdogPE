@@ -55,7 +55,11 @@ public abstract class BedrockCodec {
      * @param builder can be edited inside of the function. Builder is used to register or deregister packets.
      */
     public void buildCodec(BedrockPacketCodec.Builder builder) {
-        //Maybe later put common packets here
+        // Maybe later put common packets here
+    }
+
+    public void registerItemPackets(BedrockPacketCodec.Builder builder) {
+        // Since 1.16.100 we do item rewrite
     }
 
     public abstract ProtocolVersion getProtocol();

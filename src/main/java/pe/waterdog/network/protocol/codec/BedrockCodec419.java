@@ -18,6 +18,8 @@ package pe.waterdog.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import com.nukkitx.protocol.bedrock.packet.*;
+import com.nukkitx.protocol.bedrock.v291.serializer.CraftingEventSerializer_v291;
+import com.nukkitx.protocol.bedrock.v407.serializer.*;
 import com.nukkitx.protocol.bedrock.v419.BedrockPacketHelper_v419;
 import com.nukkitx.protocol.bedrock.v419.serializer.*;
 import pe.waterdog.network.protocol.ProtocolVersion;
@@ -51,5 +53,18 @@ public class BedrockCodec419 extends BedrockCodec408 {
 
         builder.deregisterPacket(MoveEntityDeltaPacket.class);
         builder.registerPacket(MoveEntityDeltaPacket.class, MoveEntityDeltaSerializer_v419.INSTANCE, 111);
+    }
+
+    @Override
+    public void registerItemPackets(BedrockPacketCodec.Builder builder) {
+        builder.registerPacket(CraftingDataPacket.class, CraftingDataSerializer_v407.INSTANCE, 52);
+        builder.registerPacket(CraftingEventPacket.class, CraftingEventSerializer_v291.INSTANCE, 53);
+
+        builder.registerPacket(InventoryTransactionPacket.class, InventoryTransactionSerializer_v407.INSTANCE, 30);
+        builder.registerPacket(InventoryContentPacket.class, InventoryContentSerializer_v407.INSTANCE, 49);
+        builder.registerPacket(InventorySlotPacket.class, InventorySlotSerializer_v407.INSTANCE, 50);
+        builder.registerPacket(CreativeContentPacket.class, CreativeContentSerializer_v407.INSTANCE, 145);
+        builder.registerPacket(ItemStackRequestPacket.class, ItemStackRequestSerializer_v407.INSTANCE, 147);
+
     }
 }

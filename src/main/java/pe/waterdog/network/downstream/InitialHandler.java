@@ -23,6 +23,7 @@ import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.rewrite.BlockMap;
 import pe.waterdog.network.rewrite.BlockMapModded;
+import pe.waterdog.network.rewrite.ItemMap;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.ItemPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
@@ -101,18 +102,19 @@ public class InitialHandler implements BedrockPacketHandler {
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
             rewriteData.setBlockPalette(palette);
             rewriteData.setBlockPaletteRewrite(palette.createRewrite(palette));
-            this.player.setBlockMap(new BlockMap(this.player));
+            this.player.getRewriteMaps().setBlockMap(new BlockMap(this.player));
             rewriteData.setShieldBlockingId(ItemPalette.OLD_SHIELD_ID);
         }else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
-            this.player.setBlockMap(new BlockMapModded(this.player));
+            this.player.getRewriteMaps().setBlockMap(new BlockMapModded(this.player));
 
             ItemPalette palette = ItemPalette.getPalette(packet.getItemEntries(), this.player.getProtocol());
             if (this.player.getProxy().getConfiguration().isItemRewrite()){
                 rewriteData.setItemPalette(palette);
                 rewriteData.setItemPaletteRewrite(palette.createRewrite(palette));
 
-                //TODO: itemMap
+                this.player.getRewriteMaps().setItemMap(new ItemMap(this.player, false));
+                this.player.getRewriteMaps().setItemMapReversed(new ItemMap(this.player, true));
             }else {
                 // We use shield blocking id from first palette and assume all other servers use same palette
                 rewriteData.setShieldBlockingId((int) palette.getShieldBlockingId());
