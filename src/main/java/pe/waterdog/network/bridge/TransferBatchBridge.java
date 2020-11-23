@@ -55,8 +55,9 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         }
         super.handlePacket(packet, handler);
 
-        // All packets after StartGamePacket should be queued
-        if (!isStartGame && this.hasStartGame.get()){
+        // Packets after StartGamePacket should be queued
+        // Ignore LevelEvent packet to prevent massive amounts of packets in queue
+        if (!isStartGame && this.hasStartGame.get() && packet.getPacketType() != BedrockPacketType.LEVEL_EVENT){
             this.packetQueue.add(packet);
         }
         throw CancelSignalException.CANCEL;
