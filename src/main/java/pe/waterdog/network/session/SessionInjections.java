@@ -47,15 +47,15 @@ public class SessionInjections {
 
     public static void injectInitialHandlers(ServerConnection server, ProxiedPlayer player) {
         Preconditions.checkArgument(server != null && player != null, "Player and ServerConnection can not be null!");
-        player.getUpstream().setHardcodedBlockingId(player.getRewriteData().getShieldBlockingId());
-        server.getDownstream().setHardcodedBlockingId(player.getRewriteData().getShieldBlockingId());
+        player.getUpstream().getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
+        server.getDownstream().getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
 
         server.getDownstream().setPacketHandler(new ConnectedDownstreamHandler(player, server));
     }
 
     public static void injectDownstreamHandlers(ServerConnection server, ProxiedPlayer player) {
         Preconditions.checkArgument(server != null && player != null, "Player and ServerConnection can not be null!");
-        server.getDownstream().setHardcodedBlockingId(player.getRewriteData().getDownstreamShieldBlockingId());
+        server.getDownstream().getHardcodedBlockingId().set(player.getRewriteData().getDownstreamShieldBlockingId());
 
         server.getDownstream().setPacketHandler(new ConnectedDownstreamHandler(player, server));
         player.getUpstream().setBatchHandler(new UpstreamBridge(player, server.getDownstream()));

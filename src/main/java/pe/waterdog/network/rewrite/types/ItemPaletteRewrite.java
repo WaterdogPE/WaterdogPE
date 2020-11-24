@@ -38,10 +38,12 @@ public class ItemPaletteRewrite {
     }
 
     public int fromDownstream(int runtimeId){
-        return this.upstreamPalette.getId(this.downstreamPalette.getEntry(runtimeId));
+        ItemEntry itemEntry = this.downstreamPalette.getEntry(runtimeId);
+        return itemEntry == null? 0 : this.upstreamPalette.getId(itemEntry.getIdentifier());
     }
 
     public int fromUpstream(int runtimeId){
-        return this.downstreamPalette.getId(this.upstreamPalette.getEntry(runtimeId));
+        ItemEntry itemEntry = this.upstreamPalette.getEntry(runtimeId);
+        return itemEntry == null? 0 : this.downstreamPalette.getId(itemEntry.getIdentifier());
     }
 }

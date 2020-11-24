@@ -19,8 +19,7 @@ import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ShortLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ShortMap;
+import it.unimi.dsi.fastutil.objects.*;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.shorts.Short2ObjectMap;
 import pe.waterdog.network.protocol.ProtocolVersion;
@@ -32,8 +31,8 @@ public class ItemPalette {
     public static final int OLD_SHIELD_ID = 513;
 
     private static final Int2ObjectMap<ItemPalette> paletteCache = new Int2ObjectOpenHashMap<>();
-    private final Object2ShortMap<ItemEntry> entryToId = new Object2ShortLinkedOpenHashMap<>();
-    private final Short2ObjectMap<ItemEntry> idToEntry = new Short2ObjectLinkedOpenHashMap<>();
+    private final Int2ObjectMap<ItemEntry> networkToEntry = new Int2ObjectOpenHashMap<>();
+    private final Object2ObjectMap<String, ItemEntry> identifierToEntry = new Object2ObjectOpenHashMap<>();
 
     private Short shieldBlockingId = null;
     private Short downstreamShieldBlockingId = null;
@@ -67,18 +66,23 @@ public class ItemPalette {
         return new ItemPaletteRewrite(upstreamPalette, this);
     }
 
-    private void addEntry(short runtimeId, String identifier) {
+    private void addEntry(int runtimeId, String identifier) {
         final ItemEntry entry = new ItemEntry(identifier, runtimeId);
-        this.entryToId.put(entry, runtimeId);
-        this.idToEntry.put(runtimeId, entry);
+        this.identifierToEntry.put(identifier, entry);
+        this.networkToEntry.put(runtimeId, entry);
     }
 
-    public int getId(ItemEntry entry) {
-        return this.entryToId.getShort(entry) & 0xFFFF;
+    public ItemEntry getEntry(String identifier) {
+        return this.identifierToEntry.get(identifier);
     }
 
     public ItemEntry getEntry(int runtimeId) {
-        return this.idToEntry.get((short) runtimeId);
+        return this.networkToEntry.get(runtimeId);
+    }
+
+    public int getId(String identifier) {
+        ItemEntry itemEntry = this.identifierToEntry.get(identifier);
+        return itemEntry == null? 0 : itemEntry.getRuntimeId();
     }
 
     public Short getShieldBlockingId() {
