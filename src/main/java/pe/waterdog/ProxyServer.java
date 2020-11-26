@@ -45,7 +45,9 @@ import pe.waterdog.utils.config.ServerList;
 import pe.waterdog.utils.types.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -233,7 +235,15 @@ public class ProxyServer {
     }
 
     public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
-        InetSocketAddress address = new InetSocketAddress("0.0.0.0", ThreadLocalRandom.current().nextInt(20000, 60000));
+        int port;
+        try {
+            ServerSocket socket = new ServerSocket(0);
+            socket.setReuseAddress(true);
+            port = socket.getLocalPort();
+        }catch (IOException e){
+            throw new RuntimeException("Can bind BedrockClient!", e);
+        }
+        InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
         BedrockClient client = new BedrockClient(address);
         client.setRakNetVersion(protocol.getRaknetVersion());
         return client.bind().thenApply(i -> client);
