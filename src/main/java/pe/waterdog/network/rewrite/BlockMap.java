@@ -1,17 +1,16 @@
-/**
+/*
  * Copyright 2020 WaterdogTEAM
- * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 
 package pe.waterdog.network.rewrite;
@@ -65,19 +64,19 @@ public class BlockMap implements BedrockPacketHandler {
             to.writeByte(chunkVersion);
 
             switch (chunkVersion) {
-                case 0: //legacy block ids, no remap needed
-                case 4: //minet uses this format. what is it?
+                case 0: // Legacy block ids, no remap needed
+                case 4: // MiNet uses this format. what is it?
                 case 139:
                     from.release();
                     to.release();
                     return false;
-                case 8: //new form chunk, baked-in palette
+                case 8: // New form chunk, baked-in palette
                     int storageCount = from.readUnsignedByte();
                     to.writeByte(storageCount);
 
                     for (int storage = 0; storage < storageCount; storage++) {
                         int flags = from.readUnsignedByte();
-                        int bitsPerBlock = flags >> 1; //isRuntime = (flags & 0x1) != 0
+                        int bitsPerBlock = flags >> 1; // isRuntime = (flags & 0x1) != 0
                         int blocksPerWord = Integer.SIZE / bitsPerBlock;
                         int nWords = (nV8Blocks + blocksPerWord - 1) / blocksPerWord;
 
@@ -93,7 +92,7 @@ public class BlockMap implements BedrockPacketHandler {
                         }
                     }
                     break;
-                default: //unsupported
+                default: // Unsupported
                     notSupported = true;
                     this.player.getLogger().warning("PEBlockRewrite: Unknown subchunk format " + chunkVersion);
                     break;
@@ -106,7 +105,7 @@ public class BlockMap implements BedrockPacketHandler {
         }
 
         if (success) {
-            to.writeBytes(from); //copy the rest
+            to.writeBytes(from); // Copy the rest
             byte[] newData = new byte[to.readableBytes()];
             to.readBytes(newData);
             packet.setData(newData);
