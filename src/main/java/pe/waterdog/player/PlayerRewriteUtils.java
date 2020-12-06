@@ -41,6 +41,9 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn, int radius) {
+        if (session == null || session.isClosed()){
+            return;
+        }
         NetworkChunkPublisherUpdatePacket packet = new NetworkChunkPublisherUpdatePacket();
         packet.setPosition(defaultSpawn);
         packet.setRadius(radius);
@@ -48,18 +51,27 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectGameMode(BedrockSession session, GameType gameMode) {
+        if (session == null || session.isClosed()){
+            return;
+        }
         SetPlayerGameTypePacket packet = new SetPlayerGameTypePacket();
         packet.setGamemode(gameMode.ordinal());
         session.sendPacket(packet);
     }
 
     public static void injectGameRules(BedrockSession session, List<GameRuleData<?>> gameRules) {
+        if (session == null || session.isClosed()){
+            return;
+        }
         GameRulesChangedPacket packet = new GameRulesChangedPacket();
         packet.getGameRules().addAll(gameRules);
         session.sendPacket(packet);
     }
 
     public static void injectClearWeather(BedrockSession session) {
+        if (session == null || session.isClosed()){
+            return;
+        }
         LevelEventPacket stopRain = new LevelEventPacket();
         stopRain.setType(LevelEventType.STOP_RAINING);
         stopRain.setData(10000);
@@ -74,18 +86,27 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectSetDifficulty(BedrockSession session, int difficulty) {
+        if (session == null || session.isClosed()){
+            return;
+        }
         SetDifficultyPacket packet = new SetDifficultyPacket();
         packet.setDifficulty(difficulty);
         session.sendPacket(packet);
     }
 
     public static void injectRemoveEntity(BedrockSession session, long runtimeId) {
+        if (session == null || session.isClosed()){
+            return;
+        }
         RemoveEntityPacket packet = new RemoveEntityPacket();
         packet.setUniqueEntityId(runtimeId);
         session.sendPacket(packet);
     }
 
     public static void injectRemoveAllPlayers(BedrockSession session, Collection<UUID> playerList) {
+        if (session == null || session.isClosed()){
+            return;
+        }
         PlayerListPacket packet = new PlayerListPacket();
         packet.setAction(PlayerListPacket.Action.REMOVE);
         List<PlayerListPacket.Entry> entries = new ArrayList<>();
@@ -97,6 +118,9 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectRemoveAllEffects(BedrockSession session, long runtimeId) {
+        if (session == null || session.isClosed()){
+            return;
+        }
         for (int i = 0; i < 28; i++) {
             injectRemoveEntityEffect(session, runtimeId, i);
         }
@@ -117,12 +141,18 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectRemoveObjective(BedrockSession session, String objectiveId) {
+        if (session == null || session.isClosed()){
+            return;
+        }
         RemoveObjectivePacket packet = new RemoveObjectivePacket();
         packet.setObjectiveId(objectiveId);
         session.sendPacket(packet);
     }
 
     public static void injectRemoveBossbar(BedrockSession session, long bossbarId) {
+        if (session == null || session.isClosed()){
+            return;
+        }
         BossEventPacket packet = new BossEventPacket();
         packet.setAction(BossEventPacket.Action.REMOVE);
         packet.setBossUniqueEntityId(bossbarId);
