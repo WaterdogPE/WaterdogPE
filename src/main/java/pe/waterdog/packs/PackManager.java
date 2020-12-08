@@ -161,7 +161,7 @@ public class PackManager {
                 continue;
             }
             ResourcePacksInfoPacket.Entry infoEntry = new ResourcePacksInfoPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(),
-                    pack.getPackSize(), "", "", "", false);
+                    pack.getPackSize(), "", "", "", false, false);
             this.packsInfoPacket.getResourcePackInfos().add(infoEntry);
             ResourcePackStackPacket.Entry stackEntry = new ResourcePackStackPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(), "");
             this.stackPacket.getResourcePacks().add(stackEntry);
