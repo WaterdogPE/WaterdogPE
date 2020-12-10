@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ProxyBatchBridge implements BatchHandler {
+public abstract class ProxyBatchBridge implements BatchHandler {
 
     protected final BedrockSession session;
     protected final ProxiedPlayer player;
@@ -62,7 +62,7 @@ public class ProxyBatchBridge implements BatchHandler {
         if (!changed && allPackets.size() == packets.size()) {
             buf.readerIndex(1);
             this.session.sendWrapped(buf, this.session.isEncrypted());
-        } else {
+        } else if (!allPackets.isEmpty()){
             this.session.sendWrapped(allPackets, true);
         }
     }

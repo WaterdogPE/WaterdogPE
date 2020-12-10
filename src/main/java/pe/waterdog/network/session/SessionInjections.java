@@ -18,6 +18,7 @@ package pe.waterdog.network.session;
 
 import com.google.common.base.Preconditions;
 import com.nukkitx.network.util.DisconnectReason;
+import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
@@ -35,7 +36,7 @@ public class SessionInjections {
         upstream.addDisconnectHandler((reason) -> player.disconnect((String) null));
     }
 
-    public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server) {
+    public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server, BedrockClient downstreamClient) {
         downstream.setCompressionLevel(player.getProxy().getConfiguration().getDownstreamCompression());
         downstream.addDisconnectHandler((reason) -> {
             player.getLogger().info("[" + downstream.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");

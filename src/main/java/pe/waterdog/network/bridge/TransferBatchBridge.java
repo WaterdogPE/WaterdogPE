@@ -20,6 +20,7 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import io.netty.buffer.ByteBuf;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
@@ -59,6 +60,15 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         // Ignore LevelEvent packet to prevent massive amounts of packets in queue
         if (!isStartGame && this.hasStartGame.get() && packet.getPacketType() != BedrockPacketType.LEVEL_EVENT){
             this.packetQueue.add(packet);
+        }
+        throw CancelSignalException.CANCEL;
+    }
+
+    @Override
+    public boolean handleUnknownPacket(UnknownPacket packet) {
+        int refCnt = packet.refCnt();
+        if (refCnt > 0){
+            packet.release(refCnt);
         }
         throw CancelSignalException.CANCEL;
     }

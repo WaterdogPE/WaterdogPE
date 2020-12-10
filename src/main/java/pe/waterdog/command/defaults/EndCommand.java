@@ -9,9 +9,9 @@ public class EndCommand extends Command {
 
     public EndCommand() {
         super("end", CommandSettings.builder()
-                .setDescription("Shut down the proxy instance")
-                .setPermission("waterdog.command.end")
-                .setUsageMessage("/end").build());
+                .setDescription("waterdog.command.end.description")
+                .setPermission("waterdog.command.end.permission")
+                .setUsageMessage("waterdog.command.end.usage").build());
     }
 
     @Override
