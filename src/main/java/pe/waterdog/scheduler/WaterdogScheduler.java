@@ -22,10 +22,7 @@ import pe.waterdog.utils.exceptions.SchedulerException;
 
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WaterdogScheduler {
@@ -50,7 +47,8 @@ public class WaterdogScheduler {
 
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
         builder.setNameFormat("WaterdogScheduler Executor");
-        this.threadedExecutor = Executors.newCachedThreadPool(builder.build());
+        int idleThreads = this.proxy.getConfiguration().getIdleThreads();
+        this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(), builder.build());
     }
 
     public static WaterdogScheduler getInstance() {

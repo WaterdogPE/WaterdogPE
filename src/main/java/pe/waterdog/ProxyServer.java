@@ -119,7 +119,7 @@ public class ProxyServer {
         this.pluginManager = new PluginManager(this);
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
-        this.eventManager = new EventManager();
+        this.eventManager = new EventManager(this);
         this.packManager = new PackManager(this);
 
         this.commandSender = new ConsoleCommandSender(this);
