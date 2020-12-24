@@ -31,10 +31,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.command.CommandSender;
-import pe.waterdog.event.defaults.InitialServerDeterminationEvent;
-import pe.waterdog.event.defaults.PlayerDisconnectEvent;
-import pe.waterdog.event.defaults.PlayerLoginEvent;
-import pe.waterdog.event.defaults.PreTransferEvent;
+import pe.waterdog.event.defaults.*;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
@@ -121,12 +118,20 @@ public class ProxiedPlayer implements CommandSender {
      */
     public void initPlayer() {
         SessionInjections.injectUpstreamHandlers(this.upstream, this);
-        if (this.proxy.getConfiguration().enabledResourcePacks()) {
-            ResourcePacksInfoPacket packet = this.proxy.getPackManager().getPacksInfoPacket();
-            this.upstream.sendPacket(packet);
-        } else {
+        if (!this.proxy.getConfiguration().enabledResourcePacks()) {
             this.initialConnect();
+            return;
         }
+
+        ResourcePacksInfoPacket packet = this.proxy.getPackManager().getPacksInfoPacket();
+        PlayerResourcePackInfoSendEvent event = new PlayerResourcePackInfoSendEvent(this, packet);
+        this.proxy.getEventManager().callEvent(event);
+        if (event.isCancelled()) {
+            // Connect player to downstream without sending ResourcePacksInfoPacket
+            this.initialConnect();
+            return;
+        }
+        this.upstream.sendPacket(event.getPacket());
     }
 
     /**
