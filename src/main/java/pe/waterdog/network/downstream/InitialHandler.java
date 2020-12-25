@@ -66,7 +66,7 @@ public class InitialHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(ResourcePacksInfoPacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()) {
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks() || !this.player.acceptResourcePacks()) {
             return false;
         }
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
@@ -77,7 +77,7 @@ public class InitialHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(ResourcePackStackPacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()) {
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks() || !this.player.acceptResourcePacks()) {
             return false;
         }
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
@@ -95,7 +95,7 @@ public class InitialHandler implements BedrockPacketHandler {
         rewriteData.setDimension(packet.getDimensionId());
         rewriteData.parseItemIds(packet.getItemEntries());
 
-        // Starting with 419 servers does not send vanilla blocks to client
+        // Starting with 419 server does not send vanilla blocks to client
         if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
             rewriteData.setBlockPalette(palette);

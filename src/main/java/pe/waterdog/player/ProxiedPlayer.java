@@ -95,7 +95,11 @@ public class ProxiedPlayer implements CommandSender {
      * See ConnectedDownstreamHandler and SwitchDownstreamHandler for exact usage.
      */
     private boolean acceptPlayStatus = false;
-
+    /**
+     * Used to determine if proxy can send resource packs packets to player.
+     * This value is changed by PlayerResourcePackInfoSendEvent.
+     */
+    private boolean acceptResourcePacks = true;
     /**
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
@@ -128,6 +132,7 @@ public class ProxiedPlayer implements CommandSender {
         this.proxy.getEventManager().callEvent(event);
         if (event.isCancelled()) {
             // Connect player to downstream without sending ResourcePacksInfoPacket
+            this.acceptResourcePacks = false;
             this.initialConnect();
             return;
         }
@@ -688,5 +693,9 @@ public class ProxiedPlayer implements CommandSender {
 
     public boolean acceptPlayStatus() {
         return this.acceptPlayStatus;
+    }
+
+    public boolean acceptResourcePacks() {
+        return this.acceptResourcePacks;
     }
 }

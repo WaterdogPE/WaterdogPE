@@ -88,13 +88,6 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
         initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
         this.server.sendPacket(initializedPacket);
 
-        MovePlayerPacket movePlayerPacket = new MovePlayerPacket();
-        movePlayerPacket.setPosition(rewriteData.getSpawnPosition());
-        movePlayerPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
-        movePlayerPacket.setRotation(Vector3f.from(rewriteData.getRotation().getX(), rewriteData.getRotation().getY(), rewriteData.getRotation().getY()));
-        movePlayerPacket.setMode(MovePlayerPacket.Mode.RESPAWN);
-        this.player.sendPacket(movePlayerPacket);
-
         PostTransferCompleteEvent event = new PostTransferCompleteEvent(this.server, this.player);
         this.player.getProxy().getEventManager().callEvent(event);
         return false;
