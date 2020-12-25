@@ -64,15 +64,6 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         throw CancelSignalException.CANCEL;
     }
 
-    @Override
-    public boolean handleUnknownPacket(UnknownPacket packet) {
-        int refCnt = packet.refCnt();
-        if (refCnt > 0){
-            packet.release(refCnt);
-        }
-        throw CancelSignalException.CANCEL;
-    }
-
     public Queue<BedrockPacket> getPacketQueue() {
         return this.packetQueue;
     }

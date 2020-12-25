@@ -22,6 +22,7 @@ import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.ReferenceCountUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.player.ProxiedPlayer;
@@ -57,14 +58,27 @@ public abstract class ProxyBatchBridge implements BatchHandler {
                 }
                 allPackets.add(packet);
             } catch (CancelSignalException e) {
+                // In this case packet won't be released by protocol lib
+                ReferenceCountUtil.release(packet);
             }
+        }
+
+        if (!allPackets.isEmpty() && (changed || allPackets.size() != packets.size())) {
+            this.session.sendWrapped(allPackets, true);
+            return;
         }
 
         if (!changed && allPackets.size() == packets.size()) {
             buf.readerIndex(1);
             this.session.sendWrapped(buf, this.session.isEncrypted());
-        } else if (!allPackets.isEmpty()){
-            this.session.sendWrapped(allPackets, true);
+            for (BedrockPacket packet : packets) {
+                // We send original buffer therefore packets from array aren't used.
+                // We must deallocate packets here.
+                int refCnt = ReferenceCountUtil.refCnt(packet);
+                if (refCnt > 0) {
+                    ReferenceCountUtil.release(packet);
+                }
+            }
         }
     }
 
