@@ -113,7 +113,7 @@ public class FileUtils {
         while ((length = content.read(buffer)) != -1) {
             stream.write(buffer, 0, length);
         }
-
         content.close();
+        stream.close();
     }
 }
