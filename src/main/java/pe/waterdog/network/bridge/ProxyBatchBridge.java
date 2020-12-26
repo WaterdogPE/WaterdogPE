@@ -71,13 +71,17 @@ public abstract class ProxyBatchBridge implements BatchHandler {
         if (!changed && allPackets.size() == packets.size()) {
             buf.readerIndex(1);
             this.session.sendWrapped(buf, this.session.isEncrypted());
-            for (BedrockPacket packet : packets) {
-                // We send original buffer therefore packets from array aren't used.
-                // We must deallocate packets here.
-                int refCnt = ReferenceCountUtil.refCnt(packet);
-                if (refCnt > 0) {
-                    ReferenceCountUtil.release(packet);
-                }
+        }
+
+        // Packets from array aren't used so we can deallocate whole.
+        this.deallocatePackets(packets);
+    }
+
+    protected void deallocatePackets(Collection<BedrockPacket> packets) {
+        for (BedrockPacket packet : packets) {
+            int refCnt = ReferenceCountUtil.refCnt(packet);
+            if (refCnt > 0) {
+                ReferenceCountUtil.release(packet);
             }
         }
     }
