@@ -18,9 +18,7 @@ package pe.waterdog.player;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.nukkitx.protocol.bedrock.BedrockClient;
-import com.nukkitx.protocol.bedrock.BedrockPacket;
-import com.nukkitx.protocol.bedrock.BedrockServerSession;
+import com.nukkitx.protocol.bedrock.*;
 import com.nukkitx.protocol.bedrock.packet.*;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -183,8 +181,7 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        final @NonNull ServerInfo targetServer = event.getTargetServer();
-
+        ServerInfo targetServer = event.getTargetServer();
         if (this.serverConnection != null && this.serverConnection.getInfo() == targetServer) {
             this.sendMessage(new TranslationContainer("waterdog.downstream.connected", serverInfo.getServerName()));
             return;
@@ -195,18 +192,14 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
-        future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
-            if (throwable != null) {
-                this.getLogger().debug("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
-                this.pendingConnection = null;
+        if (this.serverConnection != null) {
+            this.pendingConnection = targetServer;
+        }
 
-                String exceptionMessage = throwable.getLocalizedMessage();
-                if (this.sendToFallback(targetServer, exceptionMessage)) {
-                    this.sendMessage(new TranslationContainer("waterdog.connected.fallback", serverInfo.getServerName()));
-                } else {
-                    this.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), exceptionMessage));
-                }
+        CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
+        future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, error) -> {
+            if (error != null) {
+                this.connectFailure(client, targetServer, error);
                 return;
             }
 
@@ -219,8 +212,6 @@ public class ProxiedPlayer implements CommandSender {
                 this.upstream.setBatchHandler(new UpstreamBridge(this, downstream));
                 this.hasUpstreamBridge = true;
             } else {
-                this.pendingConnection = targetServer;
-
                 downstream.setPacketHandler(new SwitchDownstreamHandler(this, targetServer, client));
                 downstream.setBatchHandler(new TransferBatchBridge(this, this.upstream));
             }
@@ -231,7 +222,26 @@ public class ProxiedPlayer implements CommandSender {
 
             SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
             this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
-        }));
+        })).whenComplete((ignore, error) -> {
+            if (error != null) {
+                this.connectFailure(null, targetServer, error);
+            }
+        });
+    }
+
+    private void connectFailure(BedrockClient client, ServerInfo targetServer, Throwable error) {
+        this.getLogger().debug("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), error);
+        this.pendingConnection = null;
+        if (client != null) {
+            client.close();
+        }
+
+        String exceptionMessage = error.getLocalizedMessage();
+        if (this.sendToFallback(targetServer, exceptionMessage)) {
+            this.sendMessage(new TranslationContainer("waterdog.connected.fallback", targetServer.getServerName()));
+        } else {
+            this.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", targetServer.getServerName(), exceptionMessage));
+        }
     }
 
     /**

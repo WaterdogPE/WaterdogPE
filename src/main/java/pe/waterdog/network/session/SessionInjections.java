@@ -27,7 +27,6 @@ import pe.waterdog.network.downstream.ConnectedDownstreamHandler;
 import pe.waterdog.network.upstream.UpstreamHandler;
 import pe.waterdog.player.ProxiedPlayer;
 
-
 public class SessionInjections {
 
     public static void injectUpstreamHandlers(BedrockSession upstream, ProxiedPlayer player) {
@@ -39,6 +38,12 @@ public class SessionInjections {
     public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server, BedrockClient downstreamClient) {
         downstream.setCompressionLevel(player.getProxy().getConfiguration().getDownstreamCompression());
         downstream.addDisconnectHandler((reason) -> {
+            if (downstreamClient != null && downstreamClient.getSession().equals(downstream)) {
+                // Make sure everything is closed as excepted.
+                // TODO: enable this after protocol lib version bump
+                // downstreamClient.close();
+            }
+
             player.getLogger().info("[" + downstream.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
             if (reason == DisconnectReason.TIMED_OUT) {
                 player.onDownstreamTimeout();
