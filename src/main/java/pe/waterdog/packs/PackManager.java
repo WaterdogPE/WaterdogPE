@@ -161,7 +161,7 @@ public class PackManager {
                 continue;
             }
             ResourcePacksInfoPacket.Entry infoEntry = new ResourcePacksInfoPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(),
-                    pack.getPackSize(), "", "", "", false);
+                    pack.getPackSize(), "", "", "", false, false);
             this.packsInfoPacket.getResourcePackInfos().add(infoEntry);
             ResourcePackStackPacket.Entry stackEntry = new ResourcePackStackPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(), "");
             this.stackPacket.getResourcePacks().add(stackEntry);
@@ -198,7 +198,7 @@ public class PackManager {
         packet.setPackId(from.getPackId());
         packet.setPackVersion(from.getPackVersion());
         packet.setChunkIndex(from.getChunkIndex());
-        packet.setData(resourcePack.getChunk(FileUtils.INT_MEGABYTE * from.getChunkIndex(), 1048576));
+        packet.setData(resourcePack.getChunk(FileUtils.INT_MEGABYTE * from.getChunkIndex(), FileUtils.INT_MEGABYTE));
         packet.setProgress(FileUtils.INT_MEGABYTE * from.getChunkIndex());
         return packet;
     }

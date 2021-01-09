@@ -18,9 +18,7 @@ package pe.waterdog.player;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.nukkitx.protocol.bedrock.BedrockClient;
-import com.nukkitx.protocol.bedrock.BedrockPacket;
-import com.nukkitx.protocol.bedrock.BedrockServerSession;
+import com.nukkitx.protocol.bedrock.*;
 import com.nukkitx.protocol.bedrock.packet.*;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -31,10 +29,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import lombok.NonNull;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.command.CommandSender;
-import pe.waterdog.event.defaults.InitialServerDeterminationEvent;
-import pe.waterdog.event.defaults.PlayerDisconnectEvent;
-import pe.waterdog.event.defaults.PlayerLoginEvent;
-import pe.waterdog.event.defaults.PreTransferEvent;
+import pe.waterdog.event.defaults.*;
 import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
@@ -55,6 +50,7 @@ import pe.waterdog.utils.types.Permission;
 import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.utils.types.TranslationContainer;
 
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
@@ -75,7 +71,7 @@ public class ProxiedPlayer implements CommandSender {
     private final LoginData loginData;
     private final EntityTracker entityTracker;
     private final EntityMap entityMap;
-    private final BlockMap blockMap;
+    private BlockMap blockMap;
     private final LongSet entities = new LongOpenHashSet();
     private final LongSet bossbars = new LongOpenHashSet();
     private final Collection<UUID> players = new HashSet<>();
@@ -98,7 +94,11 @@ public class ProxiedPlayer implements CommandSender {
      * See ConnectedDownstreamHandler and SwitchDownstreamHandler for exact usage.
      */
     private boolean acceptPlayStatus = false;
-
+    /**
+     * Used to determine if proxy can send resource packs packets to player.
+     * This value is changed by PlayerResourcePackInfoSendEvent.
+     */
+    private boolean acceptResourcePacks = true;
     /**
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
@@ -113,7 +113,6 @@ public class ProxiedPlayer implements CommandSender {
         this.loginPacket = loginData.constructLoginPacket();
         this.entityTracker = new EntityTracker(this);
         this.entityMap = new EntityMap(this);
-        this.blockMap = new BlockMap(this);
         this.proxy.getPlayerManager().subscribePermissions(this);
     }
 
@@ -122,12 +121,21 @@ public class ProxiedPlayer implements CommandSender {
      */
     public void initPlayer() {
         SessionInjections.injectUpstreamHandlers(this.upstream, this);
-        if (this.proxy.getConfiguration().enabledResourcePacks()) {
-            ResourcePacksInfoPacket packet = this.proxy.getPackManager().getPacksInfoPacket();
-            this.upstream.sendPacket(packet);
-        } else {
+        if (!this.proxy.getConfiguration().enabledResourcePacks()) {
             this.initialConnect();
+            return;
         }
+
+        ResourcePacksInfoPacket packet = this.proxy.getPackManager().getPacksInfoPacket();
+        PlayerResourcePackInfoSendEvent event = new PlayerResourcePackInfoSendEvent(this, packet);
+        this.proxy.getEventManager().callEvent(event);
+        if (event.isCancelled()) {
+            // Connect player to downstream without sending ResourcePacksInfoPacket
+            this.acceptResourcePacks = false;
+            this.initialConnect();
+            return;
+        }
+        this.upstream.sendPacket(event.getPacket());
     }
 
     /**
@@ -174,8 +182,7 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        final @NonNull ServerInfo targetServer = event.getTargetServer();
-
+        ServerInfo targetServer = event.getTargetServer();
         if (this.serverConnection != null && this.serverConnection.getInfo() == targetServer) {
             this.sendMessage(new TranslationContainer("waterdog.downstream.connected", serverInfo.getServerName()));
             return;
@@ -186,18 +193,14 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
-        future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, throwable) -> {
-            if (throwable != null) {
-                this.getLogger().debug("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), throwable);
-                this.pendingConnection = null;
+        if (this.serverConnection != null) {
+            this.pendingConnection = targetServer;
+        }
 
-                String exceptionMessage = throwable.getLocalizedMessage();
-                if (this.sendToFallback(targetServer, exceptionMessage)) {
-                    this.sendMessage(new TranslationContainer("waterdog.connected.fallback", serverInfo.getServerName()));
-                } else {
-                    this.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), exceptionMessage));
-                }
+        CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
+        future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, error) -> {
+            if (error != null) {
+                this.connectFailure(client, targetServer, error);
                 return;
             }
 
@@ -210,8 +213,6 @@ public class ProxiedPlayer implements CommandSender {
                 this.upstream.setBatchHandler(new UpstreamBridge(this, downstream));
                 this.hasUpstreamBridge = true;
             } else {
-                this.pendingConnection = targetServer;
-
                 downstream.setPacketHandler(new SwitchDownstreamHandler(this, targetServer, client));
                 downstream.setBatchHandler(new TransferBatchBridge(this, this.upstream));
             }
@@ -220,9 +221,28 @@ public class ProxiedPlayer implements CommandSender {
             downstream.sendPacketImmediately(this.loginPacket);
             downstream.setLogging(true);
 
-            SessionInjections.injectNewDownstream(downstream, this, targetServer);
-            this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
-        }));
+            SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
+            this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
+        })).whenComplete((ignore, error) -> {
+            if (error != null) {
+                this.connectFailure(null, targetServer, error);
+            }
+        });
+    }
+
+    private void connectFailure(BedrockClient client, ServerInfo targetServer, Throwable error) {
+        this.getLogger().debug("[" + this.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), error);
+        this.pendingConnection = null;
+        if (client != null) {
+            client.close();
+        }
+
+        String exceptionMessage = error.getLocalizedMessage();
+        if (this.sendToFallback(targetServer, exceptionMessage)) {
+            this.sendMessage(new TranslationContainer("waterdog.connected.fallback", targetServer.getServerName()));
+        } else {
+            this.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", targetServer.getServerName(), exceptionMessage));
+        }
     }
 
     /**
@@ -264,7 +284,7 @@ public class ProxiedPlayer implements CommandSender {
         }
 
         this.proxy.getPlayerManager().removePlayer(this);
-        this.getLogger().info("[" + this.getName() + "] -> Upstream has disconnected");
+        this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Upstream has disconnected");
         if (reason != null) this.getLogger().info("[" + this.getName() + "] -> Disconnected with: §c" + reason);
     }
 
@@ -560,6 +580,10 @@ public class ProxiedPlayer implements CommandSender {
         return this.serverConnection == null ? null : this.serverConnection.getInfo();
     }
 
+    public InetSocketAddress getAddress() {
+        return this.upstream == null? null : this.upstream.getAddress();
+    }
+
     @Override
     public ProxyServer getProxy() {
         return this.proxy;
@@ -599,6 +623,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public EntityMap getEntityMap() {
         return this.entityMap;
+    }
+
+    public void setBlockMap(BlockMap blockMap) {
+        this.blockMap = blockMap;
     }
 
     public BlockMap getBlockMap() {
@@ -680,5 +708,9 @@ public class ProxiedPlayer implements CommandSender {
 
     public boolean acceptPlayStatus() {
         return this.acceptPlayStatus;
+    }
+
+    public boolean acceptResourcePacks() {
+        return this.acceptResourcePacks;
     }
 }

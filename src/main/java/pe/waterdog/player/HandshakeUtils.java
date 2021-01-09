@@ -26,6 +26,7 @@ import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.ProxyServer;
+import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.utils.ProxyConfig;
 
 import java.net.URI;
@@ -125,5 +126,16 @@ public class HandshakeUtils {
             extraData.addProperty("displayName", playerName.replaceAll(" ", "_"));
         }
         return extraData;
+    }
+
+    public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, JsonArray certChain, ProtocolVersion protocol) throws Exception {
+        // Cert chain should be signed by Mojang is is client xbox authenticated
+        boolean xboxAuth = HandshakeUtils.validateChain(certChain);
+        JWSObject jwt = JWSObject.parse(certChain.get(certChain.size() - 1).getAsString());
+        JsonObject payload = (JsonObject) JsonParser.parseString(jwt.getPayload().toString());
+
+        JsonObject clientData = HandshakeUtils.parseClientData(packet, payload, session);
+        JsonObject extraData = HandshakeUtils.parseExtraData(packet, payload);
+        return new HandshakeEntry(clientData, extraData, xboxAuth, protocol);
     }
 }

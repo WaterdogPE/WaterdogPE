@@ -27,6 +27,8 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import pe.waterdog.event.defaults.TransferCompleteEvent;
 import pe.waterdog.network.ServerInfo;
+import pe.waterdog.network.bridge.TransferBatchBridge;
+import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.ServerConnection;
@@ -112,27 +114,31 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(StartGamePacket packet) {
-        RewriteData rewriteData = player.getRewriteData();
+        RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
         rewriteData.setDimension(packet.getDimensionId());
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
         rewriteData.setRotation(packet.getRotation());
+        rewriteData.parseItemIds(packet.getItemEntries());
 
-        BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
-        rewriteData.setPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
-        long runtimeId = PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewriteData.getEntityId(), rewriteData.getOriginalEntityId());
+        if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
+            BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
+            rewriteData.setPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
+        }else {
+            rewriteData.setBlockProperties(packet.getBlockProperties());
+        }
 
-        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getDefaultSpawn());
+        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getPlayerPosition().toInt(), rewriteData.getChunkRadius().getRadius());
         PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(runtimeId);
+        initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
         this.getDownstream().sendPacket(initializedPacket);
 
         MovePlayerPacket movePlayerPacket = new MovePlayerPacket();
         movePlayerPacket.setPosition(packet.getPlayerPosition());
-        movePlayerPacket.setRuntimeEntityId(runtimeId);
+        movePlayerPacket.setRuntimeEntityId(rewriteData.getEntityId());
         movePlayerPacket.setRotation(Vector3f.from(packet.getRotation().getX(), packet.getRotation().getY(), packet.getRotation().getY()));
         movePlayerPacket.setMode(MovePlayerPacket.Mode.RESPAWN);
         this.player.sendPacket(movePlayerPacket);
@@ -165,7 +171,6 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
         PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
         PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
-
 
         ServerConnection oldServer = this.player.getServer();
         oldServer.getInfo().removePlayer(this.player);

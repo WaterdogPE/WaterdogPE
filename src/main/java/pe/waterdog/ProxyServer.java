@@ -21,6 +21,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import lombok.SneakyThrows;
+import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.apache.logging.log4j.Level;
 import pe.waterdog.command.*;
 import pe.waterdog.console.TerminalConsole;
@@ -40,10 +41,13 @@ import pe.waterdog.scheduler.WaterdogScheduler;
 import pe.waterdog.utils.ConfigurationManager;
 import pe.waterdog.utils.LangConfig;
 import pe.waterdog.utils.ProxyConfig;
+import pe.waterdog.utils.config.ServerList;
 import pe.waterdog.utils.types.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -67,20 +71,21 @@ public class ProxyServer {
     private final PackManager packManager;
 
     private BedrockServer bedrockServer;
-    private final Map<String, ServerInfo> serverInfoMap;
+    private final ServerList serverInfoMap;
     private QueryHandler queryHandler;
+
+    private CommandMap commandMap;
+    private final ConsoleCommandSender commandSender;
+
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
-
-    private final ConsoleCommandSender commandSender;
-    private CommandMap commandMap;
 
     private final ScheduledExecutorService tickExecutor;
     private ScheduledFuture<?> tickFuture;
     private boolean shutdown = false;
     private int currentTick = 0;
 
-    public ProxyServer(MainLogger logger, String filePath, String pluginPath) {
+    public ProxyServer(MainLogger logger, String filePath, String pluginPath) throws InvalidConfigurationException {
         instance = this;
         this.logger = logger;
         this.dataPath = Paths.get(filePath);
@@ -110,12 +115,11 @@ public class ProxyServer {
         // Default Handlers
         this.reconnectHandler = new VanillaReconnectHandler();
         this.joinHandler = new VanillaJoinHandler(this);
-        this.serverInfoMap = configurationManager.getProxyConfig().buildServerMap();
-
+        this.serverInfoMap = configurationManager.getProxyConfig().getServerInfoMap();
         this.pluginManager = new PluginManager(this);
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
-        this.eventManager = new EventManager();
+        this.eventManager = new EventManager(this);
         this.packManager = new PackManager(this);
 
         this.commandSender = new ConsoleCommandSender(this);
@@ -231,7 +235,15 @@ public class ProxyServer {
     }
 
     public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
-        InetSocketAddress address = new InetSocketAddress("0.0.0.0", ThreadLocalRandom.current().nextInt(20000, 60000));
+        int port;
+        try {
+            ServerSocket socket = new ServerSocket(0);
+            socket.setReuseAddress(true);
+            port = socket.getLocalPort();
+        }catch (IOException e){
+            throw new RuntimeException("Can bind BedrockClient!", e);
+        }
+        InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
         BedrockClient client = new BedrockClient(address);
         client.setRakNetVersion(protocol.getRaknetVersion());
         return client.bind().thenApply(i -> client);

@@ -38,7 +38,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(ResourcePackClientResponsePacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()) {
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks() || !this.player.acceptResourcePacks()) {
             return false;
         }
         PackManager packManager = this.player.getProxy().getPackManager();
@@ -74,7 +74,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(ResourcePackChunkRequestPacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks()) {
+        if (!this.player.getProxy().getConfiguration().enabledResourcePacks() || !this.player.acceptResourcePacks()) {
             return false;
         }
         PackManager packManager = this.player.getProxy().getPackManager();

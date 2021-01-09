@@ -18,6 +18,7 @@ package pe.waterdog.network.session;
 
 import com.google.common.base.Preconditions;
 import com.nukkitx.network.util.DisconnectReason;
+import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.bridge.DownstreamBridge;
@@ -34,21 +35,33 @@ public class SessionInjections {
         upstream.addDisconnectHandler((reason) -> player.disconnect((String) null));
     }
 
-    public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server) {
+    public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server, BedrockClient downstreamClient) {
         downstream.setCompressionLevel(player.getProxy().getConfiguration().getDownstreamCompression());
         downstream.addDisconnectHandler((reason) -> {
-            player.getLogger().info("[" + downstream.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
+            if (downstreamClient != null && downstreamClient.getSession().equals(downstream)) {
+                // Make sure everything is closed as excepted.
+                // TODO: enable this after protocol lib version bump
+                // downstreamClient.close();
+            }
+
+            player.getLogger().info("[" + player.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
             if (reason == DisconnectReason.TIMED_OUT) {
                 player.onDownstreamTimeout();
             }
         });
     }
 
-    public static void injectDownstreamHandlers(ServerConnection server, ProxiedPlayer player) {
+    public static void injectInitialHandlers(ServerConnection server, ProxiedPlayer player) {
         Preconditions.checkArgument(server != null && player != null, "Player and ServerConnection can not be null!");
+        player.getUpstream().getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
+        server.getDownstream().getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
 
+        server.getDownstream().setPacketHandler(new ConnectedDownstreamHandler(player, server));
+    }
+
+    public static void injectDownstreamHandlers(ServerConnection server, ProxiedPlayer player) {
+        injectInitialHandlers(server, player);
         player.getUpstream().setBatchHandler(new UpstreamBridge(player, server.getDownstream()));
         server.getDownstream().setBatchHandler(new DownstreamBridge(player, player.getUpstream()));
-        server.getDownstream().setPacketHandler(new ConnectedDownstreamHandler(player, server));
     }
 }

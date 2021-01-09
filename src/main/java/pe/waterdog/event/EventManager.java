@@ -18,10 +18,9 @@ package pe.waterdog.event;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import pe.waterdog.ProxyServer;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
@@ -31,16 +30,19 @@ import java.util.function.Consumer;
  */
 public class EventManager {
 
+    private final ProxyServer proxy;
     private final ExecutorService threadedExecutor;
     private final Object2ObjectOpenHashMap<Class<? extends Event>, EventHandler> handlerMap = new Object2ObjectOpenHashMap<>();
 
-    public EventManager() {
+    public EventManager(ProxyServer proxy) {
+        this.proxy = proxy;
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
         builder.setNameFormat("WaterdogEvents Executor");
-        this.threadedExecutor = Executors.newCachedThreadPool(builder.build());
+        int idleThreads = this.proxy.getConfiguration().getIdleThreads();
+        this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(), builder.build());
     }
 
-    public <T extends Event> void subscribe(Class<? extends Event> event, Consumer<T> handler) {
+    public <T extends Event> void subscribe(Class<T> event, Consumer<T> handler) {
         this.subscribe(event, handler, EventPriority.NORMAL);
     }
 
@@ -54,7 +56,7 @@ public class EventManager {
      * @see AsyncEvent
      * @see EventPriority
      */
-    public <T extends Event> void subscribe(Class<? extends Event> event, Consumer<T> handler, EventPriority priority) {
+    public <T extends Event> void subscribe(Class<T> event, Consumer<T> handler, EventPriority priority) {
         EventHandler eventHandler = this.handlerMap.computeIfAbsent(event, e -> new EventHandler(event, this));
 
         Consumer<Event> func = (Consumer<Event>) handler;

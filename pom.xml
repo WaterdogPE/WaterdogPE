@@ -12,9 +12,9 @@
     <packaging>jar</packaging>
 
     <properties>
-        <raklib.version>1.6.22</raklib.version>
-        <protocol.protocol>bedrock-v408</protocol.protocol>
-        <protocol.version>2.6.0-SNAPSHOT</protocol.version>
+        <raklib.version>1.6.24</raklib.version>
+        <protocol.protocol>bedrock-v422</protocol.protocol>
+        <protocol.version>2.6.1-SNAPSHOT</protocol.version>
         <log4j2.version>2.11.1</log4j2.version>
         <jline.version>3.9.0</jline.version>
     </properties>
@@ -27,6 +27,10 @@
         <repository>
             <id>nukkitx-repo-snapshot</id>
             <url>https://repo.opencollab.dev/maven-snapshots/</url>
+        </repository>
+        <repository>
+            <id>waterdog</id>
+            <url>https://repo.waterdog.dev/artifactory/main/</url>
         </repository>
     </repositories>
 
@@ -45,9 +49,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.fusesource.jansi</groupId>
-            <artifactId>jansi</artifactId>
-            <version>1.11</version>
+            <groupId>net.cubespace</groupId>
+            <artifactId>Yamler-Core</artifactId>
+            <version>2.4.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>jline</groupId>

@@ -101,6 +101,7 @@ public class ZipResourcePack extends ResourcePack {
             }
             inputStream.skip(offset);
             inputStream.read(chunkData);
+            inputStream.close();
         } catch (Exception e) {
             throw new IllegalStateException("Unable to read pack chunk", e);
         }
