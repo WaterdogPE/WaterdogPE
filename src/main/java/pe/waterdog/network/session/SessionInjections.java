@@ -44,7 +44,7 @@ public class SessionInjections {
                 // downstreamClient.close();
             }
 
-            player.getLogger().info("[" + downstream.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
+            player.getLogger().info("[" + player.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
             if (reason == DisconnectReason.TIMED_OUT) {
                 player.onDownstreamTimeout();
             }

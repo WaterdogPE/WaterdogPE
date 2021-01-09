@@ -50,6 +50,7 @@ import pe.waterdog.utils.types.Permission;
 import pe.waterdog.utils.types.TextContainer;
 import pe.waterdog.utils.types.TranslationContainer;
 
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
@@ -221,7 +222,7 @@ public class ProxiedPlayer implements CommandSender {
             downstream.setLogging(true);
 
             SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
-            this.getLogger().info("[" + this.upstream.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
+            this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         })).whenComplete((ignore, error) -> {
             if (error != null) {
                 this.connectFailure(null, targetServer, error);
@@ -230,7 +231,7 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     private void connectFailure(BedrockClient client, ServerInfo targetServer, Throwable error) {
-        this.getLogger().debug("[" + this.upstream.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), error);
+        this.getLogger().debug("[" + this.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), error);
         this.pendingConnection = null;
         if (client != null) {
             client.close();
@@ -283,7 +284,7 @@ public class ProxiedPlayer implements CommandSender {
         }
 
         this.proxy.getPlayerManager().removePlayer(this);
-        this.getLogger().info("[" + this.getName() + "] -> Upstream has disconnected");
+        this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Upstream has disconnected");
         if (reason != null) this.getLogger().info("[" + this.getName() + "] -> Disconnected with: §c" + reason);
     }
 
@@ -577,6 +578,10 @@ public class ProxiedPlayer implements CommandSender {
      */
     public ServerInfo getServerInfo() {
         return this.serverConnection == null ? null : this.serverConnection.getInfo();
+    }
+
+    public InetSocketAddress getAddress() {
+        return this.upstream == null? null : this.upstream.getAddress();
     }
 
     @Override
