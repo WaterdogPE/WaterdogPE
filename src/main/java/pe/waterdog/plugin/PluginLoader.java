@@ -68,17 +68,19 @@ public class PluginLoader {
     protected PluginYAML loadPluginData(File file, Yaml yaml) {
         try (JarFile pluginJar = new JarFile(file)) {
             JarEntry configEntry = pluginJar.getJarEntry("plugin.yml");
-            if (configEntry != null) {
-                InputStream fileStream = pluginJar.getInputStream(configEntry);
+            if (configEntry == null) {
+                MainLogger.getLogger().warning("Jar file " + file.getName() + " doesnt contain a plugin.yml!");
+                return null;
+            }
+
+            try (InputStream fileStream = pluginJar.getInputStream(configEntry)) {
                 PluginYAML pluginConfig = yaml.loadAs(fileStream, PluginYAML.class);
                 if (pluginConfig.getMain() != null && pluginConfig.getName() != null) {
                     // Valid plugin.yml, main and name set
                     return pluginConfig;
                 }
-                MainLogger.getLogger().warning("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
-            } else {
-                MainLogger.getLogger().warning("Jar file " + file.getName() + " doesnt contain a plugin.yml!");
             }
+            MainLogger.getLogger().warning("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
         } catch (IOException e) {
             MainLogger.getLogger().error("Error while reading plugin directory", e);
         }

@@ -22,6 +22,8 @@ import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.ReferenceCountUtil;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
@@ -45,7 +47,7 @@ public abstract class ProxyBatchBridge implements BatchHandler {
     @Override
     public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
         BedrockPacketHandler handler = session.getPacketHandler();
-        List<BedrockPacket> allPackets = new ArrayList<>();
+        List<BedrockPacket> allPackets = new ObjectArrayList<>();
         boolean changed = false;
 
         for (BedrockPacket packet : packets) {
@@ -56,14 +58,31 @@ public abstract class ProxyBatchBridge implements BatchHandler {
                 }
                 allPackets.add(packet);
             } catch (CancelSignalException e) {
+                // In this case packet won't be released by protocol lib
+                ReferenceCountUtil.release(packet);
             }
+        }
+
+        if (!allPackets.isEmpty() && (changed || allPackets.size() != packets.size())) {
+            this.session.sendWrapped(allPackets, true);
+            return;
         }
 
         if (!changed && allPackets.size() == packets.size()) {
             buf.readerIndex(1);
             this.session.sendWrapped(buf, this.session.isEncrypted());
-        } else if (!allPackets.isEmpty()){
-            this.session.sendWrapped(allPackets, true);
+        }
+
+        // Packets from array aren't used so we can deallocate whole.
+        this.deallocatePackets(packets);
+    }
+
+    protected void deallocatePackets(Collection<BedrockPacket> packets) {
+        for (BedrockPacket packet : packets) {
+            int refCnt = ReferenceCountUtil.refCnt(packet);
+            if (refCnt > 0) {
+                ReferenceCountUtil.release(packet);
+            }
         }
     }
 

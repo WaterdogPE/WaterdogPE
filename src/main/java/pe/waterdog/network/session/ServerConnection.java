@@ -46,7 +46,7 @@ public class ServerConnection {
     }
 
     public void disconnect() {
-        if (!this.getDownstream().isClosed()) {
+        if (!this.downstream.isClosed()) {
             this.client.close();
         }
     }

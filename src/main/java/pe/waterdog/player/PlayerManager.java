@@ -42,12 +42,13 @@ public class PlayerManager {
     }
 
     public boolean registerPlayer(ProxiedPlayer player) {
-        if (player == null) return false;
+        if (player == null) {
+            return false;
+        }
 
         ProxiedPlayer previousSession = this.players.put(player.getUniqueId(), player);
         if (previousSession != null && !previousSession.getUpstream().isClosed()) {
             previousSession.disconnect("disconnectionScreen.loggedinOtherLocation");
-            return false;
         }
         return true;
     }

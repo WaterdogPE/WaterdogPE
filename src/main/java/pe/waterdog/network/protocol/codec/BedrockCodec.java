@@ -18,6 +18,8 @@ package pe.waterdog.network.protocol.codec;
 
 import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
+import pe.waterdog.ProxyServer;
+import pe.waterdog.event.defaults.ProtocolCodecRegisterEvent;
 import pe.waterdog.network.protocol.ProtocolVersion;
 
 public abstract class BedrockCodec {
@@ -34,7 +36,7 @@ public abstract class BedrockCodec {
     /**
      * Creates default builder that will be used in buildCodec() method.
      *
-     * @param protocol      protocol number.
+     * @param protocol protocol number.
      * @param raknetVersion version number of RakNet that client uses.
      * @param minecraftVer  name of version in string.
      * @return BedrockPacketCodec builder.
@@ -49,13 +51,47 @@ public abstract class BedrockCodec {
     }
 
     /**
+     * Used to fully initialize BedrockPacketCodec and register all packets which are going to be used by proxy.
+     * @param protocol ProtocolVersion instance which will be used to determine default codec. Should be same as one returned in getProtocol().
+     * @param proxy instance of ProxyServer.
+     * @return if codec was successfully initialized and can be registered.
+     */
+    public final boolean initializeCodec(ProtocolVersion protocol, ProxyServer proxy) {
+        BedrockPacketCodec.Builder builder = this.createBuilder(protocol.getDefaultCodec());
+        this.buildCodec(builder);
+
+        if (proxy.getConfiguration().injectCommands()) {
+            this.registerCommands(builder);
+        }
+
+        if (proxy.getConfiguration().isItemRewrite()){
+            this.registerItemPackets(builder);
+        }
+
+        // We use ProtocolCodecRegisterEvent to modify final codec.
+        // When this event is canceled codec will not be registered.
+        ProtocolCodecRegisterEvent event = new ProtocolCodecRegisterEvent(protocol, builder);
+        proxy.getEventManager().callEvent(event);
+        if (event.isCancelled()) {
+            return false;
+        }
+
+        this.setPacketCodec(builder.build());
+        return true;
+    }
+
+    /**
      * This method should be implemented in parent.
      * Some common packets may be implemented here later.
      *
      * @param builder can be edited inside of the function. Builder is used to register or deregister packets.
      */
-    public void buildCodec(BedrockPacketCodec.Builder builder) {
+    protected void buildCodec(BedrockPacketCodec.Builder builder) {
         // Maybe later put common packets here
+    }
+
+    public void registerCommands(BedrockPacketCodec.Builder builder) {
+        // Used to register packets related command injections
     }
 
     public void registerItemPackets(BedrockPacketCodec.Builder builder) {

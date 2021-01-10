@@ -22,6 +22,7 @@ import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -38,7 +39,7 @@ public class ServerInfo {
     private final InetSocketAddress address;
     private final InetSocketAddress publicAddress;
 
-    private final Set<ProxiedPlayer> players = new HashSet<>();
+    private final Set<ProxiedPlayer> players = Collections.synchronizedSet(new HashSet<>());
 
     public ServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {
         this.serverName = serverName;

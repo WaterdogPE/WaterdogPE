@@ -22,6 +22,8 @@ import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import io.netty.buffer.ByteBuf;
+import io.netty.util.ReferenceCountUtil;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
@@ -30,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TransferBatchBridge extends ProxyBatchBridge {
 
-    private final Queue<BedrockPacket> packetQueue = new LinkedList<>();
+    private final List<BedrockPacket> packetQueue = new ObjectArrayList<>();
     private final AtomicBoolean hasStartGame = new AtomicBoolean(false);
 
     public TransferBatchBridge(ProxiedPlayer player, BedrockSession session) {
@@ -45,6 +47,7 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         // Send queued packets to upstream if new bridge is used
         if (this.hasStartGame.get() && (session.getBatchHandler() instanceof DownstreamBridge) && !this.packetQueue.isEmpty()){
             this.session.sendWrapped(this.packetQueue, this.session.isEncrypted());
+            this.packetQueue.clear();
         }
     }
 
@@ -59,21 +62,20 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         // Packets after StartGamePacket should be queued
         // Ignore LevelEvent packet to prevent massive amounts of packets in queue
         if (!isStartGame && this.hasStartGame.get() && packet.getPacketType() != BedrockPacketType.LEVEL_EVENT){
-            this.packetQueue.add(packet);
+            this.packetQueue.add(ReferenceCountUtil.retain(packet));
         }
         throw CancelSignalException.CANCEL;
     }
 
     @Override
     public boolean handleUnknownPacket(UnknownPacket packet) {
-        int refCnt = packet.refCnt();
-        if (refCnt > 0){
-            packet.release(refCnt);
+        if (this.hasStartGame.get()) {
+            this.packetQueue.add(packet.retain());
         }
         throw CancelSignalException.CANCEL;
     }
 
-    public Queue<BedrockPacket> getPacketQueue() {
+    public List<BedrockPacket> getPacketQueue() {
         return this.packetQueue;
     }
 }

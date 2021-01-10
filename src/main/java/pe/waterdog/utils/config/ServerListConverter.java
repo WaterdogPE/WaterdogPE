@@ -50,8 +50,8 @@ public class ServerListConverter implements Converter {
             Map<String, Object> map = (Map<String, Object>) entry.getValue();
             String name = (String) entry.getKey();
             try {
-                list.putIfAbsent(name, (ServerInfo) converter.fromConfig(ServerInfo.class, new HashMap<>(1) {{
-                    put(name, map);
+                list.putIfAbsent(name, (ServerInfo) converter.fromConfig(ServerInfo.class, new HashMap<String, Object>(){{
+                    this.put(name, map);
                 }}, null));
             } catch (Exception e) {
                 throw new RuntimeException("Cannot parse server info for " + name, e);

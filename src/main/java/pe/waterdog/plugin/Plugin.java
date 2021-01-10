@@ -125,10 +125,10 @@ public abstract class Plugin {
             return false;
         }
 
-        try {
-            InputStream resource = this.getResourceFile(filename);
-            if (resource == null) return false;
-
+        try (InputStream resource = this.getResourceFile(filename)) {
+            if (resource == null){
+                return false;
+            }
             File outFolder = file.getParentFile();
             if (!outFolder.exists()) {
                 outFolder.mkdirs();

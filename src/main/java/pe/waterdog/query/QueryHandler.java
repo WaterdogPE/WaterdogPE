@@ -131,11 +131,14 @@ public class QueryHandler {
         map.put("hostip", this.bindAddress.getHostName());
         map.put("game_id", GAME_ID);
         map.put("version", event.getVersion());
-        map.put("plugins", VersionInfo.BASE_VERSION); // Do not list plugins
+        map.put("plugins", ""); // Do not list plugins
         map.put("whitelist", event.hasWhitelist() ? "on" : "off");
 
         buf.writeBytes(LONG_RESPONSE_PADDING_TOP);
-        map.forEach((key, value) -> this.writeString(buf, value));
+        map.forEach((key, value) -> {
+            this.writeString(buf, key);
+            this.writeString(buf, value);
+        });
         buf.writeByte(0);
         buf.writeBytes(LONG_RESPONSE_PADDING_BOTTOM);
 
