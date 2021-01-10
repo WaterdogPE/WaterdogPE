@@ -65,7 +65,6 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
 
             session.sendPacketImmediately(status);
             session.disconnect();
-            this.proxy.getLogger().info("[" + session.getAddress() + "] <-> Upstream has disconnected due to incompatible protocol!");
             return true;
         }
 

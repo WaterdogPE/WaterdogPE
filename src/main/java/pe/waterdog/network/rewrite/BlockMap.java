@@ -49,6 +49,10 @@ public class BlockMap implements BedrockPacketHandler {
         return this.player.canRewrite() && packet.handle(this);
     }
 
+    protected int translateId(int runtimeId){
+        return this.getPaletteRewrite().fromDownstream(runtimeId);
+    }
+
     @Override
     public boolean handle(LevelChunkPacket packet) {
         int sections = packet.getSubChunksLength();
@@ -88,7 +92,7 @@ public class BlockMap implements BedrockPacketHandler {
 
                         for (int i = 0; i < nPaletteEntries; i++) {
                             int runtimeId = VarInts.readInt(from);
-                            VarInts.writeInt(to, this.getPaletteRewrite().map(runtimeId));
+                            VarInts.writeInt(to, this.translateId(runtimeId));
                         }
                     }
                     break;
@@ -118,7 +122,7 @@ public class BlockMap implements BedrockPacketHandler {
     @Override
     public boolean handle(UpdateBlockPacket packet) {
         int runtimeId = packet.getRuntimeId();
-        packet.setRuntimeId(this.getPaletteRewrite().map(runtimeId));
+        packet.setRuntimeId(this.translateId(runtimeId));
         return true;
     }
 
@@ -136,7 +140,7 @@ public class BlockMap implements BedrockPacketHandler {
 
         int data = packet.getData();
         int high = data & 0xFFFF0000;
-        int blockID = this.getPaletteRewrite().map(data & 0xFFFF) & 0xFFFF;
+        int blockID = this.translateId(data & 0xFFFF) & 0xFFFF;
         packet.setData(high | blockID);
         return true;
     }
@@ -147,8 +151,8 @@ public class BlockMap implements BedrockPacketHandler {
             return false;
         }
 
-        int data = packet.getExtraData();
-        packet.setExtraData(this.getPaletteRewrite().map(data));
+        int runtimeId = packet.getExtraData();
+        packet.setExtraData(this.translateId(runtimeId));
         return true;
     }
 
@@ -160,7 +164,7 @@ public class BlockMap implements BedrockPacketHandler {
 
         EntityDataMap metaData = packet.getMetadata();
         int runtimeId = metaData.getInt(EntityData.VARIANT);
-        metaData.putInt(EntityData.VARIANT, this.getPaletteRewrite().map(runtimeId));
+        metaData.putInt(EntityData.VARIANT, this.translateId(runtimeId));
         return true;
     }
 }
