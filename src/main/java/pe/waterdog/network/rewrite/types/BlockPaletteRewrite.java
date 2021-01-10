@@ -16,14 +16,24 @@
 
 package pe.waterdog.network.rewrite.types;
 
-public abstract class BlockPaletteRewrite {
+public class BlockPaletteRewrite {
 
-    public static BlockPaletteRewrite EQUAL = new BlockPaletteRewrite() {
+    public static final BlockPaletteRewrite BLOCK_EQUAL = new BlockPaletteRewrite(null, null) {
         @Override
-        public int map(int id) {
-            return id;
+        public int fromDownstream(int runtimeId) {
+            return runtimeId;
         }
     };
 
-    public abstract int map(int id);
+    private final BlockPalette upstreamPalette;
+    private final BlockPalette downstreamPalette;
+
+    public BlockPaletteRewrite(BlockPalette upstreamPalette, BlockPalette downstreamPalette) {
+        this.upstreamPalette = upstreamPalette;
+        this.downstreamPalette = downstreamPalette;
+    }
+
+    public int fromDownstream(int runtimeId) {
+        return this.upstreamPalette.getId(this.downstreamPalette.getEntry(runtimeId));
+    }
 }

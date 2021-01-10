@@ -45,7 +45,7 @@ public class RewriteData {
     private long originalEntityId;
 
     private BlockPalette blockPalette;
-    private BlockPaletteRewrite paletteRewrite;
+    private BlockPaletteRewrite blockPaletteRewrite;
     //TODO: mode blocks rewrite
     private List<BlockPropertyData> blockProperties;
 
@@ -92,12 +92,12 @@ public class RewriteData {
         this.blockPalette = blockPalette;
     }
 
-    public BlockPaletteRewrite getPaletteRewrite() {
-        return this.paletteRewrite;
+    public BlockPaletteRewrite getBlockPaletteRewrite() {
+        return this.blockPaletteRewrite;
     }
 
-    public void setPaletteRewrite(BlockPaletteRewrite paletteRewrite) {
-        this.paletteRewrite = paletteRewrite;
+    public void setBlockPaletteRewrite(BlockPaletteRewrite paletteRewrite) {
+        this.blockPaletteRewrite = paletteRewrite;
     }
 
     public void setBlockProperties(List<BlockPropertyData> blockProperties) {

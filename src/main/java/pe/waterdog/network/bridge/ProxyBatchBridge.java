@@ -98,13 +98,13 @@ public abstract class ProxyBatchBridge implements BatchHandler {
             canceled = true;
         }
 
-        boolean changed = this.player.getEntityMap().doRewrite(packet) || handled;
+        boolean changed = this.player.getRewriteMaps().getEntityMap().doRewrite(packet) || handled;
         if (!changed && canceled) {
             throw CancelSignalException.CANCEL;
         }
 
         if (this.trackEntities) {
-            this.player.getEntityTracker().trackEntity(packet);
+            this.player.getRewriteMaps().getEntityTracker().trackEntity(packet);
         }
         return changed;
     }

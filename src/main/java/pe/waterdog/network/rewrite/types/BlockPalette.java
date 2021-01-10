@@ -56,17 +56,11 @@ public class BlockPalette {
         return palette;
     }
 
-    public BlockPaletteRewrite createRewrite(BlockPalette to) {
-        if (BlockPalette.this == to) {
-            return BlockPaletteRewrite.EQUAL;
+    public BlockPaletteRewrite createRewrite(BlockPalette upstreamPalette) {
+        if (BlockPalette.this == upstreamPalette) {
+            return BlockPaletteRewrite.BLOCK_EQUAL;
         }
-
-        return new BlockPaletteRewrite() {
-            @Override
-            public int map(int id) {
-                return to.getId(getEntry(id));
-            }
-        };
+        return new BlockPaletteRewrite(upstreamPalette, this);
     }
 
     private void addEntry(short id, String name, Object data) {

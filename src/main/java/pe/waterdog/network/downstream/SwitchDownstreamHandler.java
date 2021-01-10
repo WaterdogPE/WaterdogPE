@@ -124,7 +124,7 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
 
         if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
-            rewriteData.setPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
+            rewriteData.setBlockPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
         }else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
         }

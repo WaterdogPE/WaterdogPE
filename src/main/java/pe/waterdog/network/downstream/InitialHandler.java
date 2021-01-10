@@ -99,11 +99,11 @@ public class InitialHandler implements BedrockPacketHandler {
         if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
             rewriteData.setBlockPalette(palette);
-            rewriteData.setPaletteRewrite(palette.createRewrite(palette));
-            this.player.setBlockMap(new BlockMap(this.player));
+            rewriteData.setBlockPaletteRewrite(palette.createRewrite(palette));
+            this.player.getRewriteMaps().setBlockMap(new BlockMap(this.player));
         }else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
-            this.player.setBlockMap(new BlockMapModded(this.player));
+            this.player.getRewriteMaps().setBlockMap(new BlockMapModded(this.player));
         }
 
         this.player.setCanRewrite(true);

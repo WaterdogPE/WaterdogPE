@@ -63,7 +63,8 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
                     PlayStatusPacket.Status.LOGIN_FAILED_SERVER_OLD :
                     PlayStatusPacket.Status.LOGIN_FAILED_CLIENT_OLD));
 
-            session.sendPacket(status);
+            session.sendPacketImmediately(status);
+            session.disconnect();
             return true;
         }
 
