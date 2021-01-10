@@ -16,7 +16,6 @@
 
 package pe.waterdog.network.downstream;
 
-import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import pe.waterdog.command.Command;
@@ -77,7 +76,7 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(PlayStatusPacket packet) {
-        if (!this.player.acceptPlayStatus() | packet.getStatus() != PlayStatusPacket.Status.PLAYER_SPAWN) {
+        if (!this.player.acceptPlayStatus() || packet.getStatus() != PlayStatusPacket.Status.PLAYER_SPAWN) {
             return false;
         }
 

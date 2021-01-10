@@ -1,12 +1,9 @@
 package pe.waterdog.network.protocol;
 
 import com.google.common.base.Preconditions;
-import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
-import pe.waterdog.event.defaults.ProtocolCodecRegisterEvent;
-import pe.waterdog.logger.MainLogger;
 import pe.waterdog.network.protocol.codec.*;
 
 import java.util.EnumMap;
@@ -67,20 +64,15 @@ public class ProtocolConstants {
         Preconditions.checkArgument(!protocol2CodecMap.containsKey(protocol), "BedrockCodec "+protocol+" is registered!");
         Preconditions.checkArgument(protocol == bedrockCodec.getProtocol(), "Protocol versions does not match!");
 
-        BedrockPacketCodec.Builder builder = bedrockCodec.createBuilder(protocol.getDefaultCodec());
-        bedrockCodec.buildCodec(builder);
-
-        ProtocolCodecRegisterEvent event = new ProtocolCodecRegisterEvent(protocol, builder);
-        ProxyServer.getInstance().getEventManager().callEvent(event);
-        if (event.isCancelled()){
+        ProxyServer proxy = ProxyServer.getInstance();
+        boolean success = bedrockCodec.initializeCodec(protocol, proxy);
+        if (!success) {
             return false;
         }
 
-        bedrockCodec.setPacketCodec(builder.build());
         protocol.setBedrockCodec(bedrockCodec);
         protocol2CodecMap.put(protocol, bedrockCodec);
-
-        MainLogger.getLogger().debug("Registered custom BedrockCodec "+protocol);
+        proxy.getLogger().debug("Registered custom BedrockCodec "+protocol);
         return true;
     }
 }
