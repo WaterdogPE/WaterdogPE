@@ -74,7 +74,7 @@ public abstract class ProxyBatchBridge implements BatchHandler {
         }
 
         // Packets from array aren't used so we can deallocate whole.
-        this.deallocatePackets(packets);
+        this.deallocatePackets(allPackets);
     }
 
     protected void deallocatePackets(Collection<BedrockPacket> packets) {

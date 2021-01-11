@@ -90,6 +90,7 @@ public class BedrockCodec388 extends BedrockCodec {
         builder.registerPacket(SetPlayerGameTypePacket.class, SetPlayerGameTypeSerializer_v291.INSTANCE, 62);
         builder.registerPacket(PlayerListPacket.class, PlayerListSerializer_v388.INSTANCE, 63);
         builder.registerPacket(RequestChunkRadiusPacket.class, RequestChunkRadiusSerializer_v291.INSTANCE, 69);
+        builder.registerPacket(ChunkRadiusUpdatedPacket.class, ChunkRadiusUpdatedSerializer_v291.INSTANCE, 70);
         builder.registerPacket(GameRulesChangedPacket.class, GameRulesChangedSerializer_v291.INSTANCE, 72);
         builder.registerPacket(BossEventPacket.class, BossEventSerializer_v291.INSTANCE, 74);
         builder.registerPacket(CommandRequestPacket.class, CommandRequestSerializer_v291.INSTANCE, 77);
