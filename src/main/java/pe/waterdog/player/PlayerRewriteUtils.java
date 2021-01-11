@@ -82,7 +82,7 @@ public class PlayerRewriteUtils {
         stopThunder.setData(0);
         stopThunder.setPosition(Vector3f.ZERO);
         stopThunder.setType(LevelEventType.STOP_THUNDERSTORM);
-        session.sendPacketImmediately(stopThunder);
+        session.sendPacket(stopThunder);
     }
 
     public static void injectSetDifficulty(BedrockSession session, int difficulty) {
@@ -156,6 +156,15 @@ public class PlayerRewriteUtils {
         BossEventPacket packet = new BossEventPacket();
         packet.setAction(BossEventPacket.Action.REMOVE);
         packet.setBossUniqueEntityId(bossbarId);
+        session.sendPacket(packet);
+    }
+
+    public static void injectPosition(BedrockSession session, Vector3f position, Vector3f rotation, long runtimeId){
+        MovePlayerPacket packet = new MovePlayerPacket();
+        packet.setPosition(position);
+        packet.setRuntimeEntityId(runtimeId);
+        packet.setRotation(rotation);
+        packet.setMode(MovePlayerPacket.Mode.RESPAWN);
         session.sendPacket(packet);
     }
 }

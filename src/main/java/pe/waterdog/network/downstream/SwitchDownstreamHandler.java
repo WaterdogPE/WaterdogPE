@@ -20,14 +20,12 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
-import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import pe.waterdog.event.defaults.TransferCompleteEvent;
 import pe.waterdog.network.ServerInfo;
-import pe.waterdog.network.bridge.TransferBatchBridge;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
@@ -45,14 +43,13 @@ import java.util.Base64;
 import java.util.Collection;
 import java.util.UUID;
 
-public class SwitchDownstreamHandler implements BedrockPacketHandler {
+public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
-    private final ProxiedPlayer player;
     private final BedrockClient client;
     private final ServerInfo serverInfo;
 
     public SwitchDownstreamHandler(ProxiedPlayer player, ServerInfo serverInfo, BedrockClient client) {
-        this.player = player;
+        super(player);
         this.serverInfo = serverInfo;
         this.client = client;
     }
@@ -129,24 +126,6 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
             rewriteData.setBlockProperties(packet.getBlockProperties());
         }
 
-        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getPlayerPosition().toInt(), rewriteData.getChunkRadius().getRadius());
-        PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
-
-        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
-        this.getDownstream().sendPacket(initializedPacket);
-
-        MovePlayerPacket movePlayerPacket = new MovePlayerPacket();
-        movePlayerPacket.setPosition(packet.getPlayerPosition());
-        movePlayerPacket.setRuntimeEntityId(rewriteData.getEntityId());
-        movePlayerPacket.setRotation(Vector3f.from(packet.getRotation().getX(), packet.getRotation().getY(), packet.getRotation().getY()));
-        movePlayerPacket.setMode(MovePlayerPacket.Mode.RESPAWN);
-        this.player.sendPacket(movePlayerPacket);
-
-        this.getDownstream().sendPacket(rewriteData.getChunkRadius());
-        PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
-        PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
-
         Collection<UUID> playerList = this.player.getPlayers();
         PlayerRewriteUtils.injectRemoveAllPlayers(this.player.getUpstream(), playerList);
         playerList.clear();
@@ -169,6 +148,20 @@ public class SwitchDownstreamHandler implements BedrockPacketHandler {
         }
         bossbars.clear();
 
+        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
+        initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
+        this.getDownstream().sendPacket(initializedPacket);
+
+        PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
+
+        Vector3f rotation = Vector3f.from(packet.getRotation().getX(), 0, packet.getRotation().getY());
+        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), packet.getPlayerPosition(), rotation, rewriteData.getEntityId());
+
+        this.getDownstream().sendPacket(rewriteData.getChunkRadius());
+        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getPlayerPosition().toInt(), rewriteData.getChunkRadius().getRadius());
+
+        PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
+        PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
         PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
         PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
 

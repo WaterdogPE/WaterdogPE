@@ -235,15 +235,7 @@ public class ProxyServer {
     }
 
     public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
-        int port;
-        try {
-            ServerSocket socket = new ServerSocket(0);
-            socket.setReuseAddress(true);
-            port = socket.getLocalPort();
-        }catch (IOException e){
-            throw new RuntimeException("Can bind BedrockClient!", e);
-        }
-        InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
+        InetSocketAddress address = new InetSocketAddress("0.0.0.0", 0);
         BedrockClient client = new BedrockClient(address);
         client.setRakNetVersion(protocol.getRaknetVersion());
         return client.bind().thenApply(i -> client);

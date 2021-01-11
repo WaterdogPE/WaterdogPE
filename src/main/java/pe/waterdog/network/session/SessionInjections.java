@@ -40,8 +40,7 @@ public class SessionInjections {
         downstream.addDisconnectHandler((reason) -> {
             if (downstreamClient != null && downstreamClient.getSession().equals(downstream)) {
                 // Make sure everything is closed as excepted.
-                // TODO: enable this after protocol lib version bump
-                // downstreamClient.close();
+                downstreamClient.close();
             }
 
             player.getLogger().info("[" + player.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");
