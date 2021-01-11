@@ -25,6 +25,7 @@ import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 import com.nukkitx.protocol.bedrock.packet.StartGamePacket.ItemEntry;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import pe.waterdog.network.session.TransferCallback;
 
 import java.util.List;
 
@@ -57,6 +58,7 @@ public class RewriteData {
      * The dimensionId the player is currently in
      */
     private int dimension = 0;
+    private TransferCallback transferCallback;
     private RequestChunkRadiusPacket chunkRadius;
 
     private Vector3f spawnPosition;
@@ -124,12 +126,31 @@ public class RewriteData {
         this.dimension = dimension;
     }
 
+    public TransferCallback getTransferCallback() {
+        return this.transferCallback;
+    }
+
+    public void setTransferCallback(TransferCallback transferCallback) {
+        this.transferCallback = transferCallback;
+    }
+
+    public void completeTransferCallback() {
+        if (this.transferCallback != null) {
+            this.transferCallback.onTransferComplete();
+            this.transferCallback = null;
+        }
+    }
+
     public RequestChunkRadiusPacket getChunkRadius() {
         return this.chunkRadius;
     }
 
     public void setChunkRadius(RequestChunkRadiusPacket chunkRadius) {
         this.chunkRadius = chunkRadius;
+    }
+
+    public int getChunkRadiusSize() {
+        return this.chunkRadius == null? -1 : this.chunkRadius.getRadius();
     }
 
     public Vector3f getSpawnPosition() {

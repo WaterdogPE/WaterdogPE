@@ -34,6 +34,7 @@ public class TransferBatchBridge extends ProxyBatchBridge {
 
     private final List<BedrockPacket> packetQueue = new ObjectArrayList<>();
     private final AtomicBoolean hasStartGame = new AtomicBoolean(false);
+    private final AtomicBoolean dimLockActive = new AtomicBoolean(true);
 
     public TransferBatchBridge(ProxiedPlayer player, BedrockSession session) {
         super(player, session);
@@ -43,12 +44,27 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     @Override
     public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
         super.handle(session, buf, packets);
-
         // Send queued packets to upstream if new bridge is used
-        if (this.hasStartGame.get() && (session.getBatchHandler() instanceof DownstreamBridge) && !this.packetQueue.isEmpty()){
-            this.session.sendWrapped(this.packetQueue, this.session.isEncrypted());
-            this.packetQueue.clear();
+        this.flushQueue(session);
+    }
+
+    /**
+     * Here we send all queued packets from donwstream to upstream.
+     * Packets will be sent after StartGamePacket is received and dimension change sequence has been passed.
+     * @param downstream instance of BedrockSession which is this handler assigned to.
+     */
+    public void flushQueue(BedrockSession downstream) {
+        if (!this.hasStartGame.get() || this.dimLockActive.get() || !(downstream.getBatchHandler() instanceof DownstreamBridge) || this.packetQueue.isEmpty()) {
+            return;
         }
+
+        if (this.packetQueue.size() >= 512) {
+            // TODO: consider closing connection or splitting to more batches
+            this.player.getLogger().warning("TransferBatchBridge packet queue is too large! Got "+this.packetQueue.size()+" packets with "+this.player.getName());
+        }
+
+        this.session.sendWrapped(this.packetQueue, this.session.isEncrypted());
+        this.packetQueue.clear();
     }
 
     @Override
@@ -77,5 +93,13 @@ public class TransferBatchBridge extends ProxyBatchBridge {
 
     public List<BedrockPacket> getPacketQueue() {
         return this.packetQueue;
+    }
+
+    public void setDimLockActive(boolean active) {
+        this.dimLockActive.set(active);
+    }
+
+    public boolean isDimLockActive() {
+        return this.dimLockActive.get();
     }
 }

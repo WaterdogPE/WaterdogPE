@@ -57,6 +57,7 @@ import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Base Player class.
@@ -98,6 +99,13 @@ public class ProxiedPlayer implements CommandSender {
      * This value is changed by PlayerResourcePackInfoSendEvent.
      */
     private boolean acceptResourcePacks = true;
+    /**
+     * This signalizes the state of dimension change sequence.
+     * 0 => No dimension change in progress.
+     * 1 => Waiting for first dim change response.
+     * 2 => Waiting for second/last dim change response.
+     */
+    private final AtomicInteger dimensionChangeState = new AtomicInteger(0);
     /**
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
@@ -316,6 +324,17 @@ public class ProxiedPlayer implements CommandSender {
     public void sendPacket(BedrockPacket packet) {
         if (this.upstream != null && !this.upstream.isClosed()) {
             this.upstream.sendPacket(packet);
+        }
+    }
+
+    /**
+     * Sends a immediately packet to the upstream connection
+     *
+     * @param packet the packet to send
+     */
+    public void sendPacketImmediately(BedrockPacket packet) {
+        if (this.upstream != null && !this.upstream.isClosed()) {
+            this.upstream.sendPacketImmediately(packet);
         }
     }
 
@@ -698,5 +717,13 @@ public class ProxiedPlayer implements CommandSender {
 
     public boolean acceptResourcePacks() {
         return this.acceptResourcePacks;
+    }
+
+    public void setDimensionChangeState(int state) {
+        this.dimensionChangeState.set(state);
+    }
+
+    public int getDimensionChangeState() {
+        return this.dimensionChangeState.get();
     }
 }

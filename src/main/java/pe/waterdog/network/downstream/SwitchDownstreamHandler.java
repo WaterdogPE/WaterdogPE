@@ -17,20 +17,18 @@
 package pe.waterdog.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
-import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import pe.waterdog.event.defaults.TransferCompleteEvent;
 import pe.waterdog.network.ServerInfo;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.rewrite.types.BlockPalette;
 import pe.waterdog.network.rewrite.types.RewriteData;
-import pe.waterdog.network.session.ServerConnection;
 import pe.waterdog.network.session.SessionInjections;
+import pe.waterdog.network.session.TransferCallback;
 import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
@@ -113,7 +111,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
     public final boolean handle(StartGamePacket packet) {
         RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
-        rewriteData.setDimension(packet.getDimensionId());
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
         rewriteData.setRotation(packet.getRotation());
@@ -148,37 +145,23 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         }
         bossbars.clear();
 
-        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
-        this.getDownstream().sendPacket(initializedPacket);
-
         PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
-
-        Vector3f rotation = Vector3f.from(packet.getRotation().getX(), 0, packet.getRotation().getY());
-        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), packet.getPlayerPosition(), rotation, rewriteData.getEntityId());
-
-        this.getDownstream().sendPacket(rewriteData.getChunkRadius());
-        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getPlayerPosition().toInt(), rewriteData.getChunkRadius().getRadius());
-
         PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
         PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
         PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
         PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
 
-        ServerConnection oldServer = this.player.getServer();
-        oldServer.getInfo().removePlayer(this.player);
-        oldServer.disconnect();
+        /*
+         * Client does not accept ChangeDimensionPacket when dimension is same as current dimension.
+         * Therefore we are attempting to do dimension change sequence which uses 2 dim changes.
+         * After client successfully changes dimension we receive PlayerActionPacket#DIMENSION_CHANGE_SUCCESS and send second dim change.
+         */
+        rewriteData.setDimension(PlayerRewriteUtils.determineDimensionId(packet.getDimensionId()));
+        PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), packet.getPlayerPosition(), rewriteData.getChunkRadiusSize());
+        this.player.setDimensionChangeState(1); // Except first dim change packet.
 
-        this.serverInfo.addPlayer(this.player);
-        this.player.setPendingConnection(null);
-
-        ServerConnection server = new ServerConnection(this.client, this.getDownstream(), this.serverInfo);
-        SessionInjections.injectDownstreamHandlers(server, this.player);
-        this.player.setServer(server);
-        this.player.setAcceptPlayStatus(true);
-
-        TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
-        this.player.getProxy().getEventManager().callEvent(event);
+        SessionInjections.injectPreDownstreamHandlers(this.getDownstream(), this.player);
+        rewriteData.setTransferCallback(new TransferCallback(this.player, this.client, this.serverInfo));
         throw CancelSignalException.CANCEL;
     }
 

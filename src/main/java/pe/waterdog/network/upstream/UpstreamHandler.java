@@ -16,12 +16,15 @@
 
 package pe.waterdog.network.upstream;
 
+import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.PlayerChatEvent;
 import pe.waterdog.event.defaults.PlayerResourcePackApplyEvent;
+import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.packs.PackManager;
+import pe.waterdog.player.PlayerRewriteUtils;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
@@ -86,6 +89,29 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
         this.player.getUpstream().sendPacket(response);
         return this.cancel();
+    }
+
+    @Override
+    public boolean handle(PlayerActionPacket packet) {
+        if (this.player.getDimensionChangeState() < 1 || packet.getAction() != PlayerActionPacket.Action.DIMENSION_CHANGE_SUCCESS) {
+            return false;
+        }
+
+        RewriteData rewriteData = this.player.getRewriteData();
+        int dimChangeState = this.player.getDimensionChangeState();
+        if (dimChangeState == 1) {
+            // First dimension change was completed successfully.
+            rewriteData.setDimension(PlayerRewriteUtils.determineDimensionId(rewriteData.getDimension()));
+            PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), rewriteData.getChunkRadiusSize());
+            this.player.setDimensionChangeState(2); // Except second dim change packet.
+            throw CancelSignalException.CANCEL;
+        }
+
+        // At this point dimension change sequence was completed.
+        // We can finally fully initialize connection.
+        this.player.setDimensionChangeState(0);
+        rewriteData.completeTransferCallback();
+        throw CancelSignalException.CANCEL;
     }
 
     @Override

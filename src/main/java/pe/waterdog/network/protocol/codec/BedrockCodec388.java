@@ -87,6 +87,7 @@ public class BedrockCodec388 extends BedrockCodec {
         builder.registerPacket(AdventureSettingsPacket.class, AdventureSettingsSerializer_v291.INSTANCE, 55);
         builder.registerPacket(LevelChunkPacket.class, LevelChunkSerializer_v361.INSTANCE, 58);
         builder.registerPacket(SetDifficultyPacket.class, SetDifficultySerializer_v291.INSTANCE, 60);
+        builder.registerPacket(ChangeDimensionPacket.class, ChangeDimensionSerializer_v291.INSTANCE, 61);
         builder.registerPacket(SetPlayerGameTypePacket.class, SetPlayerGameTypeSerializer_v291.INSTANCE, 62);
         builder.registerPacket(PlayerListPacket.class, PlayerListSerializer_v388.INSTANCE, 63);
         builder.registerPacket(RequestChunkRadiusPacket.class, RequestChunkRadiusSerializer_v291.INSTANCE, 69);
@@ -96,6 +97,7 @@ public class BedrockCodec388 extends BedrockCodec {
         builder.registerPacket(CommandRequestPacket.class, CommandRequestSerializer_v291.INSTANCE, 77);
         builder.registerPacket(UpdateTradePacket.class, UpdateTradeSerializer_v354.INSTANCE, 80);
         builder.registerPacket(TransferPacket.class, TransferSerializer_v291.INSTANCE, 85);
+        builder.registerPacket(StopSoundPacket.class, StopSoundSerializer_v291.INSTANCE, 87);
         builder.registerPacket(SetTitlePacket.class, SetTitleSerializer_v291.INSTANCE, 88);
         builder.registerPacket(RemoveObjectivePacket.class, RemoveObjectiveSerializer_v291.INSTANCE, 106);
         builder.registerPacket(SetDisplayObjectivePacket.class, SetDisplayObjectiveSerializer_v291.INSTANCE, 107);

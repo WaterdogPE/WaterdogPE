@@ -58,9 +58,29 @@ public class SessionInjections {
         server.getDownstream().setPacketHandler(new ConnectedDownstreamHandler(player, server));
     }
 
-    public static void injectDownstreamHandlers(ServerConnection server, ProxiedPlayer player) {
-        injectInitialHandlers(server, player);
+    /**
+     * Used before dimension change sequence is completed.
+     * We define hardcodedBlockingId here to prevent incorrect packet deserialization from downstream.
+     * @param downstream instance to pending downstream session.
+     * @param player instance of player itself.
+     */
+    public static void injectPreDownstreamHandlers(BedrockSession downstream, ProxiedPlayer player) {
+        Preconditions.checkArgument(downstream != null && player != null, "Player and BedrockSession can not be null!");
+        player.getUpstream().getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
+        downstream.getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
+    }
+
+    /**
+     * Here we fully initialize bridge between new downstream and upstream and change downstream packet handler.
+     * This method is triggered after dimension sequence is completed.
+     * @param server instance of new downstream server.
+     * @param player instance of player itself.
+     */
+     public static void injectPostDownstreamHandlers(ServerConnection server, ProxiedPlayer player) {
+        Preconditions.checkArgument(server != null && player != null, "Player and ServerConnection can not be null!");
         player.getUpstream().setBatchHandler(new UpstreamBridge(player, server.getDownstream()));
         server.getDownstream().setBatchHandler(new DownstreamBridge(player, player.getUpstream()));
+
+        server.getDownstream().setPacketHandler(new ConnectedDownstreamHandler(player, server));
     }
 }
