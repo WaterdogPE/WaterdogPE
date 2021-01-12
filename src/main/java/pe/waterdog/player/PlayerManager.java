@@ -46,10 +46,11 @@ public class PlayerManager {
             return false;
         }
 
-        ProxiedPlayer previousSession = this.players.put(player.getUniqueId(), player);
+        ProxiedPlayer previousSession = this.players.remove(player.getUniqueId());
         if (previousSession != null && !previousSession.getUpstream().isClosed()) {
             previousSession.disconnect("disconnectionScreen.loggedinOtherLocation");
         }
+        this.players.put(player.getUniqueId(), player);
         return true;
     }
 
@@ -66,8 +67,9 @@ public class PlayerManager {
     }
 
     public void removePlayer(ProxiedPlayer player) {
-        if (player == null) return;
-        this.players.remove(player.getUniqueId());
+        if (player != null) {
+            this.players.remove(player.getUniqueId());
+        }
     }
 
     public ProxiedPlayer getPlayer(UUID uuid) {

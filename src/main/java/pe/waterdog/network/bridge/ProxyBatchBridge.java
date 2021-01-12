@@ -24,11 +24,9 @@ import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 

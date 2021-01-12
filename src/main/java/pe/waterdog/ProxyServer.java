@@ -199,7 +199,7 @@ public class ProxyServer {
         this.eventManager.getThreadedExecutor().shutdown();
         try {
             if (this.bedrockServer != null) {
-                this.bedrockServer.getRakNet().close();
+                this.bedrockServer.close();
             }
         } catch (Exception e) {
             this.getLogger().error("Error while shutting down ProxyServer", e);
