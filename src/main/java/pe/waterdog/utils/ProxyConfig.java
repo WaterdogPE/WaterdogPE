@@ -78,6 +78,10 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Whether the debug output in the console should be enabled or not")
     private boolean debug;
 
+    @Path("upstream_encryption")
+    @Comment("If enabled encrypted connection between client and proxy will be created")
+    private boolean upstreamEncryption = true;
+
     @Path("online_mode")
     @Comment("If enabled, only players which are authenticated with XBOX Live can join. If disabled, anyone can connect *with any name*")
     private boolean onlineMode = true;
@@ -160,6 +164,10 @@ public class ProxyConfig extends YamlConfig {
 
     public void setMaxPlayerCount(int maxPlayerCount) {
         this.maxPlayerCount = maxPlayerCount;
+    }
+
+    public boolean isUpstreamEncryption() {
+        return this.upstreamEncryption;
     }
 
     public boolean isOnlineMode() {

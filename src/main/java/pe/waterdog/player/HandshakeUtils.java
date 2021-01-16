@@ -22,15 +22,20 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.nimbusds.jose.*;
+import com.nimbusds.jose.jwk.Curve;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
+import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.utils.ProxyConfig;
 
+import javax.crypto.SecretKey;
 import java.net.URI;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
@@ -103,14 +108,31 @@ public class HandshakeUtils {
         JWSObject clientJwt = JWSObject.parse(packet.getSkinData().toString());
         EncryptionUtils.verifyJwt(clientJwt, identityPublicKey);
 
-        JsonObject clientData = (JsonObject) JsonParser.parseString(clientJwt.getPayload().toString());
-
-        /* Add WaterdogAttributes */
         ProxyConfig config = ProxyServer.getInstance().getConfiguration();
+        if (config.isUpstreamEncryption()) {
+            processEncryption(session, identityPublicKey);
+        }
+
+        JsonObject clientData = (JsonObject) JsonParser.parseString(clientJwt.getPayload().toString());
         if (config.useLoginExtras() && config.isIpForward()) {
+            // Add waterdog attributes
             clientData.addProperty("Waterdog_IP", session.getAddress().getAddress().getHostAddress());
         }
         return clientData;
+    }
+
+    private static void processEncryption(BedrockSession session, PublicKey key) throws Exception {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("EC");
+        generator.initialize(Curve.P_384.toECParameterSpec());
+        KeyPair serverKeyPair = generator.generateKeyPair();
+
+        byte[] token = EncryptionUtils.generateRandomToken();
+        SecretKey encryptionKey = EncryptionUtils.getSecretKey(serverKeyPair.getPrivate(), key, token);
+        session.enableEncryption(encryptionKey);
+
+        ServerToClientHandshakePacket packet = new ServerToClientHandshakePacket();
+        packet.setJwt(EncryptionUtils.createHandshakeJwt(serverKeyPair, token).serialize());
+        session.sendPacketImmediately(packet);
     }
 
     public static JsonObject parseExtraData(LoginPacket packet, JsonObject payload) {
@@ -120,7 +142,6 @@ public class HandshakeUtils {
         }
 
         JsonObject extraData = extraDataElement.getAsJsonObject();
-        /* Replace spaces in name */
         if (ProxyServer.getInstance().getConfiguration().isReplaceUsernameSpaces()) {
             String playerName = extraData.get("displayName").getAsString();
             extraData.addProperty("displayName", playerName.replaceAll(" ", "_"));
