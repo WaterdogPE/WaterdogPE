@@ -189,7 +189,7 @@ public class ProxyServer {
 
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
-            player.getValue().disconnect("Proxy Shutdown");
+            player.getValue().disconnect("Proxy Shutdown", true);
         }
         Thread.sleep(500); // Give small delay to send packet
 

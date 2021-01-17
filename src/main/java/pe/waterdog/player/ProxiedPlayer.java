@@ -251,11 +251,19 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public void disconnect(TextContainer message) {
+        this.disconnect(message, false);
+    }
+
+    public void disconnect(TextContainer message, boolean forceClose) {
         if (message instanceof TranslationContainer) {
-            this.disconnect(((TranslationContainer) message).getTranslated());
+            this.disconnect(((TranslationContainer) message).getTranslated(), forceClose);
         } else {
-            this.disconnect(message.getMessage());
+            this.disconnect(message.getMessage(), forceClose);
         }
+    }
+
+    public void disconnect(String reason) {
+        this.disconnect(reason, false);
     }
 
     /**
@@ -263,8 +271,9 @@ public class ProxiedPlayer implements CommandSender {
      * Kicks the player with the provided reason and closes the connection
      *
      * @param reason The disconnect reason the player will see on his disconnect screen (Supports Color Codes)
+     * @param forceClose whatever force close connections
      */
-    public void disconnect(String reason) {
+    public void disconnect(String reason, boolean forceClose) {
         if (!this.disconnected.compareAndSet(false, true)) {
             return;
         }
@@ -278,7 +287,7 @@ public class ProxiedPlayer implements CommandSender {
 
         if (this.serverConnection != null) {
             this.serverConnection.getInfo().removePlayer(this);
-            this.serverConnection.disconnect();
+            this.serverConnection.disconnect(forceClose);
         }
 
         this.proxy.getPlayerManager().removePlayer(this);
