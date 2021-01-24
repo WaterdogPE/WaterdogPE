@@ -23,7 +23,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import pe.waterdog.ProxyServer;
-import pe.waterdog.VersionInfo;
 import pe.waterdog.event.defaults.ProxyQueryEvent;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.ProxyConfig;

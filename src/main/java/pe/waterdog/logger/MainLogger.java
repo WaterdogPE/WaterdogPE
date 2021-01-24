@@ -22,7 +22,7 @@ import lombok.extern.log4j.Log4j2;
  * Main Server logger
  */
 @Log4j2
-public class MainLogger extends Thread implements Logger {
+public class MainLogger implements Logger {
 
     private static MainLogger instance = new MainLogger();
 
