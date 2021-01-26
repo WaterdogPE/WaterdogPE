@@ -16,14 +16,19 @@
 
 package pe.waterdog.network.session;
 
+import com.google.gson.JsonObject;
 import com.nimbusds.jose.JWSObject;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import io.netty.util.AsciiString;
 import lombok.Builder;
+import net.minidev.json.JSONObject;
+import net.minidev.json.JSONStyle;
 import pe.waterdog.network.protocol.ProtocolVersion;
+import pe.waterdog.player.HandshakeUtils;
 
 import java.net.InetSocketAddress;
 import java.security.KeyPair;
+import java.util.Collections;
 import java.util.UUID;
 
 /**
@@ -41,15 +46,29 @@ public class LoginData {
     private final String joinHostname;
 
     private final KeyPair keyPair;
-    private final AsciiString chainData;
-    private final JWSObject signedClientData;
+    private final JsonObject clientData;
+    private final JsonObject extraData;
 
-    public LoginPacket constructLoginPacket() {
+    private LoginPacket loginPacket;
+
+    /**
+     * Used to construct new login packet using this.clientData and this.extraData signed by this.keyPair.
+     * This method should be called everytime client data is changed. Otherwise player will join to downstream using old data.
+     * @return new LoginPacket.
+     */
+    public LoginPacket rebuildLoginPacket() {
+        JWSObject signedClientData = HandshakeUtils.encodeJWT(keyPair, clientData);
+        JWSObject signedExtraData = HandshakeUtils.createExtraData(keyPair, extraData);
+
+        JSONObject chainJson = new JSONObject();
+        chainJson.put("chain", Collections.singletonList(signedExtraData.serialize()));
+        AsciiString chainData = AsciiString.of(chainJson.toString(JSONStyle.LT_COMPRESS));
+
         LoginPacket loginPacket = new LoginPacket();
-        loginPacket.setChainData(this.chainData);
-        loginPacket.setSkinData(AsciiString.of(this.signedClientData.serialize()));
+        loginPacket.setChainData(chainData);
+        loginPacket.setSkinData(AsciiString.of(signedClientData.serialize()));
         loginPacket.setProtocolVersion(this.protocol.getProtocol());
-        return loginPacket;
+        return this.loginPacket = loginPacket;
     }
 
     public String getDisplayName() {
@@ -80,11 +99,22 @@ public class LoginData {
         return this.keyPair;
     }
 
+    public JsonObject getClientData() {
+        return this.clientData;
+    }
+
+    public JsonObject getExtraData() {
+        return this.extraData;
+    }
+
     public String getJoinHostname() {
         return this.joinHostname;
     }
 
-    public JWSObject getSignedClientData() {
-        return this.signedClientData;
+    public LoginPacket getLoginPacket() {
+        if (this.loginPacket == null) {
+            this.rebuildLoginPacket();
+        }
+        return this.loginPacket;
     }
 }

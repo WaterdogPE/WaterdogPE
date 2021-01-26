@@ -78,7 +78,6 @@ public class ProxiedPlayer implements CommandSender {
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private ServerConnection serverConnection;
     private ServerInfo pendingConnection;
-    private LoginPacket loginPacket;
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
@@ -109,7 +108,6 @@ public class ProxiedPlayer implements CommandSender {
         this.proxy = proxy;
         this.upstream = session;
         this.loginData = loginData;
-        this.loginPacket = loginData.constructLoginPacket();
         this.rewriteMaps = new RewriteMaps(this);
         this.proxy.getPlayerManager().subscribePermissions(this);
     }
@@ -222,7 +220,7 @@ public class ProxiedPlayer implements CommandSender {
             }
 
             downstream.setPacketCodec(this.getProtocol().getCodec());
-            downstream.sendPacketImmediately(this.loginPacket);
+            downstream.sendPacketImmediately(this.loginData.getLoginPacket());
             downstream.setLogging(true);
 
             SessionInjections.injectNewDownstream(downstream, this, targetServer, client);

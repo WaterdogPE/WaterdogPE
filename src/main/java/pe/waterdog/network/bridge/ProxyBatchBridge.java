@@ -62,12 +62,12 @@ public abstract class ProxyBatchBridge implements BatchHandler {
         }
 
         if (!allPackets.isEmpty() && (changed || allPackets.size() != packets.size())) {
-            this.session.sendWrapped(allPackets, true);
+            this.session.sendWrapped(allPackets, this.session.isEncrypted());
             return;
         }
 
         if (!changed && allPackets.size() == packets.size()) {
-            buf.readerIndex(1);
+            buf.resetReaderIndex(); // Set reader index to position where payload is decrypted.
             this.session.sendWrapped(buf, this.session.isEncrypted());
         }
 
