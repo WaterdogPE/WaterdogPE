@@ -25,7 +25,6 @@ import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.VersionInfo;
-import pe.waterdog.event.defaults.PlayerCreationEvent;
 import pe.waterdog.event.defaults.PlayerPreLoginEvent;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.network.protocol.ProtocolVersion;
@@ -87,17 +86,14 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
             this.proxy.getLogger().info("[" + session.getAddress()  + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has connected (protocol=" + protocolVersion + ")");
             LoginData loginData = handshakeEntry.buildData(session, this.proxy);
 
-            PlayerPreLoginEvent preLoginEvent = new PlayerPreLoginEvent(loginData);
-            this.proxy.getEventManager().callEvent(preLoginEvent);
-            if (preLoginEvent.isCancelled()) {
-                session.disconnect(preLoginEvent.getCancelReason());
+            PlayerPreLoginEvent loginEvent = new PlayerPreLoginEvent(ProxiedPlayer.class, loginData, this.session.getAddress());
+            this.proxy.getEventManager().callEvent(loginEvent);
+            if (loginEvent.isCancelled()) {
+                session.disconnect(loginEvent.getCancelReason());
                 return true;
             }
 
-            PlayerCreationEvent creationEvent = new PlayerCreationEvent(ProxiedPlayer.class, loginData, this.session.getAddress());
-            this.proxy.getEventManager().callEvent(creationEvent);
-
-            ProxiedPlayer player = creationEvent.getBaseClass().getConstructor(ProxyServer.class, BedrockServerSession.class, LoginData.class).newInstance(this.proxy, this.session, loginData);
+            ProxiedPlayer player = loginEvent.getBaseClass().getConstructor(ProxyServer.class, BedrockServerSession.class, LoginData.class).newInstance(this.proxy, this.session, loginData);
             if (!this.proxy.getPlayerManager().registerPlayer(player)) {
                 return true;
             }

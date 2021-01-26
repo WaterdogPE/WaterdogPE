@@ -19,24 +19,44 @@ package pe.waterdog.event.defaults;
 import pe.waterdog.event.CancellableEvent;
 import pe.waterdog.event.Event;
 import pe.waterdog.network.session.LoginData;
+import pe.waterdog.player.ProxiedPlayer;
+
+import java.net.InetSocketAddress;
 
 /**
- * Called in the moment we receive the LoginPacket from the Client.
- * (After decoding the LoginData)
+ * Called when LoginPacket is successfully decoded and the ProxiedPlayer Class is being created.
  * loginData contains most relevant information on the client connecting
+ * Can be used to create custom Player classes to override or extend the original class. (No Support)
  * Cancelling this event will lead to the player being kicked for the set cancelReason
  */
 public class PlayerPreLoginEvent extends Event implements CancellableEvent {
 
-    private LoginData loginData;
+    private final LoginData loginData;
+    private final InetSocketAddress address;
+
+    private Class<? extends ProxiedPlayer> baseClass;
     private String cancelReason = "Login was cancelled";
 
-    public PlayerPreLoginEvent(LoginData loginData) {
+    public PlayerPreLoginEvent(Class<? extends ProxiedPlayer> baseClass, LoginData loginData, InetSocketAddress address) {
+        this.baseClass = baseClass;
         this.loginData = loginData;
+        this.address = address;
     }
 
     public LoginData getLoginData() {
         return this.loginData;
+    }
+
+    public InetSocketAddress getAddress() {
+        return this.address;
+    }
+
+    public Class<? extends ProxiedPlayer> getBaseClass() {
+        return this.baseClass;
+    }
+
+    public void setBaseClass(Class<? extends ProxiedPlayer> baseClass) {
+        this.baseClass = baseClass;
     }
 
     public String getCancelReason() {
