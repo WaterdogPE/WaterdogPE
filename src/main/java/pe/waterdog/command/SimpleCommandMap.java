@@ -64,7 +64,7 @@ public class SimpleCommandMap implements CommandMap {
 
     @Override
     public boolean handleMessage(CommandSender sender, String message) {
-        return message.startsWith(this.commandPrefix);
+        return !message.trim().isEmpty() && message.startsWith(this.commandPrefix);
     }
 
     @Override
