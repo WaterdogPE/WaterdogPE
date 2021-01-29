@@ -17,15 +17,15 @@ effort from us and provides us with a nice api to work with.
 
 ## Benefits compared to Waterdog 
 
-- reduced memory usage
-- much cleaner Plugin API
-- much more configurable
-- easy to modify / contribute
-- active Support and quick updates for new MC:BE Versions
-- dimension-less transfer: A transfer without any screen inbetween
+- Reduced memory usage
+- Much cleaner Plugin API
+- Much more configurable
+- Easy to modify / contribute
+- Active Support and quick updates for new MC:BE Versions
+- Dimension-less transfer: A transfer without any screen inbetween
 - BE server pinging: Easily ping your downstream server using a plugin to check it's status
-- resource pack support
-- maintained documentation
+- Resource pack support
+- Maintained documentation
 
 
 ## Known bugs fixed in WaterdogPE
@@ -37,3 +37,25 @@ effort from us and provides us with a nice api to work with.
 - [Resource packs not working properly](https://github.com/yesdog/Waterdog/issues/110)
 - [Native ciphering sometimes fails](https://github.com/yesdog/Waterdog/issues/130)
 - [Food bar not always working on Nukkit](https://github.com/yesdog/Waterdog/issues/144)
+
+## Compiling
+To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
+
+## Maven usage
+```mvn
+    <repositories>
+        <repository>
+            <id>waterdog-repo</id>
+            <url>https://repo.waterdog.dev/artifactory/main</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>pe.waterdog</groupId>
+            <artifactId>waterdog</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+```
