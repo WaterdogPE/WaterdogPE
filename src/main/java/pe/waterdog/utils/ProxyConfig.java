@@ -117,9 +117,9 @@ public class ProxyConfig extends YamlConfig {
     @Path("enable_item_rewrite")
     @Comments({
             "Since 1.16.100 item palette with custom runtime ids was introduced. Transfers between different server software may cause unwanted behaviour.",
-            "Enable item rewrite if compatibility between custom software is required."
+            "Enable item rewrite if your downstream servers use different item palette."
     })
-    private boolean itemRewrite = true;
+    private boolean itemRewrite = false;
 
     @Path("upstream_compression_level")
     @Comment("Upstream server compression ratio(proxy to client), higher = less bandwidth, more cpu, lower vice versa")
