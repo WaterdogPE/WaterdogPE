@@ -10,6 +10,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                sh 'sed -i -e s/#build/"${BUILD_ID}"/g ./src/main/java/pe/waterdog/VersionInfo.java'
                 sh 'mvn clean install'
             }
             post {

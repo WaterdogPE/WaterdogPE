@@ -21,6 +21,6 @@ public interface VersionInfo {
     String BASE_VERSION = "1.0.0";
     String BUILD_VERSION = "#build";
     int LATEST_PROTOCOL_VERSION = 422;
-    boolean IS_DEVELOPMENT = true;
+    boolean IS_DEVELOPMENT = false;
     String AUTHOR = "WaterdogTEAM";
 }
