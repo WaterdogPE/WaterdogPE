@@ -17,7 +17,9 @@
 package pe.waterdog.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
+import com.nukkitx.protocol.bedrock.packet.ItemStackRequestPacket;
 import com.nukkitx.protocol.bedrock.packet.ResourcePacksInfoPacket;
+import com.nukkitx.protocol.bedrock.v422.serializer.ItemStackRequestSerializer_v422;
 import com.nukkitx.protocol.bedrock.v422.serializer.ResourcePacksInfoSerializer_v422;
 import pe.waterdog.network.protocol.ProtocolVersion;
 
@@ -33,5 +35,12 @@ public class BedrockCodec422 extends BedrockCodec419 {
         super.buildCodec(builder);
         builder.deregisterPacket(ResourcePacksInfoPacket.class);
         builder.registerPacket(ResourcePacksInfoPacket.class, ResourcePacksInfoSerializer_v422.INSTANCE, 6);
+    }
+
+    @Override
+    public void registerItemPackets(BedrockPacketCodec.Builder builder) {
+        super.registerItemPackets(builder);
+        builder.deregisterPacket(ItemStackRequestPacket.class);
+        builder.registerPacket(ItemStackRequestPacket.class, ItemStackRequestSerializer_v422.INSTANCE, 147);
     }
 }

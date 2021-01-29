@@ -65,6 +65,5 @@ public class BedrockCodec419 extends BedrockCodec408 {
         builder.registerPacket(InventorySlotPacket.class, InventorySlotSerializer_v407.INSTANCE, 50);
         builder.registerPacket(CreativeContentPacket.class, CreativeContentSerializer_v407.INSTANCE, 145);
         builder.registerPacket(ItemStackRequestPacket.class, ItemStackRequestSerializer_v407.INSTANCE, 147);
-
     }
 }
