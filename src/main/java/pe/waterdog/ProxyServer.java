@@ -189,7 +189,7 @@ public class ProxyServer {
 
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
-            player.getValue().disconnect("Proxy Shutdown");
+            player.getValue().disconnect("Proxy Shutdown", true);
         }
         Thread.sleep(500); // Give small delay to send packet
 
@@ -199,7 +199,7 @@ public class ProxyServer {
         this.eventManager.getThreadedExecutor().shutdown();
         try {
             if (this.bedrockServer != null) {
-                this.bedrockServer.getRakNet().close();
+                this.bedrockServer.close();
             }
         } catch (Exception e) {
             this.getLogger().error("Error while shutting down ProxyServer", e);
@@ -235,15 +235,7 @@ public class ProxyServer {
     }
 
     public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
-        int port;
-        try {
-            ServerSocket socket = new ServerSocket(0);
-            socket.setReuseAddress(true);
-            port = socket.getLocalPort();
-        }catch (IOException e){
-            throw new RuntimeException("Can bind BedrockClient!", e);
-        }
-        InetSocketAddress address = new InetSocketAddress("0.0.0.0", port);
+        InetSocketAddress address = new InetSocketAddress("0.0.0.0", 0);
         BedrockClient client = new BedrockClient(address);
         client.setRakNetVersion(protocol.getRaknetVersion());
         return client.bind().thenApply(i -> client);

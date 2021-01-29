@@ -46,9 +46,16 @@ public class ServerConnection {
     }
 
     public void disconnect() {
-        if (!this.downstream.isClosed()) {
-            this.client.close();
-        }
+        this.disconnect(false);
+    }
+
+    /**
+     * Safely close connection with downstream server.
+     * @param force if block thread till everything is closed.
+     */
+    public void disconnect(boolean force) {
+        // TODO: client.close(force) once it appear in protocol lib
+        this.client.close();
     }
 
     public ServerInfo getInfo() {

@@ -16,39 +16,36 @@
 package pe.waterdog.player;
 
 import com.google.gson.JsonObject;
-import com.nimbusds.jose.JWSObject;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
-import io.netty.util.AsciiString;
-import net.minidev.json.JSONObject;
-import net.minidev.json.JSONStyle;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.event.defaults.PreClientDataSetEvent;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.network.session.LoginData;
 
-import java.security.KeyPair;
-import java.util.Collections;
+import java.security.interfaces.ECPublicKey;
 import java.util.UUID;
 
 public class HandshakeEntry {
 
+    private final ECPublicKey identityPublicKey;
     private final JsonObject clientData;
     private final JsonObject extraData;
     private final boolean xboxAuthed;
     private final ProtocolVersion protocol;
 
-    public HandshakeEntry(JsonObject clientData, JsonObject extraData, boolean xboxAuthed, ProtocolVersion protocol) {
+    public HandshakeEntry(ECPublicKey identityPublicKey, JsonObject clientData, JsonObject extraData, boolean xboxAuthed, ProtocolVersion protocol) {
+        this.identityPublicKey = identityPublicKey;
         this.clientData = clientData;
         this.extraData = extraData;
         this.xboxAuthed = xboxAuthed;
         this.protocol = protocol;
     }
 
-    public LoginData buildData(BedrockServerSession session, ProxyServer proxy) {
+    public LoginData buildData(BedrockServerSession session, ProxyServer proxy) throws Exception {
         // This is first event which exposes new player connecting to proxy.
-        // The purpose is to change player's client data before joining first downstream.
-        PreClientDataSetEvent event = new PreClientDataSetEvent(clientData, extraData, session);
+        // The purpose is to change player's client data or set encryption keypair before joining first downstream.
+        PreClientDataSetEvent event = new PreClientDataSetEvent(clientData, extraData, EncryptionUtils.createKeyPair(), session);
         proxy.getEventManager().callEvent(event);
 
         LoginData.LoginDataBuilder builder = LoginData.builder();
@@ -59,20 +56,18 @@ public class HandshakeEntry {
         builder.protocol(this.protocol);
         builder.joinHostname(clientData.get("ServerAddress").getAsString().split(":")[0]);
         builder.address(session.getAddress());
+        builder.keyPair(event.getKeyPair());
+        builder.clientData(clientData);
+        builder.extraData(extraData);
 
-        KeyPair keyPair = EncryptionUtils.createKeyPair();
-        builder.keyPair(keyPair);
-
-        JWSObject signedClientData = HandshakeUtils.encodeJWT(keyPair, clientData);
-        JWSObject signedExtraData = HandshakeUtils.createExtraData(keyPair, extraData);
-
-        JSONObject chainJson = new JSONObject();
-        chainJson.put("chain", Collections.singletonList(signedExtraData.serialize()));
-        AsciiString chainData = AsciiString.of(chainJson.toString(JSONStyle.LT_COMPRESS));
-
-        builder.signedClientData(signedClientData);
-        builder.chainData(chainData);
+        if (proxy.getConfiguration().isUpstreamEncryption()) {
+            HandshakeUtils.processEncryption(session, this.identityPublicKey);
+        }
         return builder.build();
+    }
+
+    public ECPublicKey getIdentityPublicKey() {
+        return this.identityPublicKey;
     }
 
     public boolean isXboxAuthed() {

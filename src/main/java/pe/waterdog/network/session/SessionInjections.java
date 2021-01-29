@@ -32,7 +32,7 @@ public class SessionInjections {
     public static void injectUpstreamHandlers(BedrockSession upstream, ProxiedPlayer player) {
         upstream.setCompressionLevel(player.getProxy().getConfiguration().getUpstreamCompression());
         upstream.setPacketHandler(new UpstreamHandler(player));
-        upstream.addDisconnectHandler((reason) -> player.disconnect((String) null));
+        upstream.addDisconnectHandler(reason -> player.disconnect());
     }
 
     public static void injectNewDownstream(BedrockSession downstream, ProxiedPlayer player, ServerInfo server, BedrockClient downstreamClient) {
@@ -40,8 +40,7 @@ public class SessionInjections {
         downstream.addDisconnectHandler((reason) -> {
             if (downstreamClient != null && downstreamClient.getSession().equals(downstream)) {
                 // Make sure everything is closed as excepted.
-                // TODO: enable this after protocol lib version bump
-                // downstreamClient.close();
+                downstreamClient.close();
             }
 
             player.getLogger().info("[" + player.getAddress() + "|" + player.getName() + "] -> Downstream [" + server.getServerName() + "] has disconnected");

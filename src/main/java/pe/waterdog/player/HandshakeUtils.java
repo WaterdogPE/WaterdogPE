@@ -22,15 +22,20 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.nimbusds.jose.*;
+import com.nimbusds.jose.jwk.Curve;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
+import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.utils.ProxyConfig;
 
+import javax.crypto.SecretKey;
 import java.net.URI;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
@@ -40,6 +45,22 @@ import java.util.UUID;
  * Various utilities for parsing Handshake data
  */
 public class HandshakeUtils {
+
+    private static final KeyPair privateKeyPair;
+
+    static {
+        try {
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("EC");
+            generator.initialize(Curve.P_384.toECParameterSpec());
+            privateKeyPair = generator.generateKeyPair();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to generate private keyPair!", e);
+        }
+    }
+
+    public static KeyPair getPrivateKeyPair() {
+        return privateKeyPair;
+    }
 
     public static boolean validateChain(JsonArray chainArray) throws Exception {
         ECPublicKey lastKey = null;
@@ -93,21 +114,30 @@ public class HandshakeUtils {
         return jwsObject;
     }
 
-    public static JsonObject parseClientData(LoginPacket packet, JsonObject payload, BedrockSession session) throws Exception {
-        String identityPublicKeyString = payload.get("identityPublicKey").getAsString();
-        if (identityPublicKeyString == null) {
+    public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, JsonArray certChain, ProtocolVersion protocol) throws Exception {
+        // Cert chain should be signed by Mojang is is client xbox authenticated
+        boolean xboxAuth = HandshakeUtils.validateChain(certChain);
+        JWSObject jwt = JWSObject.parse(certChain.get(certChain.size() - 1).getAsString());
+        JsonObject payload = (JsonObject) JsonParser.parseString(jwt.getPayload().toString());
+        JsonObject extraData = HandshakeUtils.parseExtraData(packet, payload);
+
+        if (!payload.has("identityPublicKey")) {
             throw new RuntimeException("Identity Public Key was not found!");
         }
+        String identityPublicKeyString = payload.get("identityPublicKey").getAsString();
 
         ECPublicKey identityPublicKey = EncryptionUtils.generateKey(identityPublicKeyString);
         JWSObject clientJwt = JWSObject.parse(packet.getSkinData().toString());
         EncryptionUtils.verifyJwt(clientJwt, identityPublicKey);
+        JsonObject clientData = HandshakeUtils.parseClientData(clientJwt, session);
+        return new HandshakeEntry(identityPublicKey, clientData, extraData, xboxAuth, protocol);
+    }
 
+    public static JsonObject parseClientData(JWSObject clientJwt, BedrockSession session) throws Exception {
         JsonObject clientData = (JsonObject) JsonParser.parseString(clientJwt.getPayload().toString());
-
-        /* Add WaterdogAttributes */
         ProxyConfig config = ProxyServer.getInstance().getConfiguration();
         if (config.useLoginExtras() && config.isIpForward()) {
+            // Add waterdog attributes
             clientData.addProperty("Waterdog_IP", session.getAddress().getAddress().getHostAddress());
         }
         return clientData;
@@ -120,7 +150,6 @@ public class HandshakeUtils {
         }
 
         JsonObject extraData = extraDataElement.getAsJsonObject();
-        /* Replace spaces in name */
         if (ProxyServer.getInstance().getConfiguration().isReplaceUsernameSpaces()) {
             String playerName = extraData.get("displayName").getAsString();
             extraData.addProperty("displayName", playerName.replaceAll(" ", "_"));
@@ -128,14 +157,13 @@ public class HandshakeUtils {
         return extraData;
     }
 
-    public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, JsonArray certChain, ProtocolVersion protocol) throws Exception {
-        // Cert chain should be signed by Mojang is is client xbox authenticated
-        boolean xboxAuth = HandshakeUtils.validateChain(certChain);
-        JWSObject jwt = JWSObject.parse(certChain.get(certChain.size() - 1).getAsString());
-        JsonObject payload = (JsonObject) JsonParser.parseString(jwt.getPayload().toString());
+    public static void processEncryption(BedrockSession session, PublicKey key) throws Exception {
+        byte[] token = EncryptionUtils.generateRandomToken();
+        SecretKey encryptionKey = EncryptionUtils.getSecretKey(privateKeyPair.getPrivate(), key, token);
+        session.enableEncryption(encryptionKey);
 
-        JsonObject clientData = HandshakeUtils.parseClientData(packet, payload, session);
-        JsonObject extraData = HandshakeUtils.parseExtraData(packet, payload);
-        return new HandshakeEntry(clientData, extraData, xboxAuth, protocol);
+        ServerToClientHandshakePacket packet = new ServerToClientHandshakePacket();
+        packet.setJwt(EncryptionUtils.createHandshakeJwt(privateKeyPair, token).serialize());
+        session.sendPacketImmediately(packet);
     }
 }

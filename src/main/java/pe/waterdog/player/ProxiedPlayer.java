@@ -26,7 +26,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import lombok.NonNull;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.command.CommandSender;
 import pe.waterdog.event.defaults.*;
@@ -38,9 +37,6 @@ import pe.waterdog.network.bridge.UpstreamBridge;
 import pe.waterdog.network.downstream.InitialHandler;
 import pe.waterdog.network.downstream.SwitchDownstreamHandler;
 import pe.waterdog.network.protocol.ProtocolVersion;
-import pe.waterdog.network.rewrite.BlockMap;
-import pe.waterdog.network.rewrite.EntityMap;
-import pe.waterdog.network.rewrite.EntityTracker;
 import pe.waterdog.network.rewrite.RewriteMaps;
 import pe.waterdog.network.rewrite.types.RewriteData;
 import pe.waterdog.network.session.LoginData;
@@ -78,7 +74,6 @@ public class ProxiedPlayer implements CommandSender {
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private ServerConnection serverConnection;
     private ServerInfo pendingConnection;
-    private LoginPacket loginPacket;
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
@@ -109,7 +104,6 @@ public class ProxiedPlayer implements CommandSender {
         this.proxy = proxy;
         this.upstream = session;
         this.loginData = loginData;
-        this.loginPacket = loginData.constructLoginPacket();
         this.rewriteMaps = new RewriteMaps(this);
         this.proxy.getPlayerManager().subscribePermissions(this);
     }
@@ -197,6 +191,12 @@ public class ProxiedPlayer implements CommandSender {
 
         CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
         future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, error) -> {
+            if (this.disconnected.get()) {
+                client.close();
+                this.getLogger().debug("Discarding downstream connection: Player " + this.getName() +" disconnected!");
+                return;
+            }
+
             if (error != null) {
                 this.connectFailure(client, targetServer, error);
                 return;
@@ -216,7 +216,7 @@ public class ProxiedPlayer implements CommandSender {
             }
 
             downstream.setPacketCodec(this.getProtocol().getCodec());
-            downstream.sendPacketImmediately(this.loginPacket);
+            downstream.sendPacketImmediately(this.loginData.getLoginPacket());
             downstream.setLogging(true);
 
             SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
@@ -251,11 +251,19 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public void disconnect(TextContainer message) {
+        this.disconnect(message, false);
+    }
+
+    public void disconnect(TextContainer message, boolean forceClose) {
         if (message instanceof TranslationContainer) {
-            this.disconnect(((TranslationContainer) message).getTranslated());
+            this.disconnect(((TranslationContainer) message).getTranslated(), forceClose);
         } else {
-            this.disconnect(message.getMessage());
+            this.disconnect(message.getMessage(), forceClose);
         }
+    }
+
+    public void disconnect(String reason) {
+        this.disconnect(reason, false);
     }
 
     /**
@@ -263,14 +271,15 @@ public class ProxiedPlayer implements CommandSender {
      * Kicks the player with the provided reason and closes the connection
      *
      * @param reason The disconnect reason the player will see on his disconnect screen (Supports Color Codes)
+     * @param forceClose whatever force close connections
      */
-    public void disconnect(String reason) {
+    public void disconnect(String reason, boolean forceClose) {
         if (!this.disconnected.compareAndSet(false, true)) {
             return;
         }
 
         PlayerDisconnectEvent event = new PlayerDisconnectEvent(this);
-        ProxyServer.getInstance().getEventManager().callEvent(event);
+        this.proxy.getEventManager().callEvent(event);
 
         if (this.upstream != null && !this.upstream.isClosed()) {
             this.upstream.disconnect(reason);
@@ -278,7 +287,7 @@ public class ProxiedPlayer implements CommandSender {
 
         if (this.serverConnection != null) {
             this.serverConnection.getInfo().removePlayer(this);
-            this.serverConnection.disconnect();
+            this.serverConnection.disconnect(forceClose);
         }
 
         this.proxy.getPlayerManager().removePlayer(this);

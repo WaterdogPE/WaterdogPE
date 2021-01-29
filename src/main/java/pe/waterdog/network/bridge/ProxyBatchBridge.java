@@ -24,11 +24,9 @@ import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import pe.waterdog.network.protocol.ProtocolVersion;
 import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -64,17 +62,17 @@ public abstract class ProxyBatchBridge implements BatchHandler {
         }
 
         if (!allPackets.isEmpty() && (changed || allPackets.size() != packets.size())) {
-            this.session.sendWrapped(allPackets, true);
+            this.session.sendWrapped(allPackets, this.session.isEncrypted());
             return;
         }
 
         if (!changed && allPackets.size() == packets.size()) {
-            buf.readerIndex(1);
+            buf.resetReaderIndex(); // Set reader index to position where payload is decrypted.
             this.session.sendWrapped(buf, this.session.isEncrypted());
         }
 
         // Packets from array aren't used so we can deallocate whole.
-        this.deallocatePackets(packets);
+        this.deallocatePackets(allPackets);
     }
 
     protected void deallocatePackets(Collection<BedrockPacket> packets) {

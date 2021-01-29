@@ -17,7 +17,6 @@
 package pe.waterdog.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
-import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import pe.waterdog.network.protocol.ProtocolVersion;
@@ -37,12 +36,10 @@ import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class InitialHandler implements BedrockPacketHandler {
-
-    private final ProxiedPlayer player;
+public class InitialHandler extends AbstractDownstreamHandler {
 
     public InitialHandler(ProxiedPlayer player) {
-        this.player = player;
+        super(player);
     }
 
     @Override
@@ -95,6 +92,7 @@ public class InitialHandler implements BedrockPacketHandler {
         rewriteData.setEntityId(ThreadLocalRandom.current().nextInt(10000, 15000));
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setDimension(packet.getDimensionId());
+        rewriteData.setSpawnPosition(packet.getPlayerPosition());
 
         // Starting with 419 server does not send vanilla blocks to client
         // But thanks to some downstreams we have now item palette rewrite

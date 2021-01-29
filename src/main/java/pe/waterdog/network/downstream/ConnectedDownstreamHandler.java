@@ -16,7 +16,6 @@
 
 package pe.waterdog.network.downstream;
 
-import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import pe.waterdog.command.Command;
 import pe.waterdog.event.defaults.PostTransferCompleteEvent;
@@ -27,13 +26,12 @@ import pe.waterdog.player.ProxiedPlayer;
 import pe.waterdog.utils.exceptions.CancelSignalException;
 import pe.waterdog.utils.types.TranslationContainer;
 
-public class ConnectedDownstreamHandler implements BedrockPacketHandler {
+public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
-    private final ProxiedPlayer player;
     private final ServerConnection server;
 
     public ConnectedDownstreamHandler(ProxiedPlayer player, ServerConnection server) {
-        this.player = player;
+        super(player);
         this.server = server;
     }
 
@@ -84,7 +82,7 @@ public class ConnectedDownstreamHandler implements BedrockPacketHandler {
         RewriteData rewriteData = player.getRewriteData();
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
+        initializedPacket.setRuntimeEntityId(rewriteData.getEntityId());
         this.server.sendPacket(initializedPacket);
 
         PostTransferCompleteEvent event = new PostTransferCompleteEvent(this.server, this.player);

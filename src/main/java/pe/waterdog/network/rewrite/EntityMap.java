@@ -29,9 +29,7 @@ import java.util.ListIterator;
  * Class to map the proper entityIds to entity-related packets.
  */
 public class EntityMap implements BedrockPacketHandler {
-
-    //TODO: MobArmorEquipmentPacket
-
+    
     private final ProxiedPlayer player;
     private final RewriteData rewrite;
 
