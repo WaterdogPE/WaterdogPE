@@ -12,7 +12,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <raklib.version>1.6.24</raklib.version>
+        <raklib.version>1.6.25-SNAPSHOT</raklib.version>
         <protocol.protocol>bedrock-v422</protocol.protocol>
         <protocol.version>2.6.1-SNAPSHOT</protocol.version>
         <log4j2.version>2.11.1</log4j2.version>
