@@ -96,7 +96,7 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
             return false;
         }
 
-        ServerInfo serverInfo = this.player.getProxy().getServerInfo(packet.getAddress(), packet.getPort());
+        ServerInfo serverInfo = this.player.getProxy().getServerInfo(packet.getAddress());
         if (serverInfo != null) {
             this.player.connect(serverInfo);
             throw CancelSignalException.CANCEL;

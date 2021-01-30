@@ -17,6 +17,7 @@
 package pe.waterdog.network;
 
 import com.nukkitx.network.raknet.RakNetPong;
+import lombok.ToString;
 import pe.waterdog.ProxyServer;
 import pe.waterdog.network.protocol.ProtocolConstants;
 import pe.waterdog.player.ProxiedPlayer;
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
  * Every server registered to the Proxy has one instance of this class, holding its name aswell as its address(ip&port)
  * Also holds a list of all ProxiedPlayers connected.
  */
+@ToString(exclude = {"players"})
 public class ServerInfo {
 
     private final String serverName;
@@ -44,6 +46,9 @@ public class ServerInfo {
     public ServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {
         this.serverName = serverName;
         this.address = address;
+        if (publicAddress == null) {
+            publicAddress = address;
+        }
         this.publicAddress = publicAddress;
     }
 
@@ -58,8 +63,9 @@ public class ServerInfo {
     }
 
     public void addPlayer(ProxiedPlayer player) {
-        if (player == null) return;
-        this.players.add(player);
+        if (player != null) {
+            this.players.add(player);
+        }
     }
 
     public void removePlayer(ProxiedPlayer player) {

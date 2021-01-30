@@ -79,20 +79,20 @@ public class ProxiedPlayer implements CommandSender {
      * Signalizes if connection bridges can do entity and block rewrite.
      * Since first StarGamePacket was received we start with entity id and block rewrite.
      */
-    private boolean canRewrite = false;
-    private boolean hasUpstreamBridge = false;
+    private volatile boolean canRewrite = false;
+    private volatile boolean hasUpstreamBridge = false;
     /**
      * Some downstream server software require strict packet sending policy (like PMMP4).
      * To pass packet handler dedicated to SetLocalPlayerAsInitializedPacket only, proxy has to post-complete server transfer.
      * Using this bool allows tells us if we except post-complete phase operation.
      * See ConnectedDownstreamHandler and SwitchDownstreamHandler for exact usage.
      */
-    private boolean acceptPlayStatus = false;
+    private volatile boolean acceptPlayStatus = false;
     /**
      * Used to determine if proxy can send resource packs packets to player.
      * This value is changed by PlayerResourcePackInfoSendEvent.
      */
-    private boolean acceptResourcePacks = true;
+    private volatile boolean acceptResourcePacks = true;
     /**
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
@@ -299,7 +299,8 @@ public class ProxiedPlayer implements CommandSender {
      * Send player to fallback server if any exists.
      *
      * @param oldServer server from which was player disconnected.
-     * @param reason    disconnected reason.
+     * @param reason disconnected reason.
+     * @return if connection to downstream was successful.
      */
     public boolean sendToFallback(ServerInfo oldServer, String reason) {
         ServerInfo fallbackServer = this.proxy.getReconnectHandler().getFallbackServer(this, oldServer, reason);
@@ -360,7 +361,7 @@ public class ProxiedPlayer implements CommandSender {
     @Override
     public void sendMessage(String message) {
         if (message.trim().isEmpty()) {
-            return; //Client wont accept empty string
+            return; // Client wont accept empty string
         }
 
         TextPacket packet = new TextPacket();
@@ -707,5 +708,15 @@ public class ProxiedPlayer implements CommandSender {
 
     public boolean acceptResourcePacks() {
         return this.acceptResourcePacks;
+    }
+
+    @Override
+    public String toString() {
+        return "ProxiedPlayer(displayName=" + this.getName() +
+                ", protocol=" + this.getProtocol() +
+                ", connected=" + this.isConnected() +
+                ", address=" + this.getAddress() +
+                ", serverInfo=" + this.getServerInfo() +
+                ")";
     }
 }
