@@ -1,0 +1,69 @@
+/*
+ * Copyright 2021 WaterdogTEAM
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package dev.waterdog.command;
+
+import dev.waterdog.ProxyServer;
+import dev.waterdog.logger.MainLogger;
+import dev.waterdog.utils.types.TextContainer;
+import dev.waterdog.utils.types.TranslationContainer;
+
+public class ConsoleCommandSender implements CommandSender {
+
+    private final ProxyServer proxy;
+
+    public ConsoleCommandSender(ProxyServer proxy) {
+        this.proxy = proxy;
+    }
+
+    @Override
+    public String getName() {
+        return "Console";
+    }
+
+    @Override
+    public boolean isPlayer() {
+        return false;
+    }
+
+    @Override
+    public boolean hasPermission(String permission) {
+        return true;
+    }
+
+    @Override
+    public void sendMessage(String message) {
+        MainLogger logger = ProxyServer.getInstance().getLogger();
+        for (String line : message.trim().split("\n")) {
+            logger.info(line);
+        }
+    }
+
+    @Override
+    public void sendMessage(TextContainer message) {
+        String msg;
+        if (message instanceof TranslationContainer) {
+            msg = ((TranslationContainer) message).getTranslated();
+        } else {
+            msg = message.getMessage();
+        }
+        this.sendMessage(msg);
+    }
+
+    @Override
+    public ProxyServer getProxy() {
+        return this.proxy;
+    }
+}
