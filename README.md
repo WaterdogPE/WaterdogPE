@@ -52,7 +52,7 @@ To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
 
     <dependencies>
         <dependency>
-            <groupId>pe.waterdog</groupId>
+            <groupId>dev.waterdog</groupId>
             <artifactId>waterdog</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
