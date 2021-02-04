@@ -45,8 +45,7 @@ public class EventHandler {
             throw new EventException("Tried to handle invalid event type!");
         }
 
-        boolean async = event.getClass().isAnnotationPresent(AsyncEvent.class);
-        if (async) {
+        if (event.getClass().isAnnotationPresent(AsyncEvent.class)) {
             return CompletableFuture.supplyAsync(() -> {
                 for (EventPriority priority : EventPriority.values()) {
                     this.handlePriority(priority, event);

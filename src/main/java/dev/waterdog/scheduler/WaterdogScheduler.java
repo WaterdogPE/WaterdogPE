@@ -99,10 +99,6 @@ public class WaterdogScheduler {
         handler.setPeriod(period);
         handler.setNextRunTick(handler.isDelayed() ? currentTick + delay : currentTick);
 
-        if (task instanceof Task) {
-            ((Task) task).setHandler(handler);
-        }
-
         this.pendingTasks.add(handler);
         this.taskHandlerMap.put(taskId, handler);
         return handler;
@@ -142,8 +138,7 @@ public class WaterdogScheduler {
             return;
         }
 
-        TaskHandler removed = this.taskHandlerMap.remove(taskHandler.getTaskId());
-        removed.cancel();
+        this.taskHandlerMap.remove(taskHandler.getTaskId()).cancel();
     }
 
     public void shutdown() {
@@ -159,7 +154,6 @@ public class WaterdogScheduler {
             }
         }
     }
-
 
     public int getCurrentTick() {
         return this.proxy.getCurrentTick();

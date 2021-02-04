@@ -15,14 +15,10 @@
 
 package dev.waterdog.player;
 
-import com.google.common.collect.ImmutableMap;
 import dev.waterdog.ProxyServer;
 import dev.waterdog.utils.types.Permission;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -34,7 +30,6 @@ public class PlayerManager {
     private final ProxyServer proxy;
 
     private final ConcurrentMap<UUID, ProxiedPlayer> players = new ConcurrentHashMap<>();
-
 
     public PlayerManager(ProxyServer proxy) {
         this.proxy = proxy;
@@ -91,6 +86,6 @@ public class PlayerManager {
     }
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
-        return ImmutableMap.copyOf(this.players);
+        return Collections.unmodifiableMap(this.players);
     }
 }

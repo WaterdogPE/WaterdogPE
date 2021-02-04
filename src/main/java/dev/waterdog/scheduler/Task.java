@@ -17,7 +17,7 @@ package dev.waterdog.scheduler;
 
 public abstract class Task implements Runnable {
 
-    private TaskHandler handler = null;
+    private TaskHandler handler;
 
     public abstract void onRun(int currentTick);
 

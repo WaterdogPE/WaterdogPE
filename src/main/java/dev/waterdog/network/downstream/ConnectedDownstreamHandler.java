@@ -78,7 +78,7 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
         }
 
         this.player.setAcceptPlayStatus(false);
-        RewriteData rewriteData = player.getRewriteData();
+        RewriteData rewriteData = this.player.getRewriteData();
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(rewriteData.getEntityId());
