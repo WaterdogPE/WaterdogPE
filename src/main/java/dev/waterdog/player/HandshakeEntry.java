@@ -45,20 +45,20 @@ public class HandshakeEntry {
     public LoginData buildData(BedrockServerSession session, ProxyServer proxy) throws Exception {
         // This is first event which exposes new player connecting to proxy.
         // The purpose is to change player's client data or set encryption keypair before joining first downstream.
-        PreClientDataSetEvent event = new PreClientDataSetEvent(clientData, extraData, EncryptionUtils.createKeyPair(), session);
+        PreClientDataSetEvent event = new PreClientDataSetEvent(this.clientData, this.extraData, EncryptionUtils.createKeyPair(), session);
         proxy.getEventManager().callEvent(event);
 
         LoginData.LoginDataBuilder builder = LoginData.builder();
-        builder.displayName(extraData.get("displayName").getAsString());
-        builder.uuid(UUID.fromString(extraData.get("identity").getAsString()));
-        builder.xuid(extraData.get("XUID").getAsString());
+        builder.displayName(this.extraData.get("displayName").getAsString());
+        builder.uuid(UUID.fromString(this.extraData.get("identity").getAsString()));
+        builder.xuid(this.extraData.get("XUID").getAsString());
         builder.xboxAuthed(this.xboxAuthed);
         builder.protocol(this.protocol);
-        builder.joinHostname(clientData.get("ServerAddress").getAsString().split(":")[0]);
+        builder.joinHostname(this.clientData.get("ServerAddress").getAsString().split(":")[0]);
         builder.address(session.getAddress());
         builder.keyPair(event.getKeyPair());
-        builder.clientData(clientData);
-        builder.extraData(extraData);
+        builder.clientData(this.clientData);
+        builder.extraData(this.extraData);
 
         if (proxy.getConfiguration().isUpstreamEncryption()) {
             HandshakeUtils.processEncryption(session, this.identityPublicKey);

@@ -56,8 +56,8 @@ public class LoginData {
      * @return new LoginPacket.
      */
     public LoginPacket rebuildLoginPacket() {
-        JWSObject signedClientData = HandshakeUtils.encodeJWT(keyPair, clientData);
-        JWSObject signedExtraData = HandshakeUtils.createExtraData(keyPair, extraData);
+        JWSObject signedClientData = HandshakeUtils.encodeJWT(this.keyPair, this.clientData);
+        JWSObject signedExtraData = HandshakeUtils.createExtraData(this.keyPair, this.extraData);
 
         JSONObject chainJson = new JSONObject();
         chainJson.put("chain", Collections.singletonList(signedExtraData.serialize()));

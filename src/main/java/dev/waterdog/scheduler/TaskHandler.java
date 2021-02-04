@@ -34,6 +34,9 @@ public class TaskHandler {
 
     public TaskHandler(Runnable task, int taskId, boolean async) {
         this.task = task;
+        if (task instanceof Task) {
+            ((Task) task).setHandler(this);
+        }
         this.taskId = taskId;
         this.async = async;
     }
@@ -53,7 +56,7 @@ public class TaskHandler {
         }
 
         if (this.task instanceof Task) {
-            ((Task) task).onCancel();
+            ((Task) this.task).onCancel();
         }
         this.cancelled = true;
     }

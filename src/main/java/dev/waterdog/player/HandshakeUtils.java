@@ -72,7 +72,9 @@ public class HandshakeUtils {
             }
 
             if (lastKey != null) {
-                EncryptionUtils.verifyJwt(jwt, lastKey);
+                if (!EncryptionUtils.verifyJwt(jwt, lastKey)) {
+                    return false;
+                }
             }
 
             JsonObject payload = (JsonObject) JsonParser.parseString(jwt.getPayload().toString());

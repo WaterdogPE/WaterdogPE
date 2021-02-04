@@ -40,7 +40,7 @@ public class ListCommand extends Command {
     @Override
     public boolean onExecute(CommandSender sender, String alias, String[] args) {
         if (args.length >= 1) {
-            ServerInfo serverInfo = sender.getProxy().getServer(args[0]);
+            ServerInfo serverInfo = sender.getProxy().getServerInfo(args[0]);
             sender.sendMessage(serverInfo == null ? "§cServer not found!" : this.buildServerList(serverInfo));
             return true;
         }

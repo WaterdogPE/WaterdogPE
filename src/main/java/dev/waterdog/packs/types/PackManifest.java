@@ -53,7 +53,7 @@ public class PackManifest {
         if (this.formatVersion == null || this.header == null || this.modules == null) {
             return false;
         }
-        return header.description != null && header.name != null && header.uuid != null && header.version != null;
+        return this.header.description != null && this.header.name != null && this.header.uuid != null && this.header.version != null;
     }
 
     @Data

@@ -104,15 +104,15 @@ public class ProxyServer {
         this.tickExecutor = Executors.newScheduledThreadPool(1, builder.build());
 
         this.configurationManager = new ConfigurationManager(this);
-        configurationManager.loadProxyConfig();
+        this.configurationManager.loadProxyConfig();
         if (this.getConfiguration().isDebug()) {
             WaterdogPE.setLoggerLevel(Level.DEBUG);
         }
-        configurationManager.loadLanguage();
+        this.configurationManager.loadLanguage();
         // Default Handlers
         this.reconnectHandler = new VanillaReconnectHandler();
         this.joinHandler = new VanillaJoinHandler(this);
-        this.serverInfoMap = configurationManager.getProxyConfig().getServerInfoMap();
+        this.serverInfoMap = this.configurationManager.getProxyConfig().getServerInfoMap();
         this.pluginManager = new PluginManager(this);
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
@@ -149,8 +149,8 @@ public class ProxyServer {
         }
 
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
-        bedrockServer.setHandler(new ProxyListener(this));
-        bedrockServer.bind().join();
+        this.bedrockServer.setHandler(new ProxyListener(this));
+        this.bedrockServer.bind().join();
 
         this.logger.debug("Upstream <-> Proxy compression level " + this.getConfiguration().getUpstreamCompression());
         this.logger.debug("Downstream <-> Proxy compression level " + this.getConfiguration().getDownstreamCompression());
@@ -286,6 +286,7 @@ public class ProxyServer {
         return this.playerManager.getPlayers();
     }
 
+    @Deprecated
     public ServerInfo getServer(String serverName) {
         return this.serverInfoMap.get(serverName.toLowerCase());
     }
@@ -341,8 +342,13 @@ public class ProxyServer {
         return serverName == null ? null : this.serverInfoMap.get(serverName);
     }
 
+    /**
+     * Get all registered ServerInfo instances
+     *
+     * @return an unmodifiable collection containing all registered ServerInfo instances
+     */
     public Collection<ServerInfo> getServers() {
-        return new HashSet<>(this.serverInfoMap.values());
+        return Collections.unmodifiableCollection(this.serverInfoMap.values());
     }
 
     public Path getPluginPath() {

@@ -46,7 +46,7 @@ public class PluginClassLoader extends URLClassLoader {
             throw new ClassNotFoundException(name);
         }
 
-        Class<?> result = classes.get(name);
+        Class<?> result = this.classes.get(name);
         if (result != null) {
             return result;
         }

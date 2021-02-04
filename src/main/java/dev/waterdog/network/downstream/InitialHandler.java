@@ -108,7 +108,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
         packet.setRuntimeEntityId(rewriteData.getEntityId());
         packet.setUniqueEntityId(rewriteData.getEntityId());
 
-        SessionInjections.injectInitialHandlers(this.player.getServer(), player);;
+        SessionInjections.injectInitialHandlers(this.player.getServer(), this.player);
         return true;
     }
 }

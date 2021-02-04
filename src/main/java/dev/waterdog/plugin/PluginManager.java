@@ -37,7 +37,6 @@ public class PluginManager {
     private final ProxyServer proxy;
     private final PluginLoader pluginLoader;
 
-
     private final Yaml yamlLoader = new Yaml(new CustomClassLoaderConstructor(this.getClass().getClassLoader()));
     private final Object2ObjectMap<String, Plugin> pluginMap = new Object2ObjectArrayMap<>();
     private final Object2ObjectMap<String, Class<?>> cachedClasses = new Object2ObjectArrayMap<>();

@@ -38,87 +38,86 @@ public class EntityMap implements BedrockPacketHandler {
         this.rewrite = player.getRewriteData();
     }
 
-
     public boolean doRewrite(BedrockPacket packet) {
         return this.player.canRewrite() && packet.handle(this);
     }
 
     @Override
     public boolean handle(MoveEntityAbsolutePacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(EntityEventPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(MobEffectPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(UpdateAttributesPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(MobEquipmentPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(MobArmorEquipmentPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(PlayerActionPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(SetEntityDataPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(SetEntityMotionPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(MoveEntityDeltaPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(SetLocalPlayerAsInitializedPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(AddPlayerPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
-        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
 
         ListIterator<EntityLinkData> iterator = packet.getEntityLinks().listIterator();
         while (iterator.hasNext()){
             EntityLinkData entityLink = iterator.next();
-            long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), rewrite.getEntityId(), rewrite.getOriginalEntityId());
-            long to = PlayerRewriteUtils.rewriteId(entityLink.getTo(), rewrite.getEntityId(), rewrite.getOriginalEntityId());
+            long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
+            long to = PlayerRewriteUtils.rewriteId(entityLink.getTo(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
             if (entityLink.getFrom() != from || entityLink.getTo() != to){
                 iterator.set(new EntityLinkData(from, to, entityLink.getType(), entityLink.isImmediate(), entityLink.isRiderInitiated()));
             }
@@ -128,14 +127,14 @@ public class EntityMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(AddEntityPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
-        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
 
         ListIterator<EntityLinkData> iterator = packet.getEntityLinks().listIterator();
         while (iterator.hasNext()){
             EntityLinkData entityLink = iterator.next();
-            long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), rewrite.getEntityId(), rewrite.getOriginalEntityId());
-            long to = PlayerRewriteUtils.rewriteId(entityLink.getTo(), rewrite.getEntityId(), rewrite.getOriginalEntityId());
+            long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
+            long to = PlayerRewriteUtils.rewriteId(entityLink.getTo(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
             if (entityLink.getFrom() != from || entityLink.getTo() != to){
                 iterator.set(new EntityLinkData(from, to, entityLink.getType(), entityLink.isImmediate(), entityLink.isRiderInitiated()));
             }
@@ -145,56 +144,56 @@ public class EntityMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(AddItemEntityPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
-        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(AddPaintingPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
-        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(RemoveEntityPacket packet) {
-        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(BossEventPacket packet) {
-        packet.setBossUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getBossUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
-        packet.setPlayerUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getPlayerUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setBossUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getBossUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        packet.setPlayerUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getPlayerUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(TakeItemEntityPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
-        packet.setItemRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getItemRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        packet.setItemRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getItemRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(MovePlayerPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
-        packet.setRidingRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRidingRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        packet.setRidingRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRidingRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(InteractPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(SetEntityLinkPacket packet) {
         EntityLinkData entityLink = packet.getEntityLink();
-        long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), rewrite.getEntityId(), rewrite.getOriginalEntityId());
-        long to = PlayerRewriteUtils.rewriteId(entityLink.getTo(), rewrite.getEntityId(), rewrite.getOriginalEntityId());
+        long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
+        long to = PlayerRewriteUtils.rewriteId(entityLink.getTo(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
 
         packet.setEntityLink(new EntityLinkData(from, to, entityLink.getType(), entityLink.isImmediate(), entityLink.isRiderInitiated()));
         return true;
@@ -202,13 +201,13 @@ public class EntityMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(AnimatePacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(AdventureSettingsPacket packet) {
-        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
@@ -219,27 +218,33 @@ public class EntityMap implements BedrockPacketHandler {
         }
 
         for (PlayerListPacket.Entry entry : packet.getEntries()) {
-            entry.setEntityId(PlayerRewriteUtils.rewriteId(entry.getEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+            entry.setEntityId(PlayerRewriteUtils.rewriteId(entry.getEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         }
         return true;
     }
 
     @Override
     public boolean handle(UpdateTradePacket packet) {
-        packet.setPlayerUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getPlayerUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
-        packet.setTraderUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getTraderUniqueEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setPlayerUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getPlayerUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        packet.setTraderUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getTraderUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(RespawnPacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        return true;
+    }
+
+    @Override
+    public boolean handle(EmoteListPacket packet) {
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 
     @Override
     public boolean handle(EmotePacket packet) {
-        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), rewrite.getOriginalEntityId()));
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
 }
