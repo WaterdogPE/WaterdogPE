@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class WaterdogScheduler {
 
-    private static WaterdogScheduler instance;
+    private static final WaterdogScheduler INSTANCE = new WaterdogScheduler(ProxyServer.getInstance());
     private final ProxyServer proxy;
 
     private final ExecutorService threadedExecutor;
@@ -37,11 +37,7 @@ public class WaterdogScheduler {
 
     private final AtomicInteger currentId = new AtomicInteger();
 
-    public WaterdogScheduler(ProxyServer proxy) {
-        if (instance != null) {
-            throw new RuntimeException("Scheduler was already initialized!");
-        }
-        instance = this;
+    private WaterdogScheduler(ProxyServer proxy) {
         this.proxy = proxy;
 
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
@@ -51,7 +47,7 @@ public class WaterdogScheduler {
     }
 
     public static WaterdogScheduler getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     public TaskHandler scheduleAsync(Runnable task) {
@@ -99,10 +95,6 @@ public class WaterdogScheduler {
         handler.setPeriod(period);
         handler.setNextRunTick(handler.isDelayed() ? currentTick + delay : currentTick);
 
-        if (task instanceof Task) {
-            ((Task) task).setHandler(handler);
-        }
-
         this.pendingTasks.add(handler);
         this.taskHandlerMap.put(taskId, handler);
         return handler;
@@ -142,8 +134,7 @@ public class WaterdogScheduler {
             return;
         }
 
-        TaskHandler removed = this.taskHandlerMap.remove(taskHandler.getTaskId());
-        removed.cancel();
+        this.taskHandlerMap.remove(taskHandler.getTaskId()).cancel();
     }
 
     public void shutdown() {
@@ -159,7 +150,6 @@ public class WaterdogScheduler {
             }
         }
     }
-
 
     public int getCurrentTick() {
         return this.proxy.getCurrentTick();

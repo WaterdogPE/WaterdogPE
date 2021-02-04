@@ -183,7 +183,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public boolean handle(DisconnectPacket packet) {
-        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), packet.getKickMessage()));
+        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), packet.getKickMessage()));
         this.client.close();
         this.player.setPendingConnection(null);
         return false;

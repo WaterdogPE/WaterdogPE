@@ -32,7 +32,7 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class BlockPalette {
 
-    private static final Int2ObjectMap<BlockPalette> paletteCache = new Int2ObjectOpenHashMap<>();
+    private static final Int2ObjectMap<BlockPalette> CACHE = new Int2ObjectOpenHashMap<>();
     private final Object2ShortMap<BlockPair> entryToId = new Object2ShortLinkedOpenHashMap<>();
     private final Short2ObjectMap<BlockPair> idToEntry = new Short2ObjectLinkedOpenHashMap<>();
 
@@ -46,12 +46,12 @@ public class BlockPalette {
 
     public static BlockPalette getPalette(NbtList<NbtMap> paletteData, ProtocolVersion protocol) {
         int hashId = paletteData.hashCode();
-        if (paletteCache.containsKey(hashId)) {
-            return paletteCache.get(hashId);
+        if (CACHE.containsKey(hashId)) {
+            return CACHE.get(hashId);
         }
 
         BlockPalette palette = new BlockPalette(paletteData, protocol);
-        paletteCache.put(hashId, palette);
+        CACHE.put(hashId, palette);
         return palette;
     }
 
