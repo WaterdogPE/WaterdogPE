@@ -66,9 +66,13 @@ public class PluginLoader {
 
     protected PluginYAML loadPluginData(File file, Yaml yaml) {
         try (JarFile pluginJar = new JarFile(file)) {
-            JarEntry configEntry = pluginJar.getJarEntry("plugin.yml");
+            JarEntry configEntry = pluginJar.getJarEntry("waterdog.yml");
             if (configEntry == null) {
-                MainLogger.getLogger().warning("Jar file " + file.getName() + " doesnt contain a plugin.yml!");
+              configEntry = pluginJar.getJarEntry("plugin.yml");
+            }
+
+            if (configEntry == null) {
+                MainLogger.getLogger().warning("Jar file " + file.getName() + " doesnt contain a waterdog.yml or plugin.yml!");
                 return null;
             }
 
