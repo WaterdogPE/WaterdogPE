@@ -19,7 +19,7 @@ import dev.waterdog.network.ServerInfo;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.TreeMap;
 
 /**
  * This is a wrapper class for a map mapping all the server names to corresponding ServerInfo instances.
@@ -27,7 +27,7 @@ import java.util.HashMap;
  */
 public class ServerList {
 
-    private final HashMap<String, ServerInfo> serverList = new HashMap<>();
+    private final TreeMap<String, ServerInfo> serverList = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public ServerInfo get(String name) {
         return this.serverList.get(name);
