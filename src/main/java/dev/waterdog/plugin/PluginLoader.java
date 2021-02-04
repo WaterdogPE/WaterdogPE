@@ -68,7 +68,7 @@ public class PluginLoader {
         try (JarFile pluginJar = new JarFile(file)) {
             JarEntry configEntry = pluginJar.getJarEntry("waterdog.yml");
             if (configEntry == null) {
-              configEntry = pluginJar.getJarEntry("plugin.yml");
+                configEntry = pluginJar.getJarEntry("plugin.yml");
             }
 
             if (configEntry == null) {
