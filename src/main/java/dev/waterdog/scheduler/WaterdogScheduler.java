@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class WaterdogScheduler {
 
-    private static final WaterdogScheduler INSTANCE = new WaterdogScheduler(ProxyServer.getInstance());
+    private static final WaterdogScheduler instance = new WaterdogScheduler(ProxyServer.getInstance());
     private final ProxyServer proxy;
 
     private final ExecutorService threadedExecutor;
@@ -47,7 +47,7 @@ public class WaterdogScheduler {
     }
 
     public static WaterdogScheduler getInstance() {
-        return INSTANCE;
+        return instance;
     }
 
     public TaskHandler scheduleAsync(Runnable task) {

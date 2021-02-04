@@ -45,20 +45,20 @@ import java.util.UUID;
  */
 public class HandshakeUtils {
 
-    private static final KeyPair PRIVATE_KEY_PAIR;
+    private static final KeyPair privateKeyPair;
 
     static {
         try {
             KeyPairGenerator generator = KeyPairGenerator.getInstance("EC");
             generator.initialize(Curve.P_384.toECParameterSpec());
-            PRIVATE_KEY_PAIR = generator.generateKeyPair();
+            privateKeyPair = generator.generateKeyPair();
         } catch (Exception e) {
             throw new RuntimeException("Unable to generate private keyPair!", e);
         }
     }
 
     public static KeyPair getPrivateKeyPair() {
-        return PRIVATE_KEY_PAIR;
+        return privateKeyPair;
     }
 
     public static boolean validateChain(JsonArray chainArray) throws Exception {
@@ -160,11 +160,11 @@ public class HandshakeUtils {
 
     public static void processEncryption(BedrockSession session, PublicKey key) throws Exception {
         byte[] token = EncryptionUtils.generateRandomToken();
-        SecretKey encryptionKey = EncryptionUtils.getSecretKey(PRIVATE_KEY_PAIR.getPrivate(), key, token);
+        SecretKey encryptionKey = EncryptionUtils.getSecretKey(privateKeyPair.getPrivate(), key, token);
         session.enableEncryption(encryptionKey);
 
         ServerToClientHandshakePacket packet = new ServerToClientHandshakePacket();
-        packet.setJwt(EncryptionUtils.createHandshakeJwt(PRIVATE_KEY_PAIR, token).serialize());
+        packet.setJwt(EncryptionUtils.createHandshakeJwt(privateKeyPair, token).serialize());
         session.sendPacketImmediately(packet);
     }
 }
