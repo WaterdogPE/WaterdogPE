@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class WaterdogScheduler {
 
-    private static final WaterdogScheduler instance = new WaterdogScheduler(ProxyServer.getInstance());
+    private static WaterdogScheduler instance;
     private final ProxyServer proxy;
 
     private final ExecutorService threadedExecutor;
@@ -37,7 +37,11 @@ public class WaterdogScheduler {
 
     private final AtomicInteger currentId = new AtomicInteger();
 
-    private WaterdogScheduler(ProxyServer proxy) {
+    public WaterdogScheduler(ProxyServer proxy) {
+        if (instance != null) {
+            throw new RuntimeException("Scheduler was already initialized!");
+        }
+        instance = this;
         this.proxy = proxy;
 
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
