@@ -45,12 +45,12 @@ pipeline {
         }
         success {
             withCredentials([string(credentialsId: 'WDPE_Discord_Webhook', variable: 'WEBHOOK')]) {
-                discordSend(webhookURL: ${WEBHOOK}, description: "**Build:** ${env.BUILD_NUMBER}\n**Status:** Success\n\n**Changes:**\n${env.BUILD_URL}", footer: "Waterdog Jenkins", link: "${env.BUILD_URL}", successful: true, title: "Build Success: WaterdogPE", unstable: false, result: "SUCCESS")
+                discordSend(webhookURL: $WEBHOOK, description: "**Build:** ${env.BUILD_NUMBER}\n**Status:** Success\n\n**Changes:**\n${env.BUILD_URL}", footer: "Waterdog Jenkins", link: "${env.BUILD_URL}", successful: true, title: "Build Success: WaterdogPE", unstable: false, result: "SUCCESS")
             }
         }
         failure {
             withCredentials([string(credentialsId: 'WDPE_Discord_Webhook', variable: 'WEBHOOK')]) {
-                discordSend(webhookURL: ${WEBHOOK}, description: "**Build:** ${env.BUILD_NUMBER}\n**Status:** Failure\n\n**Changes:**\n${env.BUILD_URL}", footer: "Waterdog Jenkins", link: "${env.BUILD_URL}", successful: true, title: "Build Failed: WaterdogPE", unstable: false, result: "FAILURE")
+                discordSend(webhookURL: $WEBHOOK, description: "**Build:** ${env.BUILD_NUMBER}\n**Status:** Failure\n\n**Changes:**\n${env.BUILD_URL}", footer: "Waterdog Jenkins", link: "${env.BUILD_URL}", successful: true, title: "Build Failed: WaterdogPE", unstable: false, result: "FAILURE")
             }
         }
     }
