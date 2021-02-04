@@ -29,6 +29,6 @@ public class VanillaJoinHandler implements IJoinHandler {
 
     @Override
     public ServerInfo determineServer(ProxiedPlayer player) {
-        return this.server.getServer(this.server.getConfiguration().getPriorities().get(0));
+        return this.server.getServerInfo(this.server.getConfiguration().getPriorities().get(0));
     }
 }

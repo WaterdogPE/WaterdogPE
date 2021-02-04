@@ -286,6 +286,7 @@ public class ProxyServer {
         return this.playerManager.getPlayers();
     }
 
+    @Deprecated
     public ServerInfo getServer(String serverName) {
         return this.serverInfoMap.get(serverName.toLowerCase());
     }
