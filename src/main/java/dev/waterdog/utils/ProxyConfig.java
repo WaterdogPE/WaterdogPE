@@ -64,7 +64,7 @@ public class ProxyConfig extends YamlConfig {
 
     @Path("permissions")
     @Comment("Case-Sensitive permission list for players")
-    private Object2ObjectOpenHashMap<String, List<String>> playerPermissions = new Object2ObjectOpenHashMap<>() {{
+    private Object2ObjectOpenHashMap<String, List<String>> playerPermissions = new Object2ObjectOpenHashMap<String, List<String>>() {{
         this.put("alemiz003", Arrays.asList("waterdog.player.transfer", "waterdog.player.list"));
         this.put("TobiasDev", Arrays.asList("waterdog.player.transfer", "waterdog.player.list"));
     }};
