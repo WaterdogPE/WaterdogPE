@@ -20,7 +20,7 @@ import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 
 /**
- * Using PacketHandler class plugins can handle safely handle packet.
+ * Using PacketHandler class plugins can safely handle packet sent from upstream/downstream.
  * Handle method will be only invoked if packet was not canceled by proxy handlers.
  */
 public abstract class PacketHandler implements BedrockPacketHandler {

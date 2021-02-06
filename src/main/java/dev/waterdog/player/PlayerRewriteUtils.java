@@ -159,6 +159,9 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectPosition(BedrockSession session, Vector3f position, Vector3f rotation, long runtimeId){
+        if (session == null || session.isClosed()){
+            return;
+        }
         MovePlayerPacket packet = new MovePlayerPacket();
         packet.setPosition(position);
         packet.setRuntimeEntityId(runtimeId);
