@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -54,8 +55,10 @@ public class ZipResourcePack extends ResourcePack {
 
     @Override
     public void saveToCache() throws IOException {
-        InputStream inputStream = Files.newInputStream(this.packPath);
-        this.cachedPack = inputStream.readAllBytes();
+        try (InputStream inputStream = Files.newInputStream(this.packPath)) {
+            byte[] allBytes = new byte[inputStream.available()];
+            this.cachedPack = Arrays.copyOf(allBytes, inputStream.read(allBytes));
+        }
     }
 
     @Override
