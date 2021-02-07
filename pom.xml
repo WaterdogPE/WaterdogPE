@@ -213,7 +213,7 @@
                 <version>3.8.0</version>
                 <configuration>
                     <source>1.8</source>
-                    <release>1.8</release>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
