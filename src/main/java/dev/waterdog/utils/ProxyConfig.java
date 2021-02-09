@@ -63,14 +63,14 @@ public class ProxyConfig extends YamlConfig {
     private Map<String, String> forcedHosts = new HashMap<>();
 
     @Path("permissions")
-    @Comment("Case-Sensitive permission list for players")
+    @Comment("Case-Sensitive permission list for players (empty using {})")
     private Object2ObjectOpenHashMap<String, List<String>> playerPermissions = new Object2ObjectOpenHashMap<>() {{
         this.put("alemiz003", Arrays.asList("waterdog.player.transfer", "waterdog.player.list"));
         this.put("TobiasDev", Arrays.asList("waterdog.player.transfer", "waterdog.player.list"));
     }};
 
     @Path("permissions_default")
-    @Comment("List of permissions each player should get by default")
+    @Comment("List of permissions each player should get by default (empty using [])")
     private List<String> defaultPermissions = new ArrayList<>(Arrays.asList("waterdog.command.help", "waterdog.command.info"));
 
     @Path("enable_debug")
