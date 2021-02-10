@@ -221,13 +221,14 @@ public class ProxyServer {
     }
 
     public boolean dispatchCommand(CommandSender sender, String message) {
-        DispatchCommandEvent event = new DispatchCommandEvent(sender, message);
-        this.eventManager.callEvent(event);
+        String[] args = message.split(" ");
+        DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], Arrays.copyOfRange(args, 1, args.length));
 
+        this.eventManager.callEvent(event);
         if (event.isCancelled()) {
             return false;
         }
-        String[] args = message.split(" ");
+
         return this.commandMap.handleCommand(sender, args[0], Arrays.copyOfRange(args, 1, args.length));
     }
 
