@@ -15,23 +15,24 @@
 
 package dev.waterdog.network.session;
 
+import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
-import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.packet.SetLocalPlayerAsInitializedPacket;
 import com.nukkitx.protocol.bedrock.packet.StopSoundPacket;
 import dev.waterdog.event.defaults.TransferCompleteEvent;
 import dev.waterdog.network.ServerInfo;
 import dev.waterdog.network.bridge.TransferBatchBridge;
 import dev.waterdog.network.rewrite.types.RewriteData;
+import dev.waterdog.player.PlayerRewriteUtils;
 import dev.waterdog.player.ProxiedPlayer;
 
 public class TransferCallback {
-    
+
     private final ProxiedPlayer player;
     private final BedrockClient client;
     private final ServerInfo targetServer;
-    
+
     public TransferCallback(ProxiedPlayer player, BedrockClient client, ServerInfo targetServer) {
         this.player = player;
         this.client = client;
@@ -41,15 +42,33 @@ public class TransferCallback {
     public BedrockClientSession getDownstream() {
         return this.client.getSession();
     }
-    
-    public void onTransferComplete() {        
-        BatchHandler batchBridge = this.getDownstream().getBatchHandler();
-        if (batchBridge instanceof TransferBatchBridge) {
-            // Allow transfer queue to be sent
-            ((TransferBatchBridge) batchBridge).setDimLockActive(false);
-        }
 
+    public TransferBatchBridge getBatchBridge() {
+        if (this.getDownstream().getBatchHandler() instanceof TransferBatchBridge) {
+            return  (TransferBatchBridge) this.getDownstream().getBatchHandler();
+        }
+        return null;
+    }
+
+    public void onTransferAccepted() {
         RewriteData rewriteData = this.player.getRewriteData();
+        rewriteData.setDimension(PlayerRewriteUtils.determineDimensionId(rewriteData.getDimension()));
+        PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition());
+        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), Vector3f.ZERO, rewriteData.getEntityId());
+
+        PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
+        PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
+        PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
+    }
+
+    public void onTransferComplete() {
+        RewriteData rewriteData = this.player.getRewriteData();
+        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), rewriteData.getSpawnPosition().toInt(), rewriteData.getChunkRadiusSize());
+
+        TransferBatchBridge batchBridge = this.getBatchBridge();
+        if (batchBridge != null) { // Allow transfer queue to be sent
+            batchBridge.setDimLockActive(false);
+        }
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
@@ -61,8 +80,6 @@ public class TransferCallback {
         soundPacket.setStoppingAllSound(true);
         this.player.sendPacketImmediately(soundPacket);
 
-        // PlayerRewriteUtils.injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), Vector3f.ZERO, rewriteData.getEntityId());
-
         ServerConnection oldServer = this.player.getServer();
         oldServer.getInfo().removePlayer(this.player);
         oldServer.disconnect();
@@ -73,9 +90,9 @@ public class TransferCallback {
         ServerConnection server = new ServerConnection(this.client, this.getDownstream(), this.targetServer);
         SessionInjections.injectPostDownstreamHandlers(server, this.player);
 
-        if (batchBridge instanceof TransferBatchBridge) {
+        if (batchBridge != null) {
             // Make sure queue will be sent
-            ((TransferBatchBridge) batchBridge).flushQueue(this.getDownstream());
+            batchBridge.flushQueue(this.getDownstream());
         }
 
         this.player.setServer(server);

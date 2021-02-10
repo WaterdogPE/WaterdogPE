@@ -206,11 +206,11 @@ public class PlayerRewriteUtils {
         packet.setPosition(position);
         packet.setRuntimeEntityId(runtimeId);
         packet.setRotation(rotation);
-        packet.setMode(MovePlayerPacket.Mode.NORMAL);
+        packet.setMode(MovePlayerPacket.Mode.RESPAWN);
         session.sendPacket(packet);
     }
 
-    public static void injectDimensionChange(BedrockSession session, int dimensionId, Vector3f position, int radius) {
+    public static void injectDimensionChange(BedrockSession session, int dimensionId, Vector3f position) {
         if (session == null || session.isClosed()){
             return;
         }
@@ -219,15 +219,15 @@ public class PlayerRewriteUtils {
         packet.setRespawn(true);
         packet.setDimension(dimensionId);
         session.sendPacket(packet);
-        injectChunkPublisherUpdate(session, position.toInt(), radius);
-        injectEmptyChunks(session, position, radius);
+        injectChunkPublisherUpdate(session, position.toInt(), 4);
+        injectEmptyChunks(session, position, 4);
     }
 
     public static void injectEmptyChunks(BedrockSession session, Vector3f spawnPosition, int radius){
         int chunkPositionX = spawnPosition.getFloorX() >> 4;
         int chunkPositionZ = spawnPosition.getFloorZ() >> 4;
-        for (int x = -radius; x < radius; x++) {
-            for (int z = -radius; z < radius; z++) {
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
                 injectEmptyChunk(session, chunkPositionX + x, chunkPositionZ + z);
             }
         }

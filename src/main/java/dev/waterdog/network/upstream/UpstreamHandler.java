@@ -22,6 +22,7 @@ import dev.waterdog.ProxyServer;
 import dev.waterdog.event.defaults.PlayerChatEvent;
 import dev.waterdog.event.defaults.PlayerResourcePackApplyEvent;
 import dev.waterdog.network.rewrite.types.RewriteData;
+import dev.waterdog.network.session.TransferCallback;
 import dev.waterdog.packs.PackManager;
 import dev.waterdog.player.PlayerRewriteUtils;
 import dev.waterdog.utils.exceptions.CancelSignalException;
@@ -97,20 +98,23 @@ public class UpstreamHandler implements BedrockPacketHandler {
         }
 
         RewriteData rewriteData = this.player.getRewriteData();
+        TransferCallback transferCallback = rewriteData.getTransferCallback();
         int dimChangeState = this.player.getDimensionChangeState();
-        if (dimChangeState == 1) {
+        if (dimChangeState == 1 && transferCallback != null) {
             // First dimension change was completed successfully.
-            rewriteData.setDimension(PlayerRewriteUtils.determineDimensionId(rewriteData.getDimension()));
-            PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), rewriteData.getChunkRadiusSize());
-            this.player.setDimensionChangeState(2); // Except second dim change packet.
+            transferCallback.onTransferAccepted();
+            this.player.setDimensionChangeState(2);
             throw CancelSignalException.CANCEL;
         }
 
-        // At this point dimension change sequence was completed.
-        // We can finally fully initialize connection.
-        this.player.setDimensionChangeState(0);
-        rewriteData.completeTransferCallback();
-        throw CancelSignalException.CANCEL;
+        if (dimChangeState == 2 && transferCallback != null) {
+            // At this point dimension change sequence was completed.
+            // We can finally fully initialize connection.
+            transferCallback.onTransferComplete();
+            this.player.setDimensionChangeState(0);
+            throw CancelSignalException.CANCEL;
+        }
+        return false;
     }
 
     @Override

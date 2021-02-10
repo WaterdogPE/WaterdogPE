@@ -147,9 +147,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         bossbars.clear();
 
         PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
-        PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
-        PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
-        PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
         PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
 
         /*
@@ -158,11 +155,11 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
          * After client successfully changes dimension we receive PlayerActionPacket#DIMENSION_CHANGE_SUCCESS and send second dim change.
          */
         rewriteData.setDimension(PlayerRewriteUtils.determineDimensionId(packet.getDimensionId()));
-        PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), packet.getPlayerPosition(), rewriteData.getChunkRadiusSize());
-        this.player.setDimensionChangeState(1); // Except first dim change packet.
-
-        SessionInjections.injectPreDownstreamHandlers(this.getDownstream(), this.player);
         rewriteData.setTransferCallback(new TransferCallback(this.player, this.client, this.serverInfo));
+
+        PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), packet.getPlayerPosition());
+        this.player.setDimensionChangeState(1); // Except first dim change packet.
+        SessionInjections.injectPreDownstreamHandlers(this.getDownstream(), this.player);
         throw CancelSignalException.CANCEL;
     }
 

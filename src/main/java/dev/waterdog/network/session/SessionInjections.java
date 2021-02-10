@@ -19,8 +19,10 @@ import com.google.common.base.Preconditions;
 import com.nukkitx.network.util.DisconnectReason;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockSession;
+import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import dev.waterdog.network.ServerInfo;
 import dev.waterdog.network.bridge.DownstreamBridge;
+import dev.waterdog.network.bridge.TransferBatchBridge;
 import dev.waterdog.network.bridge.UpstreamBridge;
 import dev.waterdog.network.downstream.ConnectedDownstreamHandler;
 import dev.waterdog.network.upstream.UpstreamHandler;
@@ -67,6 +69,10 @@ public class SessionInjections {
         Preconditions.checkArgument(downstream != null && player != null, "Player and BedrockSession can not be null!");
         player.getUpstream().getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
         downstream.getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
+        BatchHandler batchBridge = downstream.getBatchHandler();
+        if (batchBridge instanceof TransferBatchBridge) {
+            ((TransferBatchBridge) batchBridge).setDimLockActive(true);
+        }
     }
 
     /**

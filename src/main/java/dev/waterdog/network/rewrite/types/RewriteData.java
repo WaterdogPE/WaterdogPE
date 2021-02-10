@@ -133,13 +133,6 @@ public class RewriteData {
         this.transferCallback = transferCallback;
     }
 
-    public void completeTransferCallback() {
-        if (this.transferCallback != null) {
-            this.transferCallback.onTransferComplete();
-            this.transferCallback = null;
-        }
-    }
-
     public RequestChunkRadiusPacket getChunkRadius() {
         return this.chunkRadius;
     }

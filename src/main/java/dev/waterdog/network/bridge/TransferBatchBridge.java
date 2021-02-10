@@ -27,13 +27,12 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import dev.waterdog.player.ProxiedPlayer;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TransferBatchBridge extends ProxyBatchBridge {
 
     private final List<BedrockPacket> packetQueue = new ObjectArrayList<>();
-    private final AtomicBoolean hasStartGame = new AtomicBoolean(false);
-    private final AtomicBoolean dimLockActive = new AtomicBoolean(true);
+    private volatile boolean hasStartGame = false;
+    private volatile boolean dimLockActive = true;
 
     public TransferBatchBridge(ProxiedPlayer player, BedrockSession session) {
         super(player, session);
@@ -43,8 +42,10 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     @Override
     public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
         super.handle(session, buf, packets);
-        // Send queued packets to upstream if new bridge is used
-        this.flushQueue(session);
+        if (!this.dimLockActive) {
+            // Send queued packets to upstream if dim lock is disabled
+            this.flushQueue(session);
+        }
     }
 
     /**
@@ -53,9 +54,10 @@ public class TransferBatchBridge extends ProxyBatchBridge {
      * @param downstream instance of BedrockSession which is this handler assigned to.
      */
     public void flushQueue(BedrockSession downstream) {
-        if (!this.hasStartGame.get() || this.dimLockActive.get() || !(downstream.getBatchHandler() instanceof DownstreamBridge) || this.packetQueue.isEmpty()) {
+        if (!this.hasStartGame || this.packetQueue.isEmpty()) {
             return;
         }
+        player.getLogger().debug("Flushed queue size="+this.packetQueue.size());
 
         if (this.packetQueue.size() >= 512) {
             // TODO: consider closing connection or splitting to more batches
@@ -70,13 +72,13 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
         boolean isStartGame = packet.getPacketType() == BedrockPacketType.START_GAME;
         if (isStartGame){
-            this.hasStartGame.set(true);
+            this.hasStartGame = true;
         }
         super.handlePacket(packet, handler);
 
         // Packets after StartGamePacket should be queued
         // Ignore LevelEvent packet to prevent massive amounts of packets in queue
-        if (!isStartGame && this.hasStartGame.get() && packet.getPacketType() != BedrockPacketType.LEVEL_EVENT){
+        if (!isStartGame && this.hasStartGame && packet.getPacketType() != BedrockPacketType.LEVEL_EVENT) {
             this.packetQueue.add(ReferenceCountUtil.retain(packet));
         }
         throw CancelSignalException.CANCEL;
@@ -84,21 +86,17 @@ public class TransferBatchBridge extends ProxyBatchBridge {
 
     @Override
     public boolean handleUnknownPacket(UnknownPacket packet) {
-        if (this.hasStartGame.get()) {
+        if (this.hasStartGame) {
             this.packetQueue.add(packet.retain());
         }
         throw CancelSignalException.CANCEL;
     }
 
-    public List<BedrockPacket> getPacketQueue() {
-        return this.packetQueue;
-    }
-
     public void setDimLockActive(boolean active) {
-        this.dimLockActive.set(active);
+        this.dimLockActive = active;
     }
 
     public boolean isDimLockActive() {
-        return this.dimLockActive.get();
+        return this.dimLockActive;
     }
 }
