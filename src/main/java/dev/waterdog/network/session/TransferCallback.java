@@ -54,7 +54,6 @@ public class TransferCallback {
         RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setDimension(PlayerRewriteUtils.determineDimensionId(rewriteData.getDimension()));
         PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition());
-        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), Vector3f.ZERO, rewriteData.getEntityId());
 
         PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
         PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
@@ -64,6 +63,7 @@ public class TransferCallback {
     public void onTransferComplete() {
         RewriteData rewriteData = this.player.getRewriteData();
         PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), rewriteData.getSpawnPosition().toInt(), rewriteData.getChunkRadiusSize());
+        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), Vector3f.ZERO, rewriteData.getEntityId());
 
         TransferBatchBridge batchBridge = this.getBatchBridge();
         if (batchBridge != null) { // Allow transfer queue to be sent

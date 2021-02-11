@@ -15,6 +15,7 @@
 
 package dev.waterdog.network.bridge;
 
+import com.nukkitx.network.raknet.RakNetSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
@@ -23,8 +24,8 @@ import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import dev.waterdog.utils.exceptions.CancelSignalException;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import dev.waterdog.player.ProxiedPlayer;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.util.*;
 
@@ -42,30 +43,40 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     @Override
     public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
         super.handle(session, buf, packets);
-        if (!this.dimLockActive) {
+        if (this.hasStartGame && !this.dimLockActive) {
             // Send queued packets to upstream if dim lock is disabled
             this.flushQueue(session);
         }
     }
 
     /**
-     * Here we send all queued packets from donwstream to upstream.
+     * Here we send all queued packets from downstream to upstream.
      * Packets will be sent after StartGamePacket is received and dimension change sequence has been passed.
      * @param downstream instance of BedrockSession which is this handler assigned to.
      */
     public void flushQueue(BedrockSession downstream) {
-        if (!this.hasStartGame || this.packetQueue.isEmpty()) {
+        RakNetSession rakSession = (RakNetSession) downstream.getConnection();
+        if (rakSession.getEventLoop().inEventLoop()) {
+            this.flushQueue0();
+        } else {
+            rakSession.getEventLoop().execute(this::flushQueue0);
+        }
+    }
+
+    private void flushQueue0() {
+        Collection<BedrockPacket> outboundQueue = new ObjectArrayList<>();
+        if (this.packetQueue.isEmpty()) {
             return;
         }
-        player.getLogger().debug("Flushed queue size="+this.packetQueue.size());
+        outboundQueue.addAll(this.packetQueue);
+        this.packetQueue.clear();
 
-        if (this.packetQueue.size() >= 512) {
+        if (outboundQueue.size() >= 512) {
             // TODO: consider closing connection or splitting to more batches
-            this.player.getLogger().warning("TransferBatchBridge packet queue is too large! Got "+this.packetQueue.size()+" packets with "+this.player.getName());
+            this.player.getLogger().warning("TransferBatchBridge packet queue is too large! Got "+outboundQueue.size()+" packets with "+this.player.getName());
         }
 
-        this.session.sendWrapped(this.packetQueue, this.session.isEncrypted());
-        this.packetQueue.clear();
+        this.session.sendWrapped(outboundQueue, this.session.isEncrypted());
     }
 
     @Override
