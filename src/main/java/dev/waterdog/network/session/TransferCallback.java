@@ -26,6 +26,7 @@ import dev.waterdog.network.bridge.TransferBatchBridge;
 import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.player.PlayerRewriteUtils;
 import dev.waterdog.player.ProxiedPlayer;
+import dev.waterdog.utils.types.TranslationContainer;
 
 public class TransferCallback {
 
@@ -65,8 +66,19 @@ public class TransferCallback {
         PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), rewriteData.getSpawnPosition().toInt(), rewriteData.getChunkRadiusSize());
         PlayerRewriteUtils.injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), Vector3f.ZERO, rewriteData.getEntityId());
 
+        StopSoundPacket soundPacket = new StopSoundPacket();
+        soundPacket.setSoundName("portal.travel");
+        soundPacket.setStoppingAllSound(true);
+        this.player.sendPacketImmediately(soundPacket);
+
+        if (this.client.getSession() == null || this.getDownstream().isClosed()) {
+            this.onTransferFailed();
+            return;
+        }
+
         TransferBatchBridge batchBridge = this.getBatchBridge();
-        if (batchBridge != null) { // Allow transfer queue to be sent
+        if (batchBridge != null) {
+            // Allow transfer queue to be sent
             batchBridge.setDimLockActive(false);
         }
 
@@ -74,11 +86,6 @@ public class TransferCallback {
         initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
         this.getDownstream().sendPacket(initializedPacket);
         this.getDownstream().sendPacket(rewriteData.getChunkRadius());
-
-        StopSoundPacket soundPacket = new StopSoundPacket();
-        soundPacket.setSoundName("portal.travel");
-        soundPacket.setStoppingAllSound(true);
-        this.player.sendPacketImmediately(soundPacket);
 
         ServerConnection oldServer = this.player.getServer();
         oldServer.getInfo().removePlayer(this.player);
@@ -100,5 +107,16 @@ public class TransferCallback {
 
         TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
         this.player.getProxy().getEventManager().callEvent(event);
+    }
+
+    private void onTransferFailed() {
+        if (this.player.sendToFallback(this.targetServer, "Transfer failed")) {
+            this.player.sendMessage(new TranslationContainer("waterdog.connected.fallback", this.targetServer.getServerName()));
+        } else {
+            this.player.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", targetServer.getServerName(), "Server was closed"));
+        }
+
+        this.client.close();
+        this.player.getLogger().warning("Failed to transfer " + this.player.getName() + " to " + this.targetServer.getServerName() + ": Server was closed");
     }
 }
