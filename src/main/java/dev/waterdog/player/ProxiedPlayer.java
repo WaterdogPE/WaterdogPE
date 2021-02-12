@@ -177,13 +177,13 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        if (this.pendingConnection == targetServer) {
+        if (this.getPendingConnection() == targetServer) {
             this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
             return;
         }
 
         if (this.serverConnection != null) {
-            this.pendingConnection = targetServer;
+            this.setPendingConnection(targetServer);
         }
 
         CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
@@ -227,7 +227,7 @@ public class ProxiedPlayer implements CommandSender {
 
     private void connectFailure(BedrockClient client, ServerInfo targetServer, Throwable error) {
         this.getLogger().debug("[" + this.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), error);
-        this.pendingConnection = null;
+        this.setPendingConnection(null);
         if (client != null) {
             client.close();
         }
@@ -606,11 +606,11 @@ public class ProxiedPlayer implements CommandSender {
         this.serverConnection = serverConnection;
     }
 
-    public ServerInfo getPendingConnection() {
+    public synchronized ServerInfo getPendingConnection() {
         return this.pendingConnection;
     }
 
-    public void setPendingConnection(ServerInfo pendingConnection) {
+    public synchronized void setPendingConnection(ServerInfo pendingConnection) {
         this.pendingConnection = pendingConnection;
     }
 
