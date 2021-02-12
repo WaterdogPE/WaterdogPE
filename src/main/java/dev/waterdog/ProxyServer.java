@@ -222,7 +222,7 @@ public class ProxyServer {
 
     public boolean dispatchCommand(CommandSender sender, String message) {
         String[] args = message.split(" ");
-        String[] shiftedArgs = Arrays.copyOfRange(args, 1, args.length);
+        String[] shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
         DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs);
 
         this.eventManager.callEvent(event);
