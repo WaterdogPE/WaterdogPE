@@ -28,10 +28,12 @@ public class DispatchCommandEvent extends Event implements CancellableEvent {
 
     private final CommandSender sender;
     private final String command;
+    private final String[] args;
 
-    public DispatchCommandEvent(CommandSender sender, String command) {
+    public DispatchCommandEvent(CommandSender sender, String command, String[] args) {
         this.sender = sender;
         this.command = command;
+        this.args = args;
     }
 
     public CommandSender getSender() {
@@ -40,5 +42,9 @@ public class DispatchCommandEvent extends Event implements CancellableEvent {
 
     public String getCommand() {
         return this.command;
+    }
+
+    public String[] getArgs() {
+        return this.args;
     }
 }
