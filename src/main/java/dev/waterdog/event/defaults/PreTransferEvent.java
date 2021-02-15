@@ -33,10 +33,6 @@ public class PreTransferEvent extends PlayerEvent implements CancellableEvent {
         this.targetServer = targetServer;
     }
 
-    public void setPlayer(ProxiedPlayer player) {
-        this.player = player;
-    }
-
     public ServerInfo getTargetServer() {
         return this.targetServer;
     }

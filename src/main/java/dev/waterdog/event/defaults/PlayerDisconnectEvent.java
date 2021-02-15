@@ -24,7 +24,14 @@ import dev.waterdog.player.ProxiedPlayer;
 @AsyncEvent
 public class PlayerDisconnectEvent extends PlayerEvent {
 
-    public PlayerDisconnectEvent(ProxiedPlayer player) {
+    private final String reason;
+
+    public PlayerDisconnectEvent(ProxiedPlayer player, String reason) {
         super(player);
+        this.reason = reason;
+    }
+
+    public String getReason() {
+        return this.reason;
     }
 }
