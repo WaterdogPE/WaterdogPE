@@ -107,7 +107,7 @@ public class ProxyServer {
         this.configurationManager.loadProxyConfig();
 
         if(!this.getConfiguration().isIpv6Enabled()){
-           // System.setProperty("java.net.preferIPv4Stack", "true");//I dont know why, but it was here before so better not remove it
+            System.setProperty("java.net.preferIPv4Stack", "true");//I dont know why, but it was here before so better not remove it
         }
 
         if (this.getConfiguration().isDebug()) {
