@@ -42,7 +42,7 @@ enable_debug: false
 # Enable online mode to prevent unauthorized players to join.
 online_mode: true
 #If enabled, the proxy will be able to bind to an Ipv6 Address.
-enable_ipv6: true
+enable_ipv6: false
 # Some server software may have problem with extra attributes in packets. You can disable it here.
 use_login_extras: true
 # Disable if you do not want ho handle query requests.
