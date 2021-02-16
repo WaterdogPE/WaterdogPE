@@ -87,7 +87,7 @@ public class ProxyConfig extends YamlConfig {
 
     @Path("enable_ipv6")
     @Comment("If enabled, the proxy will be able to bind to an Ipv6 Address")
-    private boolean enableIpv6 = true;
+    private boolean enableIpv6 = false;
 
     @Path("use_login_extras")
     @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")
