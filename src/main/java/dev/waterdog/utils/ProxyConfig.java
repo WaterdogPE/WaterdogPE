@@ -85,6 +85,10 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, only players which are authenticated with XBOX Live can join. If disabled, anyone can connect *with any name*")
     private boolean onlineMode = true;
 
+    @Path("enable_ipv6")
+    @Comment("If enabled, the proxy will be able to bind to an Ipv6 Address")
+    private boolean enableIpv6 = false;
+
     @Path("use_login_extras")
     @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")
     private boolean useLoginExtras = true;
@@ -251,6 +255,14 @@ public class ProxyConfig extends YamlConfig {
 
     public boolean injectCommands() {
         return this.injectCommands;
+    }
+
+    public boolean isIpv6Enabled() {
+        return enableIpv6;
+    }
+
+    public void setIpv6Enabled(boolean enableIpv6) {
+        this.enableIpv6 = enableIpv6;
     }
 
     public boolean enabledResourcePacks() {
