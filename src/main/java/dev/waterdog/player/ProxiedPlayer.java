@@ -141,7 +141,13 @@ public class ProxiedPlayer implements CommandSender {
      */
     public void initialConnect() {
         PlayerLoginEvent event = new PlayerLoginEvent(this);
-        this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, ignored) -> {
+        this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, error) -> {
+            if (error != null) {
+                this.getLogger().logException(error);
+                this.disconnect(new TranslationContainer("waterdog.downstream.initial.connect"));
+                return;
+            }
+
             if (event.isCancelled()) {
                 this.disconnect(event.getCancelReason());
                 return;

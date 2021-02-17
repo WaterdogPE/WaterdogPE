@@ -31,7 +31,7 @@ public class InetSocketAddressConverter implements Converter {
 
     @Override
     public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
-        if (object == null){
+        if (object == null) {
             return null;
         }
         InetSocketAddress address = (InetSocketAddress) object;
@@ -44,8 +44,9 @@ public class InetSocketAddressConverter implements Converter {
             return null;
         }
         String string = (String) object;
-        String[] parts = string.split(":");
-        return new InetSocketAddress(parts[0], Integer.parseInt(parts[1]));
+        String address = string.substring(0, string.lastIndexOf(":"));
+        int port = Integer.parseInt(string.substring(string.lastIndexOf(":") + 1));
+        return new InetSocketAddress(address, port);
     }
 
     @Override
