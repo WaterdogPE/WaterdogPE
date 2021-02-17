@@ -15,7 +15,7 @@
 
 package dev.waterdog.network.upstream;
 
-import com.nukkitx.math.vector.Vector3f;
+import com.nukkitx.protocol.bedrock.data.PlayerActionType;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.ProxyServer;
@@ -24,7 +24,6 @@ import dev.waterdog.event.defaults.PlayerResourcePackApplyEvent;
 import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.TransferCallback;
 import dev.waterdog.packs.PackManager;
-import dev.waterdog.player.PlayerRewriteUtils;
 import dev.waterdog.utils.exceptions.CancelSignalException;
 import dev.waterdog.player.ProxiedPlayer;
 
@@ -93,7 +92,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(PlayerActionPacket packet) {
-        if (this.player.getDimensionChangeState() < 1 || packet.getAction() != PlayerActionPacket.Action.DIMENSION_CHANGE_SUCCESS) {
+        if (this.player.getDimensionChangeState() < 1 || packet.getAction() != PlayerActionType.DIMENSION_CHANGE_SUCCESS) {
             return false;
         }
 
