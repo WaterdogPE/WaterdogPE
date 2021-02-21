@@ -63,10 +63,10 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     }
 
     private void flushQueue0() {
-        Collection<BedrockPacket> outboundQueue = new ObjectArrayList<>();
         if (this.packetQueue.isEmpty()) {
             return;
         }
+        Collection<BedrockPacket> outboundQueue = new ObjectArrayList<>();
         outboundQueue.addAll(this.packetQueue);
         this.packetQueue.clear();
 
