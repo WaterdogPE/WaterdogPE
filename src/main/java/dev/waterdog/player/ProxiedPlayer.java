@@ -33,6 +33,7 @@ import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.rewrite.RewriteMaps;
 import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.LoginData;
+import dev.waterdog.network.session.PendingConnection;
 import dev.waterdog.network.session.ServerConnection;
 import dev.waterdog.network.session.SessionInjections;
 import dev.waterdog.utils.types.PacketHandler;
@@ -71,7 +72,7 @@ public class ProxiedPlayer implements CommandSender {
     private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private ServerConnection serverConnection;
-    private ServerInfo pendingConnection;
+    private PendingConnection pendingConnection;
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
@@ -191,14 +192,20 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        if (this.getPendingConnection() == targetServer) {
-            this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
-            return;
+        PendingConnection oldPendingConnection = this.getPendingConnection();
+        if (oldPendingConnection != null) {
+            if (oldPendingConnection.getInfo() == targetServer) {
+                this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
+                return;
+            }
+
+            // Close old pending connection
+            oldPendingConnection.close();
+            this.getLogger().debug("Discarding pending connection for "+this.getName()+"! Tried to join "+oldPendingConnection.getInfo().getServerName());
         }
 
-        if (this.serverConnection != null) {
-            this.setPendingConnection(targetServer);
-        }
+        PendingConnection pendingConnection = new PendingConnection(targetServer);
+        this.setPendingConnection(pendingConnection);
 
         CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
         future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, error) -> {
@@ -212,6 +219,8 @@ public class ProxiedPlayer implements CommandSender {
                 this.connectFailure(client, targetServer, error);
                 return;
             }
+
+            pendingConnection.setClient(client);
 
             if (this.serverConnection == null) {
                 this.serverConnection = new ServerConnection(client, downstream, targetServer);
@@ -299,6 +308,11 @@ public class ProxiedPlayer implements CommandSender {
         if (this.serverConnection != null) {
             this.serverConnection.getInfo().removePlayer(this);
             this.serverConnection.disconnect(forceClose);
+        }
+
+        PendingConnection pendingConnection = this.getPendingConnection();
+        if (pendingConnection != null) {
+            pendingConnection.close();
         }
 
         this.proxy.getPlayerManager().removePlayer(this);
@@ -631,11 +645,11 @@ public class ProxiedPlayer implements CommandSender {
         this.serverConnection = serverConnection;
     }
 
-    public synchronized ServerInfo getPendingConnection() {
+    public synchronized PendingConnection getPendingConnection() {
         return this.pendingConnection;
     }
 
-    public synchronized void setPendingConnection(ServerInfo pendingConnection) {
+    public synchronized void setPendingConnection(PendingConnection pendingConnection) {
         this.pendingConnection = pendingConnection;
     }
 
