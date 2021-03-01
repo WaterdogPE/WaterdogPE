@@ -16,6 +16,7 @@
 package dev.waterdog.utils;
 
 import dev.waterdog.logger.MainLogger;
+import lombok.AllArgsConstructor;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -25,6 +26,12 @@ import java.nio.file.Path;
 import java.util.*;
 
 public abstract class Configuration {
+
+    @AllArgsConstructor
+    private static class LastMap {
+        public final String key;
+        public final Map<String, Object> map;
+    }
 
     protected File file;
     protected Map<String, Object> values = new LinkedHashMap<>();
@@ -76,12 +83,28 @@ public abstract class Configuration {
     }
 
     public Set<String> getKeys() {
-        return new HashSet<>(this.values.keySet());
+        return this.values.keySet();
+    }
+
+    public void remove(String key) {
+        LastMap lastMap = getLastMap(key);
+
+        if (lastMap == null) return;
+
+        lastMap.map.remove(lastMap.key);
+    }
+
+    public void set(String key, Object value) {
+        LastMap lastMap = getLastMap(key);
+
+        if (lastMap == null) return;
+
+        lastMap.map.put(lastMap.key, value);
     }
 
     @SuppressWarnings("unchecked")
-    public void set(String key, Object value) {
-        if (key == null || key.isEmpty()) return;
+    private LastMap getLastMap(String key) {
+        if (key == null || key.isEmpty()) return null;
 
         Map<String, Object> values = this.values;
         String[] keys = key.split("\\.");
@@ -101,7 +124,7 @@ public abstract class Configuration {
             values = (Map<String, Object>) values.get(currentKey);
         }
 
-        values.put(currentKey, value);
+        return new LastMap(currentKey, values);
     }
 
     public Object get(String key) {
