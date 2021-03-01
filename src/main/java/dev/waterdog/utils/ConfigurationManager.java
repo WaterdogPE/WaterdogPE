@@ -26,7 +26,7 @@ public class ConfigurationManager {
     public static final int JSON = 1;
     public static final int YAML = 2;
 
-    private ProxyServer proxy;
+    private final ProxyServer proxy;
     private ProxyConfig proxyConfig;
     private LangConfig langConfig;
 

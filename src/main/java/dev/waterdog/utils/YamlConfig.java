@@ -21,6 +21,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -28,6 +29,10 @@ import java.util.Map;
 public class YamlConfig extends Configuration {
 
     private final static Yaml yaml = new Yaml();
+
+    public YamlConfig() {
+        super();
+    }
 
     public YamlConfig(File file) {
         super(file);
@@ -42,9 +47,15 @@ public class YamlConfig extends Configuration {
     }
 
     @Override
-    public void load() {
+    @SuppressWarnings("unchecked")
+    public void load(InputStream inputStream) {
+        if (this.file == null && inputStream == null) return;
+
         try {
-            this.values = yaml.loadAs(Files.newInputStream(this.file.toPath()), Map.class);
+            this.values = yaml.loadAs(
+                    inputStream == null ? Files.newInputStream(this.file.toPath()) : inputStream,
+                    Map.class
+            );
         } catch (Exception e) {
             MainLogger.getLogger().error("Unable to load Config " + this.file.toString());
         }
@@ -52,11 +63,19 @@ public class YamlConfig extends Configuration {
 
     @Override
     public void save() {
+        if (this.file == null) return;
+
         String writingData = yaml.dump(this.values);
+
         try {
             Files.write(this.file.toPath(), writingData.getBytes(Charsets.UTF_8));
         } catch (IOException e) {
             MainLogger.getLogger().error("Unable to save Config " + this.file.toString());
         }
+    }
+
+    @Override
+    public String getDefaultFileContent() {
+        return "[]";
     }
 }

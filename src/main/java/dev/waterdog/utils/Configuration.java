@@ -18,7 +18,9 @@ package dev.waterdog.utils;
 import dev.waterdog.logger.MainLogger;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -26,6 +28,10 @@ public abstract class Configuration {
 
     protected File file;
     protected Map<String, Object> values = new LinkedHashMap<>();
+
+    public Configuration() {
+        this((File) null);
+    }
 
     public Configuration(String file) {
         this(new File(file));
@@ -38,10 +44,17 @@ public abstract class Configuration {
     public Configuration(File file) {
         this.file = file;
 
-        if (!this.file.exists()) {
+        if (this.file != null && !this.file.exists()) {
             try {
-                this.file.getParentFile().mkdirs();
-                this.file.createNewFile();
+                File parentFile = this.file.getParentFile();
+
+                if (parentFile != null) {
+                    parentFile.mkdirs();
+                }
+
+                FileWriter myWriter = new FileWriter(file);
+                myWriter.write(getDefaultFileContent());
+                myWriter.close();
             } catch (IOException e) {
                 MainLogger.getLogger().error("Unable to create Config " + this.file.toString(), e);
             }
@@ -50,7 +63,11 @@ public abstract class Configuration {
         this.load();
     }
 
-    public abstract void load();
+    public void load() {
+        load(null);
+    }
+
+    public abstract void load(InputStream inputStream);
 
     public abstract void save();
 
@@ -62,36 +79,75 @@ public abstract class Configuration {
         return new HashSet<>(this.values.keySet());
     }
 
+    @SuppressWarnings("unchecked")
     public void set(String key, Object value) {
-        this.values.put(key, value);
+        if (key == null || key.isEmpty()) return;
+
+        Map<String, Object> values = this.values;
+        String[] keys = key.split("\\.");
+        String currentKey = null;
+
+        for (int i = 0; i < keys.length; i++) {
+            currentKey = keys[i];
+
+            if (i + 1 < keys.length && values.get(currentKey) == null) {
+                values.put(currentKey, new LinkedHashMap<>());
+            }
+
+            if (!(values.get(currentKey) instanceof Map)) {
+                break;
+            }
+
+            values = (Map<String, Object>) values.get(currentKey);
+        }
+
+        values.put(currentKey, value);
     }
 
     public Object get(String key) {
         return this.get(key, null);
     }
 
+    @SuppressWarnings("unchecked")
     public Object get(String key, Object defaultValue) {
         if (key == null || key.isEmpty()) return defaultValue;
+
+        Map<String, Object> values = this.values;
         String[] keys = key.split("\\.");
 
-        if (!this.values.containsKey(keys[0])) return defaultValue;
-
-        Object value = this.values.get(keys[0]);
-        if (!(value instanceof Map) || keys.length == 1) return value == null ? defaultValue : value;
-
-        for (int i = 1; i < keys.length; i++) {
-            value = ((Map<?, ?>) value).get(keys[i]);
-            if (!(value instanceof Map)) {
-                return value == null ? defaultValue : value;
-            }
+        if (this.values.containsKey(key)) {
+            return this.values.get(key);
         }
 
-        return value;
+        for (int i = 0; i < keys.length; i++) {
+            Object currentValue = values.get(keys[i]);
+
+            if (currentValue == null) {
+                return defaultValue;
+            }
+
+            if (i + 1 == keys.length) {
+                return currentValue;
+            }
+
+            values = (Map<String, Object>) currentValue;
+        }
+
+        return defaultValue;
     }
 
+    public boolean exists(String key) {
+        return get(key) != null;
+    }
+
+    public Map<String, Object> getAll() {
+        return values;
+    }
+
+    public abstract String getDefaultFileContent();
 
     public void setString(String key, String value) {
-        this.values.put(key, value);
+        this.set(key, value);
     }
 
     public String getString(String key) {
@@ -99,12 +155,12 @@ public abstract class Configuration {
     }
 
     public String getString(String key, String defaultValue) {
-        return (String) this.get(key, defaultValue);
+        return String.valueOf(this.get(key, defaultValue));
     }
 
 
     public void setInt(String key, Integer value) {
-        this.values.put(key, value);
+        this.set(key, value);
     }
 
     public Integer getInt(String key) {
@@ -112,12 +168,12 @@ public abstract class Configuration {
     }
 
     public Integer getInt(String key, Integer defaultValue) {
-        return (Integer) this.get(key, defaultValue);
+        return Integer.valueOf(String.valueOf(this.get(key, defaultValue)));
     }
 
 
     public void setLong(String key, Long value) {
-        this.values.put(key, value);
+        this.set(key, value);
     }
 
     public Long getLong(String key) {
@@ -125,12 +181,12 @@ public abstract class Configuration {
     }
 
     public Long getLong(String key, Long defaultValue) {
-        return (Long) this.get(key, defaultValue);
+        return Long.valueOf(String.valueOf(this.get(key, defaultValue)));
     }
 
 
     public void setDouble(String key, Double value) {
-        this.values.put(key, value);
+        this.set(key, value);
     }
 
     public Double getDouble(String key) {
@@ -138,12 +194,13 @@ public abstract class Configuration {
     }
 
     public Double getDouble(String key, Double defaultValue) {
-        return (Double) this.get(key, defaultValue);
+        return Double.valueOf(String.valueOf(this.get(key, defaultValue)));
+
     }
 
 
     public void setBoolean(String key, Boolean value) {
-        this.values.put(key, value);
+        this.set(key, value);
     }
 
     public Boolean getBoolean(String key) {
@@ -156,13 +213,14 @@ public abstract class Configuration {
 
 
     public <T> void setList(String key, List<T> value) {
-        this.values.put(key, value);
+        this.set(key, value);
     }
 
     public <T> List<T> getList(String key) {
         return this.getList(key, null);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> List<T> getList(String key, List<T> defaultValue) {
         return (List<T>) this.get(key, defaultValue);
     }
@@ -176,6 +234,7 @@ public abstract class Configuration {
         return getStringList(key, null);
     }
 
+    @SuppressWarnings("unchecked")
     public List<String> getStringList(String key, List<String> defaultValue) {
         return (List<String>) this.get(key, defaultValue);
     }
