@@ -44,7 +44,7 @@ public class YamlConfig extends Configuration {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected Map<String, Object> unserialize(InputStream inputStream) {
+    protected Map<String, Object> deserialize(InputStream inputStream) {
         return yaml.loadAs(inputStream, Map.class);
     }
 

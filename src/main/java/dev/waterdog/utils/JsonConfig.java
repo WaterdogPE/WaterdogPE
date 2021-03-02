@@ -29,7 +29,7 @@ public class JsonConfig extends Configuration {
 
     @Override
     @SuppressWarnings("unchecked")
-    protected Map<String, Object> unserialize(InputStream inputStream) {
+    protected Map<String, Object> deserialize(InputStream inputStream) {
         return json.fromJson(new InputStreamReader(inputStream, StandardCharsets.UTF_8), Map.class);
     }
 

@@ -65,20 +65,20 @@ public abstract class Configuration {
         }
     }
 
-    protected abstract Map<String, Object> unserialize(InputStream inputStream);
+    protected abstract Map<String, Object> deserialize(InputStream inputStream);
 
     protected abstract String serialize(Map<String, Object> values);
 
     public void load(InputStream inputStream) {
         try {
-            this.values = unserialize(inputStream);
+            this.values = this.deserialize(inputStream);
         } catch (Exception e) {
             MainLogger.getLogger().error("Unable to load Config " + this.file.toString());
         }
     }
 
     public void save() {
-        save(serialize(this.values));
+        this.save(this.serialize(this.values));
     }
 
     protected void save(String content) {
