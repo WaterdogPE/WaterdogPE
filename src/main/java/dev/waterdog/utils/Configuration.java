@@ -267,7 +267,7 @@ public abstract class Configuration {
 
 
     public void setStringList(String key, List<String> value) {
-        this.values.put(key, value);
+        this.set(key, value);
     }
 
     public List<String> getStringList(String key) {
