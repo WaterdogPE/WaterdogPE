@@ -36,10 +36,6 @@ public abstract class Configuration {
     protected File file;
     protected Map<String, Object> values = new LinkedHashMap<>();
 
-    public Configuration() {
-        this((File) null);
-    }
-
     public Configuration(String file) {
         this(new File(file));
     }
@@ -59,8 +55,8 @@ public abstract class Configuration {
                     parentFile.mkdirs();
                 }
 
-                FileWriter myWriter = new FileWriter(file);
-                myWriter.write(getDefaultFileContent());
+                FileWriter myWriter = new FileWriter(this.file);
+                myWriter.write(this.getDefaultFileContent());
                 myWriter.close();
             } catch (IOException e) {
                 MainLogger.getLogger().error("Unable to create Config " + this.file.toString(), e);
@@ -87,7 +83,7 @@ public abstract class Configuration {
     }
 
     public void remove(String key) {
-        LastMap lastMap = getLastMap(key);
+        LastMap lastMap = this.getLastMap(key);
 
         if (lastMap == null) return;
 
@@ -95,7 +91,7 @@ public abstract class Configuration {
     }
 
     public void set(String key, Object value) {
-        LastMap lastMap = getLastMap(key);
+        LastMap lastMap = this.getLastMap(key);
 
         if (lastMap == null) return;
 
@@ -218,7 +214,6 @@ public abstract class Configuration {
 
     public Double getDouble(String key, Double defaultValue) {
         return Double.valueOf(String.valueOf(this.get(key, defaultValue)));
-
     }
 
 

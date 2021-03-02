@@ -30,10 +30,6 @@ public class YamlConfig extends Configuration {
 
     private final static Yaml yaml = new Yaml();
 
-    public YamlConfig() {
-        super();
-    }
-
     public YamlConfig(File file) {
         super(file);
     }
@@ -49,8 +45,6 @@ public class YamlConfig extends Configuration {
     @Override
     @SuppressWarnings("unchecked")
     public void load(InputStream inputStream) {
-        if (this.file == null && inputStream == null) return;
-
         try {
             this.values = yaml.loadAs(
                     inputStream == null ? Files.newInputStream(this.file.toPath()) : inputStream,
@@ -63,8 +57,6 @@ public class YamlConfig extends Configuration {
 
     @Override
     public void save() {
-        if (this.file == null) return;
-
         String writingData = yaml.dump(this.values);
 
         try {
