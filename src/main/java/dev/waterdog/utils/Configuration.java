@@ -67,7 +67,7 @@ public abstract class Configuration {
     }
 
     public void load() {
-        load(null);
+        this.load(null);
     }
 
     public abstract void load(InputStream inputStream);
@@ -156,11 +156,11 @@ public abstract class Configuration {
     }
 
     public boolean exists(String key) {
-        return get(key) != null;
+        return this.get(key) != null;
     }
 
     public Map<String, Object> getAll() {
-        return values;
+        return this.values;
     }
 
     public abstract String getDefaultFileContent();
@@ -222,7 +222,7 @@ public abstract class Configuration {
     }
 
     public Boolean getBoolean(String key) {
-        return getBoolean(key, null);
+        return this.getBoolean(key, null);
     }
 
     public Boolean getBoolean(String key, Boolean defaultValue) {
@@ -249,7 +249,7 @@ public abstract class Configuration {
     }
 
     public List<String> getStringList(String key) {
-        return getStringList(key, null);
+        return this.getStringList(key, null);
     }
 
     @SuppressWarnings("unchecked")
