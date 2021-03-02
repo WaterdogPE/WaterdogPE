@@ -25,6 +25,10 @@ public class JsonConfig extends Configuration {
         super(file);
     }
 
+    public JsonConfig(File saveFile, InputStream inputStream) {
+        super(saveFile, inputStream);
+    }
+
     @SuppressWarnings("unchecked")
     public void load(InputStream inputStream) {
         try {
