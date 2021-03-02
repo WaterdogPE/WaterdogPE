@@ -15,6 +15,7 @@
 
 package dev.waterdog.utils;
 
+import com.google.common.base.Charsets;
 import dev.waterdog.logger.MainLogger;
 import lombok.AllArgsConstructor;
 
@@ -22,6 +23,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -36,43 +39,59 @@ public abstract class Configuration {
     protected File file;
     protected Map<String, Object> values = new LinkedHashMap<>();
 
-    public Configuration(String file) {
-        this(new File(file));
+    public Configuration(String saveFile) {
+        this(new File(saveFile));
     }
 
     public Configuration(Path path) {
         this(path.toFile());
     }
 
-    public Configuration(File file) {
-        this.file = file;
-
-        if (this.file != null && !this.file.exists()) {
-            try {
-                File parentFile = this.file.getParentFile();
-
-                if (parentFile != null) {
-                    parentFile.mkdirs();
-                }
-
-                FileWriter myWriter = new FileWriter(this.file);
-                myWriter.write(this.getDefaultFileContent());
-                myWriter.close();
-            } catch (IOException e) {
-                MainLogger.getLogger().error("Unable to create Config " + this.file.toString(), e);
-            }
-        }
-
-        this.load();
+    public Configuration(File saveFile) {
+        this(saveFile, null);
     }
 
-    public void load() {
-        this.load(null);
+    public Configuration(File saveFile, InputStream inputStream) {
+        this.file = saveFile;
+
+        try {
+            if (!this.file.exists()) {
+                try {
+                    File parentFile = this.file.getParentFile();
+
+                    if (parentFile != null) {
+                        parentFile.mkdirs();
+                    }
+
+                    FileWriter myWriter = new FileWriter(this.file);
+                    myWriter.write(this.getDefaultFileContent());
+                    myWriter.close();
+                } catch (IOException e) {
+                    MainLogger.getLogger().error("Unable to create Config " + this.file.toString(), e);
+                }
+            }
+
+            if (inputStream == null) {
+                inputStream = Files.newInputStream(this.file.toPath());
+            }
+
+            this.load(inputStream);
+        } catch (IOException e) {
+            MainLogger.getLogger().error("Unable to create Config " + this.file.toString(), e);
+        }
     }
 
     public abstract void load(InputStream inputStream);
 
     public abstract void save();
+
+    protected void save(String content) {
+        try {
+            Files.write(this.file.toPath(), content.getBytes(Charsets.UTF_8));
+        } catch (IOException e) {
+            MainLogger.getLogger().error("Unable to save Config " + this.file.toString());
+        }
+    }
 
     public void loadFrom(Map<String, Object> values) {
         this.values = values;

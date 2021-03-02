@@ -15,14 +15,11 @@
 
 package dev.waterdog.utils;
 
-import com.google.common.base.Charsets;
 import dev.waterdog.logger.MainLogger;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -30,7 +27,7 @@ public class YamlConfig extends Configuration {
 
     private final static Yaml yaml = new Yaml();
 
-    public YamlConfig(File file) {
+    public YamlConfig(String file) {
         super(file);
     }
 
@@ -38,18 +35,19 @@ public class YamlConfig extends Configuration {
         super(path);
     }
 
-    public YamlConfig(String file) {
-        super(file);
+    public YamlConfig(File saveFile) {
+        super(saveFile);
+    }
+
+    public YamlConfig(File saveFile, InputStream inputStream) {
+        super(saveFile, inputStream);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public void load(InputStream inputStream) {
         try {
-            this.values = yaml.loadAs(
-                    inputStream == null ? Files.newInputStream(this.file.toPath()) : inputStream,
-                    Map.class
-            );
+            this.values = yaml.loadAs(inputStream, Map.class);
         } catch (Exception e) {
             MainLogger.getLogger().error("Unable to load Config " + this.file.toString());
         }
@@ -57,13 +55,7 @@ public class YamlConfig extends Configuration {
 
     @Override
     public void save() {
-        String writingData = yaml.dump(this.values);
-
-        try {
-            Files.write(this.file.toPath(), writingData.getBytes(Charsets.UTF_8));
-        } catch (IOException e) {
-            MainLogger.getLogger().error("Unable to save Config " + this.file.toString());
-        }
+        save(yaml.dump(this.values));
     }
 
     @Override

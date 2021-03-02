@@ -15,15 +15,16 @@
 
 package dev.waterdog.plugin;
 
+import lombok.ToString;
 import java.util.List;
 
+@ToString
 public class PluginYAML {
 
     public String name;
     public String version;
     public String author;
     public String main;
-
     public List<String> depends;
 
     public String getAuthor() {
