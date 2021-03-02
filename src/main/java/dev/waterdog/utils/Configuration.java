@@ -15,14 +15,10 @@
 
 package dev.waterdog.utils;
 
-import com.google.common.base.Charsets;
 import dev.waterdog.logger.MainLogger;
 import lombok.AllArgsConstructor;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,19 +52,7 @@ public abstract class Configuration {
 
         try {
             if (!this.file.exists()) {
-                try {
-                    File parentFile = this.file.getParentFile();
-
-                    if (parentFile != null) {
-                        parentFile.mkdirs();
-                    }
-
-                    FileWriter myWriter = new FileWriter(this.file);
-                    myWriter.write(this.getDefaultFileContent());
-                    myWriter.close();
-                } catch (IOException e) {
-                    MainLogger.getLogger().error("Unable to create Config " + this.file.toString(), e);
-                }
+                this.save();
             }
 
             if (inputStream == null) {
@@ -77,19 +61,39 @@ public abstract class Configuration {
 
             this.load(inputStream);
         } catch (IOException e) {
-            MainLogger.getLogger().error("Unable to create Config " + this.file.toString(), e);
+            MainLogger.getLogger().error("Unable to initialize Config " + this.file.toString(), e);
         }
     }
 
-    public abstract void load(InputStream inputStream);
+    protected abstract Map<String, Object> unserialize(InputStream inputStream);
 
-    public abstract void save();
+    protected abstract String serialize(Map<String, Object> values);
+
+    public void load(InputStream inputStream) {
+        try {
+            this.values = unserialize(inputStream);
+        } catch (Exception e) {
+            MainLogger.getLogger().error("Unable to load Config " + this.file.toString());
+        }
+    }
+
+    public void save() {
+        save(serialize(this.values));
+    }
 
     protected void save(String content) {
         try {
-            Files.write(this.file.toPath(), content.getBytes(Charsets.UTF_8));
+            File parentFile = this.file.getParentFile();
+
+            if (parentFile != null) {
+                parentFile.mkdirs();
+            }
+
+            FileWriter myWriter = new FileWriter(this.file);
+            myWriter.write(content);
+            myWriter.close();
         } catch (IOException e) {
-            MainLogger.getLogger().error("Unable to save Config " + this.file.toString());
+            MainLogger.getLogger().error("Unable to save Config " + this.file.toString(), e);
         }
     }
 
@@ -182,7 +186,6 @@ public abstract class Configuration {
         return this.values;
     }
 
-    public abstract String getDefaultFileContent();
 
     public void setString(String key, String value) {
         this.set(key, value);

@@ -1,8 +1,6 @@
 package dev.waterdog.utils;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import dev.waterdog.logger.MainLogger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -29,24 +27,14 @@ public class JsonConfig extends Configuration {
         super(saveFile, inputStream);
     }
 
+    @Override
     @SuppressWarnings("unchecked")
-    public void load(InputStream inputStream) {
-        try {
-            Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-
-            this.values = json.fromJson(reader, Map.class);
-        } catch (Exception e) {
-            MainLogger.getLogger().error("Unable to load Config " + this.file.toString());
-        }
+    protected Map<String, Object> unserialize(InputStream inputStream) {
+        return json.fromJson(new InputStreamReader(inputStream, StandardCharsets.UTF_8), Map.class);
     }
 
     @Override
-    public void save() {
-        save(new GsonBuilder().create().toJson(this.values));
-    }
-
-    @Override
-    public String getDefaultFileContent() {
-        return "{}";
+    protected String serialize(Map<String, Object> values) {
+        return json.toJson(this.values);
     }
 }

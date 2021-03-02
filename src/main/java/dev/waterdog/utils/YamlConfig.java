@@ -15,7 +15,6 @@
 
 package dev.waterdog.utils;
 
-import dev.waterdog.logger.MainLogger;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -45,21 +44,12 @@ public class YamlConfig extends Configuration {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void load(InputStream inputStream) {
-        try {
-            this.values = yaml.loadAs(inputStream, Map.class);
-        } catch (Exception e) {
-            MainLogger.getLogger().error("Unable to load Config " + this.file.toString());
-        }
+    protected Map<String, Object> unserialize(InputStream inputStream) {
+        return yaml.loadAs(inputStream, Map.class);
     }
 
     @Override
-    public void save() {
-        save(yaml.dump(this.values));
-    }
-
-    @Override
-    public String getDefaultFileContent() {
-        return "[]";
+    protected String serialize(Map<String, Object> values) {
+        return yaml.dump(values);
     }
 }
