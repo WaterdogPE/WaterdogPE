@@ -16,15 +16,28 @@
 package dev.waterdog.utils;
 
 import dev.waterdog.ProxyServer;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class ConfigurationManager {
 
-    public static final int JSON = 1;
-    public static final int YAML = 2;
+    @AllArgsConstructor
+    public enum Type {
+        JSON(1),
+        YAML(2),
+        UNKNOWN(-1);
+
+        @Getter private final int id;
+
+        public static Type getTypeById(int id) {
+            return Arrays.stream(Type.values()).filter(type -> type.getId() == id).findFirst().orElse(Type.UNKNOWN);
+        }
+    }
 
     private final ProxyServer proxy;
     private ProxyConfig proxyConfig;
@@ -34,17 +47,18 @@ public class ConfigurationManager {
         this.proxy = proxy;
     }
 
-    public static Configuration newConfig(File file, int type) {
+    @Deprecated
+    public static Configuration newConfig(File file, Type type) {
         return newConfig(file.toString(), type);
     }
 
-    public static Configuration newConfig(String file, int type) {
+    @Deprecated
+    public static Configuration newConfig(String file, Type type) {
         switch (type) {
             case YAML:
                 return new YamlConfig(file);
             case JSON:
-                //TODO: Json config
-                return null;
+                return new JsonConfig(file);
             default:
                 return null;
         }

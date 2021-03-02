@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class JsonConfig extends Configuration {
 
-    protected Gson json = new Gson();
+    protected static Gson json = new Gson();
 
     public JsonConfig(File file) {
         super(file);
