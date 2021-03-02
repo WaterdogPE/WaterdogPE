@@ -19,6 +19,8 @@ import dev.waterdog.logger.MainLogger;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -27,30 +29,37 @@ public abstract class Configuration {
     protected File file;
     protected Map<String, Object> values = new LinkedHashMap<>();
 
-    public Configuration(String file) {
-        this(new File(file));
+    public Configuration(String saveFile) {
+        this(new File(saveFile));
     }
 
     public Configuration(Path path) {
         this(path.toFile());
     }
 
-    public Configuration(File file) {
-        this.file = file;
-
-        if (!this.file.exists()) {
-            try {
-                this.file.getParentFile().mkdirs();
-                this.file.createNewFile();
-            } catch (IOException e) {
-                MainLogger.getLogger().error("Unable to create Config " + this.file.toString(), e);
-            }
-        }
-
-        this.load();
+    public Configuration(File saveFile) {
+        this(saveFile, null);
     }
 
-    public abstract void load();
+    public Configuration(File saveFile, InputStream inputStream) {
+        this.file = saveFile;
+
+        try {
+            if (!this.file.exists()) {
+                this.file.getParentFile().mkdirs();
+                this.file.createNewFile();
+            }
+
+            if (inputStream == null) {
+                inputStream = Files.newInputStream(this.file.toPath());
+            }
+            this.load(inputStream);
+        } catch (IOException e) {
+            MainLogger.getLogger().error("Unable to create Config " + this.file.toString(), e);
+        }
+    }
+
+    public abstract void load(InputStream inputStream);
 
     public abstract void save();
 
