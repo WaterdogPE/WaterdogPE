@@ -16,7 +16,6 @@
 package dev.waterdog.plugin;
 
 import dev.waterdog.ProxyServer;
-import dev.waterdog.logger.MainLogger;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import org.yaml.snakeyaml.Yaml;
@@ -27,10 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.stream.Stream;
+import java.util.*;
 
 public class PluginManager {
 
@@ -45,29 +41,34 @@ public class PluginManager {
     public PluginManager(ProxyServer proxy) {
         this.proxy = proxy;
         this.pluginLoader = new PluginLoader(this);
-        this.loadPluginsIn(this.proxy.getPluginPath());
-    }
-
-    public void loadPluginsIn(Path folderPath) {
-        this.loadPluginsIn(folderPath, false);
-    }
-
-    public void loadPluginsIn(Path folderPath, boolean directStartup) {
         try {
-            Stream<Path> pluginPaths = Files.walk(folderPath);
-            pluginPaths.filter(Files::isRegularFile)
-                    .filter(PluginLoader::isJarFile)
-                    .forEach(jarPath -> this.loadPlugin(jarPath, directStartup));
+            this.loadPluginsIn(this.proxy.getPluginPath());
         } catch (IOException e) {
-            MainLogger.getLogger().error("Error while filtering plugin files", e);
+            this.proxy.getLogger().error("Error while filtering plugin files", e);
         }
     }
 
-    public Plugin loadPlugin(Path path) {
-        return this.loadPlugin(path, false);
+    public void loadPluginsIn(Path folderPath) throws IOException {
+        Comparator<PluginYAML> comparator = (o1, o2) -> {
+            if (o2.getDepends() == null || o2.getName().equals(o1.getName())) {
+                return 0;
+            }
+            return o2.getDepends().contains(o1.getName()) ? -1 : 1;
+        };
+
+        Map<PluginYAML, Path> plugins = new TreeMap<>(comparator);
+
+        Files.walk(folderPath).filter(Files::isRegularFile).filter(PluginLoader::isJarFile).forEach(jarPath -> {
+            PluginYAML config = this.loadPluginConfig(jarPath);
+            if (config != null) {
+                plugins.put(config, jarPath);
+            }
+        });
+
+        plugins.forEach(this::loadPlugin);
     }
 
-    public Plugin loadPlugin(Path path, boolean directStartup) {
+    public PluginYAML loadPluginConfig(Path path) {
         if (!Files.isRegularFile(path) || !PluginLoader.isJarFile(path)) {
             this.proxy.getLogger().warning("Cannot load plugin: Provided file is no jar file: " + path.getFileName());
             return null;
@@ -77,12 +78,11 @@ public class PluginManager {
         if (!pluginFile.exists()) {
             return null;
         }
+        return this.pluginLoader.loadPluginData(pluginFile, this.yamlLoader);
+    }
 
-        PluginYAML config = this.pluginLoader.loadPluginData(pluginFile, this.yamlLoader);
-        if (config == null){
-            return null;
-        }
-
+    public Plugin loadPlugin(PluginYAML config, Path path) {
+        File pluginFile = path.toFile();
         if (this.getPluginByName(config.getName()) != null) {
             this.proxy.getLogger().warning("Plugin is already loaded: " + config.getName());
             return null;
@@ -93,17 +93,15 @@ public class PluginManager {
             return null;
         }
 
+        try {
+            plugin.onStartup();
+        } catch (Exception e) {
+            this.proxy.getLogger().error("failed to load plugin "+config.getName()+"!", e);
+            return null;
+        }
+
         this.proxy.getLogger().info("Loaded plugin " + config.getName() + " successfully! (version=" + config.getVersion() + ",author=" + config.getAuthor() + ")");
         this.pluginMap.put(config.getName(), plugin);
-
-        plugin.onStartup();
-        if (directStartup) {
-            try {
-                plugin.setEnabled(true);
-            } catch (Exception e) {
-                this.proxy.getLogger().error("Direct startup failed!", e);
-            }
-        }
         return plugin;
     }
 
@@ -116,17 +114,19 @@ public class PluginManager {
             }
         }
 
-        if (!failed.isEmpty()) {
-            StringBuilder builder = new StringBuilder("§cFailed to load plugins: §e");
-            while (failed.peek() != null) {
-                Plugin plugin = failed.poll();
-                builder.append(plugin.getName());
-                if (failed.peek() != null) {
-                    builder.append(", ");
-                }
-            }
-            this.proxy.getLogger().warning(builder.toString());
+        if (failed.isEmpty()) {
+            return;
         }
+
+        StringBuilder builder = new StringBuilder("§cFailed to load plugins: §e");
+        while (failed.peek() != null) {
+            Plugin plugin = failed.poll();
+            builder.append(plugin.getName());
+            if (failed.peek() != null) {
+                builder.append(", ");
+            }
+        }
+        this.proxy.getLogger().warning(builder.toString());
     }
 
     public boolean enablePlugin(Plugin plugin, String parent) {
@@ -195,11 +195,11 @@ public class PluginManager {
     }
 
     public Map<String, Plugin> getPluginMap() {
-        return this.pluginMap;
+        return Collections.unmodifiableMap(this.pluginMap);
     }
 
     public Collection<Plugin> getPlugins() {
-        return this.pluginMap.values();
+        return Collections.unmodifiableCollection(this.pluginMap.values());
     }
 
     public Plugin getPluginByName(String pluginName) {
