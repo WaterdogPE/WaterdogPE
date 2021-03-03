@@ -36,7 +36,7 @@ public class PluginManager {
     private final Yaml yamlLoader = new Yaml(new CustomClassLoaderConstructor(this.getClass().getClassLoader()));
     private final Object2ObjectMap<String, Plugin> pluginMap = new Object2ObjectArrayMap<>();
     private final Object2ObjectMap<String, Class<?>> cachedClasses = new Object2ObjectArrayMap<>();
-    final Object2ObjectMap<String, PluginClassLoader> pluginClassLoaders = new Object2ObjectArrayMap<>();
+    protected final Object2ObjectMap<String, PluginClassLoader> pluginClassLoaders = new Object2ObjectArrayMap<>();
 
     public PluginManager(ProxyServer proxy) {
         this.proxy = proxy;
@@ -50,7 +50,11 @@ public class PluginManager {
 
     public void loadPluginsIn(Path folderPath) throws IOException {
         Comparator<PluginYAML> comparator = (o1, o2) -> {
-            if (o2.getDepends() == null || o2.getName().equals(o1.getName())) {
+            if (o2.getDepends() == null) {
+                return o1.getDepends() == null ? 0 : 1;
+            }
+
+            if (o2.getName().equals(o1.getName())) {
                 return 0;
             }
             return o2.getDepends().contains(o1.getName()) ? -1 : 1;
