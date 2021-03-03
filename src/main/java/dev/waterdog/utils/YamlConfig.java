@@ -15,14 +15,10 @@
 
 package dev.waterdog.utils;
 
-import com.google.common.base.Charsets;
-import dev.waterdog.logger.MainLogger;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -47,21 +43,13 @@ public class YamlConfig extends Configuration {
     }
 
     @Override
-    public void load(InputStream inputStream) {
-        try {
-            this.values = yaml.loadAs(inputStream, Map.class);
-        } catch (Exception e) {
-            MainLogger.getLogger().error("Unable to load Config " + this.file.toString());
-        }
+    @SuppressWarnings("unchecked")
+    protected Map<String, Object> deserialize(InputStream inputStream) {
+        return yaml.loadAs(inputStream, Map.class);
     }
 
     @Override
-    public void save() {
-        String writingData = yaml.dump(this.values);
-        try {
-            Files.write(this.file.toPath(), writingData.getBytes(Charsets.UTF_8));
-        } catch (IOException e) {
-            MainLogger.getLogger().error("Unable to save Config " + this.file.toString());
-        }
+    protected String serialize(Map<String, Object> values) {
+        return yaml.dump(values);
     }
 }
