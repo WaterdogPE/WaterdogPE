@@ -70,7 +70,7 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         outboundQueue.addAll(this.packetQueue);
         this.packetQueue.clear();
 
-        if (outboundQueue.size() >= 512) {
+        if (outboundQueue.size() >= 1024) {
             // TODO: consider closing connection or splitting to more batches
             this.player.getLogger().warning("TransferBatchBridge packet queue is too large! Got "+outboundQueue.size()+" packets with "+this.player.getName());
         }
