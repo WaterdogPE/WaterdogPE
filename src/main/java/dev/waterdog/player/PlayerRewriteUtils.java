@@ -219,8 +219,8 @@ public class PlayerRewriteUtils {
         packet.setRespawn(true);
         packet.setDimension(dimensionId);
         session.sendPacket(packet);
-        injectChunkPublisherUpdate(session, position.toInt(), 4);
-        injectEmptyChunks(session, position, 4);
+        injectChunkPublisherUpdate(session, position.toInt(), 3);
+        injectEmptyChunks(session, position, 3);
     }
 
     public static void injectEmptyChunks(BedrockSession session, Vector3f spawnPosition, int radius){
@@ -237,7 +237,8 @@ public class PlayerRewriteUtils {
         LevelChunkPacket packet = new LevelChunkPacket();
         packet.setChunkX(chunkX);
         packet.setChunkZ(chunkZ);
-        packet.setData(fakeChunkData);
+        // packet.setData(fakeChunkData);
+        packet.setData(new byte[257]);
         session.sendPacket(packet);
     }
 }

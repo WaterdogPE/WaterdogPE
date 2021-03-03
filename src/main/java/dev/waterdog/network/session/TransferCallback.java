@@ -15,7 +15,6 @@
 
 package dev.waterdog.network.session;
 
-import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.packet.SetLocalPlayerAsInitializedPacket;
@@ -63,8 +62,7 @@ public class TransferCallback {
 
     public void onTransferComplete() {
         RewriteData rewriteData = this.player.getRewriteData();
-        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), rewriteData.getSpawnPosition().toInt(), rewriteData.getChunkRadiusSize());
-        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), Vector3f.ZERO, rewriteData.getEntityId());
+        // PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), rewriteData.getSpawnPosition().toInt(), rewriteData.getChunkRadiusSize());
 
         StopSoundPacket soundPacket = new StopSoundPacket();
         soundPacket.setSoundName("portal.travel");
@@ -87,10 +85,6 @@ public class TransferCallback {
         this.getDownstream().sendPacket(initializedPacket);
         this.getDownstream().sendPacket(rewriteData.getChunkRadius());
 
-        ServerConnection oldServer = this.player.getServer();
-        oldServer.getInfo().removePlayer(this.player);
-        oldServer.disconnect();
-
         this.targetServer.addPlayer(this.player);
         this.player.setPendingConnection(null);
 
@@ -102,6 +96,7 @@ public class TransferCallback {
             batchBridge.flushQueue(this.getDownstream());
         }
 
+        ServerConnection oldServer = this.player.getServer();
         this.player.setServer(server);
         this.player.setAcceptPlayStatus(true);
 

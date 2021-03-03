@@ -104,6 +104,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
         }
 
         this.player.setCanRewrite(true);
+        this.player.setPendingConnection(null);
 
         packet.setRuntimeEntityId(rewriteData.getEntityId());
         packet.setUniqueEntityId(rewriteData.getEntityId());

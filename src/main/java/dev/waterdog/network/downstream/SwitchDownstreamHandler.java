@@ -18,10 +18,12 @@ package dev.waterdog.network.downstream;
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
+import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import dev.waterdog.event.defaults.TransferCompleteEvent;
 import dev.waterdog.network.ServerInfo;
+import dev.waterdog.network.bridge.ProxyBatchBridge;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.rewrite.types.BlockPalette;
 import dev.waterdog.network.rewrite.types.RewriteData;
@@ -123,6 +125,10 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         }else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
         }
+
+        ServerConnection oldServer = this.player.getServer();
+        oldServer.getInfo().removePlayer(this.player);
+        oldServer.disconnect();
 
         Collection<UUID> playerList = this.player.getPlayers();
         PlayerRewriteUtils.injectRemoveAllPlayers(this.player.getUpstream(), playerList);
