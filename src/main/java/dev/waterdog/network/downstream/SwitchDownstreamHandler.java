@@ -31,6 +31,7 @@ import dev.waterdog.network.session.SessionInjections;
 import dev.waterdog.player.PlayerRewriteUtils;
 import dev.waterdog.utils.exceptions.CancelSignalException;
 import dev.waterdog.utils.types.TranslationContainer;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import dev.waterdog.player.ProxiedPlayer;
@@ -128,6 +129,12 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         Collection<UUID> playerList = this.player.getPlayers();
         PlayerRewriteUtils.injectRemoveAllPlayers(this.player.getUpstream(), playerList);
         playerList.clear();
+
+        Long2LongMap entityLinks = this.player.getEntityLinks();
+        for (Long2LongMap.Entry entry : entityLinks.long2LongEntrySet()) {
+            PlayerRewriteUtils.injectRemoveEntityLink(this.player.getUpstream(), entry.getLongKey(), entry.getLongValue());
+        }
+        entityLinks.clear();
 
         LongSet entities = this.player.getEntities();
         for (long entityId : entities) {

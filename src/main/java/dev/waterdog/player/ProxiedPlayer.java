@@ -40,8 +40,7 @@ import dev.waterdog.utils.types.PacketHandler;
 import dev.waterdog.utils.types.Permission;
 import dev.waterdog.utils.types.TextContainer;
 import dev.waterdog.utils.types.TranslationContainer;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.*;
 
 import java.net.InetSocketAddress;
@@ -67,8 +66,9 @@ public class ProxiedPlayer implements CommandSender {
     private final RewriteMaps rewriteMaps;
     private final LongSet entities = new LongOpenHashSet();
     private final LongSet bossbars = new LongOpenHashSet();
-    private final Collection<UUID> players = new HashSet<>();
+    private final ObjectSet<UUID> players = new ObjectOpenHashSet<>();
     private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
+    private final Long2LongMap entityLinks = new Long2LongOpenHashMap();
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private ServerConnection serverConnection;
     private PendingConnection pendingConnection;
@@ -697,6 +697,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public ObjectSet<String> getScoreboards() {
         return this.scoreboards;
+    }
+
+    public Long2LongMap getEntityLinks() {
+        return this.entityLinks;
     }
 
     public PacketHandler getPluginUpstreamHandler() {

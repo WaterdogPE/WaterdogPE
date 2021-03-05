@@ -50,12 +50,11 @@ public class PluginManager {
 
     public void loadPluginsIn(Path folderPath) throws IOException {
         Comparator<PluginYAML> comparator = (o1, o2) -> {
-            if (o2.getDepends() == null) {
-                return o1.getDepends() == null ? 0 : 1;
-            }
-
             if (o2.getName().equals(o1.getName())) {
                 return 0;
+            }
+            if (o2.getDepends() == null) {
+                return 1;
             }
             return o2.getDepends().contains(o1.getName()) ? -1 : 1;
         };

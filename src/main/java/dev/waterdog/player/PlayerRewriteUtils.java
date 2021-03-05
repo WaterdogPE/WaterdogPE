@@ -22,6 +22,7 @@ import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.GameType;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import com.nukkitx.protocol.bedrock.data.entity.EntityData;
+import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.packet.*;
 
 import java.util.ArrayList;
@@ -90,6 +91,15 @@ public class PlayerRewriteUtils {
         }
         SetDifficultyPacket packet = new SetDifficultyPacket();
         packet.setDifficulty(difficulty);
+        session.sendPacket(packet);
+    }
+
+    public static void injectRemoveEntityLink(BedrockSession session, long vehicleId, long riderId) {
+        if (session == null || session.isClosed()){
+            return;
+        }
+        SetEntityLinkPacket packet = new SetEntityLinkPacket();
+        packet.setEntityLink(new EntityLinkData(vehicleId, riderId, EntityLinkData.Type.REMOVE, false, false));
         session.sendPacket(packet);
     }
 
