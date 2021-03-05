@@ -17,6 +17,7 @@ package dev.waterdog.packs.types;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -39,7 +40,7 @@ public abstract class ResourcePack {
 
     public abstract void saveToCache() throws IOException;
 
-    public abstract InputStream getCachedPack();
+    public abstract ByteBuffer getCachedPack();
 
     public abstract InputStream getStream(Path path) throws IOException;
 
