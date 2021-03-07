@@ -33,7 +33,6 @@ public class WaterdogPE {
         System.out.println("Starting WaterdogPE....");
         System.setProperty("log4j.skipJansi", "false");
         System.setSecurityManager(null);
-        System.getProperties().putIfAbsent("io.netty.allocator.type", "unpooled");
         ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
 
         MainLogger logger = MainLogger.getLogger();

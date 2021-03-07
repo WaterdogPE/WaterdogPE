@@ -92,6 +92,11 @@ public class InitialHandler extends AbstractDownstreamHandler {
         rewriteData.parseItemIds(packet.getItemEntries());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
 
+        // Since 340 shield blocking id was introduced
+        if (this.player.getProtocol().getProtocol() < ProtocolVersion.MINECRAFT_PE_1_10.getProtocol()) {
+            rewriteData.setShieldBlockingId(-1);
+        }
+
         // Starting with 419 server does not send vanilla blocks to client
         if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
