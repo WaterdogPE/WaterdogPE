@@ -55,25 +55,37 @@ public class BlockMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(LevelChunkPacket packet) {
-        int sections = packet.getSubChunksLength();
         byte[] oldData = packet.getData();
-        ByteBuf from = AbstractByteBufAllocator.DEFAULT.directBuffer(oldData.length);
-        ByteBuf to = AbstractByteBufAllocator.DEFAULT.directBuffer(oldData.length);
-        from.writeBytes(oldData);
+        ByteBuf from = AbstractByteBufAllocator.DEFAULT.ioBuffer(oldData.length);
+        ByteBuf to = AbstractByteBufAllocator.DEFAULT.ioBuffer(oldData.length);
 
-        boolean success = true;
+        try {
+            from.writeBytes(oldData);
+            boolean success = this.rewriteChunkData(from, to,  packet.getSubChunksLength());
+            if (success) {
+                to.writeBytes(from); // Copy the rest
+                byte[] newData = new byte[to.readableBytes()];
+                to.readBytes(newData);
+                packet.setData(newData);
+            }
+            return success;
+        } finally {
+            from.release();
+            to.release();
+        }
+    }
+
+    private boolean rewriteChunkData(ByteBuf from, ByteBuf to, int sections) {
         for (int section = 0; section < sections; section++) {
-            boolean notSupported = false;
             int chunkVersion = from.readUnsignedByte();
             to.writeByte(chunkVersion);
 
             switch (chunkVersion) {
                 case 0: // Legacy block ids, no remap needed
-                case 4: // MiNet uses this format. what is it?
+                case 4: // MiNet uses this format
                 case 139:
-                    from.release();
-                    to.release();
-                    return false;
+                    to.writeBytes(from);
+                    return true;
                 case 8: // New form chunk, baked-in palette
                     int storageCount = from.readUnsignedByte();
                     to.writeByte(storageCount);
@@ -97,26 +109,11 @@ public class BlockMap implements BedrockPacketHandler {
                     }
                     break;
                 default: // Unsupported
-                    notSupported = true;
                     this.player.getLogger().warning("PEBlockRewrite: Unknown subchunk format " + chunkVersion);
-                    break;
-            }
-
-            if (notSupported) {
-                success = false;
-                break;
+                    return false;
             }
         }
-
-        if (success) {
-            to.writeBytes(from); // Copy the rest
-            byte[] newData = new byte[to.readableBytes()];
-            to.readBytes(newData);
-            packet.setData(newData);
-        }
-        from.release();
-        to.release();
-        return success;
+        return true;
     }
 
     @Override

@@ -13,37 +13,35 @@
  * limitations under the License.
  */
 
-package dev.waterdog.plugin;
+package dev.waterdog.network.session;
 
-import lombok.ToString;
-import java.util.List;
+import com.nukkitx.protocol.bedrock.BedrockClient;
+import dev.waterdog.network.ServerInfo;
 
-@ToString
-public class PluginYAML {
+public class PendingConnection {
 
-    public String name;
-    public String version;
-    public String author;
-    public String main;
-    public List<String> depends;
+    private final ServerInfo serverInfo;
+    private BedrockClient client;
 
-    public String getAuthor() {
-        return this.author;
+    public PendingConnection(ServerInfo serverInfo) {
+        this.serverInfo = serverInfo;
     }
 
-    public String getMain() {
-        return this.main;
+    public void close() {
+        if (this.client != null) {
+            this.client.close();
+        }
     }
 
-    public String getName() {
-        return this.name;
+    public ServerInfo getInfo() {
+        return this.serverInfo;
     }
 
-    public String getVersion() {
-        return this.version;
+    public void setClient(BedrockClient client) {
+        this.client = client;
     }
 
-    public List<String> getDepends() {
-        return this.depends;
+    public BedrockClient getClient() {
+        return this.client;
     }
 }

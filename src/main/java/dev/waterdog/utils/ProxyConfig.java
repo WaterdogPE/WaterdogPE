@@ -63,14 +63,14 @@ public class ProxyConfig extends YamlConfig {
     private Map<String, String> forcedHosts = new HashMap<>();
 
     @Path("permissions")
-    @Comment("Case-Sensitive permission list for players")
+    @Comment("Case-Sensitive permission list for players (empty using {})")
     private Object2ObjectOpenHashMap<String, List<String>> playerPermissions = new Object2ObjectOpenHashMap<String, List<String>>() {{
         this.put("alemiz003", Arrays.asList("waterdog.player.transfer", "waterdog.player.list"));
         this.put("TobiasDev", Arrays.asList("waterdog.player.transfer", "waterdog.player.list"));
     }};
 
     @Path("permissions_default")
-    @Comment("List of permissions each player should get by default")
+    @Comment("List of permissions each player should get by default (empty using [])")
     private List<String> defaultPermissions = new ArrayList<>(Arrays.asList("waterdog.command.help", "waterdog.command.info"));
 
     @Path("enable_debug")
@@ -84,6 +84,10 @@ public class ProxyConfig extends YamlConfig {
     @Path("online_mode")
     @Comment("If enabled, only players which are authenticated with XBOX Live can join. If disabled, anyone can connect *with any name*")
     private boolean onlineMode = true;
+
+    @Path("enable_ipv6")
+    @Comment("If enabled, the proxy will be able to bind to an Ipv6 Address")
+    private boolean enableIpv6 = false;
 
     @Path("use_login_extras")
     @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")
@@ -251,6 +255,14 @@ public class ProxyConfig extends YamlConfig {
 
     public boolean injectCommands() {
         return this.injectCommands;
+    }
+
+    public boolean isIpv6Enabled() {
+        return enableIpv6;
+    }
+
+    public void setIpv6Enabled(boolean enableIpv6) {
+        this.enableIpv6 = enableIpv6;
     }
 
     public boolean enabledResourcePacks() {

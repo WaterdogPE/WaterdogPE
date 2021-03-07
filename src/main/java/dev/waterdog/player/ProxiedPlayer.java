@@ -33,14 +33,14 @@ import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.rewrite.RewriteMaps;
 import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.LoginData;
+import dev.waterdog.network.session.PendingConnection;
 import dev.waterdog.network.session.ServerConnection;
 import dev.waterdog.network.session.SessionInjections;
 import dev.waterdog.utils.types.PacketHandler;
 import dev.waterdog.utils.types.Permission;
 import dev.waterdog.utils.types.TextContainer;
 import dev.waterdog.utils.types.TranslationContainer;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.*;
 
 import java.net.InetSocketAddress;
@@ -66,11 +66,12 @@ public class ProxiedPlayer implements CommandSender {
     private final RewriteMaps rewriteMaps;
     private final LongSet entities = new LongOpenHashSet();
     private final LongSet bossbars = new LongOpenHashSet();
-    private final Collection<UUID> players = new HashSet<>();
+    private final ObjectSet<UUID> players = new ObjectOpenHashSet<>();
     private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
+    private final Long2LongMap entityLinks = new Long2LongOpenHashMap();
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private ServerConnection serverConnection;
-    private ServerInfo pendingConnection;
+    private PendingConnection pendingConnection;
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
@@ -133,7 +134,13 @@ public class ProxiedPlayer implements CommandSender {
      */
     public void initialConnect() {
         PlayerLoginEvent event = new PlayerLoginEvent(this);
-        this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, ignored) -> {
+        this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, error) -> {
+            if (error != null) {
+                this.getLogger().logException(error);
+                this.disconnect(new TranslationContainer("waterdog.downstream.initial.connect"));
+                return;
+            }
+
             if (event.isCancelled()) {
                 this.disconnect(event.getCancelReason());
                 return;
@@ -177,14 +184,20 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        if (this.pendingConnection == targetServer) {
-            this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
-            return;
+        PendingConnection oldPendingConnection = this.getPendingConnection();
+        if (oldPendingConnection != null) {
+            if (oldPendingConnection.getInfo() == targetServer) {
+                this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
+                return;
+            }
+
+            // Close old pending connection
+            oldPendingConnection.close();
+            this.getLogger().debug("Discarding pending connection for "+this.getName()+"! Tried to join "+oldPendingConnection.getInfo().getServerName());
         }
 
-        if (this.serverConnection != null) {
-            this.pendingConnection = targetServer;
-        }
+        PendingConnection pendingConnection = new PendingConnection(targetServer);
+        this.setPendingConnection(pendingConnection);
 
         CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
         future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, error) -> {
@@ -198,6 +211,8 @@ public class ProxiedPlayer implements CommandSender {
                 this.connectFailure(client, targetServer, error);
                 return;
             }
+
+            pendingConnection.setClient(client);
 
             if (this.serverConnection == null) {
                 this.serverConnection = new ServerConnection(client, downstream, targetServer);
@@ -227,7 +242,7 @@ public class ProxiedPlayer implements CommandSender {
 
     private void connectFailure(BedrockClient client, ServerInfo targetServer, Throwable error) {
         this.getLogger().debug("[" + this.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), error);
-        this.pendingConnection = null;
+        this.setPendingConnection(null);
         if (client != null) {
             client.close();
         }
@@ -275,7 +290,7 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        PlayerDisconnectEvent event = new PlayerDisconnectEvent(this);
+        PlayerDisconnectEvent event = new PlayerDisconnectEvent(this, reason);
         this.proxy.getEventManager().callEvent(event);
 
         if (this.upstream != null && !this.upstream.isClosed()) {
@@ -285,6 +300,11 @@ public class ProxiedPlayer implements CommandSender {
         if (this.serverConnection != null) {
             this.serverConnection.getInfo().removePlayer(this);
             this.serverConnection.disconnect(forceClose);
+        }
+
+        PendingConnection pendingConnection = this.getPendingConnection();
+        if (pendingConnection != null) {
+            pendingConnection.close();
         }
 
         this.proxy.getPlayerManager().removePlayer(this);
@@ -606,11 +626,11 @@ public class ProxiedPlayer implements CommandSender {
         this.serverConnection = serverConnection;
     }
 
-    public ServerInfo getPendingConnection() {
+    public synchronized PendingConnection getPendingConnection() {
         return this.pendingConnection;
     }
 
-    public void setPendingConnection(ServerInfo pendingConnection) {
+    public synchronized void setPendingConnection(PendingConnection pendingConnection) {
         this.pendingConnection = pendingConnection;
     }
 
@@ -677,6 +697,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public ObjectSet<String> getScoreboards() {
         return this.scoreboards;
+    }
+
+    public Long2LongMap getEntityLinks() {
+        return this.entityLinks;
     }
 
     public PacketHandler getPluginUpstreamHandler() {
