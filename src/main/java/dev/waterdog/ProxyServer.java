@@ -105,6 +105,11 @@ public class ProxyServer {
 
         this.configurationManager = new ConfigurationManager(this);
         this.configurationManager.loadProxyConfig();
+
+        if(!this.getConfiguration().isIpv6Enabled()){
+            System.setProperty("java.net.preferIPv4Stack", "true");//I dont know why, but it was here before so better not remove it
+        }
+
         if (this.getConfiguration().isDebug()) {
             WaterdogPE.setLoggerLevel(Level.DEBUG);
         }
@@ -221,14 +226,16 @@ public class ProxyServer {
     }
 
     public boolean dispatchCommand(CommandSender sender, String message) {
-        DispatchCommandEvent event = new DispatchCommandEvent(sender, message);
-        this.eventManager.callEvent(event);
+        String[] args = message.split(" ");
+        String[] shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
+        DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs);
 
+        this.eventManager.callEvent(event);
         if (event.isCancelled()) {
             return false;
         }
-        String[] args = message.split(" ");
-        return this.commandMap.handleCommand(sender, args[0], Arrays.copyOfRange(args, 1, args.length));
+
+        return this.commandMap.handleCommand(sender, args[0], shiftedArgs);
     }
 
     public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {

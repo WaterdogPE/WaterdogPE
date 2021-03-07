@@ -19,7 +19,7 @@ import dev.waterdog.event.CancellableEvent;
 import dev.waterdog.player.ProxiedPlayer;
 
 /**
- * Called before a player send a message to the chat.
+ * Called before a player sends a message to the chat.
  * At this point it is possible to cancel or modify the message.
  */
 public class PlayerChatEvent extends PlayerEvent implements CancellableEvent {

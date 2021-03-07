@@ -45,19 +45,50 @@ public class EventHandler {
             throw new EventException("Tried to handle invalid event type!");
         }
 
-        if (event.getClass().isAnnotationPresent(AsyncEvent.class)) {
-            return CompletableFuture.supplyAsync(() -> {
-                for (EventPriority priority : EventPriority.values()) {
-                    this.handlePriority(priority, event);
-                }
-                return event;
-            }, this.eventManager.getThreadedExecutor());
+        if (!event.isAsync()) {
+            return this.handleSync(event);
         }
 
-        for (EventPriority priority : EventPriority.values()) {
-            this.handlePriority(priority, event);
+        CompletableFuture<Event> future = new CompletableFuture<>();
+        CompletableFuture.supplyAsync(() -> {
+            for (EventPriority priority : EventPriority.values()) {
+                this.handlePriority(priority, event);
+            }
+            return event;
+        }).thenAccept(futureEvent -> futureEvent.completeFuture(future)).whenComplete((ignore, error) -> {
+            if (error != null && !future.isDone()) {
+                future.completeExceptionally(error);
+            }
+        });
+        return future;
+    }
+
+    private CompletableFuture<Event> handleSync(Event event) {
+        if (!event.isCompletable()) {
+            for (EventPriority priority : EventPriority.values()) {
+                this.handlePriority(priority, event);
+            }
+            // Non-completable events does not provide future.
+            return null;
         }
-        return null;
+
+        try {
+            for (EventPriority priority : EventPriority.values()) {
+                this.handlePriority(priority, event);
+            }
+        } catch (Exception e) {
+            CompletableFuture<Event> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
+        }
+
+        if (event.getCompletableFutures().isEmpty()) {
+            return CompletableFuture.completedFuture(event);
+        }
+
+        CompletableFuture<Event> future = new CompletableFuture<>();
+        event.completeFuture(future);
+        return future;
     }
 
     private void handlePriority(EventPriority priority, Event event) {
@@ -71,10 +102,9 @@ public class EventHandler {
 
     public void subscribe(Consumer<Event> handler, EventPriority priority) {
         List<Consumer<Event>> handlerList = this.priority2handlers.computeIfAbsent(priority, priority1 -> new ArrayList<>());
-
-        //Check if event is already registered
+        // Check if event is already registered
         if (!handlerList.contains(handler)) {
-            //Handler is not registered yet
+            // Handler is not registered yet
             handlerList.add(handler);
         }
     }

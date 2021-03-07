@@ -37,7 +37,13 @@ public class SimpleCommandMap implements CommandMap {
 
     @Override
     public boolean registerCommand(String name, Command command) {
-        return this.commandsMap.putIfAbsent(name.toLowerCase(), command) == null;
+        if (this.commandsMap.putIfAbsent(name.toLowerCase(), command) != null) {
+            return false;
+        }
+        for (String alias : command.getAliases()) {
+            this.registerAlias(alias, command);
+        }
+        return true;
     }
 
     @Override
