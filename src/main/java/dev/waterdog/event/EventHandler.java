@@ -77,7 +77,9 @@ public class EventHandler {
                 this.handlePriority(priority, event);
             }
         } catch (Exception e) {
-            return CompletableFuture.failedFuture(e);
+            CompletableFuture<Event> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
         }
 
         if (event.getCompletableFutures().isEmpty()) {
