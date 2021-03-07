@@ -23,6 +23,9 @@ public class RewriteMaps {
     private final EntityMap entityMap;
     private BlockMap blockMap;
 
+    private ItemMap itemMap;
+    private ItemMap itemMapReversed;
+
     public RewriteMaps(ProxiedPlayer player) {
         this.entityTracker = new EntityTracker(player);
         this.entityMap = new EntityMap(player);
@@ -42,5 +45,21 @@ public class RewriteMaps {
 
     public BlockMap getBlockMap() {
         return this.blockMap;
+    }
+
+    public void setItemMap(ItemMap itemMap) {
+        this.itemMap = itemMap;
+    }
+
+    public ItemMap getItemMap() {
+        return this.itemMap;
+    }
+
+    public void setItemMapReversed(ItemMap itemMapReversed) {
+        this.itemMapReversed = itemMapReversed;
+    }
+
+    public ItemMap getItemMapReversed() {
+        return this.itemMapReversed;
     }
 }

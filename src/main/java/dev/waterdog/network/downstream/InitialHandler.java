@@ -21,6 +21,8 @@ import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.rewrite.BlockMap;
 import dev.waterdog.network.rewrite.BlockMapModded;
+import dev.waterdog.network.rewrite.ItemMap;
+import dev.waterdog.network.rewrite.types.ItemPalette;
 import dev.waterdog.network.rewrite.types.BlockPalette;
 import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.SessionInjections;
@@ -89,7 +91,6 @@ public class InitialHandler extends AbstractDownstreamHandler {
         rewriteData.setEntityId(ThreadLocalRandom.current().nextInt(10000, 15000));
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setDimension(packet.getDimensionId());
-        rewriteData.parseItemIds(packet.getItemEntries());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
 
         // Since 340 shield blocking id was introduced
@@ -98,14 +99,28 @@ public class InitialHandler extends AbstractDownstreamHandler {
         }
 
         // Starting with 419 server does not send vanilla blocks to client
+        // But thanks to some downstreams we have now item palette rewrite
         if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
             rewriteData.setBlockPalette(palette);
             rewriteData.setBlockPaletteRewrite(palette.createRewrite(palette));
             this.player.getRewriteMaps().setBlockMap(new BlockMap(this.player));
+            rewriteData.setShieldBlockingId(ItemPalette.OLD_SHIELD_ID);
         }else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
             this.player.getRewriteMaps().setBlockMap(new BlockMapModded(this.player));
+
+            ItemPalette palette = ItemPalette.getPalette(packet.getItemEntries(), this.player.getProtocol());
+            if (this.player.getProxy().getConfiguration().isItemRewrite()){
+                rewriteData.setItemPalette(palette);
+                rewriteData.setItemPaletteRewrite(palette.createRewrite(palette));
+
+                this.player.getRewriteMaps().setItemMap(new ItemMap(this.player, false));
+                this.player.getRewriteMaps().setItemMapReversed(new ItemMap(this.player, true));
+            }else {
+                // We use shield blocking id from first palette and assume all other servers use same palette
+                rewriteData.setShieldBlockingId((int) palette.getShieldBlockingId());
+            }
         }
 
         this.player.setCanRewrite(true);

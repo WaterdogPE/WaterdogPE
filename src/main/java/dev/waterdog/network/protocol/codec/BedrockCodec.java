@@ -63,6 +63,10 @@ public abstract class BedrockCodec {
             this.registerCommands(builder);
         }
 
+        if (proxy.getConfiguration().isItemRewrite()){
+            this.registerItemPackets(builder);
+        }
+
         // We use ProtocolCodecRegisterEvent to modify final codec.
         // When this event is canceled codec will not be registered.
         ProtocolCodecRegisterEvent event = new ProtocolCodecRegisterEvent(protocol, builder);
@@ -87,6 +91,10 @@ public abstract class BedrockCodec {
 
     public void registerCommands(BedrockPacketCodec.Builder builder) {
         // Used to register packets related command injections
+    }
+
+    public void registerItemPackets(BedrockPacketCodec.Builder builder) {
+        // Since 1.16.100 we do item rewrite
     }
 
     public abstract ProtocolVersion getProtocol();

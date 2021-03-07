@@ -34,11 +34,12 @@ public class DownstreamBridge extends ProxyBatchBridge {
 
         RewriteMaps rewriteMaps = this.player.getRewriteMaps();
         boolean rewroteBlock = rewriteMaps.getBlockMap() != null && rewriteMaps.getBlockMap().doRewrite(packet);
+        boolean rewroteItem = rewriteMaps.getItemMapReversed() != null && rewriteMaps.getItemMapReversed().doRewrite(packet);
 
         boolean pluginHandled = false;
         if (this.player.getPluginDownstreamHandler() != null) {
             pluginHandled = this.player.getPluginDownstreamHandler().handlePacket(packet);
         }
-        return changed || rewroteBlock || pluginHandled;
+        return changed || rewroteBlock || rewroteItem || pluginHandled;
     }
 }

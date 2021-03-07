@@ -17,6 +17,7 @@ package dev.waterdog.player;
 
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.math.vector.Vector3i;
+import com.nukkitx.network.VarInts;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.GameType;
@@ -24,6 +25,7 @@ import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.packet.*;
+import io.netty.buffer.ByteBuf;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,10 +37,6 @@ import java.util.UUID;
  * For example removing client-sided weather, effects, effect particles etc..
  */
 public class PlayerRewriteUtils {
-
-    public static long rewriteId(long from, long rewritten, long origin) {
-        return from == origin ? rewritten : (from == rewritten ? origin : from);
-    }
 
     public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn, int radius) {
         if (session == null || session.isClosed()){
@@ -178,5 +176,25 @@ public class PlayerRewriteUtils {
         packet.setRotation(rotation);
         packet.setMode(MovePlayerPacket.Mode.RESPAWN);
         session.sendPacket(packet);
+    }
+
+    public static long rewriteId(long from, long rewritten, long origin) {
+        return from == origin ? rewritten : (from == rewritten ? origin : from);
+    }
+
+    public static void copyLong(ByteBuf from, ByteBuf to){
+        VarInts.writeLong(to, VarInts.readLong(from));
+    }
+
+    public static void copyUnsignedLong(ByteBuf from, ByteBuf to){
+        VarInts.writeLong(to, VarInts.readUnsignedLong(from));
+    }
+
+    public static void copyInt(ByteBuf from, ByteBuf to){
+        VarInts.writeInt(to, VarInts.readInt(from));
+    }
+
+    public static void copyUnsignedInt(ByteBuf from, ByteBuf to){
+        VarInts.writeUnsignedInt(to, VarInts.readUnsignedInt(from));
     }
 }

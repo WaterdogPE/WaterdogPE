@@ -25,16 +25,17 @@ import dev.waterdog.event.defaults.TransferCompleteEvent;
 import dev.waterdog.network.ServerInfo;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.rewrite.types.BlockPalette;
+import dev.waterdog.network.rewrite.types.ItemPalette;
 import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.ServerConnection;
 import dev.waterdog.network.session.SessionInjections;
 import dev.waterdog.player.PlayerRewriteUtils;
+import dev.waterdog.player.ProxiedPlayer;
 import dev.waterdog.utils.exceptions.CancelSignalException;
 import dev.waterdog.utils.types.TranslationContainer;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import dev.waterdog.player.ProxiedPlayer;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -117,13 +118,18 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
         rewriteData.setRotation(packet.getRotation());
-        rewriteData.parseItemIds(packet.getItemEntries());
 
         if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
             rewriteData.setBlockPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
         }else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
+
+            if (this.player.getProxy().getConfiguration().isItemRewrite()){
+                ItemPalette palette = ItemPalette.getPalette(packet.getItemEntries(), this.player.getProtocol());
+                rewriteData.getItemPalette().setDownstreamShieldBlockingId(palette.getShieldBlockingId());
+                rewriteData.setItemPaletteRewrite(palette.createRewrite(rewriteData.getItemPalette()));
+            }
         }
 
         Collection<UUID> playerList = this.player.getPlayers();

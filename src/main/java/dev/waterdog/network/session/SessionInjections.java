@@ -58,7 +58,10 @@ public class SessionInjections {
     }
 
     public static void injectDownstreamHandlers(ServerConnection server, ProxiedPlayer player) {
-        injectInitialHandlers(server, player);
+        Preconditions.checkArgument(server != null && player != null, "Player and ServerConnection can not be null!");
+        server.getDownstream().getHardcodedBlockingId().set(player.getRewriteData().getDownstreamShieldBlockingId());
+
+        server.getDownstream().setPacketHandler(new ConnectedDownstreamHandler(player, server));
         player.getUpstream().setBatchHandler(new UpstreamBridge(player, server.getDownstream()));
         server.getDownstream().setBatchHandler(new DownstreamBridge(player, player.getUpstream()));
     }

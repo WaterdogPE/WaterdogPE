@@ -117,6 +117,13 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, the proxy will inject all the proxy commands in the AvailableCommandsPacket, enabling autocompletion")
     private boolean injectCommands = true;
 
+    @Path("enable_item_rewrite")
+    @Comments({
+            "Since 1.16.100 item palette with custom runtime ids was introduced. Transfers between different server software may cause unwanted behaviour.",
+            "Enable item rewrite if your downstream servers use different item palette."
+    })
+    private boolean itemRewrite = false;
+
     @Path("upstream_compression_level")
     @Comment("Upstream server compression ratio(proxy to client), higher = less bandwidth, more cpu, lower vice versa")
     private int upstreamCompression = 6;
@@ -239,6 +246,10 @@ public class ProxyConfig extends YamlConfig {
 
     public List<String> getDefaultPermissions() {
         return this.defaultPermissions;
+    }
+
+    public boolean isItemRewrite() {
+        return this.itemRewrite;
     }
 
     public int getUpstreamCompression() {
