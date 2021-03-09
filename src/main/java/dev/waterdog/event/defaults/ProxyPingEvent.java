@@ -29,6 +29,7 @@ public class ProxyPingEvent extends Event {
 
     private final InetSocketAddress address;
     private String motd;
+    private String subMotd;
     private String gameType;
     private String edition;
     private String version;
@@ -36,8 +37,9 @@ public class ProxyPingEvent extends Event {
     private int playerCount = -1;
     private int maximumPlayerCount;
 
-    public ProxyPingEvent(String motd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, InetSocketAddress address) {
+    public ProxyPingEvent(String motd, String subMotd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, InetSocketAddress address) {
         this.motd = motd;
+        this.subMotd = subMotd;
         this.gameType = gameType;
         this.edition = edition;
         this.version = version;
@@ -52,6 +54,14 @@ public class ProxyPingEvent extends Event {
 
     public void setMotd(String motd) {
         this.motd = motd;
+    }
+
+    public String getSubMotd() {
+        return this.subMotd;
+    }
+
+    public void setSubMotd(String subMotd) {
+        this.subMotd = subMotd;
     }
 
     public String getGameType() {

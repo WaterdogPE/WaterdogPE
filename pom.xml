@@ -13,7 +13,7 @@
 
     <properties>
         <raklib.version>1.6.26-SNAPSHOT</raklib.version>
-        <protocol.protocol>bedrock-v422</protocol.protocol>
+        <protocol.protocol>bedrock-v428</protocol.protocol>
         <protocol.version>2.6.2-SNAPSHOT</protocol.version>
         <log4j2.version>2.14.0</log4j2.version>
         <jline.version>3.9.0</jline.version>
