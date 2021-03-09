@@ -22,6 +22,7 @@ import com.nukkitx.protocol.bedrock.data.BlockPropertyData;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 import com.nukkitx.protocol.bedrock.packet.StartGamePacket.ItemEntry;
+import dev.waterdog.player.PlayerRewriteUtils;
 import dev.waterdog.network.session.TransferCallback;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -58,7 +59,7 @@ public class RewriteData {
      */
     private int dimension = 0;
     private TransferCallback transferCallback;
-    private RequestChunkRadiusPacket chunkRadius;
+    private RequestChunkRadiusPacket chunkRadius = PlayerRewriteUtils.defaultChunkRadius;
 
     private Vector3f spawnPosition;
     private Vector2f rotation;

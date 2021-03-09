@@ -30,7 +30,7 @@ public class ProxyQueryEvent extends ProxyPingEvent {
     private boolean hasWhitelist = false;
 
     public ProxyQueryEvent(String motd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, String map, InetSocketAddress address) {
-        super(motd, gameType, edition, version, players, maximumPlayerCount, address);
+        super(motd, "", gameType, edition, version, players, maximumPlayerCount, address);
         this.map = map;
     }
 

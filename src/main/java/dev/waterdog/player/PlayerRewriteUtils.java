@@ -40,12 +40,16 @@ import java.util.UUID;
  */
 public class PlayerRewriteUtils {
 
+    public static final RequestChunkRadiusPacket defaultChunkRadius = new RequestChunkRadiusPacket();
+
     public static final int DIMENSION_OVERWORLD = 0;
     public static final int DIMENSION_NETHER = 1;
 
     private static final byte[] fakeChunkData;
 
     static {
+        defaultChunkRadius.setRadius(8);
+
         // Here we create hardcoded "empty" chunk which is accepted by client
         // Because client does not accept empty array list we try to hardcode this
         // Keep in mind that this CAN change with newer versions!
