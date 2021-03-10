@@ -15,6 +15,8 @@ effort from us and provides us with a nice api to work with.
 - [Branding: various brand assets for the WaterdogPE project](https://github.com/WaterdogPE/Branding)
 - [Protocol: A fork of Nukkits Protocol library with various changes for the WaterdogPE project](https://github.com/WaterdogPE/Protocol)
 
+## If you want to discuss things without joining the discord server, please use the [Discussions Tab](https://github.com/WaterdogPE/WaterdogPE/discussions)
+
 ## Benefits compared to Waterdog 
 
 - Reduced memory usage

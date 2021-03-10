@@ -19,6 +19,7 @@ import com.nukkitx.protocol.bedrock.BedrockPong;
 import com.nukkitx.protocol.bedrock.BedrockServerEventHandler;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import dev.waterdog.ProxyServer;
+import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.query.QueryHandler;
 import dev.waterdog.utils.ProxyConfig;
 import io.netty.buffer.ByteBuf;
@@ -56,9 +57,10 @@ public class ProxyListener implements BedrockServerEventHandler {
 
         ProxyPingEvent event = new ProxyPingEvent(
                 config.getMotd(),
-                "SMP",
+                "WaterdogPE Proxy",
+                "Survival",
                 "MCPE",
-                "",
+                ProtocolConstants.getLatestProtocol().getCodec().getMinecraftVersion(),
                 this.proxy.getPlayerManager().getPlayers().values(),
                 config.getMaxPlayerCount(),
                 address
@@ -68,7 +70,7 @@ public class ProxyListener implements BedrockServerEventHandler {
         BedrockPong pong = PONG_THREAD_LOCAL.get();
         pong.setEdition(event.getEdition());
         pong.setMotd(event.getMotd());
-        pong.setSubMotd("");
+        pong.setSubMotd(event.getSubMotd());
         pong.setGameType(event.getGameType());
         pong.setMaximumPlayerCount(event.getMaximumPlayerCount());
         pong.setPlayerCount(event.getPlayerCount());
