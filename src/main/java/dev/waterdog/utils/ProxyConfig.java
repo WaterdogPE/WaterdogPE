@@ -93,10 +93,6 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")
     private boolean useLoginExtras = true;
 
-    @Path("ip_forward")
-    @Comment("Forward original address in client data under 'Waterdog_IP' attribute.")
-    private boolean ipForward = false;
-
     @Path("replace_username_spaces")
     @Comment("Replaces username spaces with underscores if enabled")
     private boolean replaceUsernameSpaces = false;
@@ -207,14 +203,6 @@ public class ProxyConfig extends YamlConfig {
 
     public boolean useFastTransfer() {
         return this.fastTransfer;
-    }
-
-    public boolean isIpForward() {
-        return this.ipForward;
-    }
-
-    public void setIpForward(boolean ipForward) {
-        this.ipForward = ipForward;
     }
 
     public InetSocketAddress getBindAddress() {
