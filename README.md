@@ -26,7 +26,6 @@ effort from us and provides us with a nice api to work with.
 - BE server pinging: Easily ping your downstream server using a plugin to check it's status
 - Resource pack support
 - Maintained documentation
-- Add XUID in Client Data
 
 
 ## Known bugs fixed in WaterdogPE
