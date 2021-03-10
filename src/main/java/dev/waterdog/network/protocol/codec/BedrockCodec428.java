@@ -17,6 +17,7 @@ package dev.waterdog.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
+import com.nukkitx.protocol.bedrock.v428.BedrockPacketHelper_v428;
 import com.nukkitx.protocol.bedrock.v428.serializer.StartGameSerializer_v428;
 import dev.waterdog.network.protocol.ProtocolVersion;
 
@@ -30,6 +31,7 @@ public class BedrockCodec428 extends BedrockCodec422 {
     @Override
     public void buildCodec(BedrockPacketCodec.Builder builder) {
         super.buildCodec(builder);
+        builder.helper(BedrockPacketHelper_v428.INSTANCE);
         builder.deregisterPacket(StartGamePacket.class);
         builder.registerPacket(StartGamePacket.class, StartGameSerializer_v428.INSTANCE, 11);
     }
