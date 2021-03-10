@@ -329,7 +329,7 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public void onDownstreamTimeout() {
-        ServerInfo serverInfo = this.serverConnection.getInfo();
+        ServerInfo serverInfo = this.getServerInfo();
         if (!this.sendToFallback(serverInfo, "Downstream Timeout")) {
             this.disconnect(new TranslationContainer("waterdog.downstream.down", serverInfo.getServerName(), "Timeout"));
         }
@@ -544,7 +544,7 @@ public class ProxiedPlayer implements CommandSender {
      */
     @Override
     public boolean hasPermission(String permission) {
-        if (this.admin || permission.isEmpty() || permission.equals("*")) {
+        if (this.admin || permission.isEmpty()) {
             return true;
         }
         Permission perm = this.permissions.get(permission.toLowerCase());

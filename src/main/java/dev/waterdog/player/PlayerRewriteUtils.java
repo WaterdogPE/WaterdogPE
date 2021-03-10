@@ -36,6 +36,11 @@ import java.util.UUID;
  */
 public class PlayerRewriteUtils {
 
+    public static final RequestChunkRadiusPacket defaultChunkRadius = new RequestChunkRadiusPacket();
+    static {
+        defaultChunkRadius.setRadius(8);
+    }
+
     public static long rewriteId(long from, long rewritten, long origin) {
         return from == origin ? rewritten : (from == rewritten ? origin : from);
     }
