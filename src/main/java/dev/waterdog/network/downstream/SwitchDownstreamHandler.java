@@ -178,9 +178,16 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public boolean handle(DisconnectPacket packet) {
-        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), packet.getKickMessage()));
+        TransferCallback transferCallback = this.player.getRewriteData().getTransferCallback();
+        if (transferCallback != null) {
+            // Player was already disconnected from old downstream
+            transferCallback.onTransferFailed();
+            return false;
+        }
+
         this.client.close();
         this.player.setPendingConnection(null);
+        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), packet.getKickMessage()));
         return false;
     }
 }

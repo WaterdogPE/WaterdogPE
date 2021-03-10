@@ -62,6 +62,7 @@ public class TransferCallback {
 
     public void onTransferComplete() {
         RewriteData rewriteData = this.player.getRewriteData();
+        rewriteData.setTransferCallback(null);
         // PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), rewriteData.getSpawnPosition().toInt(), rewriteData.getChunkRadiusSize());
 
         StopSoundPacket soundPacket = new StopSoundPacket();
@@ -104,7 +105,7 @@ public class TransferCallback {
         this.player.getProxy().getEventManager().callEvent(event);
     }
 
-    private void onTransferFailed() {
+    public void onTransferFailed() {
         if (this.player.sendToFallback(this.targetServer, "Transfer failed")) {
             this.player.sendMessage(new TranslationContainer("waterdog.connected.fallback", this.targetServer.getServerName()));
         } else {
