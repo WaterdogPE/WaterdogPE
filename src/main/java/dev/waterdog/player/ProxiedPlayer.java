@@ -544,7 +544,7 @@ public class ProxiedPlayer implements CommandSender {
      */
     @Override
     public boolean hasPermission(String permission) {
-        if (this.admin || permission.isEmpty() || permission.equals("*")) {
+        if (this.admin || permission.isEmpty()) {
             return true;
         }
         Permission perm = this.permissions.get(permission.toLowerCase());
