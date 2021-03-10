@@ -137,10 +137,12 @@ public class HandshakeUtils {
     public static JsonObject parseClientData(JWSObject clientJwt,JsonObject extraData, BedrockSession session) throws Exception {
         JsonObject clientData = (JsonObject) JsonParser.parseString(clientJwt.getPayload().toString());
         ProxyConfig config = ProxyServer.getInstance().getConfiguration();
-        if (config.useLoginExtras() && config.isIpForward()) {
+        if (config.useLoginExtras()) {
             // Add waterdog attributes
             clientData.addProperty("Waterdog_XUID", extraData.get("XUID").getAsString());
+            if(config.isIpForward()){
             clientData.addProperty("Waterdog_IP", session.getAddress().getAddress().getHostAddress());
+            }
         }
         return clientData;
     }
