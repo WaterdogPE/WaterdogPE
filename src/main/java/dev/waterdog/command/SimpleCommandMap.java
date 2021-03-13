@@ -86,7 +86,7 @@ public class SimpleCommandMap implements CommandMap {
             return true;
         }
 
-        if (!sender.isPlayer()) { //Player commands may be handled by servers
+        if (!sender.isPlayer()) { // Player commands may be handled by servers
             sender.sendMessage(new TranslationContainer("waterdog.command.unknown"));
         }
         return false;

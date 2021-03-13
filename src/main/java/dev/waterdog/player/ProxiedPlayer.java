@@ -606,7 +606,7 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public InetSocketAddress getAddress() {
-        return this.upstream == null? null : this.upstream.getAddress();
+        return this.upstream == null ? null : this.upstream.getAddress();
     }
 
     @Override

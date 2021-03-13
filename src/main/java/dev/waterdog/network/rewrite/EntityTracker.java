@@ -48,6 +48,9 @@ public class EntityTracker implements BedrockPacketHandler {
     @Override
     public boolean handle(AddEntityPacket packet) {
         this.player.getEntities().add(packet.getRuntimeEntityId());
+        for (EntityLinkData entityLink : packet.getEntityLinks()) {
+            this.handleEntityLink(entityLink);
+        }
         return false;
     }
 
@@ -84,12 +87,15 @@ public class EntityTracker implements BedrockPacketHandler {
 
     @Override
     public boolean handle(SetEntityLinkPacket packet) {
-        EntityLinkData entityLink = packet.getEntityLink();
+        this.handleEntityLink(packet.getEntityLink());
+        return false;
+    }
+
+    private void handleEntityLink(EntityLinkData entityLink) {
         if (entityLink.getType() == EntityLinkData.Type.REMOVE) {
             this.player.getEntityLinks().remove(entityLink.getFrom());
         } else {
             this.player.getEntityLinks().put(entityLink.getFrom(), entityLink.getTo());
         }
-        return false;
     }
 }

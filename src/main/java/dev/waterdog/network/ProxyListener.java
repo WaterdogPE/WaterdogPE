@@ -19,7 +19,6 @@ import com.nukkitx.protocol.bedrock.BedrockPong;
 import com.nukkitx.protocol.bedrock.BedrockServerEventHandler;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import dev.waterdog.ProxyServer;
-import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.query.QueryHandler;
 import dev.waterdog.utils.ProxyConfig;
 import io.netty.buffer.ByteBuf;
@@ -60,7 +59,7 @@ public class ProxyListener implements BedrockServerEventHandler {
                 "WaterdogPE Proxy",
                 "Survival",
                 "MCPE",
-                ProtocolConstants.getLatestProtocol().getCodec().getMinecraftVersion(),
+                ProtocolConstants.getLatestProtocol().getMinecraftVersion(),
                 this.proxy.getPlayerManager().getPlayers().values(),
                 config.getMaxPlayerCount(),
                 address
@@ -91,7 +90,7 @@ public class ProxyListener implements BedrockServerEventHandler {
     @Override
     public void onUnhandledDatagram(ChannelHandlerContext ctx, DatagramPacket packet) {
         ByteBuf buf = packet.content();
-        if (!buf.isReadable(3)) {
+        if (!buf.isReadable(8)) {
             return;
         }
 

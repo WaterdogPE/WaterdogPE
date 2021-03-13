@@ -53,8 +53,7 @@ public class ServerConnection {
      * @param force if block thread till everything is closed.
      */
     public void disconnect(boolean force) {
-        // TODO: client.close(force) once it appear in protocol lib
-        this.client.close();
+        this.client.close(force);
     }
 
     public ServerInfo getInfo() {

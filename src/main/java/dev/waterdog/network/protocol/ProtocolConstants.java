@@ -29,8 +29,6 @@ import java.util.Map;
  */
 public class ProtocolConstants {
 
-    public static final int DEFAULT_RAKNET_VER = 10;
-
     public static final Object2ObjectArrayMap<Integer, ProtocolVersion> protocolMap = new Object2ObjectArrayMap<>();
     public static final Map<ProtocolVersion, BedrockCodec> protocol2CodecMap = new EnumMap<>(ProtocolVersion.class);
 

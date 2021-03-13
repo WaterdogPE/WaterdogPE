@@ -17,13 +17,14 @@ package dev.waterdog.network;
 
 import com.nukkitx.network.raknet.RakNetPong;
 import dev.waterdog.ProxyServer;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSets;
 import lombok.ToString;
 import dev.waterdog.network.protocol.ProtocolConstants;
 import dev.waterdog.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -40,15 +41,12 @@ public class ServerInfo {
     private final InetSocketAddress address;
     private final InetSocketAddress publicAddress;
 
-    private final Set<ProxiedPlayer> players = Collections.synchronizedSet(new HashSet<>());
+    private final Set<ProxiedPlayer> players = ObjectSets.synchronize(new ObjectOpenHashSet<>());
 
     public ServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {
         this.serverName = serverName;
         this.address = address;
-        if (publicAddress == null) {
-            publicAddress = address;
-        }
-        this.publicAddress = publicAddress;
+        this.publicAddress = publicAddress == null ? address : publicAddress;
     }
 
     /**
@@ -72,7 +70,7 @@ public class ServerInfo {
     }
 
     public Set<ProxiedPlayer> getPlayers() {
-        return this.players;
+        return Collections.unmodifiableSet(this.players);
     }
 
     public String getServerName() {

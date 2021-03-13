@@ -20,6 +20,7 @@ import dev.waterdog.utils.exceptions.EventException;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -33,7 +34,7 @@ public class EventHandler {
     private final EventManager eventManager;
     private final Class<? extends Event> eventClass;
 
-    private final EnumMap<EventPriority, ArrayList<Consumer<Event>>> priority2handlers = new EnumMap<>(EventPriority.class);
+    private final Map<EventPriority, ArrayList<Consumer<Event>>> priority2handlers = new EnumMap<>(EventPriority.class);
 
     public EventHandler(Class<? extends Event> eventClass, EventManager eventManager) {
         this.eventClass = eventClass;
