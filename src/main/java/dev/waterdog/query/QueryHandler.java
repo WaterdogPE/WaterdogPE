@@ -17,7 +17,6 @@ package dev.waterdog.query;
 
 import dev.waterdog.ProxyServer;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -37,9 +36,11 @@ public class QueryHandler {
     public static final byte[] QUERY_SIGNATURE = new byte[]{(byte) 0xFE, (byte) 0xFD};
     public static final byte[] LONG_RESPONSE_PADDING_TOP = new byte[]{115, 112, 108, 105, 116, 110, 117, 109, 0, -128, 0};
     public static final byte[] LONG_RESPONSE_PADDING_BOTTOM = new byte[]{1, 112, 108, 97, 121, 101, 114, 95, 0, 0};
-    public static final int HANDSHAKE = 0x09;
-    public static final short STATISTICS = 0x00;
+
+    public static final int PACKET_HANDSHAKE = 0x09;
+    public static final short PACKET_STATISTICS = 0x00;
     private static final String GAME_ID = "MINECRAFTPE";
+
     private final ProxyServer proxy;
     private final InetSocketAddress bindAddress;
 
@@ -66,9 +67,9 @@ public class QueryHandler {
         short packetId = packet.readUnsignedByte();
         int sessionId = packet.readInt();
 
-        if (packetId == HANDSHAKE) {
-            ByteBuf reply = ByteBufAllocator.DEFAULT.ioBuffer(10);
-            reply.writeByte(HANDSHAKE);
+        if (packetId == PACKET_HANDSHAKE) {
+            ByteBuf reply = ctx.alloc().ioBuffer(10);
+            reply.writeByte(PACKET_HANDSHAKE);
             reply.writeInt(sessionId);
 
             int token = ThreadLocalRandom.current().nextInt();
@@ -78,15 +79,15 @@ public class QueryHandler {
             return;
         }
 
-        if (packetId == STATISTICS) {
+        if (packetId == PACKET_STATISTICS && packet.isReadable(4)) {
             QuerySession session = this.querySessions.remove(address.getAddress());
             int token = packet.readInt();
             if (session == null || session.token != token) {
                 return;
             }
 
-            ByteBuf reply = ByteBufAllocator.DEFAULT.ioBuffer(64);
-            reply.writeByte(STATISTICS);
+            ByteBuf reply = ctx.alloc().ioBuffer(64);
+            reply.writeByte(PACKET_STATISTICS);
             reply.writeInt(sessionId);
 
             this.writeData(address, packet.readableBytes() == 8, reply);

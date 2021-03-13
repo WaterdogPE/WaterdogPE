@@ -64,11 +64,11 @@ public class ProxiedPlayer implements CommandSender {
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
     private final RewriteMaps rewriteMaps;
-    private final LongSet entities = new LongOpenHashSet();
-    private final LongSet bossbars = new LongOpenHashSet();
-    private final ObjectSet<UUID> players = new ObjectOpenHashSet<>();
-    private final ObjectSet<String> scoreboards = new ObjectOpenHashSet<>();
-    private final Long2LongMap entityLinks = new Long2LongOpenHashMap();
+    private final LongSet entities = LongSets.synchronize(new LongOpenHashSet());
+    private final LongSet bossbars = LongSets.synchronize(new LongOpenHashSet());
+    private final ObjectSet<UUID> players = ObjectSets.synchronize(new ObjectOpenHashSet<>());
+    private final ObjectSet<String> scoreboards = ObjectSets.synchronize(new ObjectOpenHashSet<>());
+    private final Long2LongMap entityLinks = Long2LongMaps.synchronize(new Long2LongOpenHashMap());
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private ServerConnection serverConnection;
     private PendingConnection pendingConnection;
@@ -606,7 +606,7 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public InetSocketAddress getAddress() {
-        return this.upstream == null? null : this.upstream.getAddress();
+        return this.upstream == null ? null : this.upstream.getAddress();
     }
 
     @Override

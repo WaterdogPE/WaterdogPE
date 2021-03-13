@@ -45,9 +45,8 @@ public class ConsoleCommandSender implements CommandSender {
 
     @Override
     public void sendMessage(String message) {
-        MainLogger logger = ProxyServer.getInstance().getLogger();
         for (String line : message.trim().split("\n")) {
-            logger.info(line);
+            this.proxy.getLogger().info(line);
         }
     }
 

@@ -89,9 +89,9 @@ public class ProxyServer {
         this.pluginPath = Paths.get(pluginPath);
         this.packsPath = this.dataPath.resolve("packs");
 
-        if (!new File(pluginPath).exists()) {
+        if (!this.pluginPath.toFile().exists()) {
             this.logger.info("Created Plugin Folder at " + this.pluginPath.toString());
-            new File(pluginPath).mkdirs();
+            this.pluginPath.toFile().mkdirs();
         }
 
         if (!this.packsPath.toFile().exists()) {
@@ -106,8 +106,9 @@ public class ProxyServer {
         this.configurationManager = new ConfigurationManager(this);
         this.configurationManager.loadProxyConfig();
 
-        if(!this.getConfiguration().isIpv6Enabled()){
-            System.setProperty("java.net.preferIPv4Stack", "true");//I dont know why, but it was here before so better not remove it
+        if(!this.getConfiguration().isIpv6Enabled()) {
+            // Some devices and networks may not support IPv6
+            System.setProperty("java.net.preferIPv4Stack", "true");
         }
 
         if (this.getConfiguration().isDebug()) {
@@ -229,12 +230,11 @@ public class ProxyServer {
         String[] args = message.split(" ");
         String[] shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
         DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs);
-
         this.eventManager.callEvent(event);
+
         if (event.isCancelled()) {
             return false;
         }
-
         return this.commandMap.handleCommand(sender, args[0], shiftedArgs);
     }
 

@@ -57,9 +57,7 @@ public class EventManager {
      */
     public <T extends Event> void subscribe(Class<T> event, Consumer<T> handler, EventPriority priority) {
         EventHandler eventHandler = this.handlerMap.computeIfAbsent(event, e -> new EventHandler(event, this));
-
-        Consumer<Event> func = (Consumer<Event>) handler;
-        eventHandler.subscribe(func, priority);
+        eventHandler.subscribe((Consumer<Event>) handler, priority);
     }
 
     /**

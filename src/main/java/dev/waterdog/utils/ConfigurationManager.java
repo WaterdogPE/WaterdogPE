@@ -17,6 +17,7 @@ package dev.waterdog.utils;
 
 import dev.waterdog.ProxyServer;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 
@@ -32,7 +33,8 @@ public class ConfigurationManager {
         YAML(2),
         UNKNOWN(-1);
 
-        @Getter private final int id;
+        @Getter
+        private final int id;
 
         public static Type getTypeById(int id) {
             return Arrays.stream(Type.values()).filter(type -> type.getId() == id).findFirst().orElse(Type.UNKNOWN);
