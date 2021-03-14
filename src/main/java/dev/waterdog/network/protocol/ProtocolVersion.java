@@ -55,10 +55,6 @@ public enum ProtocolVersion {
     private final BedrockPacketCodec defaultCodec;
     private BedrockCodec bedrockCodec;
 
-    ProtocolVersion(int protocol, BedrockPacketCodec codec) {
-        this(protocol, codec, ProtocolConstants.DEFAULT_RAKNET_VER);
-    }
-
     ProtocolVersion(int protocol, BedrockPacketCodec codec, int raknetVersion) {
         this.protocol = protocol;
         this.defaultCodec = codec;

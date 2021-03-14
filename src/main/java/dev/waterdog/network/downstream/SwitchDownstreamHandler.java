@@ -99,16 +99,25 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public boolean handle(PlayStatusPacket packet) {
+        String message;
         switch (packet.getStatus()) {
             case LOGIN_SUCCESS:
                 throw CancelSignalException.CANCEL;
             case LOGIN_FAILED_CLIENT_OLD:
             case LOGIN_FAILED_SERVER_OLD:
+                message = "Incompatible version";
+                break;
             case FAILED_SERVER_FULL_SUB_CLIENT:
-                //TODO: handle error
-                throw CancelSignalException.CANCEL;
+                message = "Server is full";
+                break;
+            default:
+                return false;
         }
-        return false;
+
+        this.client.close();
+        this.player.setPendingConnection(null);
+        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), message));
+        throw CancelSignalException.CANCEL;
     }
 
     @Override

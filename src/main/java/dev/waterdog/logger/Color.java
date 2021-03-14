@@ -87,7 +87,9 @@ public enum Color {
 
     public Ansi getAnsi() {
         Ansi ansi = (attribute == null) ? Ansi.ansi().a(Ansi.Attribute.RESET) : Ansi.ansi().a(this.attribute);
-        if (this.color != null) ansi = ansi.fg(this.color);
+        if (this.color != null) {
+            ansi = ansi.fg(this.color);
+        }
         return this.bold ? ansi.bold() : ansi;
     }
 }
