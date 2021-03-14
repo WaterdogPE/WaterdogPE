@@ -37,7 +37,7 @@ public class QueryHandler {
     public static final byte[] LONG_RESPONSE_PADDING_TOP = new byte[]{115, 112, 108, 105, 116, 110, 117, 109, 0, -128, 0};
     public static final byte[] LONG_RESPONSE_PADDING_BOTTOM = new byte[]{1, 112, 108, 97, 121, 101, 114, 95, 0, 0};
 
-    public static final int PACKET_HANDSHAKE = 0x09;
+    public static final short PACKET_HANDSHAKE = 0x09;
     public static final short PACKET_STATISTICS = 0x00;
     private static final String GAME_ID = "MINECRAFTPE";
 

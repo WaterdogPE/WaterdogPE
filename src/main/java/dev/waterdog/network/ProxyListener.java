@@ -90,7 +90,7 @@ public class ProxyListener implements BedrockServerEventHandler {
     @Override
     public void onUnhandledDatagram(ChannelHandlerContext ctx, DatagramPacket packet) {
         ByteBuf buf = packet.content();
-        if (!buf.isReadable(8)) {
+        if (!buf.isReadable(7)) {
             return;
         }
 
