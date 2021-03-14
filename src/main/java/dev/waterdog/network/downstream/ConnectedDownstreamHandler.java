@@ -62,13 +62,14 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
         if (!this.player.getProxy().getConfiguration().injectCommands()) {
             return false;
         }
+        int sizeBefore = packet.getCommands().size();
 
         for (Command command : this.player.getProxy().getCommandMap().getCommands().values()) {
             if (command.getPermission() == null || this.player.hasPermission(command.getPermission())) {
                 packet.getCommands().add(command.getData());
             }
         }
-        return true;
+        return packet.getCommands().size() > sizeBefore;
     }
 
     @Override
