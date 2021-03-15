@@ -16,6 +16,7 @@
 package dev.waterdog.command;
 
 import com.nukkitx.protocol.bedrock.data.command.CommandData;
+import com.nukkitx.protocol.bedrock.data.command.CommandParam;
 import com.nukkitx.protocol.bedrock.data.command.CommandParamData;
 import com.nukkitx.protocol.bedrock.data.command.CommandParamType;
 
@@ -81,7 +82,7 @@ public abstract class Command {
 
     public CommandData craftNetwork() {
         CommandParamData[][] parameterData = new CommandParamData[][]{{
-                new CommandParamData(this.name, true, null, CommandParamType.TEXT, null, Collections.emptyList())
+                new CommandParamData(this.name, true, null, CommandParam.TEXT, null, Collections.emptyList())
         }};
         return new CommandData(this.name, this.getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
     }

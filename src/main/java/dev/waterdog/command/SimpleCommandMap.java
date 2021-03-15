@@ -16,6 +16,7 @@
 package dev.waterdog.command;
 
 import dev.waterdog.ProxyServer;
+import dev.waterdog.utils.types.TextContainer;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import dev.waterdog.utils.types.TranslationContainer;
@@ -95,7 +96,7 @@ public class SimpleCommandMap implements CommandMap {
     private void execute(Command command, CommandSender sender, String alias, String[] args) {
         boolean permission = sender.hasPermission(command.getPermission());
         if (!permission) {
-            sender.sendMessage(command.getPermissionMessage());
+            sender.sendMessage(new TextContainer(command.getPermissionMessage(), command.getName(), command.getPermission()));
             return;
         }
 

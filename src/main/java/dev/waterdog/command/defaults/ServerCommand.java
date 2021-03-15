@@ -16,6 +16,7 @@
 package dev.waterdog.command.defaults;
 
 import com.nukkitx.protocol.bedrock.data.command.CommandData;
+import com.nukkitx.protocol.bedrock.data.command.CommandParam;
 import com.nukkitx.protocol.bedrock.data.command.CommandParamData;
 import com.nukkitx.protocol.bedrock.data.command.CommandParamType;
 import dev.waterdog.command.Command;
@@ -68,8 +69,8 @@ public class ServerCommand extends Command {
     @Override
     public CommandData craftNetwork() {
         CommandParamData[][] parameterData = new CommandParamData[][]{{
-                new CommandParamData("server", false, null, CommandParamType.TEXT, null, Collections.emptyList()),
-                new CommandParamData("player", true, null, CommandParamType.TARGET, null, Collections.emptyList())
+                new CommandParamData("server", false, null, CommandParam.TEXT, null, Collections.emptyList()),
+                new CommandParamData("player", true, null, CommandParam.TARGET, null, Collections.emptyList())
         }};
         return new CommandData(this.getName(), this.getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
     }
