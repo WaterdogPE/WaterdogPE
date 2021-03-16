@@ -103,8 +103,8 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
 
             player.initPlayer();
         } catch (Exception e) {
-            session.disconnect("disconnectionScreen.internalError.cantConnect");
-            throw new RuntimeException("Unable to complete login", e);
+            session.disconnect("Login failed: "+e.getMessage());
+            this.proxy.getLogger().error("[" + session.getAddress() + "] Unable to complete login", e);
         }
         return true;
     }

@@ -50,6 +50,10 @@ public class PlayerManager {
     public void subscribePermissions(ProxiedPlayer player) {
         this.proxy.getConfiguration().getDefaultPermissions().forEach(perm -> player.addPermission(new Permission(perm, true)));
         List<String> permissions = this.proxy.getConfiguration().getPlayerPermissions().get(player.getName());
+        if (permissions == null) {
+            return;
+        }
+
         for (String perm : permissions) {
             player.addPermission(new Permission(perm, true));
         }
