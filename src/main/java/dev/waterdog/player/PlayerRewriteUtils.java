@@ -16,6 +16,7 @@
 package dev.waterdog.player;
 
 import com.google.common.base.Preconditions;
+import com.nukkitx.math.vector.Vector2f;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.network.VarInts;
@@ -212,14 +213,14 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
-    public static void injectPosition(BedrockSession session, Vector3f position, Vector3f rotation, long runtimeId){
+    public static void injectPosition(BedrockSession session, Vector3f position, Vector2f rotation, long runtimeId){
         if (session == null || session.isClosed()){
             return;
         }
         MovePlayerPacket packet = new MovePlayerPacket();
         packet.setPosition(position);
         packet.setRuntimeEntityId(runtimeId);
-        packet.setRotation(rotation);
+        packet.setRotation(rotation.toVector3(rotation.getY()));
         packet.setMode(MovePlayerPacket.Mode.RESPAWN);
         session.sendPacket(packet);
     }
