@@ -20,11 +20,11 @@ import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
+import dev.waterdog.player.ProxiedPlayer;
 import dev.waterdog.utils.exceptions.CancelSignalException;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import dev.waterdog.player.ProxiedPlayer;
 
 import java.util.Collection;
 import java.util.List;
@@ -106,7 +106,7 @@ public abstract class ProxyBatchBridge implements BatchHandler {
         return changed;
     }
 
-    public boolean handleUnknownPacket(UnknownPacket packet){
+    public boolean handleUnknownPacket(UnknownPacket packet) {
         return false;
     }
 }

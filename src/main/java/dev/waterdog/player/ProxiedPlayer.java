@@ -17,8 +17,13 @@ package dev.waterdog.player;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.nukkitx.protocol.bedrock.*;
-import com.nukkitx.protocol.bedrock.packet.*;
+import com.nukkitx.protocol.bedrock.BedrockClient;
+import com.nukkitx.protocol.bedrock.BedrockPacket;
+import com.nukkitx.protocol.bedrock.BedrockServerSession;
+import com.nukkitx.protocol.bedrock.packet.ResourcePacksInfoPacket;
+import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
+import com.nukkitx.protocol.bedrock.packet.TextPacket;
+import com.nukkitx.protocol.bedrock.packet.TransferPacket;
 import dev.waterdog.ProxyServer;
 import dev.waterdog.command.CommandSender;
 import dev.waterdog.event.defaults.*;
@@ -45,8 +50,6 @@ import it.unimi.dsi.fastutil.objects.*;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -193,7 +196,7 @@ public class ProxiedPlayer implements CommandSender {
 
             // Close old pending connection
             oldPendingConnection.close();
-            this.getLogger().debug("Discarding pending connection for "+this.getName()+"! Tried to join "+oldPendingConnection.getInfo().getServerName());
+            this.getLogger().debug("Discarding pending connection for " + this.getName() + "! Tried to join " + oldPendingConnection.getInfo().getServerName());
         }
 
         PendingConnection pendingConnection = new PendingConnection(targetServer);
@@ -203,7 +206,7 @@ public class ProxiedPlayer implements CommandSender {
         future.thenAccept(client -> client.connect(targetServer.getAddress()).whenComplete((downstream, error) -> {
             if (this.disconnected.get()) {
                 client.close();
-                this.getLogger().debug("Discarding downstream connection: Player " + this.getName() +" disconnected!");
+                this.getLogger().debug("Discarding downstream connection: Player " + this.getName() + " disconnected!");
                 return;
             }
 
@@ -282,7 +285,7 @@ public class ProxiedPlayer implements CommandSender {
      * Calls the PlayerDisconnectEvent and disconnects the player from downstream.
      * Kicks the player with the provided reason and closes the connection
      *
-     * @param reason The disconnect reason the player will see on his disconnect screen (Supports Color Codes)
+     * @param reason     The disconnect reason the player will see on his disconnect screen (Supports Color Codes)
      * @param forceClose whatever force close connections
      */
     public void disconnect(String reason, boolean forceClose) {
@@ -316,7 +319,7 @@ public class ProxiedPlayer implements CommandSender {
      * Send player to fallback server if any exists.
      *
      * @param oldServer server from which was player disconnected.
-     * @param reason disconnected reason.
+     * @param reason    disconnected reason.
      * @return if connection to downstream was successful.
      */
     public boolean sendToFallback(ServerInfo oldServer, String reason) {

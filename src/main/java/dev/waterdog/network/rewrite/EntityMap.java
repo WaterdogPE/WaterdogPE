@@ -19,8 +19,8 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
-import dev.waterdog.player.PlayerRewriteUtils;
 import dev.waterdog.network.rewrite.types.RewriteData;
+import dev.waterdog.player.PlayerRewriteUtils;
 import dev.waterdog.player.ProxiedPlayer;
 
 import java.util.ListIterator;
@@ -114,11 +114,11 @@ public class EntityMap implements BedrockPacketHandler {
         packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
 
         ListIterator<EntityLinkData> iterator = packet.getEntityLinks().listIterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             EntityLinkData entityLink = iterator.next();
             long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
             long to = PlayerRewriteUtils.rewriteId(entityLink.getTo(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
-            if (entityLink.getFrom() != from || entityLink.getTo() != to){
+            if (entityLink.getFrom() != from || entityLink.getTo() != to) {
                 iterator.set(new EntityLinkData(from, to, entityLink.getType(), entityLink.isImmediate(), entityLink.isRiderInitiated()));
             }
         }
@@ -131,11 +131,11 @@ public class EntityMap implements BedrockPacketHandler {
         packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
 
         ListIterator<EntityLinkData> iterator = packet.getEntityLinks().listIterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             EntityLinkData entityLink = iterator.next();
             long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
             long to = PlayerRewriteUtils.rewriteId(entityLink.getTo(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
-            if (entityLink.getFrom() != from || entityLink.getTo() != to){
+            if (entityLink.getFrom() != from || entityLink.getTo() != to) {
                 iterator.set(new EntityLinkData(from, to, entityLink.getType(), entityLink.isImmediate(), entityLink.isRiderInitiated()));
             }
         }
@@ -213,7 +213,7 @@ public class EntityMap implements BedrockPacketHandler {
 
     @Override
     public boolean handle(PlayerListPacket packet) {
-        if (packet.getAction() != PlayerListPacket.Action.ADD){
+        if (packet.getAction() != PlayerListPacket.Action.ADD) {
             return false;
         }
 

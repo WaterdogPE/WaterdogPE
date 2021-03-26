@@ -21,8 +21,8 @@ import dev.waterdog.ProxyServer;
 import dev.waterdog.event.defaults.PlayerChatEvent;
 import dev.waterdog.event.defaults.PlayerResourcePackApplyEvent;
 import dev.waterdog.packs.PackManager;
-import dev.waterdog.utils.exceptions.CancelSignalException;
 import dev.waterdog.player.ProxiedPlayer;
+import dev.waterdog.utils.exceptions.CancelSignalException;
 
 /**
  * Main handler for handling packets received from upstream.

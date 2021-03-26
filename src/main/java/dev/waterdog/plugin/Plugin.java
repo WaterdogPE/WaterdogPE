@@ -125,7 +125,7 @@ public abstract class Plugin {
         }
 
         try (InputStream resource = this.getResourceFile(filename)) {
-            if (resource == null){
+            if (resource == null) {
                 return false;
             }
             File outFolder = file.getParentFile();

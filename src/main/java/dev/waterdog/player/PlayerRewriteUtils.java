@@ -37,6 +37,7 @@ import java.util.UUID;
 public class PlayerRewriteUtils {
 
     public static final RequestChunkRadiusPacket defaultChunkRadius = new RequestChunkRadiusPacket();
+
     static {
         defaultChunkRadius.setRadius(8);
     }
@@ -46,7 +47,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn, int radius) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         NetworkChunkPublisherUpdatePacket packet = new NetworkChunkPublisherUpdatePacket();
@@ -56,7 +57,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectGameMode(BedrockSession session, GameType gameMode) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         SetPlayerGameTypePacket packet = new SetPlayerGameTypePacket();
@@ -65,7 +66,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectGameRules(BedrockSession session, List<GameRuleData<?>> gameRules) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         GameRulesChangedPacket packet = new GameRulesChangedPacket();
@@ -74,7 +75,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectClearWeather(BedrockSession session) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         LevelEventPacket stopRain = new LevelEventPacket();
@@ -91,7 +92,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectSetDifficulty(BedrockSession session, int difficulty) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         SetDifficultyPacket packet = new SetDifficultyPacket();
@@ -100,7 +101,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectRemoveEntityLink(BedrockSession session, long vehicleId, long riderId) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         SetEntityLinkPacket packet = new SetEntityLinkPacket();
@@ -109,7 +110,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectRemoveEntity(BedrockSession session, long runtimeId) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         RemoveEntityPacket packet = new RemoveEntityPacket();
@@ -118,7 +119,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectRemoveAllPlayers(BedrockSession session, Collection<UUID> playerList) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         PlayerListPacket packet = new PlayerListPacket();
@@ -132,7 +133,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectRemoveAllEffects(BedrockSession session, long runtimeId) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         for (int i = 0; i < 28; i++) {
@@ -155,7 +156,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectRemoveObjective(BedrockSession session, String objectiveId) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         RemoveObjectivePacket packet = new RemoveObjectivePacket();
@@ -164,7 +165,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectRemoveBossbar(BedrockSession session, long bossbarId) {
-        if (session == null || session.isClosed()){
+        if (session == null || session.isClosed()) {
             return;
         }
         BossEventPacket packet = new BossEventPacket();
@@ -173,8 +174,8 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
-    public static void injectPosition(BedrockSession session, Vector3f position, Vector3f rotation, long runtimeId){
-        if (session == null || session.isClosed()){
+    public static void injectPosition(BedrockSession session, Vector3f position, Vector3f rotation, long runtimeId) {
+        if (session == null || session.isClosed()) {
             return;
         }
         MovePlayerPacket packet = new MovePlayerPacket();

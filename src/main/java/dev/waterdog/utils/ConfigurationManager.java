@@ -17,7 +17,6 @@ package dev.waterdog.utils;
 
 import dev.waterdog.ProxyServer;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 
@@ -27,24 +26,9 @@ import java.util.Arrays;
 
 public class ConfigurationManager {
 
-    @AllArgsConstructor
-    public enum Type {
-        JSON(1),
-        YAML(2),
-        UNKNOWN(-1);
-
-        @Getter
-        private final int id;
-
-        public static Type getTypeById(int id) {
-            return Arrays.stream(Type.values()).filter(type -> type.getId() == id).findFirst().orElse(Type.UNKNOWN);
-        }
-    }
-
     private final ProxyServer proxy;
     private ProxyConfig proxyConfig;
     private LangConfig langConfig;
-
     public ConfigurationManager(ProxyServer proxy) {
         this.proxy = proxy;
     }
@@ -95,5 +79,19 @@ public class ConfigurationManager {
 
     public LangConfig getLangConfig() {
         return this.langConfig;
+    }
+
+    @AllArgsConstructor
+    public enum Type {
+        JSON(1),
+        YAML(2),
+        UNKNOWN(-1);
+
+        @Getter
+        private final int id;
+
+        public static Type getTypeById(int id) {
+            return Arrays.stream(Type.values()).filter(type -> type.getId() == id).findFirst().orElse(Type.UNKNOWN);
+        }
     }
 }

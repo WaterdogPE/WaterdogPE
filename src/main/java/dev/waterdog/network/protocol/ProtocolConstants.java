@@ -33,7 +33,7 @@ public class ProtocolConstants {
     public static final Map<ProtocolVersion, BedrockCodec> protocol2CodecMap = new EnumMap<>(ProtocolVersion.class);
 
     static {
-        for (ProtocolVersion protocol : ProtocolVersion.values()){
+        for (ProtocolVersion protocol : ProtocolVersion.values()) {
             protocolMap.put(protocol.getProtocol(), protocol);
         }
     }
@@ -50,14 +50,14 @@ public class ProtocolConstants {
         return protocolMap.get(VersionInfo.LATEST_PROTOCOL_VERSION);
     }
 
-    public static BedrockCodec getBedrockCodec(ProtocolVersion protocol){
+    public static BedrockCodec getBedrockCodec(ProtocolVersion protocol) {
         return protocol2CodecMap.get(protocol);
     }
 
     /**
      * Here we register customized, performance improved codecs for supported game versions.
      */
-    public static void registerCodecs(){
+    public static void registerCodecs() {
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_8, new BedrockCodec313());
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_9, new BedrockCodec332());
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_10, new BedrockCodec340());
@@ -75,12 +75,13 @@ public class ProtocolConstants {
 
     /**
      * Register BedrockCodec for specific protocol version.
-     * @param protocol protocol version matched for instance of BedrockCodec.
+     *
+     * @param protocol     protocol version matched for instance of BedrockCodec.
      * @param bedrockCodec must match same protocol version as protocol or exception will be thrown.
      * @return if registration was not canceled by plugin.
      */
-    protected static boolean registerCodec(ProtocolVersion protocol, BedrockCodec bedrockCodec){
-        Preconditions.checkArgument(!protocol2CodecMap.containsKey(protocol), "BedrockCodec "+protocol+" is registered!");
+    protected static boolean registerCodec(ProtocolVersion protocol, BedrockCodec bedrockCodec) {
+        Preconditions.checkArgument(!protocol2CodecMap.containsKey(protocol), "BedrockCodec " + protocol + " is registered!");
         Preconditions.checkArgument(protocol == bedrockCodec.getProtocol(), "Protocol versions does not match!");
 
         ProxyServer proxy = ProxyServer.getInstance();
@@ -91,7 +92,7 @@ public class ProtocolConstants {
 
         protocol.setBedrockCodec(bedrockCodec);
         protocol2CodecMap.put(protocol, bedrockCodec);
-        proxy.getLogger().debug("Registered custom BedrockCodec "+protocol);
+        proxy.getLogger().debug("Registered custom BedrockCodec " + protocol);
         return true;
     }
 }

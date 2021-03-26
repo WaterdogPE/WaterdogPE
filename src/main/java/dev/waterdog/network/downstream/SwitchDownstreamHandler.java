@@ -29,12 +29,12 @@ import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.ServerConnection;
 import dev.waterdog.network.session.SessionInjections;
 import dev.waterdog.player.PlayerRewriteUtils;
+import dev.waterdog.player.ProxiedPlayer;
 import dev.waterdog.utils.exceptions.CancelSignalException;
 import dev.waterdog.utils.types.TranslationContainer;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import dev.waterdog.player.ProxiedPlayer;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -128,10 +128,10 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setRotation(packet.getRotation());
         rewriteData.parseItemIds(packet.getItemEntries());
 
-        if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()){
+        if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()) {
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
             rewriteData.setBlockPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
-        }else {
+        } else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
         }
 

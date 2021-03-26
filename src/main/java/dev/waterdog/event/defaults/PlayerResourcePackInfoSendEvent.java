@@ -33,11 +33,11 @@ public class PlayerResourcePackInfoSendEvent extends PlayerEvent implements Canc
         this.packet = packet;
     }
 
-    public void setPacket(ResourcePacksInfoPacket packet) {
-        this.packet = packet;
-    }
-
     public ResourcePacksInfoPacket getPacket() {
         return this.packet;
+    }
+
+    public void setPacket(ResourcePacksInfoPacket packet) {
+        this.packet = packet;
     }
 }

@@ -20,13 +20,14 @@ import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
+import dev.waterdog.player.ProxiedPlayer;
 import dev.waterdog.utils.exceptions.CancelSignalException;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import dev.waterdog.player.ProxiedPlayer;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TransferBatchBridge extends ProxyBatchBridge {
@@ -44,7 +45,7 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         super.handle(session, buf, packets);
 
         // Send queued packets to upstream if new bridge is used
-        if (this.hasStartGame.get() && (session.getBatchHandler() instanceof DownstreamBridge) && !this.packetQueue.isEmpty()){
+        if (this.hasStartGame.get() && (session.getBatchHandler() instanceof DownstreamBridge) && !this.packetQueue.isEmpty()) {
             this.session.sendWrapped(this.packetQueue, this.session.isEncrypted());
             this.packetQueue.clear();
         }
@@ -53,14 +54,14 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     @Override
     public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
         boolean isStartGame = packet.getPacketType() == BedrockPacketType.START_GAME;
-        if (isStartGame){
+        if (isStartGame) {
             this.hasStartGame.set(true);
         }
         super.handlePacket(packet, handler);
 
         // Packets after StartGamePacket should be queued
         // Ignore LevelEvent packet to prevent massive amounts of packets in queue
-        if (!isStartGame && this.hasStartGame.get() && packet.getPacketType() != BedrockPacketType.LEVEL_EVENT){
+        if (!isStartGame && this.hasStartGame.get() && packet.getPacketType() != BedrockPacketType.LEVEL_EVENT) {
             this.packetQueue.add(ReferenceCountUtil.retain(packet));
         }
         throw CancelSignalException.CANCEL;

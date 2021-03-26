@@ -30,8 +30,8 @@ import java.util.concurrent.CompletableFuture;
  */
 public abstract class Event {
 
-    private boolean cancelled = false;
     private final List<CompletableFuture<Void>> completableFuture;
+    private boolean cancelled = false;
 
     public Event() {
         this.completableFuture = this.isCompletable() ? Collections.synchronizedList(new ObjectArrayList<>()) : null;

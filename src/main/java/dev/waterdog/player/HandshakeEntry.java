@@ -19,9 +19,9 @@ import com.google.gson.JsonObject;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import dev.waterdog.ProxyServer;
+import dev.waterdog.event.defaults.PreClientDataSetEvent;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.session.LoginData;
-import dev.waterdog.event.defaults.PreClientDataSetEvent;
 
 import java.security.interfaces.ECPublicKey;
 import java.util.UUID;

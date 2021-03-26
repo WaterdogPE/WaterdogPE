@@ -53,6 +53,7 @@ public class LoginData {
     /**
      * Used to construct new login packet using this.clientData and this.extraData signed by this.keyPair.
      * This method should be called everytime client data is changed. Otherwise player will join to downstream using old data.
+     *
      * @return new LoginPacket.
      */
     public LoginPacket rebuildLoginPacket() {

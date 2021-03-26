@@ -20,11 +20,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import dev.waterdog.command.*;
-import dev.waterdog.packs.PackManager;
-import dev.waterdog.utils.types.*;
-import lombok.SneakyThrows;
-import net.cubespace.Yamler.Config.InvalidConfigurationException;
-import org.apache.logging.log4j.Level;
 import dev.waterdog.console.TerminalConsole;
 import dev.waterdog.event.EventManager;
 import dev.waterdog.event.defaults.DispatchCommandEvent;
@@ -33,6 +28,7 @@ import dev.waterdog.network.ProxyListener;
 import dev.waterdog.network.ServerInfo;
 import dev.waterdog.network.protocol.ProtocolConstants;
 import dev.waterdog.network.protocol.ProtocolVersion;
+import dev.waterdog.packs.PackManager;
 import dev.waterdog.player.PlayerManager;
 import dev.waterdog.player.ProxiedPlayer;
 import dev.waterdog.plugin.PluginManager;
@@ -42,8 +38,11 @@ import dev.waterdog.utils.ConfigurationManager;
 import dev.waterdog.utils.LangConfig;
 import dev.waterdog.utils.ProxyConfig;
 import dev.waterdog.utils.config.ServerList;
+import dev.waterdog.utils.types.*;
+import lombok.SneakyThrows;
+import net.cubespace.Yamler.Config.InvalidConfigurationException;
+import org.apache.logging.log4j.Level;
 
-import java.io.File;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,18 +65,14 @@ public class ProxyServer {
     private final PluginManager pluginManager;
     private final EventManager eventManager;
     private final PackManager packManager;
-
-    private BedrockServer bedrockServer;
     private final ServerList serverInfoMap;
-    private QueryHandler queryHandler;
-
-    private CommandMap commandMap;
     private final ConsoleCommandSender commandSender;
-
+    private final ScheduledExecutorService tickExecutor;
+    private BedrockServer bedrockServer;
+    private QueryHandler queryHandler;
+    private CommandMap commandMap;
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
-
-    private final ScheduledExecutorService tickExecutor;
     private ScheduledFuture<?> tickFuture;
     private boolean shutdown = false;
     private int currentTick = 0;
@@ -106,7 +101,7 @@ public class ProxyServer {
         this.configurationManager = new ConfigurationManager(this);
         this.configurationManager.loadProxyConfig();
 
-        if(!this.getConfiguration().isIpv6Enabled()) {
+        if (!this.getConfiguration().isIpv6Enabled()) {
             // Some devices and networks may not support IPv6
             System.setProperty("java.net.preferIPv4Stack", "true");
         }

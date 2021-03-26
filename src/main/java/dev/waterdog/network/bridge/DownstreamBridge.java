@@ -19,8 +19,8 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import dev.waterdog.network.rewrite.RewriteMaps;
-import dev.waterdog.utils.exceptions.CancelSignalException;
 import dev.waterdog.player.ProxiedPlayer;
+import dev.waterdog.utils.exceptions.CancelSignalException;
 
 public class DownstreamBridge extends ProxyBatchBridge {
 

@@ -16,13 +16,13 @@
 package dev.waterdog.utils;
 
 import dev.waterdog.ProxyServer;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.cubespace.Yamler.Config.YamlConfig;
-import net.cubespace.Yamler.Config.*;
 import dev.waterdog.utils.config.InetSocketAddressConverter;
 import dev.waterdog.utils.config.ServerInfoConverter;
 import dev.waterdog.utils.config.ServerList;
 import dev.waterdog.utils.config.ServerListConverter;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.cubespace.Yamler.Config.YamlConfig;
+import net.cubespace.Yamler.Config.*;
 
 import java.io.File;
 import java.net.InetSocketAddress;
@@ -221,12 +221,12 @@ public class ProxyConfig extends YamlConfig {
         return this.playerPermissions;
     }
 
-    public void setDefaultPermissions(List<String> defaultPermissions) {
-        this.defaultPermissions = defaultPermissions;
-    }
-
     public List<String> getDefaultPermissions() {
         return this.defaultPermissions;
+    }
+
+    public void setDefaultPermissions(List<String> defaultPermissions) {
+        this.defaultPermissions = defaultPermissions;
     }
 
     public int getUpstreamCompression() {
@@ -265,12 +265,12 @@ public class ProxyConfig extends YamlConfig {
         return this.forcePacks;
     }
 
-    public void setPackCacheSize(int packCacheSize) {
-        this.packCacheSize = packCacheSize;
-    }
-
     public int getPackCacheSize() {
         return this.packCacheSize;
+    }
+
+    public void setPackCacheSize(int packCacheSize) {
+        this.packCacheSize = packCacheSize;
     }
 
     public ServerList getServerInfoMap() {

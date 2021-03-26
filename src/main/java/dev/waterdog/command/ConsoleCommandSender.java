@@ -16,7 +16,6 @@
 package dev.waterdog.command;
 
 import dev.waterdog.ProxyServer;
-import dev.waterdog.logger.MainLogger;
 import dev.waterdog.utils.types.TextContainer;
 import dev.waterdog.utils.types.TranslationContainer;
 

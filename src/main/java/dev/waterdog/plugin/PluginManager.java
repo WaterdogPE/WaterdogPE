@@ -16,11 +16,11 @@
 package dev.waterdog.plugin;
 
 import dev.waterdog.ProxyServer;
+import dev.waterdog.utils.exceptions.PluginChangeStateException;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
-import dev.waterdog.utils.exceptions.PluginChangeStateException;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,13 +30,12 @@ import java.util.*;
 
 public class PluginManager {
 
+    protected final Object2ObjectMap<String, PluginClassLoader> pluginClassLoaders = new Object2ObjectArrayMap<>();
     private final ProxyServer proxy;
     private final PluginLoader pluginLoader;
-
     private final Yaml yamlLoader = new Yaml(new CustomClassLoaderConstructor(this.getClass().getClassLoader()));
     private final Object2ObjectMap<String, Plugin> pluginMap = new Object2ObjectArrayMap<>();
     private final Object2ObjectMap<String, Class<?>> cachedClasses = new Object2ObjectArrayMap<>();
-    protected final Object2ObjectMap<String, PluginClassLoader> pluginClassLoaders = new Object2ObjectArrayMap<>();
 
     public PluginManager(ProxyServer proxy) {
         this.proxy = proxy;
@@ -99,7 +98,7 @@ public class PluginManager {
         try {
             plugin.onStartup();
         } catch (Exception e) {
-            this.proxy.getLogger().error("failed to load plugin "+config.getName()+"!", e);
+            this.proxy.getLogger().error("failed to load plugin " + config.getName() + "!", e);
             return null;
         }
 
@@ -175,25 +174,25 @@ public class PluginManager {
         }
     }
 
-    public Class<?> getClassFromCache(String className){
+    public Class<?> getClassFromCache(String className) {
         Class<?> clazz = this.cachedClasses.get(className);
-        if (clazz != null){
+        if (clazz != null) {
             return clazz;
         }
 
-        for (PluginClassLoader loader : this.pluginClassLoaders.values()){
+        for (PluginClassLoader loader : this.pluginClassLoaders.values()) {
             try {
-                if ((clazz = loader.findClass(className, false)) != null){
+                if ((clazz = loader.findClass(className, false)) != null) {
                     return clazz;
                 }
-            }catch (ClassNotFoundException e){
+            } catch (ClassNotFoundException e) {
                 //ignore
             }
         }
         return null;
     }
 
-    protected void cacheClass(String className, Class<?> clazz){
+    protected void cacheClass(String className, Class<?> clazz) {
         this.cachedClasses.putIfAbsent(className, clazz);
     }
 

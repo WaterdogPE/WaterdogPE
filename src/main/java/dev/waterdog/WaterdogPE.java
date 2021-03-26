@@ -15,13 +15,13 @@
 
 package dev.waterdog;
 
+import dev.waterdog.logger.MainLogger;
 import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import dev.waterdog.logger.MainLogger;
 
 public class WaterdogPE {
 

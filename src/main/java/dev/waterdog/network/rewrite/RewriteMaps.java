@@ -36,11 +36,11 @@ public class RewriteMaps {
         return this.entityMap;
     }
 
-    public void setBlockMap(BlockMap blockMap) {
-        this.blockMap = blockMap;
-    }
-
     public BlockMap getBlockMap() {
         return this.blockMap;
+    }
+
+    public void setBlockMap(BlockMap blockMap) {
+        this.blockMap = blockMap;
     }
 }

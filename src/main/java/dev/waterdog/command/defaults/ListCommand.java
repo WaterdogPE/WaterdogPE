@@ -19,8 +19,8 @@ import dev.waterdog.command.Command;
 import dev.waterdog.command.CommandSender;
 import dev.waterdog.command.CommandSettings;
 import dev.waterdog.network.ServerInfo;
-import dev.waterdog.utils.types.TranslationContainer;
 import dev.waterdog.player.ProxiedPlayer;
+import dev.waterdog.utils.types.TranslationContainer;
 
 import java.util.ArrayList;
 import java.util.Comparator;

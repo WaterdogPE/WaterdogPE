@@ -16,6 +16,7 @@
 package dev.waterdog.plugin;
 
 import lombok.ToString;
+
 import java.util.List;
 
 @ToString
