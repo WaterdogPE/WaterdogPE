@@ -63,7 +63,6 @@ public class TransferCallback {
     public void onTransferComplete() {
         RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setTransferCallback(null);
-        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
 
         StopSoundPacket soundPacket = new StopSoundPacket();
         soundPacket.setSoundName("portal.travel");

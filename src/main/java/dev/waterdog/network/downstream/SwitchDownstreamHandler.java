@@ -170,6 +170,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
         PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
         PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
+        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
 
         /*
          * Client does not accept ChangeDimensionPacket when dimension is same as current dimension.
