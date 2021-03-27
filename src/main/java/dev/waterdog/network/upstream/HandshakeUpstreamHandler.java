@@ -27,9 +27,9 @@ import dev.waterdog.VersionInfo;
 import dev.waterdog.event.defaults.PlayerPreLoginEvent;
 import dev.waterdog.network.protocol.ProtocolConstants;
 import dev.waterdog.network.protocol.ProtocolVersion;
-import dev.waterdog.player.HandshakeUtils;
 import dev.waterdog.network.session.LoginData;
 import dev.waterdog.player.HandshakeEntry;
+import dev.waterdog.player.HandshakeUtils;
 import dev.waterdog.player.ProxiedPlayer;
 
 import java.io.ByteArrayInputStream;
@@ -69,7 +69,7 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
         session.setLogging(true);
 
         JsonObject certJson = (JsonObject) JsonParser.parseReader(new InputStreamReader(new ByteArrayInputStream(packet.getChainData().toByteArray())));
-        if (!certJson.has("chain") || !certJson.getAsJsonObject().get("chain").isJsonArray()){
+        if (!certJson.has("chain") || !certJson.getAsJsonObject().get("chain").isJsonArray()) {
             throw new RuntimeException("Certificate data is not valid");
         }
         JsonArray certChain = certJson.getAsJsonArray("chain");
@@ -77,12 +77,12 @@ public class HandshakeUpstreamHandler implements BedrockPacketHandler {
         try {
             HandshakeEntry handshakeEntry = HandshakeUtils.processHandshake(session, packet, certChain, protocol);
             if (!handshakeEntry.isXboxAuthed() && this.proxy.getConfiguration().isOnlineMode()) {
-                this.proxy.getLogger().info("[" + session.getAddress()  + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has disconnected due to failed XBOX authentication!");
+                this.proxy.getLogger().info("[" + session.getAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has disconnected due to failed XBOX authentication!");
                 session.disconnect("disconnectionScreen.notAuthenticated");
                 return true;
             }
 
-            this.proxy.getLogger().info("[" + session.getAddress()  + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has connected (protocol=" + protocolVersion + ")");
+            this.proxy.getLogger().info("[" + session.getAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has connected (protocol=" + protocolVersion + ")");
             LoginData loginData = handshakeEntry.buildData(session, this.proxy);
 
             PlayerPreLoginEvent loginEvent = new PlayerPreLoginEvent(ProxiedPlayer.class, loginData, this.session.getAddress());

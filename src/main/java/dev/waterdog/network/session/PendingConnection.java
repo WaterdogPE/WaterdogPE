@@ -37,11 +37,11 @@ public class PendingConnection {
         return this.serverInfo;
     }
 
-    public void setClient(BedrockClient client) {
-        this.client = client;
-    }
-
     public BedrockClient getClient() {
         return this.client;
+    }
+
+    public void setClient(BedrockClient client) {
+        this.client = client;
     }
 }

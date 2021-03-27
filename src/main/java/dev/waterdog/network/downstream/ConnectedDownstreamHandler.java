@@ -17,13 +17,13 @@ package dev.waterdog.network.downstream;
 
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.command.Command;
-import dev.waterdog.network.ServerInfo;
-import dev.waterdog.utils.exceptions.CancelSignalException;
-import dev.waterdog.utils.types.TranslationContainer;
 import dev.waterdog.event.defaults.PostTransferCompleteEvent;
+import dev.waterdog.network.ServerInfo;
 import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.ServerConnection;
 import dev.waterdog.player.ProxiedPlayer;
+import dev.waterdog.utils.exceptions.CancelSignalException;
+import dev.waterdog.utils.types.TranslationContainer;
 
 public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 

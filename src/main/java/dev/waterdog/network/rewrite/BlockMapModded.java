@@ -18,7 +18,7 @@ package dev.waterdog.network.rewrite;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.player.ProxiedPlayer;
 
-public class BlockMapModded extends BlockMap{
+public class BlockMapModded extends BlockMap {
 
     public BlockMapModded(ProxiedPlayer player) {
         super(player);

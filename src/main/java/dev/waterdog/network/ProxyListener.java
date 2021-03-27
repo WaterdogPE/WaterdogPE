@@ -19,14 +19,14 @@ import com.nukkitx.protocol.bedrock.BedrockPong;
 import com.nukkitx.protocol.bedrock.BedrockServerEventHandler;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import dev.waterdog.ProxyServer;
+import dev.waterdog.event.defaults.ProxyPingEvent;
+import dev.waterdog.network.protocol.ProtocolConstants;
+import dev.waterdog.network.upstream.HandshakeUpstreamHandler;
 import dev.waterdog.query.QueryHandler;
 import dev.waterdog.utils.ProxyConfig;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
-import dev.waterdog.event.defaults.ProxyPingEvent;
-import dev.waterdog.network.protocol.ProtocolConstants;
-import dev.waterdog.network.upstream.HandshakeUpstreamHandler;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;

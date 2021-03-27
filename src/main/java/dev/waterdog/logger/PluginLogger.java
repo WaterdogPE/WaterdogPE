@@ -15,8 +15,8 @@
 
 package dev.waterdog.logger;
 
-import lombok.extern.log4j.Log4j2;
 import dev.waterdog.plugin.Plugin;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * Plugin-specific loggers.

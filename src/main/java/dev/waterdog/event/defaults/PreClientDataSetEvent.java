@@ -51,11 +51,11 @@ public class PreClientDataSetEvent extends Event {
         return this.extraData;
     }
 
-    public void setKeyPair(KeyPair keyPair) {
-        this.keyPair = keyPair;
-    }
-
     public KeyPair getKeyPair() {
         return this.keyPair;
+    }
+
+    public void setKeyPair(KeyPair keyPair) {
+        this.keyPair = keyPair;
     }
 }

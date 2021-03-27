@@ -24,8 +24,8 @@ import dev.waterdog.event.defaults.PlayerResourcePackApplyEvent;
 import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.TransferCallback;
 import dev.waterdog.packs.PackManager;
-import dev.waterdog.utils.exceptions.CancelSignalException;
 import dev.waterdog.player.ProxiedPlayer;
+import dev.waterdog.utils.exceptions.CancelSignalException;
 
 /**
  * Main handler for handling packets received from upstream.

@@ -17,11 +17,11 @@ package dev.waterdog.network;
 
 import com.nukkitx.network.raknet.RakNetPong;
 import dev.waterdog.ProxyServer;
+import dev.waterdog.network.protocol.ProtocolConstants;
+import dev.waterdog.player.ProxiedPlayer;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
 import lombok.ToString;
-import dev.waterdog.network.protocol.ProtocolConstants;
-import dev.waterdog.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;

@@ -1,10 +1,10 @@
 # WaterdogPE
 
-WaterdogPE is a brand new Minecraft: Bedrock Edition proxy software developed by the developers
-of the old Waterdog Proxy. 
+WaterdogPE is a brand new Minecraft: Bedrock Edition proxy software developed by the developers of the old Waterdog
+Proxy.
 <br>
-In this new proxy, we are working with Cloudbursts Protocol Library. It takes alot of maintaining
-effort from us and provides us with a nice api to work with.
+In this new proxy, we are working with Cloudbursts Protocol Library. It takes alot of maintaining effort from us and
+provides us with a nice api to work with.
 
 ## Links
 
@@ -17,7 +17,7 @@ effort from us and provides us with a nice api to work with.
 
 ## If you want to discuss things without joining the discord server, please use the [Discussions Tab](https://github.com/WaterdogPE/WaterdogPE/discussions)
 
-## Benefits compared to Waterdog 
+## Benefits compared to Waterdog
 
 - Reduced memory usage
 - Much cleaner Plugin API
@@ -28,7 +28,6 @@ effort from us and provides us with a nice api to work with.
 - BE server pinging: Easily ping your downstream server using a plugin to check it's status
 - Resource pack support
 - Maintained documentation
-
 
 ## Known bugs fixed in WaterdogPE
 
@@ -41,9 +40,11 @@ effort from us and provides us with a nice api to work with.
 - [Food bar not always working on Nukkit](https://github.com/yesdog/Waterdog/issues/144)
 
 ## Compiling
+
 To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
 
 ## Maven usage
+
 ```mvn
     <repositories>
         <repository>

@@ -17,11 +17,11 @@ package dev.waterdog.console;
 
 import dev.waterdog.ProxyServer;
 import dev.waterdog.command.CommandMap;
+import dev.waterdog.player.ProxiedPlayer;
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
 import org.jline.reader.LineReader;
 import org.jline.reader.ParsedLine;
-import dev.waterdog.player.ProxiedPlayer;
 
 import java.util.ArrayList;
 import java.util.List;

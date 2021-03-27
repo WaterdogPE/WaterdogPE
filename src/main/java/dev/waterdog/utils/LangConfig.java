@@ -16,10 +16,10 @@
 package dev.waterdog.utils;
 
 import dev.waterdog.logger.MainLogger;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import dev.waterdog.utils.types.TextContainer;
 import dev.waterdog.utils.types.TranslationContainer;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.io.File;
 import java.io.IOException;

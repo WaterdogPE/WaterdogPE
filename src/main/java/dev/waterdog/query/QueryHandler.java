@@ -16,15 +16,15 @@
 package dev.waterdog.query;
 
 import dev.waterdog.ProxyServer;
+import dev.waterdog.event.defaults.ProxyQueryEvent;
+import dev.waterdog.player.ProxiedPlayer;
+import dev.waterdog.utils.ProxyConfig;
+import dev.waterdog.utils.types.TranslationContainer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import dev.waterdog.event.defaults.ProxyQueryEvent;
-import dev.waterdog.player.ProxiedPlayer;
-import dev.waterdog.utils.ProxyConfig;
-import dev.waterdog.utils.types.TranslationContainer;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

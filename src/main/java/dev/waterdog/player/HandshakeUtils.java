@@ -27,8 +27,8 @@ import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import dev.waterdog.ProxyServer;
-import dev.waterdog.utils.ProxyConfig;
 import dev.waterdog.network.protocol.ProtocolVersion;
+import dev.waterdog.utils.ProxyConfig;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -65,7 +65,7 @@ public class HandshakeUtils {
         ECPublicKey lastKey = null;
         boolean validChain = false;
 
-        for (JsonElement element : chainArray){
+        for (JsonElement element : chainArray) {
             JWSObject jwt = JWSObject.parse(element.getAsString());
             if (!validChain) {
                 validChain = EncryptionUtils.verifyJwt(jwt, EncryptionUtils.getMojangPublicKey());

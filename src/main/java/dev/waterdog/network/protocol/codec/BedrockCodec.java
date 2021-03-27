@@ -35,7 +35,7 @@ public abstract class BedrockCodec {
     /**
      * Creates default builder that will be used in buildCodec() method.
      *
-     * @param protocol protocol number.
+     * @param protocol      protocol number.
      * @param raknetVersion version number of RakNet that client uses.
      * @param minecraftVer  name of version in string.
      * @return BedrockPacketCodec builder.
@@ -51,8 +51,9 @@ public abstract class BedrockCodec {
 
     /**
      * Used to fully initialize BedrockPacketCodec and register all packets which are going to be used by proxy.
+     *
      * @param protocol ProtocolVersion instance which will be used to determine default codec. Should be same as one returned in getProtocol().
-     * @param proxy instance of ProxyServer.
+     * @param proxy    instance of ProxyServer.
      * @return if codec was successfully initialized and can be registered.
      */
     public final boolean initializeCodec(ProtocolVersion protocol, ProxyServer proxy) {

@@ -18,7 +18,10 @@ package dev.waterdog.player;
 import dev.waterdog.ProxyServer;
 import dev.waterdog.utils.types.Permission;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

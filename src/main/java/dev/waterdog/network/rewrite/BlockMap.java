@@ -23,11 +23,11 @@ import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityDataMap;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
-import io.netty.buffer.AbstractByteBufAllocator;
-import io.netty.buffer.ByteBuf;
 import dev.waterdog.network.rewrite.types.BlockPaletteRewrite;
 import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.player.ProxiedPlayer;
+import io.netty.buffer.AbstractByteBufAllocator;
+import io.netty.buffer.ByteBuf;
 
 public class BlockMap implements BedrockPacketHandler {
 
@@ -49,7 +49,7 @@ public class BlockMap implements BedrockPacketHandler {
         return this.player.canRewrite() && packet.handle(this);
     }
 
-    protected int translateId(int runtimeId){
+    protected int translateId(int runtimeId) {
         return this.getPaletteRewrite().fromDownstream(runtimeId);
     }
 
@@ -61,7 +61,7 @@ public class BlockMap implements BedrockPacketHandler {
 
         try {
             from.writeBytes(oldData);
-            boolean success = this.rewriteChunkData(from, to,  packet.getSubChunksLength());
+            boolean success = this.rewriteChunkData(from, to, packet.getSubChunksLength());
             if (success) {
                 to.writeBytes(from); // Copy the rest
                 byte[] newData = new byte[to.readableBytes()];

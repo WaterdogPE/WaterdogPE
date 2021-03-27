@@ -18,23 +18,21 @@ package dev.waterdog.utils;
 import dev.waterdog.logger.MainLogger;
 import lombok.AllArgsConstructor;
 
-import java.io.*;
-
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public abstract class Configuration {
 
-    @AllArgsConstructor
-    private static class LastMap {
-        public final String key;
-        public final Map<String, Object> map;
-    }
-
     protected File file;
     protected Map<String, Object> values = new LinkedHashMap<>();
-
     public Configuration(String saveFile) {
         this(new File(saveFile));
     }
@@ -186,7 +184,6 @@ public abstract class Configuration {
         return this.values;
     }
 
-
     public void setString(String key, String value) {
         this.set(key, value);
     }
@@ -198,7 +195,6 @@ public abstract class Configuration {
     public String getString(String key, String defaultValue) {
         return String.valueOf(this.get(key, defaultValue));
     }
-
 
     public void setInt(String key, Integer value) {
         this.set(key, value);
@@ -212,7 +208,6 @@ public abstract class Configuration {
         return Integer.valueOf(String.valueOf(this.get(key, defaultValue)));
     }
 
-
     public void setLong(String key, Long value) {
         this.set(key, value);
     }
@@ -224,7 +219,6 @@ public abstract class Configuration {
     public Long getLong(String key, Long defaultValue) {
         return Long.valueOf(String.valueOf(this.get(key, defaultValue)));
     }
-
 
     public void setDouble(String key, Double value) {
         this.set(key, value);
@@ -238,7 +232,6 @@ public abstract class Configuration {
         return Double.valueOf(String.valueOf(this.get(key, defaultValue)));
     }
 
-
     public void setBoolean(String key, Boolean value) {
         this.set(key, value);
     }
@@ -250,7 +243,6 @@ public abstract class Configuration {
     public Boolean getBoolean(String key, Boolean defaultValue) {
         return (Boolean) this.get(key, defaultValue);
     }
-
 
     public <T> void setList(String key, List<T> value) {
         this.set(key, value);
@@ -265,7 +257,6 @@ public abstract class Configuration {
         return (List<T>) this.get(key, defaultValue);
     }
 
-
     public void setStringList(String key, List<String> value) {
         this.set(key, value);
     }
@@ -277,5 +268,11 @@ public abstract class Configuration {
     @SuppressWarnings("unchecked")
     public List<String> getStringList(String key, List<String> defaultValue) {
         return (List<String>) this.get(key, defaultValue);
+    }
+
+    @AllArgsConstructor
+    private static class LastMap {
+        public final String key;
+        public final Map<String, Object> map;
     }
 }
