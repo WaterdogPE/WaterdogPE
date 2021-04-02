@@ -23,6 +23,7 @@ import dev.waterdog.command.*;
 import dev.waterdog.console.TerminalConsole;
 import dev.waterdog.event.EventManager;
 import dev.waterdog.event.defaults.DispatchCommandEvent;
+import dev.waterdog.event.defaults.ProxyStartEvent;
 import dev.waterdog.logger.MainLogger;
 import dev.waterdog.network.ProxyListener;
 import dev.waterdog.network.ServerInfo;
@@ -152,6 +153,9 @@ public class ProxyServer {
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
         this.bedrockServer.setHandler(new ProxyListener(this));
         this.bedrockServer.bind().join();
+
+        ProxyStartEvent event = new ProxyStartEvent(this);
+        this.eventManager.callEvent(event);
 
         this.logger.debug("Upstream <-> Proxy compression level " + this.getConfiguration().getUpstreamCompression());
         this.logger.debug("Downstream <-> Proxy compression level " + this.getConfiguration().getDownstreamCompression());
