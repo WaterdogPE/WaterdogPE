@@ -226,15 +226,19 @@ public class ProxyServer {
     }
 
     public boolean dispatchCommand(CommandSender sender, String message) {
+        if (message.trim().isEmpty()) {
+            return false;
+        }
+
         String[] args = message.split(" ");
+        if (args.length < 1) {
+            return false;
+        }
+
         String[] shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
         DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs);
         this.eventManager.callEvent(event);
-
-        if (event.isCancelled()) {
-            return false;
-        }
-        return this.commandMap.handleCommand(sender, args[0], shiftedArgs);
+        return !event.isCancelled() && this.commandMap.handleCommand(sender, args[0], shiftedArgs);
     }
 
     public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
