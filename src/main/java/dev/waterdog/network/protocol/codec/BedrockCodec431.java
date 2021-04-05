@@ -13,13 +13,22 @@
  * limitations under the License.
  */
 
-package dev.waterdog;
+package dev.waterdog.network.protocol.codec;
 
-public interface VersionInfo {
+import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
+import com.nukkitx.protocol.bedrock.v431.BedrockPacketHelper_v431;
+import dev.waterdog.network.protocol.ProtocolVersion;
 
-    String BASE_VERSION = "1.0.0";
-    String BUILD_VERSION = "#build";
-    int LATEST_PROTOCOL_VERSION = 431;
-    boolean IS_DEVELOPMENT = true;
-    String AUTHOR = "WaterdogTEAM";
+public class BedrockCodec431 extends BedrockCodec428 {
+
+    @Override
+    public ProtocolVersion getProtocol() {
+        return ProtocolVersion.MINECRAFT_PE_1_16_220;
+    }
+
+    @Override
+    public void buildCodec(BedrockPacketCodec.Builder builder) {
+        super.buildCodec(builder);
+        builder.helper(BedrockPacketHelper_v431.INSTANCE);
+    }
 }
