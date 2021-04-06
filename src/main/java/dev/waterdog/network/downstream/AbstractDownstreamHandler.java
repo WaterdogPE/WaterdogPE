@@ -16,7 +16,9 @@
 package dev.waterdog.network.downstream;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.AvailableCommandsPacket;
 import com.nukkitx.protocol.bedrock.packet.ChunkRadiusUpdatedPacket;
+import dev.waterdog.command.Command;
 import dev.waterdog.player.ProxiedPlayer;
 
 public abstract class AbstractDownstreamHandler implements BedrockPacketHandler {
@@ -25,6 +27,21 @@ public abstract class AbstractDownstreamHandler implements BedrockPacketHandler 
 
     public AbstractDownstreamHandler(ProxiedPlayer player) {
         this.player = player;
+    }
+
+    @Override
+    public boolean handle(AvailableCommandsPacket packet) {
+        if (!this.player.getProxy().getConfiguration().injectCommands()) {
+            return false;
+        }
+        int sizeBefore = packet.getCommands().size();
+
+        for (Command command : this.player.getProxy().getCommandMap().getCommands().values()) {
+            if (command.getPermission() == null || this.player.hasPermission(command.getPermission())) {
+                packet.getCommands().add(command.getData());
+            }
+        }
+        return packet.getCommands().size() > sizeBefore;
     }
 
     @Override
