@@ -1,10 +1,12 @@
 # WaterdogPE
+[![Build Status](https://jenkins.waterdog.dev/buildStatus/icon?job=Waterdog%2FWaterdogPE%2Fmaster)](https://jenkins.waterdog.dev/job/Waterdog/job/WaterdogPE/job/master/)
+[![Discord Chat](https://img.shields.io/discord/767330242078834712.svg)](https://discord.gg/QcRRzXX)
 
 WaterdogPE is a brand new Minecraft: Bedrock Edition proxy software developed by the developers of the old Waterdog
-Proxy.
-<br>
+Proxy.  
 In this new proxy, we are working with Cloudbursts Protocol Library. It takes alot of maintaining effort from us and
-provides us with a nice api to work with.
+provides us with a nice api to work with.  
+If you want to discuss things without joining the discord server, please use the [Discussions Tab](https://github.com/WaterdogPE/WaterdogPE/discussions)
 
 ## Links
 
@@ -14,8 +16,6 @@ provides us with a nice api to work with.
 - [Yamler: a forked yaml parsing library](https://github.com/WaterdogPE/Yamler)
 - [Branding: various brand assets for the WaterdogPE project](https://github.com/WaterdogPE/Branding)
 - [Protocol: A fork of Nukkits Protocol library with various changes for the WaterdogPE project](https://github.com/WaterdogPE/Protocol)
-
-## If you want to discuss things without joining the discord server, please use the [Discussions Tab](https://github.com/WaterdogPE/WaterdogPE/discussions)
 
 ## Benefits compared to Waterdog
 
@@ -45,7 +45,7 @@ To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
 
 ## Maven usage
 
-```mvn
+```xml
     <repositories>
         <repository>
             <id>waterdog-repo</id>
