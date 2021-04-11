@@ -83,7 +83,6 @@ public class TransferCallback {
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
         this.getDownstream().sendPacket(initializedPacket);
-        this.getDownstream().sendPacket(rewriteData.getChunkRadius());
 
         this.targetServer.addPlayer(this.player);
         this.player.setPendingConnection(null);
