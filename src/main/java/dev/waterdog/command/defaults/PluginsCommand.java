@@ -23,9 +23,7 @@ public class PluginsCommand extends Command {
     public boolean onExecute(CommandSender sender, String alias, String[] args) {
 
         ArrayList<String> PluginsListArr = new ArrayList<>();
-        for (
-                Plugin p : ProxyServer.getInstance().getPluginManager().getPlugins()
-             ) {
+        for (Plugin p : ProxyServer.getInstance().getPluginManager().getPlugins()) {
             PluginsListArr.add(p.getName());
         }
         String pluginsformat = PluginsListArr.toString().replace("[", "").replace("]", "");
