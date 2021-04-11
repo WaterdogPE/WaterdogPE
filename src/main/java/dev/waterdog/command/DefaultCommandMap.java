@@ -31,6 +31,7 @@ public class DefaultCommandMap extends SimpleCommandMap {
         this.registerCommand("wdinfo", new InfoCommand());
         this.registerCommand("server", new ServerCommand());
         this.registerCommand("wdsend", new SendCommand());
+        this.registerCommand("wdplugins", new PluginsCommand());
         this.registerCommand("end", new EndCommand());
     }
 }
