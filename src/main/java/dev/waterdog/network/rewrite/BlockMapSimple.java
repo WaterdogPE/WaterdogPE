@@ -18,9 +18,18 @@ package dev.waterdog.network.rewrite;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.player.ProxiedPlayer;
 
-public class BlockMapModded extends BlockMap {
+public class BlockMapSimple extends BlockMap {
 
-    public BlockMapModded(ProxiedPlayer player) {
+    /*
+     * TODO: since 1.16.220 item packets contain baked-in blockRuntimeId
+     * We won't currently benefit from implementing runtimeId rewrite because since 1.16.100
+     * client defines the block palette and block states. Servers are excepted to match the client palette.
+     * However there might occur some small differences which might be reason to enable rewrite. Because this
+     * does happen only when transferring between different downstream software or with modded servers,
+     * it will be implemented with upcoming refactor.
+     */
+
+    public BlockMapSimple(ProxiedPlayer player) {
         super(player);
     }
 

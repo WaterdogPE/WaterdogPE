@@ -20,7 +20,7 @@ import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.rewrite.BlockMap;
-import dev.waterdog.network.rewrite.BlockMapModded;
+import dev.waterdog.network.rewrite.BlockMapSimple;
 import dev.waterdog.network.rewrite.types.BlockPalette;
 import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.SessionInjections;
@@ -105,7 +105,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
             this.player.getRewriteMaps().setBlockMap(new BlockMap(this.player));
         } else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
-            this.player.getRewriteMaps().setBlockMap(new BlockMapModded(this.player));
+            this.player.getRewriteMaps().setBlockMap(new BlockMapSimple(this.player));
         }
 
         this.player.setCanRewrite(true);
