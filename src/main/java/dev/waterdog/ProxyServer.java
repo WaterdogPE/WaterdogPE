@@ -358,7 +358,7 @@ public class ProxyServer {
      * @return an unmodifiable collection containing all registered ServerInfo instances
      */
     public Collection<ServerInfo> getServers() {
-        return Collections.unmodifiableCollection(this.serverInfoMap.values());
+        return this.serverInfoMap.values();
     }
 
     public Path getPluginPath() {

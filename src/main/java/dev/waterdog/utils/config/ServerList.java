@@ -19,7 +19,9 @@ import dev.waterdog.network.ServerInfo;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
-import java.util.TreeMap;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * This is a wrapper class for a map mapping all the server names to corresponding ServerInfo instances.
@@ -27,7 +29,7 @@ import java.util.TreeMap;
  */
 public class ServerList {
 
-    private final TreeMap<String, ServerInfo> serverList = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, ServerInfo> serverList = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public ServerInfo get(String name) {
         return this.serverList.get(name);
@@ -46,7 +48,7 @@ public class ServerList {
     }
 
     public Collection<ServerInfo> values() {
-        return this.serverList.values();
+        return Collections.unmodifiableCollection(this.serverList.values());
     }
 
     public ServerList initEmpty() {
