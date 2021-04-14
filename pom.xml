@@ -12,9 +12,10 @@
     <packaging>jar</packaging>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <raklib.version>1.6.26-SNAPSHOT</raklib.version>
-        <protocol.protocol>bedrock-v428</protocol.protocol>
-        <protocol.version>2.6.3-SNAPSHOT</protocol.version>
+        <protocol.protocol>bedrock-v431</protocol.protocol>
+        <protocol.version>2.7.0-SNAPSHOT</protocol.version>
         <log4j2.version>2.14.0</log4j2.version>
         <jline.version>3.9.0</jline.version>
     </properties>
