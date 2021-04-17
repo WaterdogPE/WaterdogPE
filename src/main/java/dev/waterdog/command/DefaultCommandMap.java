@@ -26,11 +26,11 @@ public class DefaultCommandMap extends SimpleCommandMap {
     }
 
     public void registerDefaults() {
-        this.registerCommand("wdhelp", new HelpCommand());
-        this.registerCommand("wdlist", new ListCommand());
-        this.registerCommand("wdinfo", new InfoCommand());
-        this.registerCommand("server", new ServerCommand());
-        this.registerCommand("wdsend", new SendCommand());
-        this.registerCommand("end", new EndCommand());
+        this.registerCommand(new HelpCommand());
+        this.registerCommand(new ListCommand());
+        this.registerCommand(new InfoCommand());
+        this.registerCommand(new ServerCommand());
+        this.registerCommand(new SendCommand());
+        this.registerCommand(new EndCommand());
     }
 }
