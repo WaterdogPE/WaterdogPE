@@ -22,6 +22,12 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
  */
 public interface CommandMap {
 
+    /**
+     * Registers a command with the respective name in it
+     *
+     * @param command the command which should be registered
+     * @return true if this command could be registered under the respective name
+     */
     boolean registerCommand(Command command);
 
     /**
