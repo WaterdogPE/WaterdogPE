@@ -86,13 +86,17 @@ public class ProxyServer {
         this.packsPath = this.dataPath.resolve("packs");
 
         if (!this.pluginPath.toFile().exists()) {
-            this.logger.info("Created Plugin Folder at " + this.pluginPath.toString());
-            this.pluginPath.toFile().mkdirs();
+            if (this.pluginPath.toFile().mkdirs())
+                this.logger.info("Created Plugin Folder at " + this.pluginPath.toString());
+            else
+                this.logger.warning("Could not create Plugin Folder at " + this.pluginPath.toString());
         }
 
         if (!this.packsPath.toFile().exists()) {
-            this.logger.info("Created Packs Folder at " + this.packsPath.toString());
-            this.packsPath.toFile().mkdirs();
+            if (this.packsPath.toFile().mkdirs())
+                this.logger.info("Created Packs Folder at " + this.packsPath.toString());
+            else
+                this.logger.warning("Could not create Packs Folder at " + this.packsPath.toString());
         }
 
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();

@@ -37,8 +37,20 @@ public class SimpleCommandMap implements CommandMap {
     }
 
     @Override
+    @Deprecated
     public boolean registerCommand(String name, Command command) {
         if (this.commandsMap.putIfAbsent(name.toLowerCase(), command) != null) {
+            return false;
+        }
+        for (String alias : command.getAliases()) {
+            this.registerAlias(alias, command);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean registerCommand(Command command) {
+        if (this.commandsMap.putIfAbsent(command.getName().toLowerCase(), command) != null) {
             return false;
         }
         for (String alias : command.getAliases()) {

@@ -39,6 +39,10 @@ public abstract class Command {
 
     private final CommandData data;
 
+    public Command(String name) {
+        this(name, CommandSettings.empty());
+    }
+
     public Command(String name, CommandSettings settings) {
         this.name = name;
         this.settings = settings;
@@ -78,7 +82,6 @@ public abstract class Command {
     public String[] getAliases() {
         return this.settings.getAliases();
     }
-
 
     public CommandData craftNetwork() {
         CommandParamData[][] parameterData = new CommandParamData[][]{{
