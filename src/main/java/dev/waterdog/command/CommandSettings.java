@@ -22,6 +22,8 @@ import dev.waterdog.utils.types.TranslationContainer;
  */
 public class CommandSettings {
 
+    private static final CommandSettings EMPTY_SETTINGS = CommandSettings.builder().build();
+
     private final String usageMessage;
     private final String description;
 
@@ -36,6 +38,10 @@ public class CommandSettings {
         this.permission = new TranslationContainer(permission).getTranslated();
         this.permissionMessage = new TranslationContainer(permissionMessage).getTranslated();
         this.aliases = aliases;
+    }
+
+    public static CommandSettings empty() {
+        return EMPTY_SETTINGS;
     }
 
     public static Builder builder() {

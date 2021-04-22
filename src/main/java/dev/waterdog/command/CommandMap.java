@@ -22,6 +22,22 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
  */
 public interface CommandMap {
 
+    /**
+     * Registers a command with the respective name in it
+     *
+     * @param command the command which should be registered
+     * @return true if this command could be registered under the respective name
+     */
+    boolean registerCommand(Command command);
+
+    /**
+     * @deprecated this should be replaced with CommandMap.registerAlias
+     *
+     * @param name the command name
+     * @param command the command which should be registered under the respective name
+     * @return true if this command could be registered under the respective name
+     */
+    @Deprecated
     boolean registerCommand(String name, Command command);
 
     boolean registerAlias(String name, Command command);
