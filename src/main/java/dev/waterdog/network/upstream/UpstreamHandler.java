@@ -95,7 +95,7 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final boolean handle(PacketViolationWarningPacket packet) {
-        this.player.getLogger().warning("Received " + packet.toString());
+        this.player.getLogger().warning("Received violation from " + this.player.getName() + ": " + packet.toString());
         return this.cancel();
     }
 
