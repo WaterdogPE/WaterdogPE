@@ -23,14 +23,12 @@ import dev.waterdog.network.ServerInfo;
 import dev.waterdog.network.bridge.DownstreamBridge;
 import dev.waterdog.network.bridge.UpstreamBridge;
 import dev.waterdog.network.downstream.ConnectedDownstreamHandler;
-import dev.waterdog.network.upstream.UpstreamHandler;
 import dev.waterdog.player.ProxiedPlayer;
 
 public class SessionInjections {
 
-    public static void injectUpstreamHandlers(BedrockSession upstream, ProxiedPlayer player) {
+    public static void injectUpstreamSettings(BedrockSession upstream, ProxiedPlayer player) {
         upstream.setCompressionLevel(player.getProxy().getConfiguration().getUpstreamCompression());
-        upstream.setPacketHandler(new UpstreamHandler(player));
         upstream.addDisconnectHandler(reason -> player.disconnect());
     }
 

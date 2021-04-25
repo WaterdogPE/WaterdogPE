@@ -17,9 +17,14 @@ package dev.waterdog.network.session;
 
 import com.google.gson.JsonObject;
 import com.nimbusds.jose.JWSObject;
+import com.nukkitx.protocol.bedrock.BedrockSession;
+import com.nukkitx.protocol.bedrock.packet.ClientCacheStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
+import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.player.HandshakeUtils;
+import dev.waterdog.player.PlayerRewriteUtils;
+import dev.waterdog.player.ProxiedPlayer;
 import io.netty.util.AsciiString;
 import lombok.Builder;
 import net.minidev.json.JSONObject;
@@ -50,6 +55,11 @@ public class LoginData {
 
     private LoginPacket loginPacket;
 
+    @Builder.Default
+    private RequestChunkRadiusPacket chunkRadius = PlayerRewriteUtils.defaultChunkRadius;
+    @Builder.Default
+    private ClientCacheStatusPacket cachePacket = PlayerRewriteUtils.defaultCachePacket;
+
     /**
      * Used to construct new login packet using this.clientData and this.extraData signed by this.keyPair.
      * This method should be called everytime client data is changed. Otherwise player will join to downstream using old data.
@@ -69,6 +79,10 @@ public class LoginData {
         loginPacket.setSkinData(AsciiString.of(signedClientData.serialize()));
         loginPacket.setProtocolVersion(this.protocol.getProtocol());
         return this.loginPacket = loginPacket;
+    }
+
+    public void doLogin(BedrockSession session, ProxiedPlayer player) {
+        session.sendPacketImmediately(this.getLoginPacket());
     }
 
     public String getDisplayName() {
@@ -116,5 +130,21 @@ public class LoginData {
             this.rebuildLoginPacket();
         }
         return this.loginPacket;
+    }
+
+    public RequestChunkRadiusPacket getChunkRadius() {
+        return this.chunkRadius;
+    }
+
+    public void setChunkRadius(RequestChunkRadiusPacket chunkRadius) {
+        this.chunkRadius = chunkRadius;
+    }
+
+    public ClientCacheStatusPacket getCachePacket() {
+        return this.cachePacket;
+    }
+
+    public void setCachePacket(ClientCacheStatusPacket cachePacket) {
+        this.cachePacket = cachePacket;
     }
 }

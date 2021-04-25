@@ -20,8 +20,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.LoginPacket;
-import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.ProxyServer;
 import dev.waterdog.VersionInfo;
 import dev.waterdog.event.defaults.PlayerPreLoginEvent;
@@ -38,12 +37,12 @@ import java.io.InputStreamReader;
 /**
  * The Pipeline Handler handling the login handshake part of the initial connect. Will be replaced after success.
  */
-public class HandshakeUpstreamHandler implements BedrockPacketHandler {
+public class LoginUpstreamHandler implements BedrockPacketHandler {
 
     private final ProxyServer proxy;
     private final BedrockServerSession session;
 
-    public HandshakeUpstreamHandler(ProxyServer proxy, BedrockServerSession session) {
+    public LoginUpstreamHandler(ProxyServer proxy, BedrockServerSession session) {
         this.proxy = proxy;
         this.session = session;
     }

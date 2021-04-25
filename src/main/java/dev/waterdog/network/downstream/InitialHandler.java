@@ -18,6 +18,7 @@ package dev.waterdog.network.downstream;
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
+import dev.waterdog.network.ServerInfo;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.rewrite.BlockMap;
 import dev.waterdog.network.rewrite.BlockMapSimple;
@@ -26,6 +27,7 @@ import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.SessionInjections;
 import dev.waterdog.player.ProxiedPlayer;
 import dev.waterdog.utils.exceptions.CancelSignalException;
+import dev.waterdog.utils.types.TranslationContainer;
 
 import javax.crypto.SecretKey;
 import java.net.URI;
@@ -37,6 +39,16 @@ public class InitialHandler extends AbstractDownstreamHandler {
 
     public InitialHandler(ProxiedPlayer player) {
         super(player);
+    }
+
+    @Override
+    public boolean handle(PlayStatusPacket packet) {
+        return this.onPlayStatus(packet, message -> {
+            ServerInfo serverInfo = this.player.getServerInfo();
+            if (!this.player.sendToFallback(serverInfo, message)) {
+                this.player.disconnect(new TranslationContainer("waterdog.connected.fallback", serverInfo.getServerName(), message));
+            }
+        }, this.player.getServer().getDownstream());
     }
 
     @Override
@@ -93,12 +105,12 @@ public class InitialHandler extends AbstractDownstreamHandler {
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
 
         // Since 340 shield blocking id was introduced
-        if (this.player.getProtocol().getProtocol() < ProtocolVersion.MINECRAFT_PE_1_10.getProtocol()) {
+        if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_10)) {
             rewriteData.setShieldBlockingId(-1);
         }
 
         // Starting with 419 server does not send vanilla blocks to client
-        if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()) {
+        if (this.player.getProtocol().isBeforeOrEqual(ProtocolVersion.MINECRAFT_PE_1_16_20)) {
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
             rewriteData.setBlockPalette(palette);
             rewriteData.setBlockPaletteRewrite(palette.createRewrite(palette));
@@ -109,6 +121,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
         }
 
         this.player.setCanRewrite(true);
+        this.player.setPendingConnection(null);
 
         packet.setRuntimeEntityId(rewriteData.getEntityId());
         packet.setUniqueEntityId(rewriteData.getEntityId());

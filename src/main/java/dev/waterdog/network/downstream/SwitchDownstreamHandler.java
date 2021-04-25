@@ -97,25 +97,11 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public boolean handle(PlayStatusPacket packet) {
-        String message;
-        switch (packet.getStatus()) {
-            case LOGIN_SUCCESS:
-                throw CancelSignalException.CANCEL;
-            case LOGIN_FAILED_CLIENT_OLD:
-            case LOGIN_FAILED_SERVER_OLD:
-                message = "Incompatible version";
-                break;
-            case FAILED_SERVER_FULL_SUB_CLIENT:
-                message = "Server is full";
-                break;
-            default:
-                return false;
-        }
-
-        this.client.close();
-        this.player.setPendingConnection(null);
-        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), message));
-        throw CancelSignalException.CANCEL;
+        return this.onPlayStatus(packet, message -> {
+            this.client.close();
+            this.player.setPendingConnection(null);
+            this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), message));
+        }, this.getDownstream());
     }
 
     @Override
@@ -128,7 +114,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setRotation(packet.getRotation());
         rewriteData.parseItemIds(packet.getItemEntries());
 
-        if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()) {
+        if (this.player.getProtocol().isBeforeOrEqual(ProtocolVersion.MINECRAFT_PE_1_16_20)) {
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
             rewriteData.setBlockPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
         } else {
@@ -172,8 +158,9 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         Vector3f rotation = Vector3f.from(packet.getRotation().getX(), 0, packet.getRotation().getY());
         PlayerRewriteUtils.injectPosition(this.player.getUpstream(), packet.getPlayerPosition(), rotation, rewriteData.getEntityId());
 
-        this.getDownstream().sendPacket(rewriteData.getChunkRadius());
-        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getPlayerPosition().toInt(), rewriteData.getChunkRadius().getRadius());
+        RequestChunkRadiusPacket chunkRadius = this.player.getLoginData().getChunkRadius();
+        this.getDownstream().sendPacket(chunkRadius);
+        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getPlayerPosition().toInt(), chunkRadius.getRadius());
 
         PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
         PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());

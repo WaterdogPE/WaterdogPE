@@ -41,6 +41,8 @@ import dev.waterdog.network.session.LoginData;
 import dev.waterdog.network.session.PendingConnection;
 import dev.waterdog.network.session.ServerConnection;
 import dev.waterdog.network.session.SessionInjections;
+import dev.waterdog.network.upstream.ResourcePacksHandler;
+import dev.waterdog.network.upstream.ConnectedUpstreamHandler;
 import dev.waterdog.utils.types.PacketHandler;
 import dev.waterdog.utils.types.Permission;
 import dev.waterdog.utils.types.TextContainer;
@@ -113,7 +115,7 @@ public class ProxiedPlayer implements CommandSender {
      * Called after sending LOGIN_SUCCESS in PlayStatusPacket.
      */
     public void initPlayer() {
-        SessionInjections.injectUpstreamHandlers(this.upstream, this);
+        SessionInjections.injectUpstreamSettings(this.upstream, this);
         if (!this.proxy.getConfiguration().enabledResourcePacks()) {
             this.initialConnect();
             return;
@@ -128,6 +130,8 @@ public class ProxiedPlayer implements CommandSender {
             this.initialConnect();
             return;
         }
+
+        this.upstream.setPacketHandler(new ResourcePacksHandler(this));
         this.upstream.sendPacket(event.getPacket());
     }
 
@@ -136,6 +140,8 @@ public class ProxiedPlayer implements CommandSender {
      * Determines the first player the player gets transferred to based on the currently present JoinHandler.
      */
     public void initialConnect() {
+        this.upstream.setPacketHandler(new ConnectedUpstreamHandler(this));
+
         PlayerLoginEvent event = new PlayerLoginEvent(this);
         this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, error) -> {
             if (error != null) {
@@ -235,7 +241,7 @@ public class ProxiedPlayer implements CommandSender {
             }
 
             downstream.setPacketCodec(this.getProtocol().getCodec());
-            downstream.sendPacketImmediately(this.loginData.getLoginPacket());
+            this.loginData.doLogin(downstream, this);
             downstream.setLogging(true);
 
             SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
@@ -328,7 +334,7 @@ public class ProxiedPlayer implements CommandSender {
      */
     public boolean sendToFallback(ServerInfo oldServer, String reason) {
         ServerInfo fallbackServer = this.proxy.getReconnectHandler().getFallbackServer(this, oldServer, reason);
-        if (fallbackServer != null && fallbackServer != this.serverConnection.getInfo()) {
+        if (fallbackServer != null && fallbackServer != this.getServerInfo()) {
             this.connect(fallbackServer);
             return true;
         }

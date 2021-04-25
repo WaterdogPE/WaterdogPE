@@ -15,31 +15,22 @@
 
 package dev.waterdog.network.upstream;
 
-import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
-import dev.waterdog.ProxyServer;
-import dev.waterdog.event.defaults.PlayerChatEvent;
 import dev.waterdog.event.defaults.PlayerResourcePackApplyEvent;
 import dev.waterdog.packs.PackManager;
 import dev.waterdog.player.ProxiedPlayer;
-import dev.waterdog.utils.exceptions.CancelSignalException;
 
 /**
- * Main handler for handling packets received from upstream.
+ * Upstream handler handling proxy manager resource packs.
  */
-public class UpstreamHandler implements BedrockPacketHandler {
+public class ResourcePacksHandler extends AbstractUpstreamHandler {
 
-    private final ProxiedPlayer player;
-
-    public UpstreamHandler(ProxiedPlayer player) {
-        this.player = player;
+    public ResourcePacksHandler(ProxiedPlayer player) {
+        super(player);
     }
 
     @Override
     public boolean handle(ResourcePackClientResponsePacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks() || !this.player.acceptResourcePacks()) {
-            return false;
-        }
         PackManager packManager = this.player.getProxy().getPackManager();
 
         switch (packet.getStatus()) {
@@ -73,63 +64,13 @@ public class UpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public boolean handle(ResourcePackChunkRequestPacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks() || !this.player.acceptResourcePacks()) {
-            return false;
-        }
         PackManager packManager = this.player.getProxy().getPackManager();
         ResourcePackChunkDataPacket response = packManager.packChunkDataPacket(packet.getPackId() + "_" + packet.getPackVersion(), packet);
         if (response == null) {
             this.player.disconnect("Unknown resource pack!");
-            return this.cancel();
+        } else {
+            this.player.getUpstream().sendPacket(response);
         }
-
-        this.player.getUpstream().sendPacket(response);
         return this.cancel();
     }
-
-    @Override
-    public final boolean handle(RequestChunkRadiusPacket packet) {
-        this.player.getRewriteData().setChunkRadius(packet);
-        return false;
-    }
-
-    @Override
-    public final boolean handle(PacketViolationWarningPacket packet) {
-        this.player.getLogger().warning("Received violation from " + this.player.getName() + ": " + packet.toString());
-        return this.cancel();
-    }
-
-    @Override
-    public final boolean handle(TextPacket packet) {
-        PlayerChatEvent event = new PlayerChatEvent(this.player, packet.getMessage());
-        ProxyServer.getInstance().getEventManager().callEvent(event);
-        packet.setMessage(event.getMessage());
-
-        if (event.isCancelled()) {
-            throw CancelSignalException.CANCEL;
-        }
-        return true;
-    }
-
-    @Override
-    public final boolean handle(CommandRequestPacket packet) {
-        String message = packet.getCommand();
-        if (this.player.getProxy().handlePlayerCommand(this.player, message)) {
-            throw CancelSignalException.CANCEL;
-        }
-        return false;
-    }
-
-    /**
-     * If connection has bridge we cancel packet to prevent sending it to downstream.
-     *
-     * @return true is we can't use CancelSignalException.
-     */
-    private boolean cancel() {
-        if (this.player.hasUpstreamBridge()) {
-            throw CancelSignalException.CANCEL;
-        }
-        return true;
-    }
-
 }

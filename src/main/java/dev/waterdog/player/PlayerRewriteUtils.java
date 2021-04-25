@@ -37,6 +37,7 @@ import java.util.UUID;
 public class PlayerRewriteUtils {
 
     public static final RequestChunkRadiusPacket defaultChunkRadius = new RequestChunkRadiusPacket();
+    public static final ClientCacheStatusPacket defaultCachePacket = new ClientCacheStatusPacket();
 
     static {
         defaultChunkRadius.setRadius(8);

@@ -20,6 +20,7 @@ import com.nukkitx.math.vector.Vector2f;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.data.BlockPropertyData;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
+import com.nukkitx.protocol.bedrock.packet.ClientCacheStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 import com.nukkitx.protocol.bedrock.packet.StartGamePacket.ItemEntry;
 import dev.waterdog.player.PlayerRewriteUtils;
@@ -57,7 +58,6 @@ public class RewriteData {
      * The dimensionId the player is currently in
      */
     private int dimension = 0;
-    private RequestChunkRadiusPacket chunkRadius = PlayerRewriteUtils.defaultChunkRadius;
 
     private Vector3f spawnPosition;
     private Vector2f rotation;
@@ -122,14 +122,6 @@ public class RewriteData {
 
     public void setDimension(int dimension) {
         this.dimension = dimension;
-    }
-
-    public RequestChunkRadiusPacket getChunkRadius() {
-        return this.chunkRadius;
-    }
-
-    public void setChunkRadius(RequestChunkRadiusPacket chunkRadius) {
-        this.chunkRadius = chunkRadius;
     }
 
     public Vector3f getSpawnPosition() {
