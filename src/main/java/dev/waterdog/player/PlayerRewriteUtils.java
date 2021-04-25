@@ -25,6 +25,8 @@ import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.GameType;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import com.nukkitx.protocol.bedrock.data.entity.EntityData;
+import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
+import com.nukkitx.protocol.bedrock.data.entity.EntityFlags;
 import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.packet.*;
 import io.netty.buffer.ByteBuf;
@@ -255,6 +257,20 @@ public class PlayerRewriteUtils {
         packet.setChunkZ(chunkZ);
         // packet.setData(fakeChunkData);
         packet.setData(new byte[257]);
+        session.sendPacket(packet);
+    }
+
+    public static void injectEntityImmobile(BedrockSession session, long runtimeId, boolean immobile) {
+        if (session == null || session.isClosed()){
+            return;
+        }
+        EntityFlags flags = new EntityFlags();
+        flags.setFlag(EntityFlag.NO_AI, immobile);
+        flags.setFlag(EntityFlag.BREATHING, true); // Hide bubbles
+
+        SetEntityDataPacket packet = new SetEntityDataPacket();
+        packet.setRuntimeEntityId(runtimeId);
+        packet.getMetadata().putFlags(flags);
         session.sendPacket(packet);
     }
 }

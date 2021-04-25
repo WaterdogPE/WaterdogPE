@@ -23,9 +23,10 @@ import dev.waterdog.event.defaults.TransferCompleteEvent;
 import dev.waterdog.network.ServerInfo;
 import dev.waterdog.network.bridge.TransferBatchBridge;
 import dev.waterdog.network.rewrite.types.RewriteData;
-import dev.waterdog.player.PlayerRewriteUtils;
 import dev.waterdog.player.ProxiedPlayer;
 import dev.waterdog.utils.types.TranslationContainer;
+
+import static dev.waterdog.player.PlayerRewriteUtils.*;
 
 public class TransferCallback {
 
@@ -52,12 +53,14 @@ public class TransferCallback {
 
     public void onTransferAccepted() {
         RewriteData rewriteData = this.player.getRewriteData();
-        rewriteData.setDimension(PlayerRewriteUtils.determineDimensionId(rewriteData.getDimension()));
-        PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition());
+        injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), true);
 
-        PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
-        PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
-        PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
+        rewriteData.setDimension(determineDimensionId(rewriteData.getDimension()));
+        injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition());
+
+        injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
+        injectClearWeather(this.player.getUpstream());
+        injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
     }
 
     public void onTransferComplete() {

@@ -27,7 +27,6 @@ import dev.waterdog.network.rewrite.types.RewriteData;
 import dev.waterdog.network.session.ServerConnection;
 import dev.waterdog.network.session.SessionInjections;
 import dev.waterdog.network.session.TransferCallback;
-import dev.waterdog.player.PlayerRewriteUtils;
 import dev.waterdog.player.ProxiedPlayer;
 import dev.waterdog.utils.exceptions.CancelSignalException;
 import dev.waterdog.utils.types.TranslationContainer;
@@ -41,6 +40,8 @@ import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.UUID;
+
+import static dev.waterdog.player.PlayerRewriteUtils.*;
 
 public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
@@ -123,36 +124,36 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         oldServer.disconnect();
 
         Collection<UUID> playerList = this.player.getPlayers();
-        PlayerRewriteUtils.injectRemoveAllPlayers(this.player.getUpstream(), playerList);
+        injectRemoveAllPlayers(this.player.getUpstream(), playerList);
         playerList.clear();
 
         Long2LongMap entityLinks = this.player.getEntityLinks();
         for (Long2LongMap.Entry entry : entityLinks.long2LongEntrySet()) {
-            PlayerRewriteUtils.injectRemoveEntityLink(this.player.getUpstream(), entry.getLongKey(), entry.getLongValue());
+            injectRemoveEntityLink(this.player.getUpstream(), entry.getLongKey(), entry.getLongValue());
         }
         entityLinks.clear();
 
         LongSet entities = this.player.getEntities();
         for (long entityId : entities) {
-            PlayerRewriteUtils.injectRemoveEntity(this.player.getUpstream(), entityId);
+            injectRemoveEntity(this.player.getUpstream(), entityId);
         }
         entities.clear();
 
         ObjectSet<String> scoreboards = this.player.getScoreboards();
         for (String scoreboard : scoreboards) {
-            PlayerRewriteUtils.injectRemoveObjective(this.player.getUpstream(), scoreboard);
+            injectRemoveObjective(this.player.getUpstream(), scoreboard);
         }
         scoreboards.clear();
 
         LongSet bossbars = this.player.getBossbars();
         for (long bossbarId : bossbars) {
-            PlayerRewriteUtils.injectRemoveBossbar(this.player.getUpstream(), bossbarId);
+            injectRemoveBossbar(this.player.getUpstream(), bossbarId);
         }
         bossbars.clear();
 
-        PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
-        PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
-        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
+        injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
+        injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
+        injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
         this.getDownstream().sendPacket(this.player.getLoginData().getChunkRadius());
 
         /*
@@ -160,10 +161,10 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
          * Therefore we are attempting to do dimension change sequence which uses 2 dim changes.
          * After client successfully changes dimension we receive PlayerActionPacket#DIMENSION_CHANGE_SUCCESS and send second dim change.
          */
-        rewriteData.setDimension(PlayerRewriteUtils.determineDimensionId(packet.getDimensionId()));
+        rewriteData.setDimension(determineDimensionId(packet.getDimensionId()));
         rewriteData.setTransferCallback(new TransferCallback(this.player, this.client, this.serverInfo));
 
-        PlayerRewriteUtils.injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), packet.getPlayerPosition());
+        injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), packet.getPlayerPosition());
         this.player.setDimensionChangeState(1); // Except first dim change packet.
         SessionInjections.injectPreDownstreamHandlers(this.getDownstream(), this.player);
         throw CancelSignalException.CANCEL;
