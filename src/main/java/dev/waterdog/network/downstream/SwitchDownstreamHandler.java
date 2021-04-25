@@ -112,7 +112,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
         rewriteData.setRotation(packet.getRotation());
-        rewriteData.parseItemIds(packet.getItemEntries());
 
         if (this.player.getProtocol().isBeforeOrEqual(ProtocolVersion.MINECRAFT_PE_1_16_20)) {
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());

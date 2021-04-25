@@ -15,17 +15,10 @@
 
 package dev.waterdog.network.rewrite.types;
 
-import com.google.common.base.Preconditions;
 import com.nukkitx.math.vector.Vector2f;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.data.BlockPropertyData;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
-import com.nukkitx.protocol.bedrock.packet.ClientCacheStatusPacket;
-import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
-import com.nukkitx.protocol.bedrock.packet.StartGamePacket.ItemEntry;
-import dev.waterdog.player.PlayerRewriteUtils;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.util.List;
 
@@ -61,9 +54,6 @@ public class RewriteData {
 
     private Vector3f spawnPosition;
     private Vector2f rotation;
-
-    private Object2ObjectMap<String, ItemEntry> itemEntriesMap = new Object2ObjectOpenHashMap<>();
-    private Integer shieldBlockingId = null;
 
     public RewriteData() {
     }
@@ -138,34 +128,5 @@ public class RewriteData {
 
     public void setRotation(Vector2f rotation) {
         this.rotation = rotation;
-    }
-
-    public void parseItemIds(List<ItemEntry> itemEntries) {
-        Object2ObjectMap<String, ItemEntry> items = new Object2ObjectOpenHashMap<>();
-        for (ItemEntry entry : itemEntries) {
-            items.put(entry.getIdentifier(), entry);
-        }
-        this.itemEntriesMap = items;
-    }
-
-    public Object2ObjectMap<String, ItemEntry> getItemEntriesMap() {
-        return this.itemEntriesMap;
-    }
-
-    public void setItemEntriesMap(Object2ObjectMap<String, ItemEntry> itemEntriesMap) {
-        this.itemEntriesMap = itemEntriesMap;
-    }
-
-    public int getShieldBlockingId() {
-        if (this.shieldBlockingId != null) {
-            return this.shieldBlockingId;
-        }
-        ItemEntry itemEntry = this.itemEntriesMap.get("minecraft:shield");
-        Preconditions.checkNotNull(itemEntry, "Block shield id can not be null!");
-        return itemEntry.getId();
-    }
-
-    public void setShieldBlockingId(Integer shieldBlockingId) {
-        this.shieldBlockingId = shieldBlockingId;
     }
 }
