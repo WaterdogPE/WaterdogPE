@@ -25,14 +25,12 @@ import dev.waterdog.network.bridge.DownstreamBridge;
 import dev.waterdog.network.bridge.TransferBatchBridge;
 import dev.waterdog.network.bridge.UpstreamBridge;
 import dev.waterdog.network.downstream.ConnectedDownstreamHandler;
-import dev.waterdog.network.upstream.UpstreamHandler;
 import dev.waterdog.player.ProxiedPlayer;
 
 public class SessionInjections {
 
-    public static void injectUpstreamHandlers(BedrockSession upstream, ProxiedPlayer player) {
+    public static void injectUpstreamSettings(BedrockSession upstream, ProxiedPlayer player) {
         upstream.setCompressionLevel(player.getProxy().getConfiguration().getUpstreamCompression());
-        upstream.setPacketHandler(new UpstreamHandler(player));
         upstream.addDisconnectHandler(reason -> player.disconnect());
     }
 
@@ -53,9 +51,8 @@ public class SessionInjections {
 
     public static void injectInitialHandlers(ServerConnection server, ProxiedPlayer player) {
         Preconditions.checkArgument(server != null && player != null, "Player and ServerConnection can not be null!");
-        player.getUpstream().getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
-        server.getDownstream().getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
-
+        int blockingId = server.getDownstream().getHardcodedBlockingId().get();
+        player.getUpstream().getHardcodedBlockingId().set(blockingId);
         server.getDownstream().setPacketHandler(new ConnectedDownstreamHandler(player, server));
     }
 
@@ -67,8 +64,6 @@ public class SessionInjections {
      */
     public static void injectPreDownstreamHandlers(BedrockSession downstream, ProxiedPlayer player) {
         Preconditions.checkArgument(downstream != null && player != null, "Player and BedrockSession can not be null!");
-        player.getUpstream().getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
-        downstream.getHardcodedBlockingId().set(player.getRewriteData().getShieldBlockingId());
         BatchHandler batchBridge = downstream.getBatchHandler();
         if (batchBridge instanceof TransferBatchBridge) {
             ((TransferBatchBridge) batchBridge).setDimLockActive(true);

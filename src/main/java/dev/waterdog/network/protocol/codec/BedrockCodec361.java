@@ -16,15 +16,9 @@
 package dev.waterdog.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
-import com.nukkitx.protocol.bedrock.packet.AddPaintingPacket;
-import com.nukkitx.protocol.bedrock.packet.LevelChunkPacket;
-import com.nukkitx.protocol.bedrock.packet.ResourcePackDataInfoPacket;
-import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.v361.BedrockPacketHelper_v361;
-import com.nukkitx.protocol.bedrock.v361.serializer.AddPaintingSerializer_v361;
-import com.nukkitx.protocol.bedrock.v361.serializer.LevelChunkSerializer_v361;
-import com.nukkitx.protocol.bedrock.v361.serializer.ResourcePackDataInfoSerializer_v361;
-import com.nukkitx.protocol.bedrock.v361.serializer.StartGameSerializer_v361;
+import com.nukkitx.protocol.bedrock.v361.serializer.*;
 import dev.waterdog.network.protocol.ProtocolVersion;
 
 public class BedrockCodec361 extends BedrockCodec354 {
@@ -50,5 +44,7 @@ public class BedrockCodec361 extends BedrockCodec354 {
 
         builder.deregisterPacket(LevelChunkPacket.class);
         builder.registerPacket(LevelChunkPacket.class, LevelChunkSerializer_v361.INSTANCE, 58);
+
+        builder.registerPacket(ClientCacheStatusPacket.class, ClientCacheStatusSerializer_v361.INSTANCE, 129);
     }
 }

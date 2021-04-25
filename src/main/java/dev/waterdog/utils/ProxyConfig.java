@@ -32,7 +32,7 @@ public class ProxyConfig extends YamlConfig {
 
     @Path("servers")
     @Comments({
-            "A list of all downstream proxies that are available right after starting",
+            "A list of all downstream servers that are available right after starting",
             "address field is formatted using ip:port",
             "publicAddress is optional and can be set to the ip players can directly connect through"
     })
@@ -43,7 +43,7 @@ public class ProxyConfig extends YamlConfig {
     private String motd = "§bWaterdog§3PE";
 
     @Path("listener.priorities")
-    @Comment("The server priority list. if not changed by plugins, the proxy will connect the player to the first of those servers")
+    @Comment("The server priority list. If not changed by plugins, the proxy will connect the player to the first of those servers")
     private List<String> priorities = new ArrayList<>(Collections.singletonList("lobby1"));
 
     @Path("listener.host")
@@ -78,7 +78,7 @@ public class ProxyConfig extends YamlConfig {
     private boolean debug;
 
     @Path("upstream_encryption")
-    @Comment("If enabled encrypted connection between client and proxy will be created")
+    @Comment("If enabled, encrypted connection between client and proxy will be created")
     private boolean upstreamEncryption = true;
 
     @Path("online_mode")

@@ -63,6 +63,22 @@ public enum ProtocolVersion {
         this.raknetVersion = raknetVersion;
     }
 
+    public boolean isBefore(ProtocolVersion version) {
+        return this.protocol < version.protocol;
+    }
+
+    public boolean isBeforeOrEqual(ProtocolVersion version) {
+        return this.protocol <= version.protocol;
+    }
+
+    public boolean isAfter(ProtocolVersion version) {
+        return this.protocol > version.protocol;
+    }
+
+    public boolean isAfterOrEqual(ProtocolVersion version) {
+        return this.protocol >= version.protocol;
+    }
+
     public int getProtocol() {
         return this.protocol;
     }

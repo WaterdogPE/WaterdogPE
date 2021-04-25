@@ -42,6 +42,7 @@ import java.util.UUID;
 public class PlayerRewriteUtils {
 
     public static final RequestChunkRadiusPacket defaultChunkRadius = new RequestChunkRadiusPacket();
+    public static final ClientCacheStatusPacket defaultCachePacket = new ClientCacheStatusPacket();
 
     public static final int DIMENSION_OVERWORLD = 0;
     public static final int DIMENSION_NETHER = 1;

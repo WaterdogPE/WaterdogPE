@@ -21,7 +21,7 @@ import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import dev.waterdog.ProxyServer;
 import dev.waterdog.event.defaults.ProxyPingEvent;
 import dev.waterdog.network.protocol.ProtocolConstants;
-import dev.waterdog.network.upstream.HandshakeUpstreamHandler;
+import dev.waterdog.network.upstream.LoginUpstreamHandler;
 import dev.waterdog.query.QueryHandler;
 import dev.waterdog.utils.ProxyConfig;
 import io.netty.buffer.ByteBuf;
@@ -84,7 +84,7 @@ public class ProxyListener implements BedrockServerEventHandler {
     @Override
     public void onSessionCreation(BedrockServerSession session) {
         this.proxy.getLogger().debug("[" + session.getAddress() + "] <-> Received first data");
-        session.setPacketHandler(new HandshakeUpstreamHandler(this.proxy, session));
+        session.setPacketHandler(new LoginUpstreamHandler(this.proxy, session));
     }
 
     @Override

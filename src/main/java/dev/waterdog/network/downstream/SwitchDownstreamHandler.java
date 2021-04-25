@@ -18,12 +18,9 @@ package dev.waterdog.network.downstream;
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
-import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
-import dev.waterdog.event.defaults.TransferCompleteEvent;
 import dev.waterdog.network.ServerInfo;
-import dev.waterdog.network.bridge.ProxyBatchBridge;
 import dev.waterdog.network.protocol.ProtocolVersion;
 import dev.waterdog.network.rewrite.types.BlockPalette;
 import dev.waterdog.network.rewrite.types.RewriteData;
@@ -99,25 +96,11 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public boolean handle(PlayStatusPacket packet) {
-        String message;
-        switch (packet.getStatus()) {
-            case LOGIN_SUCCESS:
-                throw CancelSignalException.CANCEL;
-            case LOGIN_FAILED_CLIENT_OLD:
-            case LOGIN_FAILED_SERVER_OLD:
-                message = "Incompatible version";
-                break;
-            case FAILED_SERVER_FULL_SUB_CLIENT:
-                message = "Server is full";
-                break;
-            default:
-                return false;
-        }
-
-        this.client.close();
-        this.player.setPendingConnection(null);
-        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), message));
-        throw CancelSignalException.CANCEL;
+        return this.onPlayStatus(packet, message -> {
+            this.client.close();
+            this.player.setPendingConnection(null);
+            this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), message));
+        }, this.getDownstream());
     }
 
     @Override
@@ -127,9 +110,8 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
         rewriteData.setRotation(packet.getRotation());
-        rewriteData.parseItemIds(packet.getItemEntries());
 
-        if (this.player.getProtocol().getProtocol() <= ProtocolVersion.MINECRAFT_PE_1_16_20.getProtocol()) {
+        if (this.player.getProtocol().isBeforeOrEqual(ProtocolVersion.MINECRAFT_PE_1_16_20)) {
             BlockPalette palette = BlockPalette.getPalette(packet.getBlockPalette(), this.player.getProtocol());
             rewriteData.setBlockPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
         } else {
@@ -171,7 +153,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
         PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
         PlayerRewriteUtils.injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
-        this.getDownstream().sendPacket(rewriteData.getChunkRadius());
+        this.getDownstream().sendPacket(this.player.getLoginData().getChunkRadius());
 
         /*
          * Client does not accept ChangeDimensionPacket when dimension is same as current dimension.
