@@ -267,6 +267,7 @@ public class PlayerRewriteUtils {
         EntityFlags flags = new EntityFlags();
         flags.setFlag(EntityFlag.NO_AI, immobile);
         flags.setFlag(EntityFlag.BREATHING, true); // Hide bubbles
+        flags.setFlag(EntityFlag.HAS_GRAVITY, true); // Disable floating
 
         SetEntityDataPacket packet = new SetEntityDataPacket();
         packet.setRuntimeEntityId(runtimeId);
