@@ -23,10 +23,15 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 public class WaterdogPE {
 
     public static String DATA_PATH = System.getProperty("user.dir") + "/";
     public final static String PLUGIN_PATH = DATA_PATH + "plugins";
+    private static final VersionInfo versionInfo = loadVersion();
 
     public static void main(String[] args) {
         Thread.currentThread().setName("WaterdogPE-main");
@@ -37,17 +42,15 @@ public class WaterdogPE {
 
         MainLogger logger = MainLogger.getLogger();
         logger.info("§bStarting WaterDogPE proxy software!");
-        logger.info("§3Software Version: " + VersionInfo.BASE_VERSION);
-        logger.info("§3Build Version: " + VersionInfo.BUILD_VERSION);
-        logger.info("§3Development Build: " + VersionInfo.IS_DEVELOPMENT);
-        logger.info("§3Software Authors: " + VersionInfo.AUTHOR);
+        logger.info("§3Software Version: " + versionInfo.baseVersion());
+        logger.info("§3Build Version: " + versionInfo.buildVersion());
+        logger.info("§3Development Build: " + versionInfo.debug());
+        logger.info("§3Software Authors: " + versionInfo.author());
 
-        if (VersionInfo.BUILD_VERSION == "#build") {
-            logger.warning("Unknown build id. Custom build? Unofficial builds should be not run in production!");
-        }
-
-        if (VersionInfo.IS_DEVELOPMENT) {
-            setLoggerLevel(Level.DEBUG);
+        if (versionInfo.buildVersion().equals("#build") || versionInfo.branchName().equals("unknown")) {
+            logger.warning("Custom build? Unofficial builds should be not run in production!");
+        } else {
+            logger.info("§3Discovered branch §b" + versionInfo.branchName() + "§3 commitId §b" + versionInfo.commitId());
         }
 
         try {
@@ -57,11 +60,34 @@ public class WaterdogPE {
         }
     }
 
+    private static VersionInfo loadVersion() {
+        InputStream inputStream = WaterdogPE.class.getClassLoader().getResourceAsStream("git.properties");
+        if (inputStream == null) {
+            return VersionInfo.unknown();
+        }
+
+        Properties properties = new Properties();
+        try {
+            properties.load(inputStream);
+        } catch (IOException e) {
+            return VersionInfo.unknown();
+        }
+
+        String branchName = properties.getProperty("git.branch", "unknown");
+        String commitId = properties.getProperty("git.commit.id.abbrev", "unknown");
+        boolean debug = branchName.equals("release") ? false : VersionInfo.DEFAULT_DEBUG;
+        return new VersionInfo(branchName, commitId, debug);
+    }
+
     public static void setLoggerLevel(Level level) {
         LoggerContext context = (LoggerContext) LogManager.getContext(false);
         Configuration log4jConfig = context.getConfiguration();
         LoggerConfig loggerConfig = log4jConfig.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
         loggerConfig.setLevel(level);
         context.updateLoggers();
+    }
+
+    public static VersionInfo version() {
+        return versionInfo;
     }
 }

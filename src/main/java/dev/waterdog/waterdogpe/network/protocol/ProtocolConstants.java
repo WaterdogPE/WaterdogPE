@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.network.protocol;
 import com.google.common.base.Preconditions;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.VersionInfo;
+import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.network.protocol.codec.*;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 
@@ -47,7 +48,7 @@ public class ProtocolConstants {
     }
 
     public static ProtocolVersion getLatestProtocol() {
-        return protocolMap.get(VersionInfo.LATEST_PROTOCOL_VERSION);
+        return protocolMap.get(WaterdogPE.version().latestProtocolVersion());
     }
 
     public static BedrockCodec getBedrockCodec(ProtocolVersion protocol) {

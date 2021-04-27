@@ -15,11 +15,63 @@
 
 package dev.waterdog.waterdogpe;
 
-public interface VersionInfo {
+import org.apache.logging.log4j.Level;
 
-    String BASE_VERSION = "1.0.0";
-    String BUILD_VERSION = "#build";
-    int LATEST_PROTOCOL_VERSION = 431;
-    boolean IS_DEVELOPMENT = true;
-    String AUTHOR = "WaterdogTEAM";
+public class VersionInfo {
+
+    public static final boolean DEFAULT_DEBUG = true;
+
+    private final String baseVersion = "1.0.0";
+    private final String buildVersion = "#build";
+    private final int latestProtocolVersion = 431;
+    private final String author = "WaterdogTEAM";
+
+    private final String branchName;
+    private final String commitId;
+    private boolean debug;
+
+    public VersionInfo(String branchName, String commitId, boolean debug) {
+        this.branchName = branchName;
+        this.commitId = commitId;
+        this.debug = debug;
+    }
+
+    public static VersionInfo unknown() {
+        return new VersionInfo("unknown", "unknown", DEFAULT_DEBUG);
+    }
+
+    public String baseVersion() {
+        return this.baseVersion;
+    }
+
+    public String buildVersion() {
+        return this.buildVersion;
+    }
+
+    public int latestProtocolVersion() {
+        return this.latestProtocolVersion;
+    }
+
+    public String author() {
+        return this.author;
+    }
+
+    public String branchName() {
+        return this.branchName;
+    }
+
+    public String commitId() {
+        return this.commitId;
+    }
+
+    public void debug(boolean debug) {
+        if (debug) {
+            WaterdogPE.setLoggerLevel(Level.DEBUG);
+        }
+        this.debug = debug;
+    }
+
+    public boolean debug() {
+        return this.debug;
+    }
 }

@@ -112,7 +112,7 @@ public class ProxyServer {
         }
 
         if (this.getConfiguration().isDebug()) {
-            WaterdogPE.setLoggerLevel(Level.DEBUG);
+            WaterdogPE.version().debug(true);
         }
         this.configurationManager.loadLanguage();
         // Default Handlers
@@ -418,7 +418,8 @@ public class ProxyServer {
         this.reconnectHandler = reconnectHandler;
     }
 
+    @Deprecated
     public boolean isDebug() {
-        return VersionInfo.IS_DEVELOPMENT || this.getConfiguration().isDebug();
+        return WaterdogPE.version().debug();
     }
 }

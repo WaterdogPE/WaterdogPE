@@ -23,6 +23,7 @@ import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.VersionInfo;
+import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.event.defaults.PlayerPreLoginEvent;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
@@ -53,10 +54,10 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
         ProtocolVersion protocol = ProtocolConstants.get(protocolVersion);
         session.setPacketCodec(protocol == null ? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
 
-        if (protocolVersion != VersionInfo.LATEST_PROTOCOL_VERSION && protocol == null) {
+        if (protocol == null) {
             this.proxy.getLogger().alert("[" + session.getAddress() + "] <-> Upstream has disconnected due to incompatible protocol (protocol=" + protocolVersion + ")");
             PlayStatusPacket status = new PlayStatusPacket();
-            status.setStatus((protocolVersion > VersionInfo.LATEST_PROTOCOL_VERSION ?
+            status.setStatus((protocolVersion > WaterdogPE.version().latestProtocolVersion() ?
                     PlayStatusPacket.Status.LOGIN_FAILED_SERVER_OLD :
                     PlayStatusPacket.Status.LOGIN_FAILED_CLIENT_OLD));
 
