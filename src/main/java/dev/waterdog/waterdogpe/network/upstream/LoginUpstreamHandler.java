@@ -25,6 +25,7 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.VersionInfo;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.event.defaults.PlayerPreLoginEvent;
+import dev.waterdog.waterdogpe.event.defaults.PreLoginFailedEvent;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.session.LoginData;
@@ -48,8 +49,18 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
         this.session = session;
     }
 
+    private void onLoginFailed(boolean xboxAuth, Throwable throwable, String message) {
+        PreLoginFailedEvent event = new PreLoginFailedEvent(this.session.getAddress(), xboxAuth, throwable, message);
+        try {
+            this.proxy.getEventManager().callEvent(event);
+        } finally {
+            session.disconnect(event.getDisconnectMessage());
+        }
+    }
+
     @Override
     public boolean handle(LoginPacket packet) {
+        boolean xboxAuth = false;
         int protocolVersion = packet.getProtocolVersion();
         ProtocolVersion protocol = ProtocolConstants.get(protocolVersion);
         session.setPacketCodec(protocol == null ? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
@@ -76,9 +87,9 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
         try {
             HandshakeEntry handshakeEntry = HandshakeUtils.processHandshake(session, packet, certChain, protocol);
-            if (!handshakeEntry.isXboxAuthed() && this.proxy.getConfiguration().isOnlineMode()) {
+            if (!(xboxAuth = handshakeEntry.isXboxAuthed()) && this.proxy.getConfiguration().isOnlineMode()) {
+                this.onLoginFailed(false, null, "disconnectionScreen.notAuthenticated");
                 this.proxy.getLogger().info("[" + session.getAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has disconnected due to failed XBOX authentication!");
-                session.disconnect("disconnectionScreen.notAuthenticated");
                 return true;
             }
 
@@ -103,7 +114,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
             player.initPlayer();
         } catch (Exception e) {
-            session.disconnect("Login failed: "+e.getMessage());
+            this.onLoginFailed(xboxAuth, e, "Login failed: "+e.getMessage());
             this.proxy.getLogger().error("[" + session.getAddress() + "] Unable to complete login", e);
         }
         return true;
