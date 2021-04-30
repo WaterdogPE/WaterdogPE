@@ -25,6 +25,7 @@ import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
 import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import com.nukkitx.protocol.bedrock.packet.TransferPacket;
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.command.CommandSender;
 import dev.waterdog.waterdogpe.event.defaults.*;
 import dev.waterdog.waterdogpe.logger.MainLogger;
@@ -249,8 +250,8 @@ public class ProxiedPlayer implements CommandSender {
             }
 
             downstream.setPacketCodec(this.getProtocol().getCodec());
+            downstream.setLogging(WaterdogPE.version().debug());
             this.loginData.doLogin(downstream, this);
-            downstream.setLogging(true);
 
             SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
             this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");

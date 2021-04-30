@@ -115,7 +115,7 @@ public class SimpleCommandMap implements CommandMap {
         try {
             boolean success = command.onExecute(sender, alias, args);
             if (!success) {
-                sender.sendMessage("§cCommand usage: " + this.commandPrefix + command.getUsageMessage());
+                sender.sendMessage("§cCommand usage: " + command.getUsageMessage());
             }
         } catch (Exception e) {
             this.proxy.getLogger().error("Error appeared while processing command!", e);

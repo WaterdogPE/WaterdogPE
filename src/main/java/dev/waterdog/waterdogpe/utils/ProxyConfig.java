@@ -121,6 +121,10 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Upstream server compression ratio(proxy to downstream server), higher = less bandwidth, more cpu, lower vice versa")
     private int downstreamCompression = 2;
 
+    @Path("enable_edu_features")
+    @Comment("Education features require small adjustments to work correctly. Enable this option if any of downstream servers support education features.")
+    private boolean enableEducationFeatures = false;
+
     @Path("enable_packs")
     @Comment("Enable/Disable the resource pack system")
     private boolean enableResourcePacks = true;
@@ -251,6 +255,10 @@ public class ProxyConfig extends YamlConfig {
 
     public void setIpv6Enabled(boolean enableIpv6) {
         this.enableIpv6 = enableIpv6;
+    }
+
+    public boolean enableEducationFeatures() {
+        return this.enableEducationFeatures;
     }
 
     public boolean enabledResourcePacks() {
