@@ -46,8 +46,12 @@ public class ProxyListener implements BedrockServerEventHandler {
     }
 
     @Override
-    public boolean onConnectionRequest(InetSocketAddress address) {
-        return true;
+    public boolean onConnectionRequest(InetSocketAddress address, InetSocketAddress realAddress) {
+        if (this.proxy.getProxyListener().onConnectionCreation(address)) {
+            return true;
+        }
+        this.proxy.getLogger().debug("[" + address + "] <-> Connection request denied");
+        return false;
     }
 
     @Override

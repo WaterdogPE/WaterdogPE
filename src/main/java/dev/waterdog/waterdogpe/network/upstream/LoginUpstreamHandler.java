@@ -22,16 +22,15 @@ import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.ProxyServer;
-import dev.waterdog.waterdogpe.VersionInfo;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.event.defaults.PlayerPreLoginEvent;
-import dev.waterdog.waterdogpe.event.defaults.PreLoginFailedEvent;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.session.LoginData;
 import dev.waterdog.waterdogpe.player.HandshakeEntry;
 import dev.waterdog.waterdogpe.player.HandshakeUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -49,57 +48,61 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
         this.session = session;
     }
 
-    private void onLoginFailed(boolean xboxAuth, Throwable throwable, String message) {
-        PreLoginFailedEvent event = new PreLoginFailedEvent(this.session.getAddress(), xboxAuth, throwable, message);
-        try {
-            this.proxy.getEventManager().callEvent(event);
-        } finally {
-            session.disconnect(event.getDisconnectMessage());
-        }
+    private void onLoginFailed(boolean xboxAuth, Throwable throwable, String disconnectReason) {
+        String message = this.proxy.getProxyListener().onLoginFailed(this.session.getAddress(), xboxAuth, throwable, disconnectReason);
+        this.session.disconnect(message);
     }
 
     @Override
     public boolean handle(LoginPacket packet) {
-        boolean xboxAuth = false;
+        ProxyListenerInterface listener = this.proxy.getProxyListener();
+        if (!listener.onLoginAttempt(this.session.getAddress())) {
+            this.proxy.getLogger().debug("[" + this.session.getAddress() + "] <-> Login denied");
+            this.session.disconnect("Login denied");
+            return true;
+        }
+
         int protocolVersion = packet.getProtocolVersion();
         ProtocolVersion protocol = ProtocolConstants.get(protocolVersion);
-        session.setPacketCodec(protocol == null ? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
+        this.session.setPacketCodec(protocol == null ? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
 
         if (protocol == null) {
-            this.proxy.getLogger().alert("[" + session.getAddress() + "] <-> Upstream has disconnected due to incompatible protocol (protocol=" + protocolVersion + ")");
             PlayStatusPacket status = new PlayStatusPacket();
             status.setStatus((protocolVersion > WaterdogPE.version().latestProtocolVersion() ?
                     PlayStatusPacket.Status.LOGIN_FAILED_SERVER_OLD :
                     PlayStatusPacket.Status.LOGIN_FAILED_CLIENT_OLD));
+            this.session.sendPacketImmediately(status);
+            this.session.disconnect();
 
-            session.sendPacketImmediately(status);
-            session.disconnect();
+            listener.onIncorrectVersionLogin(protocolVersion, this.session.getAddress());
+            this.proxy.getLogger().alert("[" + this.session.getAddress() + "] <-> Upstream has disconnected due to incompatible protocol (protocol=" + protocolVersion + ")");
             return true;
         }
 
-        session.setLogging(true);
-
-        JsonObject certJson = (JsonObject) JsonParser.parseReader(new InputStreamReader(new ByteArrayInputStream(packet.getChainData().toByteArray())));
-        if (!certJson.has("chain") || !certJson.getAsJsonObject().get("chain").isJsonArray()) {
-            throw new RuntimeException("Certificate data is not valid");
-        }
-        JsonArray certChain = certJson.getAsJsonArray("chain");
+        boolean xboxAuth = false;
+        this.session.setLogging(WaterdogPE.version().debug());
 
         try {
-            HandshakeEntry handshakeEntry = HandshakeUtils.processHandshake(session, packet, certChain, protocol);
+            JsonObject certJson = (JsonObject) JsonParser.parseReader(new InputStreamReader(new ByteArrayInputStream(packet.getChainData().toByteArray())));
+            if (!certJson.has("chain") || !certJson.getAsJsonObject().get("chain").isJsonArray()) {
+                throw new IllegalStateException("Certificate data is not valid");
+            }
+            JsonArray certChain = certJson.getAsJsonArray("chain");
+
+            HandshakeEntry handshakeEntry = HandshakeUtils.processHandshake(this.session, packet, certChain, protocol);
             if (!(xboxAuth = handshakeEntry.isXboxAuthed()) && this.proxy.getConfiguration().isOnlineMode()) {
                 this.onLoginFailed(false, null, "disconnectionScreen.notAuthenticated");
-                this.proxy.getLogger().info("[" + session.getAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has disconnected due to failed XBOX authentication!");
+                this.proxy.getLogger().info("[" + this.session.getAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has disconnected due to failed XBOX authentication!");
                 return true;
             }
 
-            this.proxy.getLogger().info("[" + session.getAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has connected (protocol=" + protocolVersion + ")");
-            LoginData loginData = handshakeEntry.buildData(session, this.proxy);
+            this.proxy.getLogger().info("[" + this.session.getAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has connected (protocol=" + protocolVersion + ")");
+            LoginData loginData = handshakeEntry.buildData(this.session, this.proxy);
 
             PlayerPreLoginEvent loginEvent = new PlayerPreLoginEvent(ProxiedPlayer.class, loginData, this.session.getAddress());
             this.proxy.getEventManager().callEvent(loginEvent);
             if (loginEvent.isCancelled()) {
-                session.disconnect(loginEvent.getCancelReason());
+                this.session.disconnect(loginEvent.getCancelReason());
                 return true;
             }
 
@@ -114,8 +117,8 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
             player.initPlayer();
         } catch (Exception e) {
-            this.onLoginFailed(xboxAuth, e, "Login failed: "+e.getMessage());
-            this.proxy.getLogger().error("[" + session.getAddress() + "] Unable to complete login", e);
+            this.onLoginFailed(xboxAuth, e, "Login failed: " + e.getMessage());
+            this.proxy.getLogger().error("[" + this.session.getAddress() + "] Unable to complete login", e);
         }
         return true;
     }

@@ -38,11 +38,11 @@ import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
 import dev.waterdog.waterdogpe.utils.LangConfig;
 import dev.waterdog.waterdogpe.utils.ProxyConfig;
+import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
 import dev.waterdog.waterdogpe.utils.config.ServerList;
 import dev.waterdog.waterdogpe.utils.types.*;
 import lombok.SneakyThrows;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
-import org.apache.logging.log4j.Level;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
@@ -74,6 +74,7 @@ public class ProxyServer {
     private CommandMap commandMap;
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
+    private ProxyListenerInterface proxyListener = new ProxyListenerInterface(){};
     private ScheduledFuture<?> tickFuture;
     private boolean shutdown = false;
     private int currentTick = 0;
@@ -421,5 +422,14 @@ public class ProxyServer {
     @Deprecated
     public boolean isDebug() {
         return WaterdogPE.version().debug();
+    }
+
+    public void setProxyListener(ProxyListenerInterface proxyListener) {
+        Preconditions.checkNotNull(proxyListener, "Proxy listener can not be null!");
+        this.proxyListener = proxyListener;
+    }
+
+    public ProxyListenerInterface getProxyListener() {
+        return this.proxyListener;
     }
 }
