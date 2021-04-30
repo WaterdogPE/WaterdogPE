@@ -87,6 +87,10 @@ public class PlayerManager {
         }
         return null;
     }
+    
+    public int getPlayerCount() {
+        return this.players.size();
+    }
 
     public Map<UUID, ProxiedPlayer> getPlayers() {
         return Collections.unmodifiableMap(this.players);
