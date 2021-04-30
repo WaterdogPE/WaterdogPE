@@ -33,6 +33,7 @@ import java.util.UUID;
 public class PackManager {
 
     private static final PathMatcher ZIP_PACK_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.{zip,mcpack}");
+    private static final ResourcePackStackPacket.Entry EDU_PACK = new ResourcePackStackPacket.Entry("0fba4063-dba1-4281-9b89-ff9390653530", "1.0.0", "");
 
     private final ProxyServer proxy;
     private final Map<UUID, ResourcePack> packs = new HashMap<>();
@@ -165,6 +166,10 @@ public class PackManager {
             this.packsInfoPacket.getResourcePackInfos().add(infoEntry);
             ResourcePackStackPacket.Entry stackEntry = new ResourcePackStackPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(), "");
             this.stackPacket.getResourcePacks().add(stackEntry);
+        }
+
+        if (this.proxy.getConfiguration().enableEducationFeatures()) {
+            this.stackPacket.getBehaviorPacks().add(EDU_PACK);
         }
 
         ResourcePacksRebuildEvent event = new ResourcePacksRebuildEvent(this.packsInfoPacket, this.stackPacket);
