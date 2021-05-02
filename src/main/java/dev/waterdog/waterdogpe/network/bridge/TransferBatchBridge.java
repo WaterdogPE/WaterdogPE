@@ -76,7 +76,7 @@ public class TransferBatchBridge extends ProxyBatchBridge {
             return;
         }
 
-        if (this.packetQueue.size() >= 10) {
+        if (this.packetQueue.size() >= 8048) {
             this.player.getLogger().warning("TransferBatchBridge packet queue is too large! Got " + this.packetQueue.size() + " packets with " + this.player.getName());
             this.player.disconnect("Transfer packet queue got too large!");
             this.releaseAll();
