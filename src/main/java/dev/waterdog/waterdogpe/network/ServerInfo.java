@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
 import lombok.ToString;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.Set;
@@ -86,6 +87,13 @@ public class ServerInfo {
     }
 
     public boolean matchAddress(String address, int port) {
-        return this.publicAddress.getAddress().getHostName().equals(address) && this.publicAddress.getPort() == port;
+        InetAddress inetAddress = this.publicAddress.getAddress();
+        boolean addressMatch;
+        if (inetAddress == null) {
+            addressMatch = this.publicAddress.getHostName().equals(address);
+        } else {
+            addressMatch = inetAddress.getHostName().equals(address);
+        }
+        return addressMatch && this.publicAddress.getPort() == port;
     }
 }
