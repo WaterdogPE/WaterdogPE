@@ -15,18 +15,16 @@
 
 package dev.waterdog.waterdogpe.network.bridge;
 
-import com.nukkitx.network.raknet.RakNetSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
-import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializerV9_10;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
-import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import io.netty.util.ReferenceCounted;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.util.Collection;
@@ -51,9 +49,18 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         }
     }
 
+    public void releaseAll() {
+        for (BedrockPacket packet : this.packetQueue) {
+            if (packet instanceof ReferenceCounted) { // Release all refCounted packets
+                ((UnknownPacket) packet).release(((UnknownPacket) packet).refCnt());
+            }
+        }
+    }
+
     /**
      * Here we send all queued packets from downstream to upstream.
      * Packets will be sent after StartGamePacket is received and dimension change sequence has been passed.
+     *
      * @param downstream instance of BedrockSession which is this handler assigned to.
      */
     public void flushQueue(BedrockSession downstream) {
@@ -68,15 +75,17 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         if (this.packetQueue.isEmpty()) {
             return;
         }
+
+        if (this.packetQueue.size() >= 10) {
+            this.player.getLogger().warning("TransferBatchBridge packet queue is too large! Got " + this.packetQueue.size() + " packets with " + this.player.getName());
+            this.player.disconnect("Transfer packet queue got too large!");
+            this.releaseAll();
+            return;
+        }
+
         Collection<BedrockPacket> outboundQueue = new ObjectArrayList<>();
         outboundQueue.addAll(this.packetQueue);
         this.packetQueue.clear();
-
-        if (outboundQueue.size() >= 8096) {
-            this.player.getLogger().warning("TransferBatchBridge packet queue is too large! Got "+outboundQueue.size()+" packets with "+this.player.getName());
-            this.player.disconnect("Transfer packet queue got too large!");
-            return;
-        }
 
         this.session.sendWrapped(outboundQueue, this.session.isEncrypted());
     }
@@ -88,7 +97,6 @@ public class TransferBatchBridge extends ProxyBatchBridge {
             this.hasStartGame = true;
         }
         super.handlePacket(packet, handler);
-
         // Packets after StartGamePacket should be queued
         // Ignore LevelEvent packet to prevent massive amounts of packets in queue
         if (!isStartGame && this.hasStartGame && packet.getPacketType() != BedrockPacketType.LEVEL_EVENT) {
