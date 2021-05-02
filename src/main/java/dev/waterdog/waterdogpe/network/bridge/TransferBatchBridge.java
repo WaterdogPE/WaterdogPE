@@ -21,6 +21,7 @@ import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
+import com.nukkitx.protocol.bedrock.wrapper.BedrockWrapperSerializerV9_10;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import io.netty.buffer.ByteBuf;
@@ -56,11 +57,10 @@ public class TransferBatchBridge extends ProxyBatchBridge {
      * @param downstream instance of BedrockSession which is this handler assigned to.
      */
     public void flushQueue(BedrockSession downstream) {
-        RakNetSession rakSession = (RakNetSession) downstream.getConnection();
-        if (rakSession.getEventLoop().inEventLoop()) {
+        if (downstream.getEventLoop().inEventLoop()) {
             this.flushQueue0();
         } else {
-            rakSession.getEventLoop().execute(this::flushQueue0);
+            downstream.getEventLoop().execute(this::flushQueue0);
         }
     }
 
