@@ -165,7 +165,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setTransferCallback(new TransferCallback(this.player, this.client, this.serverInfo));
 
         injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), packet.getPlayerPosition());
-        this.player.setDimensionChangeState(1); // Except first dim change packet.
+        this.player.setDimensionChangeState(TransferCallback.TRANSFER_PHASE_1); // Except first dim change packet.
         SessionInjections.injectPreDownstreamHandlers(this.getDownstream(), this.player);
         throw CancelSignalException.CANCEL;
     }

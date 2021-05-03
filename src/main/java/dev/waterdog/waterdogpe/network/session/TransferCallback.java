@@ -24,11 +24,16 @@ import dev.waterdog.waterdogpe.network.ServerInfo;
 import dev.waterdog.waterdogpe.network.bridge.TransferBatchBridge;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 
 import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.*;
 
 public class TransferCallback {
+
+    public static final int TRANSFER_RESET = 0;
+    public static final int TRANSFER_PHASE_1 = 1;
+    public static final int TRANSFER_PHASE_2 = 2;
 
     private final ProxiedPlayer player;
     private final BedrockClient client;
@@ -51,7 +56,27 @@ public class TransferCallback {
         return null;
     }
 
-    public void onTransferAccepted() {
+    public boolean onDimChangeSuccess() {
+        int dimChangeState = this.player.getDimensionChangeState();
+        switch (dimChangeState) {
+            case TRANSFER_PHASE_1:
+                // First dimension change was completed successfully.
+                this.onTransferAccepted();
+                this.player.setDimensionChangeState(TRANSFER_PHASE_2);
+                break;
+            case TRANSFER_PHASE_2:
+                // At this point dimension change sequence was completed.
+                // We can finally fully initialize connection.
+                this.onTransferComplete();
+                this.player.setDimensionChangeState(TRANSFER_RESET);
+                break;
+            default:
+                return false;
+        }
+        return true;
+    }
+
+    private void onTransferAccepted() {
         RewriteData rewriteData = this.player.getRewriteData();
         injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), true);
 
@@ -63,7 +88,7 @@ public class TransferCallback {
         injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
     }
 
-    public void onTransferComplete() {
+    private void onTransferComplete() {
         RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setTransferCallback(null);
 

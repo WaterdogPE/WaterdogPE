@@ -47,25 +47,12 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler {
 
     @Override
     public boolean handle(PlayerActionPacket packet) {
-        if (this.player.getDimensionChangeState() < 1 || packet.getAction() != PlayerActionType.DIMENSION_CHANGE_SUCCESS) {
+        if (this.player.getDimensionChangeState() == TransferCallback.TRANSFER_RESET || packet.getAction() != PlayerActionType.DIMENSION_CHANGE_SUCCESS) {
             return false;
         }
 
-        RewriteData rewriteData = this.player.getRewriteData();
-        TransferCallback transferCallback = rewriteData.getTransferCallback();
-        int dimChangeState = this.player.getDimensionChangeState();
-        if (dimChangeState == 1 && transferCallback != null) {
-            // First dimension change was completed successfully.
-            transferCallback.onTransferAccepted();
-            this.player.setDimensionChangeState(2);
-            throw CancelSignalException.CANCEL;
-        }
-
-        if (dimChangeState == 2 && transferCallback != null) {
-            // At this point dimension change sequence was completed.
-            // We can finally fully initialize connection.
-            transferCallback.onTransferComplete();
-            this.player.setDimensionChangeState(0);
+        TransferCallback transferCallback = this.player.getRewriteData().getTransferCallback();
+        if (transferCallback != null && transferCallback.onDimChangeSuccess()) {
             throw CancelSignalException.CANCEL;
         }
         return false;

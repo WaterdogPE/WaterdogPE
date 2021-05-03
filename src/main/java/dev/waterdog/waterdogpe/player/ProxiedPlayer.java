@@ -38,10 +38,7 @@ import dev.waterdog.waterdogpe.network.downstream.SwitchDownstreamHandler;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.rewrite.RewriteMaps;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
-import dev.waterdog.waterdogpe.network.session.LoginData;
-import dev.waterdog.waterdogpe.network.session.PendingConnection;
-import dev.waterdog.waterdogpe.network.session.ServerConnection;
-import dev.waterdog.waterdogpe.network.session.SessionInjections;
+import dev.waterdog.waterdogpe.network.session.*;
 import dev.waterdog.waterdogpe.network.upstream.ResourcePacksHandler;
 import dev.waterdog.waterdogpe.network.upstream.ConnectedUpstreamHandler;
 import dev.waterdog.waterdogpe.utils.types.PacketHandler;
@@ -104,7 +101,7 @@ public class ProxiedPlayer implements CommandSender {
      * 1 => Waiting for first dim change response.
      * 2 => Waiting for second/last dim change response.
      */
-    private final AtomicInteger dimensionChangeState = new AtomicInteger(0);
+    private final AtomicInteger dimensionChangeState = new AtomicInteger(TransferCallback.TRANSFER_RESET);
     /**
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
