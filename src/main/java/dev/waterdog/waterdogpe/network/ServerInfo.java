@@ -60,7 +60,7 @@ public class ServerInfo {
     }
 
     public void addPlayer(ProxiedPlayer player) {
-        if (player != null) {
+        if (player != null && player.isConnected()) {
             this.players.add(player);
         }
     }

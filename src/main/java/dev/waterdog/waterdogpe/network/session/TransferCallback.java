@@ -87,9 +87,6 @@ public class TransferCallback {
         initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
         this.getDownstream().sendPacket(initializedPacket);
 
-        this.targetServer.addPlayer(this.player);
-        this.player.setPendingConnection(null);
-
         ServerConnection server = new ServerConnection(this.client, this.getDownstream(), this.targetServer);
         SessionInjections.injectPostDownstreamHandlers(server, this.player);
 
@@ -99,7 +96,9 @@ public class TransferCallback {
         }
 
         ServerConnection oldServer = this.player.getServer();
+        this.player.setPendingConnection(null);
         this.player.setServer(server);
+        this.targetServer.addPlayer(this.player);
         this.player.setAcceptPlayStatus(true);
 
         TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);

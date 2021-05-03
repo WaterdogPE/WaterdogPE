@@ -18,21 +18,22 @@ package dev.waterdog.waterdogpe.network.bridge;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
+import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
-import io.netty.util.ReferenceCounted;
+import io.netty.util.internal.PlatformDependent;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Queue;
 
 public class TransferBatchBridge extends ProxyBatchBridge {
 
-    private final List<BedrockPacket> packetQueue = new ObjectArrayList<>();
+    private final Queue<BedrockPacket> packetQueue = PlatformDependent.newSpscQueue();
     private volatile boolean hasStartGame = false;
     private volatile boolean dimLockActive = true;
 
@@ -46,14 +47,6 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         if (this.hasStartGame && !this.dimLockActive) {
             // Send queued packets to upstream if dim lock is disabled
             this.flushQueue(session);
-        }
-    }
-
-    public void releaseAll() {
-        for (BedrockPacket packet : this.packetQueue) {
-            if (packet instanceof ReferenceCounted) { // Release all refCounted packets
-                ((UnknownPacket) packet).release(((UnknownPacket) packet).refCnt());
-            }
         }
     }
 
@@ -79,14 +72,17 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         if (this.packetQueue.size() >= 8048) {
             this.player.getLogger().warning("TransferBatchBridge packet queue is too large! Got " + this.packetQueue.size() + " packets with " + this.player.getName());
             this.player.disconnect("Transfer packet queue got too large!");
-            this.releaseAll();
+            // Deallocate packet queue manually because result of TransferBatchBridge#release called
+            // from disconnect handler can be ignored as BatchHandler can be already changed.
+            this.free0();
             return;
         }
 
         Collection<BedrockPacket> outboundQueue = new ObjectArrayList<>();
-        outboundQueue.addAll(this.packetQueue);
-        this.packetQueue.clear();
-
+        BedrockPacket packet;
+        while ((packet = this.packetQueue.poll()) != null) {
+            outboundQueue.add(packet);
+        }
         this.session.sendWrapped(outboundQueue, this.session.isEncrypted());
     }
 
@@ -119,5 +115,29 @@ public class TransferBatchBridge extends ProxyBatchBridge {
 
     public boolean isDimLockActive() {
         return this.dimLockActive;
+    }
+
+    public static void release(BatchHandler handler, BedrockSession downstream) {
+        if (handler instanceof TransferBatchBridge) {
+            ((TransferBatchBridge) handler).free(downstream);
+        }
+    }
+
+    public void free(BedrockSession downstream) {
+        if (downstream.getEventLoop().inEventLoop()) {
+            this.free0();
+        } else {
+            downstream.getEventLoop().execute(this::free0);
+        }
+    }
+
+    private void free0() {
+        BedrockPacket packet;
+        while ((packet = this.packetQueue.poll()) != null) {
+            int refCnt = ReferenceCountUtil.refCnt(packet);
+            if (refCnt > 0) {
+                ReferenceCountUtil.release(packet, refCnt);
+            }
+        }
     }
 }

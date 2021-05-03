@@ -39,6 +39,7 @@ public class SessionInjections {
         downstream.addDisconnectHandler((reason) -> {
             if (downstreamClient != null && downstreamClient.getSession().equals(downstream)) {
                 // Make sure everything is closed as excepted.
+                TransferBatchBridge.release(downstream.getBatchHandler(), downstream);
                 downstreamClient.close();
             }
 

@@ -235,6 +235,7 @@ public class ProxiedPlayer implements CommandSender {
             }
 
             pendingConnection.setClient(client);
+            SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
 
             if (this.serverConnection == null) {
                 this.serverConnection = new ServerConnection(client, downstream, targetServer);
@@ -252,8 +253,6 @@ public class ProxiedPlayer implements CommandSender {
             downstream.setPacketCodec(this.getProtocol().getCodec());
             downstream.setLogging(WaterdogPE.version().debug());
             this.loginData.doLogin(downstream, this);
-
-            SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
             this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         })).whenComplete((ignore, error) -> {
             if (error != null) {
