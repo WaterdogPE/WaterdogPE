@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.bridge;
 
+import com.nukkitx.network.raknet.RakNetSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
@@ -53,14 +54,17 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     /**
      * Here we send all queued packets from downstream to upstream.
      * Packets will be sent after StartGamePacket is received and dimension change sequence has been passed.
+     * Please notice that we use eventLoop of RakNet session instead of BedrockSession because
+     * received packets are also handled by RakNet eventLoop!
      *
      * @param downstream instance of BedrockSession which is this handler assigned to.
      */
     public void flushQueue(BedrockSession downstream) {
-        if (downstream.getEventLoop().inEventLoop()) {
+        RakNetSession rakSession = (RakNetSession) downstream.getConnection();
+        if (rakSession.getEventLoop().inEventLoop()) {
             this.flushQueue0();
         } else {
-            downstream.getEventLoop().execute(this::flushQueue0);
+            rakSession.getEventLoop().execute(this::flushQueue0);
         }
     }
 
@@ -124,10 +128,11 @@ public class TransferBatchBridge extends ProxyBatchBridge {
     }
 
     public void free(BedrockSession downstream) {
-        if (downstream.getEventLoop().inEventLoop()) {
+        RakNetSession rakSession = (RakNetSession) downstream.getConnection();
+        if (rakSession.getEventLoop().inEventLoop()) {
             this.free0();
         } else {
-            downstream.getEventLoop().execute(this::free0);
+            rakSession.getEventLoop().execute(this::free0);
         }
     }
 
