@@ -204,7 +204,7 @@ public class PackManager {
         packet.setPackVersion(from.getPackVersion());
         packet.setChunkIndex(from.getChunkIndex());
         packet.setData(resourcePack.getChunk(FileUtils.INT_MEGABYTE * from.getChunkIndex(), FileUtils.INT_MEGABYTE));
-        packet.setProgress(FileUtils.INT_MEGABYTE * from.getChunkIndex());
+        packet.setProgress((long) FileUtils.INT_MEGABYTE * from.getChunkIndex());
         return packet;
     }
 

@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.session;
 
+import com.nukkitx.network.raknet.RakNetSession;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.packet.SetLocalPlayerAsInitializedPacket;
@@ -102,21 +103,33 @@ public class TransferCallback {
             return;
         }
 
+        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
+        initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalEntityId());
+        this.getDownstream().sendPacket(initializedPacket);
+
+        // Allow transfer queue to be sent
         TransferBatchBridge batchBridge = this.getBatchBridge();
         if (batchBridge != null) {
-            // Allow transfer queue to be sent
             batchBridge.setDimLockActive(false);
         }
 
-        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
-        this.getDownstream().sendPacket(initializedPacket);
+        // Change downstream bridge on same eventLoop as packet are being processed on to
+        // prevent packet reordering in some situations
+        RakNetSession rakSession = (RakNetSession) this.getDownstream().getConnection();
+        if (rakSession.getEventLoop().inEventLoop()) {
+            this.onTransferComplete0();
+        } else {
+            rakSession.getEventLoop().execute(this::onTransferComplete0);
+        }
+    }
 
+    private void onTransferComplete0() {
+        TransferBatchBridge batchBridge = this.getBatchBridge();
         ServerConnection server = new ServerConnection(this.client, this.getDownstream(), this.targetServer);
         SessionInjections.injectPostDownstreamHandlers(server, this.player);
 
+        // Flush the queue last time before any other packets are received
         if (batchBridge != null) {
-            // Make sure queue will be sent
             batchBridge.flushQueue(this.getDownstream());
         }
 
