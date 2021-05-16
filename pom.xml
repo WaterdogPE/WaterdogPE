@@ -13,7 +13,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <raklib.version>1.6.26-SNAPSHOT</raklib.version>
+        <raklib.version>1.6.27-SNAPSHOT</raklib.version>
         <protocol.protocol>bedrock-v431</protocol.protocol>
         <protocol.version>2.7.0-SNAPSHOT</protocol.version>
         <log4j2.version>2.14.0</log4j2.version>

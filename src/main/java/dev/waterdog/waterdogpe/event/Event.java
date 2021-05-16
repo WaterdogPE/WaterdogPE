@@ -68,16 +68,16 @@ public abstract class Event {
         return this.completableFuture;
     }
 
-    protected void completeFuture(CompletableFuture<Event> future) {
+    protected <T extends Event> void completeFuture(CompletableFuture<T> future) {
         Preconditions.checkArgument(this.isCompletable(), "Event is not @CompletableEvent or @AsyncEvent!");
         if (this.completableFuture.isEmpty()) {
-            future.complete(this);
+            future.complete((T) this);
             return;
         }
 
         CompletableFuture.allOf(this.completableFuture.toArray(new CompletableFuture[0])).whenComplete((ignore, error) -> {
             if (error == null) {
-                future.complete(this);
+                future.complete((T) this);
             } else {
                 future.completeExceptionally(error);
             }

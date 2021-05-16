@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.downstream;
 
 import com.nukkitx.protocol.bedrock.packet.*;
+import dev.waterdog.waterdogpe.event.defaults.FastTransferRequestEvent;
 import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
 import dev.waterdog.waterdogpe.network.ServerInfo;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
@@ -88,8 +89,11 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
             serverInfo = this.player.getProxy().getServerInfo(packet.getAddress(), packet.getPort());
         }
 
-        if (serverInfo != null) {
-            this.player.connect(serverInfo);
+        FastTransferRequestEvent event = new FastTransferRequestEvent(serverInfo, this.player, packet.getAddress(), packet.getPort());
+        this.player.getProxy().getEventManager().callEvent(event);
+
+        if (!event.isCancelled() && event.getServerInfo() != null) {
+            this.player.connect(event.getServerInfo());
             throw CancelSignalException.CANCEL;
         }
         return false;
