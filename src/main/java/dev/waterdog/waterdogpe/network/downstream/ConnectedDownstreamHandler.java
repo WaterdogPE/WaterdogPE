@@ -89,7 +89,7 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
         FastTransferRequestEvent event = new FastTransferRequestEvent(serverInfo, this.player, packet.getAddress(), packet.getPort());
         this.player.getProxy().getEventManager().callEvent(event);
 
-        if (event.getServerInfo() != null) {
+        if (!event.isCancelled() && event.getServerInfo() != null) {
             this.player.connect(event.getServerInfo());
             throw CancelSignalException.CANCEL;
         }
