@@ -41,7 +41,7 @@ public class EventHandler {
         this.eventManager = eventManager;
     }
 
-    public CompletableFuture<Event> handle(Event event) {
+    public <T extends Event>  CompletableFuture<T> handle(T event) {
         if (!this.eventClass.isInstance(event)) {
             throw new EventException("Tried to handle invalid event type!");
         }
@@ -50,7 +50,7 @@ public class EventHandler {
             return this.handleSync(event);
         }
 
-        CompletableFuture<Event> future = new CompletableFuture<>();
+        CompletableFuture<T> future = new CompletableFuture<>();
         CompletableFuture.supplyAsync(() -> {
             for (EventPriority priority : EventPriority.values()) {
                 this.handlePriority(priority, event);
@@ -64,7 +64,7 @@ public class EventHandler {
         return future;
     }
 
-    private CompletableFuture<Event> handleSync(Event event) {
+    private <T extends Event> CompletableFuture<T> handleSync(T event) {
         if (!event.isCompletable()) {
             for (EventPriority priority : EventPriority.values()) {
                 this.handlePriority(priority, event);
@@ -85,7 +85,7 @@ public class EventHandler {
             return CompletableFuture.completedFuture(event);
         }
 
-        CompletableFuture<Event> future = new CompletableFuture<>();
+        CompletableFuture<T> future = new CompletableFuture<>();
         event.completeFuture(future);
         return future;
     }
