@@ -16,6 +16,9 @@
 package dev.waterdog.waterdogpe.network.downstream;
 
 import com.nukkitx.protocol.bedrock.packet.*;
+import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.event.Event;
+import dev.waterdog.waterdogpe.event.defaults.FastTransferRequestEvent;
 import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
 import dev.waterdog.waterdogpe.network.ServerInfo;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
@@ -23,6 +26,8 @@ import dev.waterdog.waterdogpe.network.session.ServerConnection;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
+
+import java.util.concurrent.CompletableFuture;
 
 public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
@@ -85,8 +90,11 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
             serverInfo = this.player.getProxy().getServerInfo(packet.getAddress(), packet.getPort());
         }
 
-        if (serverInfo != null) {
-            this.player.connect(serverInfo);
+        FastTransferRequestEvent event = new FastTransferRequestEvent(serverInfo, this.player, packet.getAddress(), packet.getPort());
+        this.player.getProxy().getEventManager().callEvent(event);
+
+        if (event.getServerInfo() != null) {
+            this.player.connect(event.getServerInfo());
             throw CancelSignalException.CANCEL;
         }
         return false;
