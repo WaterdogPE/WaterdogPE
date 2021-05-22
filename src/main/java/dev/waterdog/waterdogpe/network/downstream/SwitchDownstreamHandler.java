@@ -16,19 +16,17 @@
 package dev.waterdog.waterdogpe.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
-import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
-import dev.waterdog.waterdogpe.event.defaults.TransferCompleteEvent;
 import dev.waterdog.waterdogpe.network.ServerInfo;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.rewrite.types.BlockPalette;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
 import dev.waterdog.waterdogpe.network.session.ServerConnection;
 import dev.waterdog.waterdogpe.network.session.SessionInjections;
-import dev.waterdog.waterdogpe.player.PlayerRewriteUtils;
+import dev.waterdog.waterdogpe.network.session.TransferCallback;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
@@ -42,6 +40,8 @@ import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.UUID;
+
+import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.*;
 
 public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
@@ -108,7 +108,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
     public final boolean handle(StartGamePacket packet) {
         RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
-        rewriteData.setDimension(packet.getDimensionId());
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
         rewriteData.setRotation(packet.getRotation());
@@ -120,71 +119,66 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             rewriteData.setBlockProperties(packet.getBlockProperties());
         }
 
+        ServerConnection oldServer = this.player.getServer();
+        oldServer.getInfo().removePlayer(this.player);
+        oldServer.disconnect();
+
         Collection<UUID> playerList = this.player.getPlayers();
-        PlayerRewriteUtils.injectRemoveAllPlayers(this.player.getUpstream(), playerList);
+        injectRemoveAllPlayers(this.player.getUpstream(), playerList);
         playerList.clear();
 
         Long2LongMap entityLinks = this.player.getEntityLinks();
         for (Long2LongMap.Entry entry : entityLinks.long2LongEntrySet()) {
-            PlayerRewriteUtils.injectRemoveEntityLink(this.player.getUpstream(), entry.getLongKey(), entry.getLongValue());
+            injectRemoveEntityLink(this.player.getUpstream(), entry.getLongKey(), entry.getLongValue());
         }
         entityLinks.clear();
 
         LongSet entities = this.player.getEntities();
         for (long entityId : entities) {
-            PlayerRewriteUtils.injectRemoveEntity(this.player.getUpstream(), entityId);
+            injectRemoveEntity(this.player.getUpstream(), entityId);
         }
         entities.clear();
 
         ObjectSet<String> scoreboards = this.player.getScoreboards();
         for (String scoreboard : scoreboards) {
-            PlayerRewriteUtils.injectRemoveObjective(this.player.getUpstream(), scoreboard);
+            injectRemoveObjective(this.player.getUpstream(), scoreboard);
         }
         scoreboards.clear();
 
         LongSet bossbars = this.player.getBossbars();
         for (long bossbarId : bossbars) {
-            PlayerRewriteUtils.injectRemoveBossbar(this.player.getUpstream(), bossbarId);
+            injectRemoveBossbar(this.player.getUpstream(), bossbarId);
         }
         bossbars.clear();
 
-        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(rewriteData.getOriginalEntityId());
-        this.getDownstream().sendPacket(initializedPacket);
+        injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
+        injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
+        injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
+        this.getDownstream().sendPacket(this.player.getLoginData().getChunkRadius());
 
-        PlayerRewriteUtils.injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
+        /*
+         * Client does not accept ChangeDimensionPacket when dimension is same as current dimension.
+         * Therefore we are attempting to do dimension change sequence which uses 2 dim changes.
+         * After client successfully changes dimension we receive PlayerActionPacket#DIMENSION_CHANGE_SUCCESS and send second dim change.
+         */
+        rewriteData.setDimension(determineDimensionId(packet.getDimensionId()));
+        rewriteData.setTransferCallback(new TransferCallback(this.player, this.client, this.serverInfo));
 
-        Vector3f rotation = Vector3f.from(packet.getRotation().getX(), 0, packet.getRotation().getY());
-        PlayerRewriteUtils.injectPosition(this.player.getUpstream(), packet.getPlayerPosition(), rotation, rewriteData.getEntityId());
-
-        RequestChunkRadiusPacket chunkRadius = this.player.getLoginData().getChunkRadius();
-        this.getDownstream().sendPacket(chunkRadius);
-        PlayerRewriteUtils.injectChunkPublisherUpdate(this.player.getUpstream(), packet.getPlayerPosition().toInt(), chunkRadius.getRadius());
-
-        PlayerRewriteUtils.injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
-        PlayerRewriteUtils.injectClearWeather(this.player.getUpstream());
-        PlayerRewriteUtils.injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
-        PlayerRewriteUtils.injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
-
-        ServerConnection oldServer = this.player.getServer();
-        oldServer.getInfo().removePlayer(this.player);
-        oldServer.disconnect();
-
-        this.serverInfo.addPlayer(this.player);
-        this.player.setPendingConnection(null);
-
-        ServerConnection server = new ServerConnection(this.client, this.getDownstream(), this.serverInfo);
-        SessionInjections.injectDownstreamHandlers(server, this.player);
-        this.player.setServer(server);
-        this.player.setAcceptPlayStatus(true);
-
-        TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
-        this.player.getProxy().getEventManager().callEvent(event);
+        injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), packet.getPlayerPosition());
+        this.player.setDimensionChangeState(TransferCallback.TRANSFER_PHASE_1); // Except first dim change packet.
+        SessionInjections.injectPreDownstreamHandlers(this.getDownstream(), this.player);
         throw CancelSignalException.CANCEL;
     }
 
     @Override
     public boolean handle(DisconnectPacket packet) {
+        TransferCallback transferCallback = this.player.getRewriteData().getTransferCallback();
+        if (transferCallback != null) {
+            // Player was already disconnected from old downstream
+            transferCallback.onTransferFailed();
+            return false;
+        }
+
         this.client.close();
         this.player.setPendingConnection(null);
         this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), packet.getKickMessage()));

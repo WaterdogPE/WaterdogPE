@@ -38,10 +38,7 @@ import dev.waterdog.waterdogpe.network.downstream.SwitchDownstreamHandler;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.rewrite.RewriteMaps;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
-import dev.waterdog.waterdogpe.network.session.LoginData;
-import dev.waterdog.waterdogpe.network.session.PendingConnection;
-import dev.waterdog.waterdogpe.network.session.ServerConnection;
-import dev.waterdog.waterdogpe.network.session.SessionInjections;
+import dev.waterdog.waterdogpe.network.session.*;
 import dev.waterdog.waterdogpe.network.upstream.ResourcePacksHandler;
 import dev.waterdog.waterdogpe.network.upstream.ConnectedUpstreamHandler;
 import dev.waterdog.waterdogpe.utils.types.PacketHandler;
@@ -56,6 +53,7 @@ import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Base Player class.
@@ -97,6 +95,13 @@ public class ProxiedPlayer implements CommandSender {
      * This value is changed by PlayerResourcePackInfoSendEvent.
      */
     private volatile boolean acceptResourcePacks = true;
+    /**
+     * This signalizes the state of dimension change sequence.
+     * 0 => No dimension change in progress.
+     * 1 => Waiting for first dim change response.
+     * 2 => Waiting for second/last dim change response.
+     */
+    private final AtomicInteger dimensionChangeState = new AtomicInteger(TransferCallback.TRANSFER_RESET);
     /**
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
@@ -227,6 +232,7 @@ public class ProxiedPlayer implements CommandSender {
             }
 
             pendingConnection.setClient(client);
+            SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
 
             if (this.serverConnection == null) {
                 this.serverConnection = new ServerConnection(client, downstream, targetServer);
@@ -244,8 +250,6 @@ public class ProxiedPlayer implements CommandSender {
             downstream.setPacketCodec(this.getProtocol().getCodec());
             downstream.setLogging(WaterdogPE.version().debug());
             this.loginData.doLogin(downstream, this);
-
-            SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
             this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         })).whenComplete((ignore, error) -> {
             if (error != null) {
@@ -357,6 +361,17 @@ public class ProxiedPlayer implements CommandSender {
     public void sendPacket(BedrockPacket packet) {
         if (this.upstream != null && !this.upstream.isClosed()) {
             this.upstream.sendPacket(packet);
+        }
+    }
+
+    /**
+     * Sends a immediately packet to the upstream connection
+     *
+     * @param packet the packet to send
+     */
+    public void sendPacketImmediately(BedrockPacket packet) {
+        if (this.upstream != null && !this.upstream.isClosed()) {
+            this.upstream.sendPacketImmediately(packet);
         }
     }
 
@@ -743,6 +758,14 @@ public class ProxiedPlayer implements CommandSender {
 
     public boolean acceptResourcePacks() {
         return this.acceptResourcePacks;
+    }
+
+    public void setDimensionChangeState(int state) {
+        this.dimensionChangeState.set(state);
+    }
+
+    public int getDimensionChangeState() {
+        return this.dimensionChangeState.get();
     }
 
     @Override

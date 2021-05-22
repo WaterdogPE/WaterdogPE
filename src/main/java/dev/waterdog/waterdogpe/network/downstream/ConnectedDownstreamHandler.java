@@ -25,6 +25,8 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 
+import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.*;
+
 public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
     private final ServerConnection server;
@@ -65,6 +67,7 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
         this.player.setAcceptPlayStatus(false);
         RewriteData rewriteData = this.player.getRewriteData();
+        injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), false);
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(rewriteData.getEntityId());

@@ -34,7 +34,7 @@ public abstract class ProxyBatchBridge implements BatchHandler {
     protected final BedrockSession session;
     protected final ProxiedPlayer player;
 
-    protected boolean trackEntities = true;
+    protected volatile boolean trackEntities = true;
 
     public ProxyBatchBridge(ProxiedPlayer player, BedrockSession session) {
         this.session = session;

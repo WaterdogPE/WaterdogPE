@@ -15,9 +15,12 @@
 
 package dev.waterdog.waterdogpe.network.upstream;
 
+import com.nukkitx.protocol.bedrock.data.PlayerActionType;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.PlayerChatEvent;
+import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
+import dev.waterdog.waterdogpe.network.session.TransferCallback;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 
@@ -39,6 +42,19 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler {
     @Override
     public final boolean handle(RequestChunkRadiusPacket packet) {
         this.player.getLoginData().setChunkRadius(packet);
+        return false;
+    }
+
+    @Override
+    public boolean handle(PlayerActionPacket packet) {
+        if (this.player.getDimensionChangeState() == TransferCallback.TRANSFER_RESET || packet.getAction() != PlayerActionType.DIMENSION_CHANGE_SUCCESS) {
+            return false;
+        }
+
+        TransferCallback transferCallback = this.player.getRewriteData().getTransferCallback();
+        if (transferCallback != null && transferCallback.onDimChangeSuccess()) {
+            throw CancelSignalException.CANCEL;
+        }
         return false;
     }
 

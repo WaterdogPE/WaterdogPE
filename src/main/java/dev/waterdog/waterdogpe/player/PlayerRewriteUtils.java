@@ -15,15 +15,22 @@
 
 package dev.waterdog.waterdogpe.player;
 
+import com.google.common.base.Preconditions;
+import com.nukkitx.math.vector.Vector2f;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.math.vector.Vector3i;
+import com.nukkitx.network.VarInts;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.GameType;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import com.nukkitx.protocol.bedrock.data.entity.EntityData;
+import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
+import com.nukkitx.protocol.bedrock.data.entity.EntityFlags;
 import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.packet.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,12 +46,46 @@ public class PlayerRewriteUtils {
     public static final RequestChunkRadiusPacket defaultChunkRadius = new RequestChunkRadiusPacket();
     public static final ClientCacheStatusPacket defaultCachePacket = new ClientCacheStatusPacket();
 
+    public static final int DIMENSION_OVERWORLD = 0;
+    public static final int DIMENSION_NETHER = 1;
+
+    private static final byte[] fakeChunkData;
+
     static {
         defaultChunkRadius.setRadius(8);
+
+        // Here we create hardcoded "empty" chunk which is accepted by client
+        // Because client does not accept empty array list we try to hardcode this
+        // Keep in mind that this CAN change with newer versions!
+        final ByteBuf chunkdata = Unpooled.buffer();
+        chunkdata.writeByte(1); // 1 section
+        chunkdata.writeByte(8); // New subchunk version!
+        chunkdata.writeByte(1); // Zero block storages :O
+        chunkdata.writeByte((1 << 1) | 1);  // Runtimeflag and palette id.
+        chunkdata.writeZero(512);
+        VarInts.writeInt(chunkdata, 1); // Palette size
+        VarInts.writeInt(chunkdata, 0); // Air
+        chunkdata.writeZero(512); // Map height
+        chunkdata.writeZero(256); // Biome data.
+        chunkdata.writeByte(0); // Borders
+
+        ByteBuf buffer = Unpooled.buffer();
+        VarInts.writeInt(buffer, chunkdata.readUnsignedByte());
+        buffer.writeByte(0);
+        VarInts.writeInt(buffer, chunkdata.readableBytes());
+        buffer.writeBytes(chunkdata);
+
+        fakeChunkData = new byte[buffer.readableBytes()];
+        buffer.readBytes(fakeChunkData);
+        Preconditions.checkArgument(fakeChunkData.length > 0);
     }
 
     public static long rewriteId(long from, long rewritten, long origin) {
         return from == origin ? rewritten : (from == rewritten ? origin : from);
+    }
+
+    public static int determineDimensionId(int from) {
+        return from == DIMENSION_OVERWORLD ? DIMENSION_NETHER : DIMENSION_OVERWORLD;
     }
 
     public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn, int radius) {
@@ -175,15 +216,62 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
-    public static void injectPosition(BedrockSession session, Vector3f position, Vector3f rotation, long runtimeId) {
+    public static void injectPosition(BedrockSession session, Vector3f position, Vector2f rotation, long runtimeId) {
         if (session == null || session.isClosed()) {
             return;
         }
         MovePlayerPacket packet = new MovePlayerPacket();
         packet.setPosition(position);
         packet.setRuntimeEntityId(runtimeId);
-        packet.setRotation(rotation);
+        packet.setRotation(rotation.toVector3(rotation.getY()));
         packet.setMode(MovePlayerPacket.Mode.RESPAWN);
+        session.sendPacket(packet);
+    }
+
+    public static void injectDimensionChange(BedrockSession session, int dimensionId, Vector3f position) {
+        if (session == null || session.isClosed()){
+            return;
+        }
+        ChangeDimensionPacket packet = new ChangeDimensionPacket();
+        packet.setPosition(position);
+        packet.setRespawn(true);
+        packet.setDimension(dimensionId);
+        session.sendPacket(packet);
+        injectChunkPublisherUpdate(session, position.toInt(), 3);
+        injectEmptyChunks(session, position, 3);
+    }
+
+    public static void injectEmptyChunks(BedrockSession session, Vector3f spawnPosition, int radius){
+        int chunkPositionX = spawnPosition.getFloorX() >> 4;
+        int chunkPositionZ = spawnPosition.getFloorZ() >> 4;
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                injectEmptyChunk(session, chunkPositionX + x, chunkPositionZ + z);
+            }
+        }
+    }
+
+    public static void injectEmptyChunk(BedrockSession session, int chunkX, int chunkZ){
+        LevelChunkPacket packet = new LevelChunkPacket();
+        packet.setChunkX(chunkX);
+        packet.setChunkZ(chunkZ);
+        // packet.setData(fakeChunkData);
+        packet.setData(new byte[257]);
+        session.sendPacket(packet);
+    }
+
+    public static void injectEntityImmobile(BedrockSession session, long runtimeId, boolean immobile) {
+        if (session == null || session.isClosed()){
+            return;
+        }
+        EntityFlags flags = new EntityFlags();
+        flags.setFlag(EntityFlag.NO_AI, immobile);
+        flags.setFlag(EntityFlag.BREATHING, true); // Hide bubbles
+        flags.setFlag(EntityFlag.HAS_GRAVITY, true); // Disable floating
+
+        SetEntityDataPacket packet = new SetEntityDataPacket();
+        packet.setRuntimeEntityId(runtimeId);
+        packet.getMetadata().putFlags(flags);
         session.sendPacket(packet);
     }
 }

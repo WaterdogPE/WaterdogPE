@@ -19,6 +19,7 @@ import com.nukkitx.math.vector.Vector2f;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.data.BlockPropertyData;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
+import dev.waterdog.waterdogpe.network.session.TransferCallback;
 
 import java.util.List;
 
@@ -51,6 +52,7 @@ public class RewriteData {
      * The dimensionId the player is currently in
      */
     private int dimension = 0;
+    private TransferCallback transferCallback;
 
     private Vector3f spawnPosition;
     private Vector2f rotation;
@@ -112,6 +114,14 @@ public class RewriteData {
 
     public void setDimension(int dimension) {
         this.dimension = dimension;
+    }
+
+    public TransferCallback getTransferCallback() {
+        return this.transferCallback;
+    }
+
+    public void setTransferCallback(TransferCallback transferCallback) {
+        this.transferCallback = transferCallback;
     }
 
     public Vector3f getSpawnPosition() {
