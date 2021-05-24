@@ -48,6 +48,7 @@ public class PlayerRewriteUtils {
 
     public static final int DIMENSION_OVERWORLD = 0;
     public static final int DIMENSION_NETHER = 1;
+    public static final int DIMENSION_END = 2;
 
     private static final byte[] fakeChunkData;
 
@@ -84,8 +85,11 @@ public class PlayerRewriteUtils {
         return from == origin ? rewritten : (from == rewritten ? origin : from);
     }
 
-    public static int determineDimensionId(int from) {
-        return from == DIMENSION_OVERWORLD ? DIMENSION_NETHER : DIMENSION_OVERWORLD;
+    public static int determineDimensionId(int from, int to) {
+        if (from == to) {
+            return from == DIMENSION_OVERWORLD ? DIMENSION_NETHER : DIMENSION_OVERWORLD;
+        }
+        return to;
     }
 
     public static void injectChunkPublisherUpdate(BedrockSession session, Vector3i defaultSpawn, int radius) {

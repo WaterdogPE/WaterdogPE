@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.network.downstream;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.AvailableCommandsPacket;
+import com.nukkitx.protocol.bedrock.packet.ChangeDimensionPacket;
 import com.nukkitx.protocol.bedrock.packet.ChunkRadiusUpdatedPacket;
 import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
 import dev.waterdog.waterdogpe.command.Command;
@@ -53,6 +54,12 @@ public abstract class AbstractDownstreamHandler implements BedrockPacketHandler 
     @Override
     public boolean handle(ChunkRadiusUpdatedPacket packet) {
         this.player.getLoginData().getChunkRadius().setRadius(packet.getRadius());
+        return false;
+    }
+
+    @Override
+    public boolean handle(ChangeDimensionPacket packet) {
+        this.player.getRewriteData().setDimension(packet.getDimension());
         return false;
     }
 

@@ -156,16 +156,22 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
         this.getDownstream().sendPacket(this.player.getLoginData().getChunkRadius());
 
-        /*
-         * Client does not accept ChangeDimensionPacket when dimension is same as current dimension.
-         * Therefore we are attempting to do dimension change sequence which uses 2 dim changes.
-         * After client successfully changes dimension we receive PlayerActionPacket#DIMENSION_CHANGE_SUCCESS and send second dim change.
-         */
-        rewriteData.setDimension(determineDimensionId(packet.getDimensionId()));
-        rewriteData.setTransferCallback(new TransferCallback(this.player, this.client, this.serverInfo));
+        // Client does not accept ChangeDimensionPacket when dimension is same as current dimension.
+        // If we transfer between same dimensions we are attempting to do dimension change sequence which uses 2 dim changes
+        // After client successfully changes dimension we receive PlayerActionPacket#DIMENSION_CHANGE_SUCCESS and continue in transfer
+        int newDimension = determineDimensionId(rewriteData.getDimension(), packet.getDimensionId());
+        TransferCallback transferCallback = new TransferCallback(this.player, this.client, this.serverInfo, packet.getDimensionId());
 
-        injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), packet.getPlayerPosition());
-        this.player.setDimensionChangeState(TransferCallback.TRANSFER_PHASE_1); // Except first dim change packet.
+        rewriteData.setDimension(newDimension);
+        rewriteData.setTransferCallback(transferCallback);
+        this.player.setDimensionChangeState(TransferCallback.TRANSFER_PHASE_1);
+        injectDimensionChange(this.player.getUpstream(), newDimension, packet.getPlayerPosition());
+
+        if (newDimension == packet.getDimensionId()) {
+            // Transfer between different dimensions
+            // Simulate two dim-change behaviour
+            transferCallback.onDimChangeSuccess();
+        }
         SessionInjections.injectPreDownstreamHandlers(this.getDownstream(), this.player);
         throw CancelSignalException.CANCEL;
     }

@@ -39,11 +39,13 @@ public class TransferCallback {
     private final ProxiedPlayer player;
     private final BedrockClient client;
     private final ServerInfo targetServer;
+    private final int targetDimension;
 
-    public TransferCallback(ProxiedPlayer player, BedrockClient client, ServerInfo targetServer) {
+    public TransferCallback(ProxiedPlayer player, BedrockClient client, ServerInfo targetServer, int targetDimension) {
         this.player = player;
         this.client = client;
         this.targetServer = targetServer;
+        this.targetDimension = targetDimension;
     }
 
     public BedrockClientSession getDownstream() {
@@ -62,13 +64,13 @@ public class TransferCallback {
         switch (dimChangeState) {
             case TRANSFER_PHASE_1:
                 // First dimension change was completed successfully.
-                this.onTransferAccepted();
+                this.onTransferPhase1Completed();
                 this.player.setDimensionChangeState(TRANSFER_PHASE_2);
                 break;
             case TRANSFER_PHASE_2:
                 // At this point dimension change sequence was completed.
                 // We can finally fully initialize connection.
-                this.onTransferComplete();
+                this.onTransferPhase2Completed();
                 this.player.setDimensionChangeState(TRANSFER_RESET);
                 break;
             default:
@@ -77,19 +79,22 @@ public class TransferCallback {
         return true;
     }
 
-    private void onTransferAccepted() {
+    private void onTransferPhase1Completed() {
         RewriteData rewriteData = this.player.getRewriteData();
         injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), true);
 
-        rewriteData.setDimension(determineDimensionId(rewriteData.getDimension()));
-        injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition());
+        if (rewriteData.getDimension() != this.targetDimension) {
+            // Send second dim-change to correct dimension
+            rewriteData.setDimension(determineDimensionId(rewriteData.getDimension(), this.targetDimension));
+            injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition());
+        }
 
         injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
         injectClearWeather(this.player.getUpstream());
         injectGameRules(this.player.getUpstream(), rewriteData.getGameRules());
     }
 
-    private void onTransferComplete() {
+    private void onTransferPhase2Completed() {
         RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setTransferCallback(null);
 
