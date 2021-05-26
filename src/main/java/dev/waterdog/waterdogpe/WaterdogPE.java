@@ -54,10 +54,18 @@ public class WaterdogPE {
         }
 
         try {
-            ProxyServer server = new ProxyServer(logger, DATA_PATH, PLUGIN_PATH);
+            new ProxyServer(logger, DATA_PATH, PLUGIN_PATH);
         } catch (Exception e) {
             logger.logException(e);
+            shutdownHook();
         }
+    }
+
+    /**
+     * This method is called when exception occurs or process saw shutdown
+     */
+    protected static void shutdownHook() {
+        LogManager.shutdown();
     }
 
     private static VersionInfo loadVersion() {
