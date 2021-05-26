@@ -50,6 +50,8 @@ import it.unimi.dsi.fastutil.objects.*;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -576,8 +578,13 @@ public class ProxiedPlayer implements CommandSender {
         if (this.admin || permission.isEmpty()) {
             return true;
         }
+
         Permission perm = this.permissions.get(permission.toLowerCase());
-        return perm != null && perm.getValue();
+        boolean result = perm != null && perm.getValue();
+
+        PlayerPermissionCheckEvent event = new PlayerPermissionCheckEvent(this, permission, result);
+        this.getProxy().getEventManager().callEvent(event);
+        return event.hasPermission();
     }
 
     /**
@@ -595,6 +602,13 @@ public class ProxiedPlayer implements CommandSender {
      */
     public Permission getPermission(String permission) {
         return this.permissions.get(permission.toLowerCase());
+    }
+
+    /**
+     * @return collection of assigned player permissions
+     */
+    public Collection<Permission> getPermissions() {
+        return Collections.unmodifiableCollection(this.permissions.values());
     }
 
     /**
