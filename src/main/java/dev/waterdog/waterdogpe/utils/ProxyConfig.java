@@ -28,6 +28,7 @@ import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.*;
 
+@SerializeOptions(skipFailedObjects = true)
 public class ProxyConfig extends YamlConfig {
 
     @Path("servers")

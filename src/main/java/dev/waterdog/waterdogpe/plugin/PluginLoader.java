@@ -84,8 +84,8 @@ public class PluginLoader {
                 }
             }
             MainLogger.getLogger().warning("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
-        } catch (IOException e) {
-            MainLogger.getLogger().error("Error while reading plugin directory", e);
+        } catch (Exception e) {
+            MainLogger.getLogger().error("Can not load plugin files in " + file.getPath(), e);
         }
         return null;
     }
