@@ -37,16 +37,17 @@ public class HelpCommand extends Command {
     @Override
     public boolean onExecute(CommandSender sender, String alias, String[] args) {
         int pageNumber = 1;
+        int pageHeight = 8;
         if (sender.isPlayer()) {
             if (args.length >= 1) {
                 try {
                     pageNumber = Integer.parseInt(args[0]);
                     if (pageNumber < 1) pageNumber = 1;
-                } catch (NumberFormatException e) {
+                } catch (NumberFormatException ignored) {
                 }
             }
         } else {
-            pageNumber = Integer.MAX_VALUE;
+            pageHeight = Integer.MAX_VALUE;
         }
 
         CommandMap commandMap = sender.getProxy().getCommandMap();
@@ -57,7 +58,6 @@ public class HelpCommand extends Command {
             }
         }
 
-        int pageHeight = 8;
         int pages = commands.size() % pageHeight == 0 ? commands.size() / pageHeight : commands.size() / pageHeight + 1;
         pageNumber = Math.min(pageNumber, pages);
         if (pageNumber < 1) {
