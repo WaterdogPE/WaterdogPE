@@ -20,6 +20,9 @@ import com.google.common.base.Strings;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
+import com.nukkitx.protocol.bedrock.data.command.CommandOriginData;
+import com.nukkitx.protocol.bedrock.data.command.CommandOriginType;
+import com.nukkitx.protocol.bedrock.packet.CommandRequestPacket;
 import com.nukkitx.protocol.bedrock.packet.ResourcePacksInfoPacket;
 import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
 import com.nukkitx.protocol.bedrock.packet.TextPacket;
@@ -417,6 +420,37 @@ public class ProxiedPlayer implements CommandSender {
         packet.setXuid(this.getXuid());
         packet.setMessage(message);
         this.sendPacket(packet);
+    }
+
+    /**
+     * Sends a chat message as this player, to the server he is currently connected to
+     *
+     * @param message the message to be sent
+     */
+    public void chat(String message) {
+        if (message.trim().isEmpty()) {
+            return; // Client wont accept empty string
+        }
+
+        if (this.getServer() == null || !this.getServer().isConnected()) {
+            return; // This player is not connected to any server
+        }
+
+        if (message.charAt(0) == '/') {
+            CommandRequestPacket packet = new CommandRequestPacket();
+            packet.setCommand(message);
+            packet.setCommandOriginData(new CommandOriginData(CommandOriginType.PLAYER, this.getUniqueId(), "", 0L));
+            packet.setInternal(false);
+            this.getServer().sendPacket(packet);
+            return;
+        }
+
+        TextPacket packet = new TextPacket();
+        packet.setType(TextPacket.Type.CHAT);
+        packet.setSourceName(this.getName());
+        packet.setXuid(this.getXuid());
+        packet.setMessage(message);
+        this.getServer().sendPacket(packet);
     }
 
     /**
