@@ -23,7 +23,7 @@ public class VersionInfo {
 
     private final String baseVersion = "1.0.1";
     private final String buildVersion = "#build";
-    private final int latestProtocolVersion = 431;
+    private final int latestProtocolVersion = 440;
     private final String author = "WaterdogTEAM";
 
     private final String branchName;
