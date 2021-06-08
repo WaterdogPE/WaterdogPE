@@ -95,7 +95,8 @@ public class ZipResourcePack extends ResourcePack {
 
         ByteBuffer cachedPack = this.getCachedPack();
         if (cachedPack != null) {
-            cachedPack.get(chunkData, offset, chunkData.length);
+            cachedPack.position(offset);
+            cachedPack.get(chunkData, 0, chunkData.length);
             return chunkData;
         }
 
