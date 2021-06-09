@@ -16,7 +16,9 @@
 package dev.waterdog.waterdogpe.network.downstream;
 
 import com.nukkitx.protocol.bedrock.packet.*;
+import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.FastTransferRequestEvent;
+import dev.waterdog.waterdogpe.event.defaults.PluginMessageEvent;
 import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
 import dev.waterdog.waterdogpe.network.ServerInfo;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
@@ -24,6 +26,8 @@ import dev.waterdog.waterdogpe.network.session.ServerConnection;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
+
+import java.nio.charset.StandardCharsets;
 
 import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.*;
 
@@ -34,6 +38,13 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
     public ConnectedDownstreamHandler(ProxiedPlayer player, ServerConnection server) {
         super(player);
         this.server = server;
+    }
+
+    @Override
+    public boolean handle(ScriptCustomEventPacket packet){
+        byte[] data = packet.getData().getBytes(StandardCharsets.UTF_8);
+        ProxyServer.getInstance().getEventManager().callEvent(new PluginMessageEvent(player, data, packet.getEventName()));
+        throw CancelSignalException.CANCEL;
     }
 
     @Override

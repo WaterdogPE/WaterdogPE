@@ -94,6 +94,7 @@ public class BedrockCodec313 extends BedrockCodec {
         builder.registerPacket(SetScoreboardIdentityPacket.class, SetScoreboardIdentitySerializer_v291.INSTANCE, 112);
         builder.registerPacket(SetLocalPlayerAsInitializedPacket.class, SetLocalPlayerAsInitializedSerializer_v291.INSTANCE, 113);
         builder.registerPacket(NetworkStackLatencyPacket.class, NetworkStackLatencySerializer_v291.INSTANCE, 115);
+        builder.registerPacket(ScriptCustomEventPacket.class, ScriptCustomEventSerializer_v291.INSTANCE, 117);
         builder.registerPacket(LevelSoundEvent2Packet.class, LevelSoundEvent2Serializer_v313.INSTANCE, 120);
         builder.registerPacket(NetworkChunkPublisherUpdatePacket.class, NetworkChunkPublisherUpdateSerializer_v313.INSTANCE, 121);
     }
