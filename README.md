@@ -24,7 +24,6 @@ If you want to discuss things without joining the discord server, please use the
 - Much more configurable
 - Easy to modify / contribute
 - Active Support and quick updates for new MC:BE Versions
-- Dimension-less transfer: A transfer without any screen inbetween
 - BE server pinging: Easily ping your downstream server using a plugin to check it's status
 - Resource pack support
 - Maintained documentation

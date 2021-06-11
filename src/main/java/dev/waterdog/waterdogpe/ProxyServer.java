@@ -41,7 +41,6 @@ import dev.waterdog.waterdogpe.utils.ProxyConfig;
 import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
 import dev.waterdog.waterdogpe.utils.config.ServerList;
 import dev.waterdog.waterdogpe.utils.types.*;
-import lombok.SneakyThrows;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 
 import java.net.InetSocketAddress;
@@ -186,12 +185,22 @@ public class ProxyServer {
         this.scheduler.onTick(currentTick);
     }
 
-    @SneakyThrows
     public void shutdown() {
         if (this.shutdown) {
             return;
         }
         this.shutdown = true;
+
+        try {
+            this.shutdown0();
+        } catch (Exception e) {
+            this.logger.error("Unable to shutdown proxy gracefully", e);
+        } finally {
+            WaterdogPE.shutdownHook();
+        }
+    }
+
+    private void shutdown0() throws Exception {
         this.pluginManager.disableAllPlugins();
 
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
