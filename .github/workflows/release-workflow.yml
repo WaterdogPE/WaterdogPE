@@ -6,8 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: "contains(github.event.head_commit.message, '[Release]')"
-
     steps:
       - name: Startup
         uses: actions/checkout@v2
@@ -19,20 +17,14 @@ jobs:
         run: |
           sed -i -e s/#build/"release"/g ./src/main/java/dev/waterdog/waterdogpe/VersionInfo.java
           mvn -B install --file pom.xml
-      - name: Parse Commit name
-        id: cpn
-        uses: bluwy/substitute-string-action@v1
-        with:
-          _input-text: ${{ github.event.head_commit.message }}
-          '[Release]': ${{ '' }}
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.cpn.outputs.result }}
-          release_name: ${{ steps.cpn.outputs.result }} released by ${{ github.actor }}
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }} by ${{ github.actor }}
           draft: false
           prerelease: false
       - name: Upload Release Asset
