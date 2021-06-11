@@ -41,7 +41,6 @@ import dev.waterdog.waterdogpe.utils.ProxyConfig;
 import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
 import dev.waterdog.waterdogpe.utils.config.ServerList;
 import dev.waterdog.waterdogpe.utils.types.*;
-import lombok.SneakyThrows;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 
 import java.net.InetSocketAddress;
