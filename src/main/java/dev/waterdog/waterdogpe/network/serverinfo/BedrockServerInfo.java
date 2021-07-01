@@ -13,24 +13,27 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.event.defaults;
+package dev.waterdog.waterdogpe.network.serverinfo;
 
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.session.DownstreamClient;
-import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import dev.waterdog.waterdogpe.network.session.bedrock.BedrockDefaultClient;
 
-/**
- * Called when new downstream client for player is created and bind.
- */
-public class ClientBindEvent extends PlayerEvent {
+import java.net.InetSocketAddress;
 
-    private final DownstreamClient client;
+public class BedrockServerInfo extends ServerInfo {
 
-    public ClientBindEvent(ProxiedPlayer player, DownstreamClient client) {
-        super(player);
-        this.client = client;
+    public BedrockServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {
+        super(serverName, address, publicAddress);
     }
 
-    public DownstreamClient getClient() {
-        return this.client;
+    @Override
+    public DownstreamClient createNewConnection(ProtocolVersion protocol) {
+        return new BedrockDefaultClient(this);
+    }
+
+    @Override
+    public ServerInfoType getServerType() {
+        return ServerInfoType.BEDROCK;
     }
 }

@@ -17,7 +17,6 @@ package dev.waterdog.waterdogpe.player;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.data.command.CommandOriginData;
@@ -28,16 +27,11 @@ import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
 import com.nukkitx.protocol.bedrock.packet.TextPacket;
 import com.nukkitx.protocol.bedrock.packet.TransferPacket;
 import dev.waterdog.waterdogpe.ProxyServer;
-import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.command.CommandSender;
 import dev.waterdog.waterdogpe.event.defaults.*;
 import dev.waterdog.waterdogpe.logger.MainLogger;
-import dev.waterdog.waterdogpe.network.ServerInfo;
-import dev.waterdog.waterdogpe.network.bridge.DownstreamBridge;
-import dev.waterdog.waterdogpe.network.bridge.TransferBatchBridge;
 import dev.waterdog.waterdogpe.network.bridge.UpstreamBridge;
-import dev.waterdog.waterdogpe.network.downstream.InitialHandler;
-import dev.waterdog.waterdogpe.network.downstream.SwitchDownstreamHandler;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.rewrite.RewriteMaps;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
@@ -54,7 +48,6 @@ import it.unimi.dsi.fastutil.objects.*;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -79,8 +72,8 @@ public class ProxiedPlayer implements CommandSender {
     private final ObjectSet<String> scoreboards = ObjectSets.synchronize(new ObjectOpenHashSet<>());
     private final Long2LongMap entityLinks = Long2LongMaps.synchronize(new Long2LongOpenHashMap());
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
-    private ServerConnection serverConnection;
-    private PendingConnection pendingConnection;
+    private DownstreamClient downstreamConnection;
+    private DownstreamClient pendingConnection;
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
@@ -199,27 +192,27 @@ public class ProxiedPlayer implements CommandSender {
         }
 
         ServerInfo targetServer = event.getTargetServer();
-        if (this.serverConnection != null && this.serverConnection.getInfo() == targetServer) {
+        if (this.downstreamConnection != null && this.downstreamConnection.getServerInfo() == targetServer) {
             this.sendMessage(new TranslationContainer("waterdog.downstream.connected", serverInfo.getServerName()));
             return;
         }
 
-        PendingConnection oldPendingConnection = this.getPendingConnection();
+        DownstreamClient oldPendingConnection = this.getPendingConnection();
         if (oldPendingConnection != null) {
-            if (oldPendingConnection.getInfo() == targetServer) {
+            if (oldPendingConnection.getServerInfo() == targetServer) {
                 this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
                 return;
             }
 
             // Close old pending connection
             oldPendingConnection.close();
-            this.getLogger().debug("Discarding pending connection for " + this.getName() + "! Tried to join " + oldPendingConnection.getInfo().getServerName());
+            this.getLogger().debug("Discarding pending connection for " + this.getName() + "! Tried to join " + oldPendingConnection.getServerInfo().getServerName());
         }
 
-        PendingConnection pendingConnection = new PendingConnection(targetServer);
-        this.setPendingConnection(pendingConnection);
+        DownstreamClient downstreamClient = targetServer.createNewConnection(this.getProtocol());
+        this.setPendingConnection(downstreamClient);
 
-        CompletableFuture<BedrockClient> future = this.proxy.bindClient(this.getProtocol());
+        CompletableFuture<DownstreamClient> future = downstreamClient.bindDownstream(this.getProtocol());
         future.thenApply(client -> {
             ClientBindEvent bindEvent = new ClientBindEvent(this, client);
             this.proxy.getEventManager().callEvent(bindEvent);
@@ -236,24 +229,17 @@ public class ProxiedPlayer implements CommandSender {
                 return;
             }
 
-            pendingConnection.setClient(client);
-            SessionInjections.injectNewDownstream(downstream, this, targetServer, client);
-
-            if (this.serverConnection == null) {
-                this.serverConnection = new ServerConnection(client, downstream, targetServer);
+            boolean initial = this.downstreamConnection == null;
+            if (initial) {
+                this.downstreamConnection = downstreamClient;
                 targetServer.addPlayer(this);
-
-                downstream.setPacketHandler(new InitialHandler(this));
-                downstream.setBatchHandler(new DownstreamBridge(this, this.upstream));
                 this.upstream.setBatchHandler(new UpstreamBridge(this, downstream));
                 this.hasUpstreamBridge = true;
-            } else {
-                downstream.setPacketHandler(new SwitchDownstreamHandler(this, targetServer, client));
-                downstream.setBatchHandler(new TransferBatchBridge(this, this.upstream));
             }
 
-            downstream.setPacketCodec(this.getProtocol().getCodec());
-            downstream.setLogging(WaterdogPE.version().debug());
+            downstream.onDownstreamInit(this, initial);
+            SessionInjections.injectNewDownstream(this, downstream, client);
+
             this.loginData.doLogin(downstream, this);
             this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         })).whenComplete((ignore, error) -> {
@@ -263,7 +249,7 @@ public class ProxiedPlayer implements CommandSender {
         });
     }
 
-    private void connectFailure(BedrockClient client, ServerInfo targetServer, Throwable error) {
+    private void connectFailure(DownstreamClient client, ServerInfo targetServer, Throwable error) {
         this.getLogger().debug("[" + this.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), error);
         this.setPendingConnection(null);
         if (client != null) {
@@ -320,12 +306,12 @@ public class ProxiedPlayer implements CommandSender {
             this.upstream.disconnect(reason);
         }
 
-        if (this.serverConnection != null) {
-            this.serverConnection.getInfo().removePlayer(this);
-            this.serverConnection.disconnect(forceClose);
+        if (this.downstreamConnection != null) {
+            this.downstreamConnection.getServerInfo().removePlayer(this);
+            this.downstreamConnection.close(forceClose);
         }
 
-        PendingConnection pendingConnection = this.getPendingConnection();
+        DownstreamClient pendingConnection = this.getPendingConnection();
         if (pendingConnection != null) {
             pendingConnection.close();
         }
@@ -432,7 +418,8 @@ public class ProxiedPlayer implements CommandSender {
             return; // Client wont accept empty string
         }
 
-        if (this.getServer() == null || !this.getServer().isConnected()) {
+        DownstreamClient downstream = this.getDownstream();
+        if (downstream == null || !downstream.isConnected()) {
             return; // This player is not connected to any server
         }
 
@@ -441,7 +428,7 @@ public class ProxiedPlayer implements CommandSender {
             packet.setCommand(message);
             packet.setCommandOriginData(new CommandOriginData(CommandOriginType.PLAYER, this.getUniqueId(), "", 0L));
             packet.setInternal(false);
-            this.getServer().sendPacket(packet);
+            downstream.sendPacket(packet);
             return;
         }
 
@@ -450,7 +437,7 @@ public class ProxiedPlayer implements CommandSender {
         packet.setSourceName(this.getName());
         packet.setXuid(this.getXuid());
         packet.setMessage(message);
-        this.getServer().sendPacket(packet);
+        downstream.sendPacket(packet);
     }
 
     /**
@@ -679,7 +666,7 @@ public class ProxiedPlayer implements CommandSender {
      * @return ServerInfo if player is connected to downstream
      */
     public ServerInfo getServerInfo() {
-        return this.serverConnection == null ? null : this.serverConnection.getInfo();
+        return this.downstreamConnection == null ? null : this.downstreamConnection.getServerInfo();
     }
 
     public InetSocketAddress getAddress() {
@@ -695,19 +682,19 @@ public class ProxiedPlayer implements CommandSender {
         return this.proxy.getLogger();
     }
 
-    public ServerConnection getServer() {
-        return this.serverConnection;
+    public DownstreamClient getDownstream() {
+        return this.downstreamConnection;
     }
 
-    public void setServer(ServerConnection serverConnection) {
-        this.serverConnection = serverConnection;
+    public void setDownstream(DownstreamClient downstreamConnection) {
+        this.downstreamConnection = downstreamConnection;
     }
 
-    public synchronized PendingConnection getPendingConnection() {
+    public synchronized DownstreamClient getPendingConnection() {
         return this.pendingConnection;
     }
 
-    public synchronized void setPendingConnection(PendingConnection pendingConnection) {
+    public synchronized void setPendingConnection(DownstreamClient pendingConnection) {
         this.pendingConnection = pendingConnection;
     }
 

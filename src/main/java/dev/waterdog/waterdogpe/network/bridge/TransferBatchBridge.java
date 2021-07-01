@@ -15,11 +15,9 @@
 
 package dev.waterdog.waterdogpe.network.bridge;
 
-import com.nukkitx.network.raknet.RakNetSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
-import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -32,22 +30,22 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.Collection;
 import java.util.Queue;
 
-public class TransferBatchBridge extends ProxyBatchBridge {
+public class TransferBatchBridge extends AbstractDownstreamBatchBridge {
 
     private final Queue<BedrockPacket> packetQueue = PlatformDependent.newSpscQueue();
     private volatile boolean hasStartGame = false;
     private volatile boolean dimLockActive = true;
 
-    public TransferBatchBridge(ProxiedPlayer player, BedrockSession session) {
-        super(player, session);
+    public TransferBatchBridge(ProxiedPlayer player, BedrockSession upstreamSession) {
+        super(player, upstreamSession);
     }
 
     @Override
-    public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
-        super.handle(session, buf, packets);
+    public void handle(BedrockPacketHandler handler, ByteBuf buf, Collection<BedrockPacket> packets) {
+        super.handle(handler, buf, packets);
         if (this.hasStartGame && !this.dimLockActive) {
             // Send queued packets to upstream if dim lock is disabled
-            this.flushQueue(session);
+            this.flushQueue();
         }
     }
 
@@ -56,19 +54,8 @@ public class TransferBatchBridge extends ProxyBatchBridge {
      * Packets will be sent after StartGamePacket is received and dimension change sequence has been passed.
      * Please notice that we use eventLoop of RakNet session instead of BedrockSession because
      * received packets are also handled by RakNet eventLoop!
-     *
-     * @param downstream instance of BedrockSession which is this handler assigned to.
      */
-    public void flushQueue(BedrockSession downstream) {
-        RakNetSession rakSession = (RakNetSession) downstream.getConnection();
-        if (rakSession.getEventLoop().inEventLoop()) {
-            this.flushQueue0();
-        } else {
-            rakSession.getEventLoop().execute(this::flushQueue0);
-        }
-    }
-
-    private void flushQueue0() {
+    public void flushQueue() {
         if (this.packetQueue.isEmpty()) {
             return;
         }
@@ -78,7 +65,7 @@ public class TransferBatchBridge extends ProxyBatchBridge {
             this.player.disconnect("Transfer packet queue got too large!");
             // Deallocate packet queue manually because result of TransferBatchBridge#release called
             // from disconnect handler can be ignored as BatchHandler can be already changed.
-            this.free0();
+            this.free();
             return;
         }
 
@@ -87,7 +74,7 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         while ((packet = this.packetQueue.poll()) != null) {
             outboundQueue.add(packet);
         }
-        this.session.sendWrapped(outboundQueue, this.session.isEncrypted());
+        this.sendWrapped(outboundQueue, this.isEncrypted());
     }
 
     @Override
@@ -121,22 +108,13 @@ public class TransferBatchBridge extends ProxyBatchBridge {
         return this.dimLockActive;
     }
 
-    public static void release(BatchHandler handler, BedrockSession downstream) {
+    public static void release(Object handler) {
         if (handler instanceof TransferBatchBridge) {
-            ((TransferBatchBridge) handler).free(downstream);
+            ((TransferBatchBridge) handler).free();
         }
     }
 
-    public void free(BedrockSession downstream) {
-        RakNetSession rakSession = (RakNetSession) downstream.getConnection();
-        if (rakSession.getEventLoop().inEventLoop()) {
-            this.free0();
-        } else {
-            rakSession.getEventLoop().execute(this::free0);
-        }
-    }
-
-    private void free0() {
+    public void free() {
         BedrockPacket packet;
         while ((packet = this.packetQueue.poll()) != null) {
             int refCnt = ReferenceCountUtil.refCnt(packet);

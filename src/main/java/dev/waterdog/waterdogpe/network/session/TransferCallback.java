@@ -15,17 +15,13 @@
 
 package dev.waterdog.waterdogpe.network.session;
 
-import com.nukkitx.network.raknet.RakNetSession;
-import com.nukkitx.protocol.bedrock.BedrockClient;
-import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.packet.SetLocalPlayerAsInitializedPacket;
 import com.nukkitx.protocol.bedrock.packet.StopSoundPacket;
 import dev.waterdog.waterdogpe.event.defaults.TransferCompleteEvent;
-import dev.waterdog.waterdogpe.network.ServerInfo;
-import dev.waterdog.waterdogpe.network.bridge.TransferBatchBridge;
+import dev.waterdog.waterdogpe.network.bridge.UpstreamBridge;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
-import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 
 import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.*;
@@ -37,26 +33,19 @@ public class TransferCallback {
     public static final int TRANSFER_PHASE_2 = 2;
 
     private final ProxiedPlayer player;
-    private final BedrockClient client;
+    private final DownstreamClient client;
     private final ServerInfo targetServer;
     private final int targetDimension;
 
-    public TransferCallback(ProxiedPlayer player, BedrockClient client, ServerInfo targetServer, int targetDimension) {
+    public TransferCallback(ProxiedPlayer player, DownstreamClient client, int targetDimension) {
         this.player = player;
         this.client = client;
-        this.targetServer = targetServer;
+        this.targetServer = client.getServerInfo();
         this.targetDimension = targetDimension;
     }
 
-    public BedrockClientSession getDownstream() {
+    public DownstreamSession getDownstream() {
         return this.client.getSession();
-    }
-
-    public TransferBatchBridge getBatchBridge() {
-        if (this.getDownstream().getBatchHandler() instanceof TransferBatchBridge) {
-            return  (TransferBatchBridge) this.getDownstream().getBatchHandler();
-        }
-        return null;
     }
 
     public boolean onDimChangeSuccess() {
@@ -112,39 +101,19 @@ public class TransferCallback {
         initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalEntityId());
         this.getDownstream().sendPacket(initializedPacket);
 
-        // Allow transfer queue to be sent
-        TransferBatchBridge batchBridge = this.getBatchBridge();
-        if (batchBridge != null) {
-            batchBridge.setDimLockActive(false);
-        }
-
-        // Change downstream bridge on same eventLoop as packet are being processed on to
-        // prevent packet reordering in some situations
-        RakNetSession rakSession = (RakNetSession) this.getDownstream().getConnection();
-        if (rakSession.getEventLoop().inEventLoop()) {
-            this.onTransferComplete0();
-        } else {
-            rakSession.getEventLoop().execute(this::onTransferComplete0);
-        }
+        this.client.getSession().onTransferCompleted(this.player, this::onTransferComplete0);
     }
 
     private void onTransferComplete0() {
-        TransferBatchBridge batchBridge = this.getBatchBridge();
-        ServerConnection server = new ServerConnection(this.client, this.getDownstream(), this.targetServer);
-        SessionInjections.injectPostDownstreamHandlers(server, this.player);
+        this.player.getUpstream().setBatchHandler(new UpstreamBridge(player, this.client.getSession()));
 
-        // Flush the queue last time before any other packets are received
-        if (batchBridge != null) {
-            batchBridge.flushQueue(this.getDownstream());
-        }
-
-        ServerConnection oldServer = this.player.getServer();
+        DownstreamClient oldDownstream = this.player.getDownstream();
         this.player.setPendingConnection(null);
-        this.player.setServer(server);
+        this.player.setDownstream(this.client);
         this.targetServer.addPlayer(this.player);
         this.player.setAcceptPlayStatus(true);
 
-        TransferCompleteEvent event = new TransferCompleteEvent(oldServer, server, this.player);
+        TransferCompleteEvent event = new TransferCompleteEvent(oldDownstream, this.client, this.player);
         this.player.getProxy().getEventManager().callEvent(event);
     }
 

@@ -16,8 +16,7 @@
 package dev.waterdog.waterdogpe.network.bridge;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
-import com.nukkitx.protocol.bedrock.BedrockSession;
-import com.nukkitx.protocol.bedrock.handler.BatchHandler;
+
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -29,21 +28,16 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public abstract class ProxyBatchBridge implements BatchHandler {
+public abstract class ProxyBatchBridge {
 
-    protected final BedrockSession session;
     protected final ProxiedPlayer player;
-
     protected volatile boolean trackEntities = true;
 
-    public ProxyBatchBridge(ProxiedPlayer player, BedrockSession session) {
-        this.session = session;
+    public ProxyBatchBridge(ProxiedPlayer player) {
         this.player = player;
     }
 
-    @Override
-    public void handle(BedrockSession session, ByteBuf buf, Collection<BedrockPacket> packets) {
-        BedrockPacketHandler handler = session.getPacketHandler();
+    public void handle(BedrockPacketHandler handler, ByteBuf buf, Collection<BedrockPacket> packets) {
         List<BedrockPacket> allPackets = new ObjectArrayList<>();
         boolean changed = false;
 
@@ -61,18 +55,23 @@ public abstract class ProxyBatchBridge implements BatchHandler {
         }
 
         if (!allPackets.isEmpty() && (changed || allPackets.size() != packets.size())) {
-            this.session.sendWrapped(allPackets, this.session.isEncrypted());
+            this.sendWrapped(allPackets, this.isEncrypted());
             return;
         }
 
         if (!changed && allPackets.size() == packets.size()) {
             buf.resetReaderIndex(); // Set reader index to position where payload is decrypted.
-            this.session.sendWrapped(buf, this.session.isEncrypted());
+            this.sendWrapped(buf, this.isEncrypted());
         }
 
         // Packets from array aren't used so we can deallocate whole.
         this.deallocatePackets(allPackets);
     }
+
+    public abstract void sendWrapped(Collection<BedrockPacket> packets, boolean encrypt);
+    public abstract void sendWrapped(ByteBuf compressed, boolean encrypt);
+
+    public abstract boolean isEncrypted();
 
     protected void deallocatePackets(Collection<BedrockPacket> packets) {
         for (BedrockPacket packet : packets) {
