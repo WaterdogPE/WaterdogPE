@@ -70,7 +70,7 @@ public class ServerEntryConverter implements Converter {
             for (Map.Entry<String, Map<String, ?>> subMap : map.entrySet()) {
                 address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, subMap.getValue().get("address"), null);
                 publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, subMap.getValue().get("public_address"), null);
-                serverType = (String) inetConverter.fromConfig(String.class, subMap.getValue().get("server_type"), null);
+                serverType = (String) subMap.getValue().get("server_type");
                 return new ServerEntry(subMap.getKey(), address, publicAddress, ServerInfoType.getOrBedrock(serverType));
             }
         }
