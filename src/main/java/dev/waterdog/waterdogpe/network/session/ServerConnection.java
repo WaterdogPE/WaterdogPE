@@ -54,7 +54,11 @@ public class ServerConnection {
      * @param force if block thread till everything is closed.
      */
     public void disconnect(boolean force) {
-        this.client.close(force);
+        if (!force && this.downstream != null && !this.downstream.isClosed()) {
+            this.downstream.disconnect();
+        } else {
+            this.client.close(force);
+        }
     }
 
     public ServerInfo getInfo() {
