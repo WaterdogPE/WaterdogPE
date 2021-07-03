@@ -58,7 +58,11 @@ public class BedrockDefaultClient implements DownstreamClient {
 
     @Override
     public void close(boolean force) {
-        this.client.close(force);
+        if (!force && this.session != null && !this.session.isClosed()) {
+            this.session.disconnect();
+        } else if (this.client != null){
+            this.client.close(force);
+        }
     }
 
     @Override
