@@ -1,19 +1,12 @@
 # Compiled class file
 *.class
 
-# Log file
-logs/
+# Log files
 *.log
+*.log.gz
 
-# Test files
-plugins/
-config.yml
-lang.ini
 # BlueJ files
 *.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
 
 # Package Files #
 *.jar
@@ -24,15 +17,33 @@ lang.ini
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
+# JentBrains
+.idea/*
 
-#Maven files
-target/
+# Allow copyright files
+!.idea/copyright
 
-#IntelliJ IDEA files
 out/
-.idea/
-*.iml
 
-.DS_Store
+*.iml
+*.iws
+*.ipr
+
+modules.xml
+
+# Maven files
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# WaterdogPE test files
+config.yml
+lang.ini
+plugins/
