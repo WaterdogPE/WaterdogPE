@@ -42,6 +42,8 @@ public class BedrockCodec448 extends BedrockCodec440 {
 
         builder.deregisterPacket(NpcRequestPacket.class);
         builder.registerPacket(NpcRequestPacket.class, NpcRequestSerializer_v448.INSTANCE, 0x62);
+
+        builder.registerPacket(NpcDialoguePacket.class, NpcDialogueSerializer_v448.INSTANCE, 169);
     }
 
     @Override
