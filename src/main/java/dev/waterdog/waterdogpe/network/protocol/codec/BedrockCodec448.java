@@ -16,15 +16,10 @@
 package dev.waterdog.waterdogpe.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
-import com.nukkitx.protocol.bedrock.packet.AvailableCommandsPacket;
-import com.nukkitx.protocol.bedrock.packet.NpcDialoguePacket;
-import com.nukkitx.protocol.bedrock.packet.ResourcePacksInfoPacket;
-import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
+import com.nukkitx.protocol.bedrock.BedrockPacketType;
+import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.v448.BedrockPacketHelper_v448;
-import com.nukkitx.protocol.bedrock.v448.serializer.AvailableCommandsSerializer_v448;
-import com.nukkitx.protocol.bedrock.v448.serializer.NpcDialogueSerializer_v448;
-import com.nukkitx.protocol.bedrock.v448.serializer.ResourcePacksInfoSerializer_v448;
-import com.nukkitx.protocol.bedrock.v448.serializer.SetTitleSerializer_v448;
+import com.nukkitx.protocol.bedrock.v448.serializer.*;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 
 public class BedrockCodec448 extends BedrockCodec440 {
@@ -45,7 +40,8 @@ public class BedrockCodec448 extends BedrockCodec440 {
         builder.deregisterPacket(SetTitlePacket.class);
         builder.registerPacket(SetTitlePacket.class, SetTitleSerializer_v448.INSTANCE, 88);
 
-        builder.registerPacket(NpcDialoguePacket.class, NpcDialogueSerializer_v448.INSTANCE, 0x62);
+        builder.deregisterPacket(NpcRequestPacket.class);
+        builder.registerPacket(NpcRequestPacket.class, NpcRequestSerializer_v448.INSTANCE, 0x62);
     }
 
     @Override

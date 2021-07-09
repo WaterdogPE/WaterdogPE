@@ -247,6 +247,11 @@ public class EntityMap implements BedrockPacketHandler {
         return true;
     }
 
+    public boolean handle(NpcRequestPacket packet) {
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        return true;
+    }
+
     @Override
     public boolean handle(EmotePacket packet) {
         packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
