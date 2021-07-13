@@ -35,13 +35,13 @@ public class BedrockCodec448 extends BedrockCodec440 {
         builder.helper(BedrockPacketHelper_v448.INSTANCE);
 
         builder.deregisterPacket(ResourcePacksInfoPacket.class);
-        builder.registerPacket(ResourcePacksInfoPacket.class, ResourcePacksInfoSerializer_v448.INSTANCE, 0x06);
+        builder.registerPacket(ResourcePacksInfoPacket.class, ResourcePacksInfoSerializer_v448.INSTANCE, 6);
 
         builder.deregisterPacket(SetTitlePacket.class);
         builder.registerPacket(SetTitlePacket.class, SetTitleSerializer_v448.INSTANCE, 88);
 
         builder.deregisterPacket(NpcRequestPacket.class);
-        builder.registerPacket(NpcRequestPacket.class, NpcRequestSerializer_v448.INSTANCE, 0x62);
+        builder.registerPacket(NpcRequestPacket.class, NpcRequestSerializer_v448.INSTANCE, 98);
 
         builder.registerPacket(NpcDialoguePacket.class, NpcDialogueSerializer_v448.INSTANCE, 169);
     }
