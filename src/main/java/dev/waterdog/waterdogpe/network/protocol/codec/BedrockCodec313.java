@@ -96,6 +96,7 @@ public class BedrockCodec313 extends BedrockCodec {
         builder.registerPacket(NetworkStackLatencyPacket.class, NetworkStackLatencySerializer_v291.INSTANCE, 115);
         builder.registerPacket(LevelSoundEvent2Packet.class, LevelSoundEvent2Serializer_v313.INSTANCE, 120);
         builder.registerPacket(NetworkChunkPublisherUpdatePacket.class, NetworkChunkPublisherUpdateSerializer_v313.INSTANCE, 121);
+        builder.registerPacket(NpcRequestPacket.class, NpcRequestSerializer_v291.INSTANCE, 98);
     }
 
     @Override
