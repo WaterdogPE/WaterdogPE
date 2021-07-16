@@ -31,7 +31,8 @@ import java.util.List;
 public abstract class ProxyBatchBridge {
 
     protected final ProxiedPlayer player;
-    protected volatile boolean trackEntities = true;
+    protected boolean trackEntities = true;
+    protected boolean forceEncodePackets = false;
 
     public ProxyBatchBridge(ProxiedPlayer player) {
         this.player = player;
@@ -54,7 +55,7 @@ public abstract class ProxyBatchBridge {
             }
         }
 
-        if (!allPackets.isEmpty() && (changed || allPackets.size() != packets.size())) {
+        if (this.forceEncodePackets || !allPackets.isEmpty() && (changed || allPackets.size() != packets.size())) {
             this.sendWrapped(allPackets, this.isEncrypted());
             return;
         }
