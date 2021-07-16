@@ -233,7 +233,7 @@ public class ProxiedPlayer implements CommandSender {
             if (initial) {
                 this.downstreamConnection = downstreamClient;
                 targetServer.addPlayer(this);
-                this.upstream.setBatchHandler(new UpstreamBridge(this, downstream));
+                this.upstream.setBatchHandler(client.newUpstreamBridge(this));
                 this.hasUpstreamBridge = true;
             }
 

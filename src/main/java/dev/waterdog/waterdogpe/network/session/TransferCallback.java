@@ -105,7 +105,7 @@ public class TransferCallback {
     }
 
     private void onTransferComplete0() {
-        this.player.getUpstream().setBatchHandler(new UpstreamBridge(player, this.client.getSession()));
+        this.player.getUpstream().setBatchHandler(this.client.newUpstreamBridge(this.player));
 
         DownstreamClient oldDownstream = this.player.getDownstream();
         this.player.setPendingConnection(null);

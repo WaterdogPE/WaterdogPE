@@ -16,8 +16,10 @@
 package dev.waterdog.waterdogpe.network.session;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
+import dev.waterdog.waterdogpe.network.bridge.UpstreamBridge;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
+import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
@@ -43,6 +45,10 @@ public interface DownstreamClient {
 
     default void sendPacketImmediately(BedrockPacket packet) {
         this.getSession().sendPacketImmediately(packet);
+    }
+
+    default UpstreamBridge newUpstreamBridge(ProxiedPlayer player) {
+        return new UpstreamBridge(player, this.getSession());
     }
 
     InetSocketAddress getBindAddress();
