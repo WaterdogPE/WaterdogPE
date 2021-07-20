@@ -16,6 +16,8 @@
 package dev.waterdog.waterdogpe.utils;
 
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.utils.config.ServerEntry;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
@@ -29,6 +31,7 @@ public class ConfigurationManager {
     private final ProxyServer proxy;
     private ProxyConfig proxyConfig;
     private LangConfig langConfig;
+
     public ConfigurationManager(ProxyServer proxy) {
         this.proxy = proxy;
     }
@@ -55,6 +58,16 @@ public class ConfigurationManager {
         ProxyConfig config = new ProxyConfig(configFile);
         config.init();
         this.proxyConfig = config;
+    }
+
+    public void loadServerInfos(ServerInfoMap serverInfoMap) {
+        for (ServerEntry entry : this.proxyConfig.getServerList().values()) {
+            try {
+                serverInfoMap.putIfAbsent(entry.getServerName(), serverInfoMap.fromServerEntry(entry));
+            } catch (Exception e) {
+                this.proxy.getLogger().error("Failed to create ServerInfo from "+entry, e);
+            }
+        }
     }
 
     public void loadLanguage() {

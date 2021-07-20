@@ -17,14 +17,42 @@ package dev.waterdog.waterdogpe.network.bridge;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
+import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import dev.waterdog.waterdogpe.network.session.DownstreamSession;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
+import io.netty.buffer.ByteBuf;
 
-public class UpstreamBridge extends ProxyBatchBridge {
+import java.util.Collection;
 
-    public UpstreamBridge(ProxiedPlayer player, BedrockSession session) {
-        super(player, session);
+public class UpstreamBridge extends ProxyBatchBridge implements BatchHandler {
+
+    private final DownstreamSession session;
+
+    public UpstreamBridge(ProxiedPlayer player, DownstreamSession session) {
+        super(player);
+        this.session = session;
+    }
+
+    @Override
+    public void handle(BedrockSession session, ByteBuf byteBuf, Collection<BedrockPacket> packets) {
+        this.handle(session.getPacketHandler(), byteBuf, packets);
+    }
+
+    @Override
+    public void sendWrapped(Collection<BedrockPacket> packets, boolean encrypt) {
+        this.session.sendWrapped(packets, encrypt);
+    }
+
+    @Override
+    public void sendWrapped(ByteBuf compressed, boolean encrypt) {
+        this.session.sendWrapped(compressed, encrypt);
+    }
+
+    @Override
+    public boolean isEncrypted() {
+        return this.session.isEncrypted();
     }
 
     @Override

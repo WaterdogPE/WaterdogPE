@@ -16,17 +16,12 @@
 package dev.waterdog.waterdogpe.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
-import com.nukkitx.protocol.bedrock.BedrockClient;
-import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
-import dev.waterdog.waterdogpe.network.ServerInfo;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.rewrite.types.BlockPalette;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
-import dev.waterdog.waterdogpe.network.session.ServerConnection;
-import dev.waterdog.waterdogpe.network.session.SessionInjections;
-import dev.waterdog.waterdogpe.network.session.TransferCallback;
+import dev.waterdog.waterdogpe.network.session.*;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
@@ -45,16 +40,11 @@ import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.*;
 
 public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
-    private final BedrockClient client;
-    private final ServerInfo serverInfo;
-
-    public SwitchDownstreamHandler(ProxiedPlayer player, ServerInfo serverInfo, BedrockClient client) {
-        super(player);
-        this.serverInfo = serverInfo;
-        this.client = client;
+    public SwitchDownstreamHandler(ProxiedPlayer player, DownstreamClient client) {
+        super(player, client);
     }
 
-    public BedrockClientSession getDownstream() {
+    public DownstreamSession getDownstream() {
         return this.client.getSession();
     }
 
@@ -100,7 +90,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         return this.onPlayStatus(packet, message -> {
             this.client.close();
             this.player.setPendingConnection(null);
-            this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), message));
+            this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.client.getServerInfo().getServerName(), message));
         }, this.getDownstream());
     }
 
@@ -119,9 +109,9 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             rewriteData.setBlockProperties(packet.getBlockProperties());
         }
 
-        ServerConnection oldServer = this.player.getServer();
-        oldServer.getInfo().removePlayer(this.player);
-        oldServer.disconnect();
+        DownstreamClient oldDownstream = this.player.getDownstream();
+        oldDownstream.getServerInfo().removePlayer(this.player);
+        oldDownstream.close();
 
         Collection<UUID> playerList = this.player.getPlayers();
         injectRemoveAllPlayers(this.player.getUpstream(), playerList);
@@ -160,7 +150,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         // If we transfer between same dimensions we are attempting to do dimension change sequence which uses 2 dim changes
         // After client successfully changes dimension we receive PlayerActionPacket#DIMENSION_CHANGE_SUCCESS and continue in transfer
         int newDimension = determineDimensionId(rewriteData.getDimension(), packet.getDimensionId());
-        TransferCallback transferCallback = new TransferCallback(this.player, this.client, this.serverInfo, packet.getDimensionId());
+        TransferCallback transferCallback = new TransferCallback(this.player, this.client, packet.getDimensionId());
 
         rewriteData.setDimension(newDimension);
         rewriteData.setTransferCallback(transferCallback);
@@ -172,7 +162,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             // Simulate two dim-change behaviour
             transferCallback.onDimChangeSuccess();
         }
-        SessionInjections.injectPreDownstreamHandlers(this.getDownstream(), this.player);
+        this.getDownstream().onServerConnected(player);
         throw CancelSignalException.CANCEL;
     }
 
@@ -187,7 +177,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
         this.client.close();
         this.player.setPendingConnection(null);
-        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.serverInfo.getServerName(), packet.getKickMessage()));
+        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.client.getServerInfo().getServerName(), packet.getKickMessage()));
         return false;
     }
 }

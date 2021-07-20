@@ -17,7 +17,6 @@ package dev.waterdog.waterdogpe.network.session;
 
 import com.google.gson.JsonObject;
 import com.nimbusds.jose.JWSObject;
-import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.packet.ClientCacheStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
@@ -81,7 +80,7 @@ public class LoginData {
         return this.loginPacket = loginPacket;
     }
 
-    public void doLogin(BedrockSession session, ProxiedPlayer player) {
+    public void doLogin(DownstreamSession session, ProxiedPlayer player) {
         session.sendPacketImmediately(this.getLoginPacket());
     }
 

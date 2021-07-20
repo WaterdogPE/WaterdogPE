@@ -15,7 +15,7 @@
 
 package dev.waterdog.waterdogpe.utils.config;
 
-import dev.waterdog.waterdogpe.network.ServerInfo;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -24,37 +24,38 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- * This is a wrapper class for a map mapping all the server names to corresponding ServerInfo instances.
- * This class is required for configuration auto parsing
+ * This is a wrapper class for a map mapping all the server names to corresponding ServerEntry instances.
+ * This class is required for configuration auto parsing and is not synchronized with ServerInfoMap.
  */
 public class ServerList {
 
-    private final Map<String, ServerInfo> serverList = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, ServerEntry> serverList = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
 
-    public ServerInfo get(String name) {
+    public ServerEntry get(String name) {
         return this.serverList.get(name);
     }
 
-    public ServerInfo putIfAbsent(String name, ServerInfo info) {
+    public ServerEntry putIfAbsent(String name, ServerEntry info) {
         return this.serverList.putIfAbsent(name, info);
     }
 
-    public ServerInfo remove(String name) {
+    public ServerEntry remove(String name) {
         return this.serverList.remove(name);
     }
 
-    public ServerInfo put(String name, ServerInfo info) {
+    public ServerEntry put(String name, ServerEntry info) {
         return this.serverList.put(name, info);
     }
 
-    public Collection<ServerInfo> values() {
+    public Collection<ServerEntry> values() {
         return Collections.unmodifiableCollection(this.serverList.values());
     }
 
     public ServerList initEmpty() {
-        this.putIfAbsent("lobby1", new ServerInfo("lobby1",
+        this.putIfAbsent("lobby1", new ServerEntry("lobby1",
                 new InetSocketAddress("127.0.0.1", 19133),
-                new InetSocketAddress("play.myserver.com", 19133)));
+                new InetSocketAddress("play.myserver.com", 19133),
+                ServerInfoMap.DEFAULT_TYPE));
         return this;
     }
 }

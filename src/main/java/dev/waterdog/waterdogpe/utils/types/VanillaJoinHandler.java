@@ -16,7 +16,7 @@
 package dev.waterdog.waterdogpe.utils.types;
 
 import dev.waterdog.waterdogpe.ProxyServer;
-import dev.waterdog.waterdogpe.network.ServerInfo;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 public class VanillaJoinHandler implements IJoinHandler {

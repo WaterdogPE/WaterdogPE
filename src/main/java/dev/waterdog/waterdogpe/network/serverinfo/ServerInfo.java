@@ -13,11 +13,13 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.network;
+package dev.waterdog.waterdogpe.network.serverinfo;
 
 import com.nukkitx.network.raknet.RakNetPong;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
+import dev.waterdog.waterdogpe.network.session.DownstreamClient;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
@@ -36,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  * Also holds a list of all ProxiedPlayers connected.
  */
 @ToString(exclude = {"players"})
-public class ServerInfo {
+public abstract class ServerInfo {
 
     private final String serverName;
     private final InetSocketAddress address;
@@ -47,17 +49,32 @@ public class ServerInfo {
     public ServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {
         this.serverName = serverName;
         this.address = address;
-        this.publicAddress = publicAddress == null ? address : publicAddress;
+        if (publicAddress == null) {
+            publicAddress = address;
+        }
+        this.publicAddress = publicAddress;
     }
 
     /**
      * CompletableFuture may throw exception if ping fails. Therefore it is recommended to handle using whenComplete().
-     *
      * @return CompletableFuture with RakNetPong.
      */
     public CompletableFuture<RakNetPong> ping(long timeout, TimeUnit unit) {
         return ProxyServer.getInstance().bindClient(ProtocolConstants.getLatestProtocol()).thenCompose(client ->
                 client.getRakNet().ping(this.address, timeout, unit).whenComplete((pong, error) -> client.close()));
+    }
+
+    public abstract DownstreamClient createNewConnection(ProtocolVersion protocol);
+
+    public boolean matchAddress(String address, int port) {
+        InetAddress inetAddress = this.publicAddress.getAddress();
+        boolean addressMatch;
+        if (inetAddress == null) {
+            addressMatch = this.publicAddress.getHostName().equals(address);
+        } else {
+            addressMatch = inetAddress.getHostName().equals(address);
+        }
+        return addressMatch && this.publicAddress.getPort() == port;
     }
 
     public void addPlayer(ProxiedPlayer player) {
@@ -74,6 +91,8 @@ public class ServerInfo {
         return Collections.unmodifiableSet(this.players);
     }
 
+    public abstract ServerInfoType getServerType();
+
     public String getServerName() {
         return this.serverName;
     }
@@ -84,16 +103,5 @@ public class ServerInfo {
 
     public InetSocketAddress getPublicAddress() {
         return this.publicAddress;
-    }
-
-    public boolean matchAddress(String address, int port) {
-        InetAddress inetAddress = this.publicAddress.getAddress();
-        boolean addressMatch;
-        if (inetAddress == null) {
-            addressMatch = this.publicAddress.getHostName().equals(address);
-        } else {
-            addressMatch = inetAddress.getHostName().equals(address);
-        }
-        return addressMatch && this.publicAddress.getPort() == port;
     }
 }

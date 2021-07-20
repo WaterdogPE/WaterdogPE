@@ -18,9 +18,9 @@ package dev.waterdog.waterdogpe.network.downstream;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.event.defaults.FastTransferRequestEvent;
 import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
-import dev.waterdog.waterdogpe.network.ServerInfo;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
-import dev.waterdog.waterdogpe.network.session.ServerConnection;
+import dev.waterdog.waterdogpe.network.session.DownstreamClient;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
@@ -29,11 +29,8 @@ import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.*;
 
 public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
-    private final ServerConnection server;
-
-    public ConnectedDownstreamHandler(ProxiedPlayer player, ServerConnection server) {
-        super(player);
-        this.server = server;
+    public ConnectedDownstreamHandler(ProxiedPlayer player, DownstreamClient client) {
+        super(player, client);
     }
 
     @Override
@@ -71,9 +68,9 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(rewriteData.getEntityId());
-        this.server.sendPacket(initializedPacket);
+        this.client.sendPacket(initializedPacket);
 
-        PostTransferCompleteEvent event = new PostTransferCompleteEvent(this.server, this.player);
+        PostTransferCompleteEvent event = new PostTransferCompleteEvent(this.client, this.player);
         this.player.getProxy().getEventManager().callEvent(event);
         return false;
     }
@@ -101,7 +98,7 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public final boolean handle(DisconnectPacket packet) {
-        if (this.player.sendToFallback(this.server.getInfo(), packet.getKickMessage())) {
+        if (this.player.sendToFallback(this.client.getServerInfo(), packet.getKickMessage())) {
             throw CancelSignalException.CANCEL;
         }
         this.player.disconnect(new TranslationContainer("waterdog.downstream.kicked", packet.getKickMessage()));
