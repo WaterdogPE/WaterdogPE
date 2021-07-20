@@ -28,7 +28,7 @@ public class ServerInfoType implements Comparable<ServerInfoType> {
     private static final Map<String, ServerInfoType> types = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
     private final String name;
 
-    public ServerInfoType(String name) {
+    private ServerInfoType(String name) {
         this.name = name;
     }
 
