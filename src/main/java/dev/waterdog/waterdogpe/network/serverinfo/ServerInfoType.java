@@ -23,8 +23,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 public class ServerInfoType implements Comparable<ServerInfoType> {
     private static final Map<String, ServerInfoType> types = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);;
     private final String name;
-    
-    public static final ServerInfoType BEDROCK = ServerInfoType.fromString("bedrock");;
+
+    public static final ServerInfoType BEDROCK = ServerInfoType.fromString("bedrock");
 
     private ServerInfoType(String name) {
         this.name = name;
