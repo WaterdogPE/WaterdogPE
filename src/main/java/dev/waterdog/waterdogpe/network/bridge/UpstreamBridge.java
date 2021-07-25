@@ -26,6 +26,13 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.Collection;
 
+/**
+ * This is the default upstream to  downstream implementation of BatchBridge which is used during all life cycles of the connection.
+ * UpstreamBridge is assigned by the proxy automatically on the initial connection or at the end of the transfer phase when upstream packets are
+ * allowed to be sent to downstream. Note that each implementation of DownstreamSession must be capable of handling raw ByteBuf and Collection<BedrockPacket>
+ * from sendWrapped() if this.forceEncodePackets is disabled.
+ * Decoded packets are from here passed to rewrite maps and optionaly to plugin handler.
+ */
 public class UpstreamBridge extends ProxyBatchBridge implements BatchHandler {
 
     private final DownstreamSession session;

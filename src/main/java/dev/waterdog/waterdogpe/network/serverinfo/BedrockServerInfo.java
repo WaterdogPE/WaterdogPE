@@ -21,6 +21,10 @@ import dev.waterdog.waterdogpe.network.session.bedrock.BedrockDefaultClient;
 
 import java.net.InetSocketAddress;
 
+/**
+ * This is the default Minecraft: Bedrock ServerInfo implementation which
+ * uses UDP RakNet protocol thanks to CloudBurst protocol library.
+ */
 public class BedrockServerInfo extends ServerInfo {
 
     public BedrockServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {

@@ -17,6 +17,9 @@ package dev.waterdog.waterdogpe.network.serverinfo;
 
 import java.net.InetSocketAddress;
 
+/**
+ * ServerInfoFactory is used to create new ServerInfo instance based on the ServerInfoType.
+ */
 public interface ServerInfoFactory {
 
     ServerInfo newInstance(String serverName, InetSocketAddress address, InetSocketAddress publicAddress);

@@ -28,6 +28,12 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * This is the class where things get interrested.
+ * BatchBridge classes are responsible for reencoding, resending packets from upstream to downstream and vice-versa.
+ * WARNING: This class includes more tricks which might be harder to understand.
+ * Do NOT touch anything here unless you understand what you are doing and are aware of all consequences!
+ */
 public abstract class ProxyBatchBridge {
 
     protected final ProxiedPlayer player;

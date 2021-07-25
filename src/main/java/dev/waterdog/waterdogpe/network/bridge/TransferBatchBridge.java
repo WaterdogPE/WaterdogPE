@@ -30,6 +30,11 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.Collection;
 import java.util.Queue;
 
+/**
+ * This is the downstream implementation of BatchBridge which is used during transfer phase.
+ * If this.hasStartGame and this.dimLockActive is 'true', received packets will be queued until this.dimLockActive is set to 'false'.
+ * WARNING: To prevent memory leaks, all queued packets should be released before releasing TransferBatchBridge itself!
+ */
 public class TransferBatchBridge extends AbstractDownstreamBatchBridge {
 
     private final Queue<BedrockPacket> packetQueue = PlatformDependent.newSpscQueue();

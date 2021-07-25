@@ -22,6 +22,9 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.Collection;
 
+/**
+ * This is the default implementation of downstream to upstream BatchBridge which holds reference to upstream session.
+ */
 public abstract class AbstractDownstreamBatchBridge extends ProxyBatchBridge {
 
     protected final BedrockSession upstreamSession;

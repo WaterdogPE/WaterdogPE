@@ -17,9 +17,16 @@ package dev.waterdog.waterdogpe.network.serverinfo;
 
 import com.google.common.base.Preconditions;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+/**
+ * This is the identifier class for custom ServerInfo types.
+ * The aim is to allow simple comparing between the custom types. Therefore ServerInfoType#fromString()
+ * method should be used to create new ServerInfoType.
+ */
 public class ServerInfoType implements Comparable<ServerInfoType> {
     private static final Map<String, ServerInfoType> types = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
     private final String name;
@@ -46,6 +53,10 @@ public class ServerInfoType implements Comparable<ServerInfoType> {
             return BEDROCK;
         }
         return fromString(string);
+    }
+
+    public static Collection<ServerInfoType> values() {
+        return Collections.unmodifiableCollection(types.values());
     }
 
     public String getName() {

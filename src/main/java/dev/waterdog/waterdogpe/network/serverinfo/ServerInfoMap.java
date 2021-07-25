@@ -22,7 +22,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- * This class is used to map all ServerInfo instances which can be actively used.
+ * This class holds runtime information about avaliable ServerInfo instances and known implementations.
+ * Custom ServerInfo implementations should be registered by providing ServerInfoType and ServerInfoFactory.
+ * Plugins should do this using onStartup() method which is triggered before serialization from the configuration file.
  */
 public class ServerInfoMap {
 

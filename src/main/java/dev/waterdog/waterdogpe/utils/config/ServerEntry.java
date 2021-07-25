@@ -21,6 +21,9 @@ import lombok.ToString;
 
 import java.net.InetSocketAddress;
 
+/**
+ * This is data class used for Configuration which holds basic information of the ServerInfo
+ */
 @ToString
 public class ServerEntry {
 
