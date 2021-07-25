@@ -17,12 +17,12 @@ package dev.waterdog.waterdogpe.scheduler;
 
 import dev.waterdog.waterdogpe.logger.MainLogger;
 
-public class TaskHandler {
+public class TaskHandler<T extends Runnable> {
 
     private final int taskId;
     private final boolean async;
 
-    private final Runnable task;
+    private final T task;
 
     private int delay;
     private int period;
@@ -32,10 +32,10 @@ public class TaskHandler {
 
     private boolean cancelled;
 
-    public TaskHandler(Runnable task, int taskId, boolean async) {
+    public TaskHandler(T task, int taskId, boolean async) {
         this.task = task;
         if (task instanceof Task) {
-            ((Task) task).setHandler(this);
+            ((Task) task).setHandler((TaskHandler<Task>) this);
         }
         this.taskId = taskId;
         this.async = async;
@@ -45,8 +45,12 @@ public class TaskHandler {
         this.lastRunTick = currentTick;
         try {
             this.task.run();
-        } catch (Exception e) {
-            MainLogger.getLogger().error("Exception while running task!", e);
+        } catch (Throwable t) {
+            if (this.task instanceof Task) {
+                ((Task) this.task).onError(t);
+            } else {
+                MainLogger.getLogger().error("Exception while running task!", t);
+            }
         }
     }
 
@@ -77,7 +81,7 @@ public class TaskHandler {
         return this.async;
     }
 
-    public Runnable getTask() {
+    public T getTask() {
         return this.task;
     }
 
