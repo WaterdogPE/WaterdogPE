@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils;
+package dev.waterdog.waterdogpe.utils.config;
 
 import dev.waterdog.waterdogpe.logger.MainLogger;
+import dev.waterdog.waterdogpe.utils.FileUtils;
 import dev.waterdog.waterdogpe.utils.types.TextContainer;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;

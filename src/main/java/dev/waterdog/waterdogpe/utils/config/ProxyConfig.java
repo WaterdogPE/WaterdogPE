@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils;
+package dev.waterdog.waterdogpe.utils.config;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.utils.config.InetSocketAddressConverter;

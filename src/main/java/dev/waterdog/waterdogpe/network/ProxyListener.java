@@ -23,7 +23,7 @@ import dev.waterdog.waterdogpe.event.defaults.ProxyPingEvent;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
 import dev.waterdog.waterdogpe.network.upstream.LoginUpstreamHandler;
 import dev.waterdog.waterdogpe.query.QueryHandler;
-import dev.waterdog.waterdogpe.utils.ProxyConfig;
+import dev.waterdog.waterdogpe.utils.config.ProxyConfig;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
