@@ -28,7 +28,7 @@ import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
-import dev.waterdog.waterdogpe.utils.ProxyConfig;
+import dev.waterdog.waterdogpe.utils.config.ProxyConfig;
 
 import javax.crypto.SecretKey;
 import java.net.URI;

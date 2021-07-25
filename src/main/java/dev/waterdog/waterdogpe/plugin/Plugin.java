@@ -19,9 +19,9 @@ import com.google.common.base.Preconditions;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.logger.Logger;
 import dev.waterdog.waterdogpe.logger.PluginLogger;
-import dev.waterdog.waterdogpe.utils.Configuration;
+import dev.waterdog.waterdogpe.utils.config.Configuration;
 import dev.waterdog.waterdogpe.utils.FileUtils;
-import dev.waterdog.waterdogpe.utils.YamlConfig;
+import dev.waterdog.waterdogpe.utils.config.YamlConfig;
 import dev.waterdog.waterdogpe.utils.exceptions.PluginChangeStateException;
 
 import java.io.File;
