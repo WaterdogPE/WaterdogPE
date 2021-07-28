@@ -13,23 +13,14 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.event.defaults;
+package dev.waterdog.waterdogpe.network.serverinfo;
 
-import dev.waterdog.waterdogpe.event.AsyncEvent;
-import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
-import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import java.net.InetSocketAddress;
 
-@AsyncEvent
-public class InitialServerDeterminationEvent extends PlayerEvent {
+/**
+ * ServerInfoFactory is used to create new ServerInfo instance based on the ServerInfoType.
+ */
+public interface ServerInfoFactory {
 
-    private final ServerInfo initialServer;
-
-    public InitialServerDeterminationEvent(ProxiedPlayer player, ServerInfo initialServer) {
-        super(player);
-        this.initialServer = initialServer;
-    }
-
-    public ServerInfo getInitialServer() {
-        return this.initialServer;
-    }
+    ServerInfo newInstance(String serverName, InetSocketAddress address, InetSocketAddress publicAddress);
 }

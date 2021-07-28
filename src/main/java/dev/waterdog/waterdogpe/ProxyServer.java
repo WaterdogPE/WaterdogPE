@@ -26,7 +26,7 @@ import dev.waterdog.waterdogpe.event.defaults.DispatchCommandEvent;
 import dev.waterdog.waterdogpe.event.defaults.ProxyStartEvent;
 import dev.waterdog.waterdogpe.logger.MainLogger;
 import dev.waterdog.waterdogpe.network.ProxyListener;
-import dev.waterdog.waterdogpe.network.ServerInfo;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.packs.PackManager;
@@ -38,8 +38,8 @@ import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
 import dev.waterdog.waterdogpe.utils.config.LangConfig;
 import dev.waterdog.waterdogpe.utils.config.ProxyConfig;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
 import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
-import dev.waterdog.waterdogpe.utils.config.ServerList;
 import dev.waterdog.waterdogpe.utils.types.*;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 
@@ -59,21 +59,27 @@ public class ProxyServer {
 
     private final MainLogger logger;
     private final TerminalConsole console;
+
     private final ConfigurationManager configurationManager;
     private final WaterdogScheduler scheduler;
     private final PlayerManager playerManager;
     private final PluginManager pluginManager;
     private final EventManager eventManager;
     private final PackManager packManager;
-    private final ServerList serverInfoMap;
-    private final ConsoleCommandSender commandSender;
-    private final ScheduledExecutorService tickExecutor;
+
+    private final ServerInfoMap serverInfoMap = new ServerInfoMap();
+
     private BedrockServer bedrockServer;
     private QueryHandler queryHandler;
+
     private CommandMap commandMap;
+    private final ConsoleCommandSender commandSender;
+
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
     private ProxyListenerInterface proxyListener = new ProxyListenerInterface(){};
+
+    private final ScheduledExecutorService tickExecutor;
     private ScheduledFuture<?> tickFuture;
     private boolean shutdown = false;
     private int currentTick = 0;
@@ -118,8 +124,8 @@ public class ProxyServer {
         // Default Handlers
         this.reconnectHandler = new VanillaReconnectHandler();
         this.joinHandler = new VanillaJoinHandler(this);
-        this.serverInfoMap = this.configurationManager.getProxyConfig().getServerInfoMap();
         this.pluginManager = new PluginManager(this);
+        this.configurationManager.loadServerInfos(this.serverInfoMap);
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
         this.eventManager = new EventManager(this);
@@ -255,9 +261,13 @@ public class ProxyServer {
         return !event.isCancelled() && this.commandMap.handleCommand(sender, args[0], shiftedArgs);
     }
 
-    public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
+    public BedrockClient createBedrockClient() {
         InetSocketAddress address = new InetSocketAddress("0.0.0.0", 0);
-        BedrockClient client = new BedrockClient(address);
+        return new BedrockClient(address);
+    }
+
+    public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
+        BedrockClient client = this.createBedrockClient();
         client.setRakNetVersion(protocol.getRaknetVersion());
         return client.bind().thenApply(i -> client);
     }
@@ -317,7 +327,6 @@ public class ProxyServer {
 
     /**
      * Allows to add servers dynamically to server map
-     *
      * @return if server was registered
      */
     public boolean registerServerInfo(ServerInfo serverInfo) {
@@ -327,7 +336,6 @@ public class ProxyServer {
 
     /**
      * Remove server from server map
-     *
      * @return removed ServerInfo or null
      */
     public ServerInfo removeServerInfo(String serverName) {
@@ -342,7 +350,6 @@ public class ProxyServer {
 
     /**
      * Get ServerInfo by address and port
-     *
      * @return ServerInfo instance of matched server
      */
     public ServerInfo getServerInfo(String address, int port) {
@@ -357,7 +364,6 @@ public class ProxyServer {
 
     /**
      * Get ServerInfo instance using hostname
-     *
      * @return ServerInfo assigned to forced host
      */
     public ServerInfo getForcedHost(String serverHostname) {
@@ -368,11 +374,14 @@ public class ProxyServer {
 
     /**
      * Get all registered ServerInfo instances
-     *
      * @return an unmodifiable collection containing all registered ServerInfo instances
      */
     public Collection<ServerInfo> getServers() {
         return this.serverInfoMap.values();
+    }
+
+    public ServerInfoMap getServerInfoMap() {
+        return this.serverInfoMap;
     }
 
     public Path getPluginPath() {

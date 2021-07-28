@@ -16,7 +16,7 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.AsyncEvent;
-import dev.waterdog.waterdogpe.network.session.ServerConnection;
+import dev.waterdog.waterdogpe.network.session.DownstreamClient;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 /**
@@ -27,21 +27,21 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 @AsyncEvent
 public class TransferCompleteEvent extends PlayerEvent {
 
-    private final ServerConnection oldServer;
-    private final ServerConnection newServer;
+    private final DownstreamClient oldClient;
+    private final DownstreamClient newClient;
 
-    public TransferCompleteEvent(ServerConnection oldServer, ServerConnection newServer, ProxiedPlayer player) {
+    public TransferCompleteEvent(DownstreamClient oldClient, DownstreamClient newClient, ProxiedPlayer player) {
         super(player);
-        this.oldServer = oldServer;
-        this.newServer = newServer;
+        this.oldClient = oldClient;
+        this.newClient = newClient;
     }
 
-    public ServerConnection getNewServer() {
-        return this.newServer;
+    public DownstreamClient getOldClient() {
+        return this.oldClient;
     }
 
-    public ServerConnection getOldServer() {
-        return this.oldServer;
+    public DownstreamClient getNewClient() {
+        return this.newClient;
     }
 }
 

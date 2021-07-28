@@ -15,7 +15,7 @@
 
 package dev.waterdog.waterdogpe.utils.types;
 
-import dev.waterdog.waterdogpe.network.ServerInfo;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 /**

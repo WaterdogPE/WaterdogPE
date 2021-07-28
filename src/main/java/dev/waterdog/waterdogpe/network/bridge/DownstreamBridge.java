@@ -22,10 +22,15 @@ import dev.waterdog.waterdogpe.network.rewrite.RewriteMaps;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 
-public class DownstreamBridge extends ProxyBatchBridge {
+/**
+ * This is the downstream implementation of BatchBridge which is used after initial connection initialization or
+ * after transfer proccess is completed.
+ * Decoded packets are from here passed to rewrite maps and optionaly to plugin handler.
+ */
+public class DownstreamBridge extends AbstractDownstreamBatchBridge {
 
-    public DownstreamBridge(ProxiedPlayer player, BedrockSession session) {
-        super(player, session);
+    public DownstreamBridge(ProxiedPlayer player, BedrockSession upstreamSession) {
+        super(player, upstreamSession);
     }
 
     @Override

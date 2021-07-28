@@ -16,7 +16,7 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.CancellableEvent;
-import dev.waterdog.waterdogpe.network.ServerInfo;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 /**
