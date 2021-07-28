@@ -54,39 +54,39 @@ public class WaterdogScheduler {
         return instance;
     }
 
-    public TaskHandler scheduleAsync(Runnable task) {
+    public <T extends Runnable> TaskHandler<T> scheduleAsync(T task) {
         return this.scheduleTask(task, true);
     }
 
-    public TaskHandler scheduleTask(Runnable task, boolean async) {
+    public <T extends Runnable> TaskHandler<T> scheduleTask(T task, boolean async) {
         return this.addTask(task, 0, 0, async);
     }
 
-    public TaskHandler scheduleDelayed(Runnable task, int delay) {
+    public <T extends Runnable> TaskHandler<T> scheduleDelayed(T task, int delay) {
         return this.scheduleDelayed(task, delay, false);
     }
 
-    public TaskHandler scheduleDelayed(Runnable task, int delay, boolean async) {
+    public <T extends Runnable> TaskHandler<T> scheduleDelayed(T task, int delay, boolean async) {
         return this.addTask(task, delay, 0, async);
     }
 
-    public TaskHandler scheduleRepeating(Runnable task, int period) {
+    public <T extends Runnable> TaskHandler<T> scheduleRepeating(T task, int period) {
         return this.scheduleRepeating(task, period, false);
     }
 
-    public TaskHandler scheduleRepeating(Runnable task, int period, boolean async) {
+    public <T extends Runnable> TaskHandler<T> scheduleRepeating(T task, int period, boolean async) {
         return this.addTask(task, 0, period, async);
     }
 
-    public TaskHandler scheduleDelayedRepeating(Runnable task, int delay, int period) {
+    public <T extends Runnable> TaskHandler<T> scheduleDelayedRepeating(T task, int delay, int period) {
         return this.scheduleDelayedRepeating(task, delay, period, false);
     }
 
-    public TaskHandler scheduleDelayedRepeating(Runnable task, int delay, int period, boolean async) {
+    public <T extends Runnable> TaskHandler<T> scheduleDelayedRepeating(T task, int delay, int period, boolean async) {
         return this.addTask(task, delay, period, async);
     }
 
-    public TaskHandler addTask(Runnable task, int delay, int period, boolean async) {
+    public <T extends Runnable> TaskHandler<T> addTask(T task, int delay, int period, boolean async) {
         if (delay < 0 || period < 0) {
             throw new SchedulerException("Attempted to register a task with negative delay or period!");
         }
@@ -94,7 +94,7 @@ public class WaterdogScheduler {
         int currentTick = this.getCurrentTick();
         int taskId = this.currentId.getAndIncrement();
 
-        TaskHandler handler = new TaskHandler(task, taskId, async);
+        TaskHandler<T> handler = new TaskHandler(task, taskId, async);
         handler.setDelay(delay);
         handler.setPeriod(period);
         handler.setNextRunTick(handler.isDelayed() ? currentTick + delay : currentTick);

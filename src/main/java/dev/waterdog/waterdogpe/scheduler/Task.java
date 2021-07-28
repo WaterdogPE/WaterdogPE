@@ -15,13 +15,19 @@
 
 package dev.waterdog.waterdogpe.scheduler;
 
+import dev.waterdog.waterdogpe.logger.MainLogger;
+
 public abstract class Task implements Runnable {
 
-    private TaskHandler handler;
+    private TaskHandler<Task> handler;
 
     public abstract void onRun(int currentTick);
 
     public abstract void onCancel();
+
+    public void onError(Throwable error) {
+        MainLogger.getLogger().error("Unable to complete task!", error);
+    }
 
     @Override
     public void run() {
@@ -36,11 +42,11 @@ public abstract class Task implements Runnable {
         this.handler.cancel();
     }
 
-    public TaskHandler getHandler() {
+    public TaskHandler<Task> getHandler() {
         return this.handler;
     }
 
-    public void setHandler(TaskHandler handler) {
+    public void setHandler(TaskHandler<Task> handler) {
         if (this.handler != null) {
             throw new SecurityException("Can not change task handler!");
         }

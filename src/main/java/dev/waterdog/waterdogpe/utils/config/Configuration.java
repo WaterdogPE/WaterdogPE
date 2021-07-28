@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils;
+package dev.waterdog.waterdogpe.utils.config;
 
 import dev.waterdog.waterdogpe.logger.MainLogger;
 import lombok.AllArgsConstructor;

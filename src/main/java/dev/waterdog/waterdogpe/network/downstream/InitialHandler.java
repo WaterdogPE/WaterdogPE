@@ -18,12 +18,13 @@ package dev.waterdog.waterdogpe.network.downstream;
 import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
-import dev.waterdog.waterdogpe.network.ServerInfo;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.rewrite.BlockMap;
 import dev.waterdog.waterdogpe.network.rewrite.BlockMapSimple;
 import dev.waterdog.waterdogpe.network.rewrite.types.BlockPalette;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
+import dev.waterdog.waterdogpe.network.session.DownstreamClient;
 import dev.waterdog.waterdogpe.network.session.SessionInjections;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
@@ -37,8 +38,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class InitialHandler extends AbstractDownstreamHandler {
 
-    public InitialHandler(ProxiedPlayer player) {
-        super(player);
+    public InitialHandler(ProxiedPlayer player, DownstreamClient client) {
+        super(player, client);
     }
 
     @Override
@@ -48,7 +49,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
             if (!this.player.sendToFallback(serverInfo, message)) {
                 this.player.disconnect(new TranslationContainer("waterdog.connected.fallback", serverInfo.getServerName(), message));
             }
-        }, this.player.getServer().getDownstream());
+        }, this.client.getSession());
     }
 
     @Override
@@ -62,13 +63,13 @@ public class InitialHandler extends AbstractDownstreamHandler {
                     serverKey,
                     Base64.getDecoder().decode(saltJwt.getJWTClaimsSet().getStringClaim("salt"))
             );
-            this.player.getServer().getDownstream().enableEncryption(key);
+            this.player.getDownstream().getSession().enableEncryption(key);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
-        this.player.getServer().sendPacket(clientToServerHandshake);
+        this.player.getDownstream().sendPacket(clientToServerHandshake);
         throw CancelSignalException.CANCEL;
     }
 
@@ -79,7 +80,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
         }
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.HAVE_ALL_PACKS);
-        this.player.getServer().getDownstream().sendPacketImmediately(response);
+        this.player.getDownstream().sendPacketImmediately(response);
         throw CancelSignalException.CANCEL;
     }
 
@@ -90,7 +91,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
         }
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
         response.setStatus(ResourcePackClientResponsePacket.Status.COMPLETED);
-        this.player.getServer().getDownstream().sendPacketImmediately(response);
+        this.player.getDownstream().sendPacketImmediately(response);
         throw CancelSignalException.CANCEL;
     }
 
@@ -120,7 +121,9 @@ public class InitialHandler extends AbstractDownstreamHandler {
         packet.setRuntimeEntityId(rewriteData.getEntityId());
         packet.setUniqueEntityId(rewriteData.getEntityId());
 
-        SessionInjections.injectInitialHandlers(this.player.getServer(), this.player);
+        int blockingId = client.getSession().getHardcodedBlockingId();
+        this.player.getUpstream().getHardcodedBlockingId().set(blockingId);
+        this.client.getSession().onInitialServerConnected(player);
         return true;
     }
 }

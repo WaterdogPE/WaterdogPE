@@ -15,10 +15,7 @@
 
 package dev.waterdog.waterdogpe.event.defaults;
 
-import com.nukkitx.protocol.bedrock.BedrockClient;
-import dev.waterdog.waterdogpe.ProxyServer;
-import dev.waterdog.waterdogpe.event.AsyncEvent;
-import dev.waterdog.waterdogpe.event.Event;
+import dev.waterdog.waterdogpe.network.session.DownstreamClient;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 /**
@@ -26,14 +23,14 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
  */
 public class ClientBindEvent extends PlayerEvent {
 
-    private final BedrockClient client;
+    private final DownstreamClient client;
 
-    public ClientBindEvent(ProxiedPlayer player, BedrockClient client) {
+    public ClientBindEvent(ProxiedPlayer player, DownstreamClient client) {
         super(player);
         this.client = client;
     }
 
-    public BedrockClient getClient() {
+    public DownstreamClient getClient() {
         return this.client;
     }
 }
