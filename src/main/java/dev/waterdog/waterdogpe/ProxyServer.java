@@ -208,10 +208,10 @@ public class ProxyServer {
 
     private void shutdown0() throws Exception {
         this.pluginManager.disableAllPlugins();
-
+        String disconnectReason = new TranslationContainer("waterdog.server.shutdown").getTranslated();
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
-            player.getValue().disconnect("Proxy Shutdown", true);
+            player.getValue().disconnect(disconnectReason, true);
         }
         Thread.sleep(500); // Give small delay to send packet
 
