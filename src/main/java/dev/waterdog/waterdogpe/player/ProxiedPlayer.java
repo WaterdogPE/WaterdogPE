@@ -30,7 +30,6 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.command.CommandSender;
 import dev.waterdog.waterdogpe.event.defaults.*;
 import dev.waterdog.waterdogpe.logger.MainLogger;
-import dev.waterdog.waterdogpe.network.bridge.UpstreamBridge;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.rewrite.RewriteMaps;
@@ -160,7 +159,7 @@ public class ProxiedPlayer implements CommandSender {
             }
 
             // Determine forced host first
-            ServerInfo initialServer = this.proxy.getForcedHost(this.loginData.getJoinHostname());
+            ServerInfo initialServer = this.proxy.getForcedHostHandler().resolveForcedHost(this.loginData.getJoinHostname(), this);
             if (initialServer == null) {
                 initialServer = this.proxy.getJoinHandler().determineServer(this);
             }
