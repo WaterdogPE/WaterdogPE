@@ -66,7 +66,7 @@ public class SimpleCommandMap implements CommandMap {
 
     @Override
     public boolean unregisterCommand(String name) {
-        Command command = this.commandsMap.get(name.toLowerCase());
+        Command command = this.commandsMap.remove(name.toLowerCase());
         if (command == null) return false;
 
         for (String alias : command.getAliases()) {
