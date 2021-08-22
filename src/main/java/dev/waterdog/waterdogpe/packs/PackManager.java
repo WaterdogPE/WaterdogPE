@@ -146,9 +146,8 @@ public class PackManager {
     }
 
     public void rebuildPackets() {
-        boolean forcePacks = this.proxy.getConfiguration().forcePacks();
-        this.packsInfoPacket.setForcedToAccept(forcePacks);
-        this.stackPacket.setForcedToAccept(forcePacks);
+        this.packsInfoPacket.setForcedToAccept(this.proxy.getConfiguration().isForceServerPacks());
+        this.stackPacket.setForcedToAccept(this.proxy.getConfiguration().isOverwriteClientPacks());
 
         this.packsInfoPacket.getBehaviorPackInfos().clear();
         this.packsInfoPacket.getResourcePackInfos().clear();
