@@ -131,7 +131,7 @@ public class ProxyConfig extends YamlConfig {
     private boolean enableResourcePacks = true;
 
     @Path("force_apply_packs")
-    @Comment("Whether texture packs should be enforced")
+    @Comment("If this is enabled, the client will not be able to use custom packs")
     private boolean forcePacks = false;
 
     @Path("pack_cache_size")
