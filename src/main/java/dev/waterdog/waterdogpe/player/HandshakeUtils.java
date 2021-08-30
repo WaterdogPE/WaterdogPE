@@ -22,6 +22,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.ServerToClientHandshakePacket;
@@ -61,20 +62,36 @@ public class HandshakeUtils {
         return privateKeyPair;
     }
 
-    public static boolean validateChain(JsonArray chainArray) throws Exception {
+    public static boolean validateChain(JsonArray chainArray, boolean strict) throws Exception {
         ECPublicKey lastKey = null;
-        boolean validChain = false;
+        boolean authed = false;
 
         for (JsonElement element : chainArray) {
-            JWSObject jwt = JWSObject.parse(element.getAsString());
-            if (!validChain) {
-                validChain = EncryptionUtils.verifyJwt(jwt, EncryptionUtils.getMojangPublicKey());
+            SignedJWT jwt = SignedJWT.parse(element.getAsString());
+
+            URI x5u = jwt.getHeader().getX509CertURL();
+            if (x5u == null) {
+                throw new JOSEException("Key not found");
             }
 
-            if (lastKey != null) {
-                if (!EncryptionUtils.verifyJwt(jwt, lastKey)) {
-                    return false;
+            ECPublicKey expectedKey = EncryptionUtils.generateKey(jwt.getHeader().getX509CertURL().toString());
+            if (lastKey == null) {
+                // First key is self signed
+                lastKey = expectedKey;
+            } else if (strict && !lastKey.equals(expectedKey)) {
+                // Make sure the previous key matches the header of the current
+                throw new IllegalArgumentException("Key does not match");
+            }
+
+            if (!EncryptionUtils.verifyJwt(jwt, lastKey)) {
+                if (strict) {
+                    throw new JOSEException("Login JWT was not valid");
                 }
+                return false;
+            }
+
+            if (lastKey.equals(EncryptionUtils.getMojangPublicKey())) {
+                authed = true;
             }
 
             JsonObject payload = (JsonObject) JsonParser.parseString(jwt.getPayload().toString());
@@ -82,7 +99,7 @@ public class HandshakeUtils {
             JsonElement ipkNode = payload.get("identityPublicKey");
             lastKey = EncryptionUtils.generateKey(ipkNode.getAsString());
         }
-        return validChain;
+        return authed;
     }
 
     public static JWSObject createExtraData(KeyPair pair, JsonObject extraData) {
@@ -115,9 +132,9 @@ public class HandshakeUtils {
         return jwsObject;
     }
 
-    public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, JsonArray certChain, ProtocolVersion protocol) throws Exception {
+    public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, JsonArray certChain, ProtocolVersion protocol, boolean strict) throws Exception {
         // Cert chain should be signed by Mojang is is client xbox authenticated
-        boolean xboxAuth = HandshakeUtils.validateChain(certChain);
+        boolean xboxAuth = HandshakeUtils.validateChain(certChain, strict);
         JWSObject jwt = JWSObject.parse(certChain.get(certChain.size() - 1).getAsString());
         JsonObject payload = (JsonObject) JsonParser.parseString(jwt.getPayload().toString());
         JsonObject extraData = HandshakeUtils.parseExtraData(packet, payload);

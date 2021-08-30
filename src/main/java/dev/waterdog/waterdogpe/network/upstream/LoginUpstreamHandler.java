@@ -89,8 +89,10 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             }
             JsonArray certChain = certJson.getAsJsonArray("chain");
 
-            HandshakeEntry handshakeEntry = HandshakeUtils.processHandshake(this.session, packet, certChain, protocol);
-            if (!(xboxAuth = handshakeEntry.isXboxAuthed()) && this.proxy.getConfiguration().isOnlineMode()) {
+            boolean strictAuth = this.proxy.getConfiguration().isOnlineMode();
+            HandshakeEntry handshakeEntry = HandshakeUtils.processHandshake(this.session, packet, certChain, protocol, strictAuth);
+
+            if (!(xboxAuth = handshakeEntry.isXboxAuthed()) && strictAuth) {
                 this.onLoginFailed(false, null, "disconnectionScreen.notAuthenticated");
                 this.proxy.getLogger().info("[" + this.session.getAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has disconnected due to failed XBOX authentication!");
                 return true;
