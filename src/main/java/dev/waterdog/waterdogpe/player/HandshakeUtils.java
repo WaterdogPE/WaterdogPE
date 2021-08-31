@@ -64,6 +64,11 @@ public class HandshakeUtils {
     }
 
     public static boolean validateChain(JsonArray chainArray, boolean strict) throws Exception {
+        if (strict && chainArray.size() > 3) {
+            // We dont expect larger chain
+            return false;
+        }
+
         ECPublicKey lastKey = null;
         boolean authed = false;
         Iterator<JsonElement> iterator = chainArray.iterator();
@@ -92,7 +97,7 @@ public class HandshakeUtils {
                 return false;
             }
 
-            if(authed){
+            if (authed) {
                 return !iterator.hasNext();
             }
 
