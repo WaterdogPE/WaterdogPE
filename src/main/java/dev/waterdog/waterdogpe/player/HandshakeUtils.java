@@ -39,6 +39,7 @@ import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
+import java.util.Iterator;
 import java.util.UUID;
 
 /**
@@ -65,8 +66,9 @@ public class HandshakeUtils {
     public static boolean validateChain(JsonArray chainArray, boolean strict) throws Exception {
         ECPublicKey lastKey = null;
         boolean authed = false;
-
-        for (JsonElement element : chainArray) {
+        Iterator<JsonElement> iterator = chainArray.iterator();
+        while(iterator.hasNext()){
+            JsonElement element = iterator.next();
             SignedJWT jwt = SignedJWT.parse(element.getAsString());
 
             URI x5u = jwt.getHeader().getX509CertURL();
@@ -88,6 +90,10 @@ public class HandshakeUtils {
                     throw new JOSEException("Login JWT was not valid");
                 }
                 return false;
+            }
+
+            if(authed){
+                return !iterator.hasNext();
             }
 
             if (lastKey.equals(EncryptionUtils.getMojangPublicKey())) {
