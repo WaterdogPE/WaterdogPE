@@ -97,12 +97,10 @@ public class HandshakeUtils {
                 return false;
             }
 
-            if (authed) {
-                return !iterator.hasNext();
-            }
-
             if (lastKey.equals(EncryptionUtils.getMojangPublicKey())) {
                 authed = true;
+            } else if (authed) {
+                return !iterator.hasNext();
             }
 
             JsonObject payload = (JsonObject) JsonParser.parseString(jwt.getPayload().toString());
@@ -157,7 +155,9 @@ public class HandshakeUtils {
 
         ECPublicKey identityPublicKey = EncryptionUtils.generateKey(identityPublicKeyString);
         JWSObject clientJwt = JWSObject.parse(packet.getSkinData().toString());
-        EncryptionUtils.verifyJwt(clientJwt, identityPublicKey);
+        if (!EncryptionUtils.verifyJwt(clientJwt, identityPublicKey) && strict) {
+            xboxAuth = false;
+        }
         JsonObject clientData = HandshakeUtils.parseClientData(clientJwt, extraData, session);
         return new HandshakeEntry(identityPublicKey, clientData, extraData, xboxAuth, protocol);
     }
