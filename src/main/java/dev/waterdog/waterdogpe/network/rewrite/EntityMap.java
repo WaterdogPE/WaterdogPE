@@ -257,4 +257,10 @@ public class EntityMap implements BedrockPacketHandler {
         packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         return true;
     }
+
+    @Override
+    public boolean handle(EntityPickRequestPacket packet) {
+        packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        return true;
+    }
 }
