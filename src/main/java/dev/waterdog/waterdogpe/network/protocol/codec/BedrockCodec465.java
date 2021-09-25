@@ -18,9 +18,9 @@ package dev.waterdog.waterdogpe.network.protocol.codec;
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import com.nukkitx.protocol.bedrock.packet.EntityPickRequestPacket;
 import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
-import com.nukkitx.protocol.bedrock.v448.BedrockPacketHelper_v465;
-import com.nukkitx.protocol.bedrock.v448.serializer.EntityPickRequestSerializer_v465;
-import com.nukkitx.protocol.bedrock.v448.serializer.StartGameSerializer_v465;
+import com.nukkitx.protocol.bedrock.v465.BedrockPacketHelper_v465;
+import com.nukkitx.protocol.bedrock.v465.serializer.EntityPickRequestSerializer_v465;
+import com.nukkitx.protocol.bedrock.v465.serializer.StartGameSerializer_v465;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 
 public class BedrockCodec465 extends BedrockCodec448 {
