@@ -130,9 +130,13 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Enable/Disable the resource pack system")
     private boolean enableResourcePacks = true;
 
-    @Path("force_apply_packs")
-    @Comment("Whether texture packs should be enforced")
-    private boolean forcePacks = false;
+    @Path("overwrite_client_packs")
+    @Comment("If this is enabled, the client will not be able to use custom packs")
+    private boolean overwriteClientPacks = false;
+
+    @Path("force_server_packs")
+    @Comment("If enabled, the client will be forced to accept server-sided resource packs")
+    private boolean forceServerPacks = false;
 
     @Path("pack_cache_size")
     @Comment("You can set maximum pack size in MB to be cached.")
@@ -266,12 +270,20 @@ public class ProxyConfig extends YamlConfig {
         return this.enableResourcePacks;
     }
 
-    public void setForcePacks(boolean forcePacks) {
-        this.forcePacks = forcePacks;
+    public boolean isOverwriteClientPacks() {
+        return overwriteClientPacks;
     }
 
-    public boolean forcePacks() {
-        return this.forcePacks;
+    public void setOverwriteClientPacks(boolean overwriteClientPacks) {
+        this.overwriteClientPacks = overwriteClientPacks;
+    }
+
+    public void setForceServerPacks(boolean forceServerPacks) {
+        this.forceServerPacks = forceServerPacks;
+    }
+
+    public boolean isForceServerPacks() {
+        return forceServerPacks;
     }
 
     public int getPackCacheSize() {

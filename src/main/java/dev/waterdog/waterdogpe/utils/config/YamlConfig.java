@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.utils.config;
 
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -24,7 +25,14 @@ import java.util.Map;
 
 public class YamlConfig extends Configuration {
 
-    private final static Yaml yaml = new Yaml();
+    private final static Yaml yaml;
+
+    static {
+        DumperOptions dumperOptions = new DumperOptions();
+        dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        dumperOptions.setPrettyFlow(true);
+        yaml = new Yaml(dumperOptions);
+    }
 
     public YamlConfig(String file) {
         super(file);

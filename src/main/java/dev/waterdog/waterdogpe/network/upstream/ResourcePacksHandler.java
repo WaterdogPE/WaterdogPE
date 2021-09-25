@@ -20,10 +20,16 @@ import dev.waterdog.waterdogpe.event.defaults.PlayerResourcePackApplyEvent;
 import dev.waterdog.waterdogpe.packs.PackManager;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 /**
  * Upstream handler handling proxy manager resource packs.
  */
 public class ResourcePacksHandler extends AbstractUpstreamHandler {
+
+    private final Queue<ResourcePackDataInfoPacket> pendingPacks = new LinkedList<>();
+    private ResourcePackDataInfoPacket sendingPack;
 
     public ResourcePacksHandler(ProxiedPlayer player) {
         super(player);
@@ -44,8 +50,9 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
                         this.player.disconnect("disconnectionScreen.resourcePack");
                         break;
                     }
-                    this.player.getUpstream().sendPacket(response);
+                    this.pendingPacks.offer(response);
                 }
+                this.sendNextPacket();
                 break;
             case HAVE_ALL_PACKS:
                 PlayerResourcePackApplyEvent event = new PlayerResourcePackApplyEvent(this.player, packManager.getStackPacket());
@@ -69,8 +76,19 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
         if (response == null) {
             this.player.disconnect("Unknown resource pack!");
         } else {
-            this.player.getUpstream().sendPacket(response);
+            this.player.sendPacket(response);
+            if (this.sendingPack != null && (packet.getChunkIndex() + 1) >= this.sendingPack.getChunkCount()) {
+                this.sendNextPacket();
+            }
         }
         return this.cancel();
+    }
+
+    private void sendNextPacket() {
+        ResourcePackDataInfoPacket infoPacket = this.pendingPacks.poll();
+        if (infoPacket != null && this.player.isConnected()) {
+            this.sendingPack = infoPacket;
+            this.player.sendPacket(infoPacket);
+        }
     }
 }

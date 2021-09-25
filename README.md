@@ -12,17 +12,17 @@ If you want to discuss things without joining the discord server, please use the
 
 - [Discord](https://discord.gg/sJ452xNugw)
 - [Official documentation](https://docs.waterdog.dev)
-- [Issues Tracker](https://github.com/WaterdogPE/WaterdogPE/issues)
+- [Issue Tracker](https://github.com/WaterdogPE/WaterdogPE/issues)
 - [Public Plugins Page](https://plugins.waterdog.dev/)
 - [Branding: various brand assets for the WaterdogPE project](https://github.com/WaterdogPE/Branding)
 
 ## Setup Guide
-If you haven't used WaterdogPE before, we recommend you to take a look on our [setup guide](https://docs.waterdog.dev/books/waterdogpe-setup) in the docs.   
-*Please note that config from old Waterdog (Bungee) is not compatible with WaterdogPE*
+If you haven't used WaterdogPE before, we recommend you to take a look at our [setup guide](https://docs.waterdog.dev/books/waterdogpe-setup) in the docs.   
+*Please note that the config from the old Waterdog (Bungee) is not compatible with WaterdogPE*
 
 ### Supported Software
-Our goal is to support all commonly used Mincraft: Bedrock server software. Spoons and unofficial forks will not be supported due to the lack
-of the proper implementation.  
+Our goal is to support all commonly used Minecraft: Bedrock server softwares. Spoons and unofficial forks will not be supported due to the lack
+of proper implementation.  
 You can find list of currently supported/unsupported software [here](https://docs.waterdog.dev/books/waterdogpe-setup/page/software-compatibility).
 
 ## Benefits compared to Waterdog

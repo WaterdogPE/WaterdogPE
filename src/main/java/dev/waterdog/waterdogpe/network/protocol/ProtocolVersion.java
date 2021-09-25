@@ -32,6 +32,7 @@ import com.nukkitx.protocol.bedrock.v428.Bedrock_v428;
 import com.nukkitx.protocol.bedrock.v431.Bedrock_v431;
 import com.nukkitx.protocol.bedrock.v440.Bedrock_v440;
 import com.nukkitx.protocol.bedrock.v448.Bedrock_v448;
+import com.nukkitx.protocol.bedrock.v465.Bedrock_v465;
 import dev.waterdog.waterdogpe.network.protocol.codec.BedrockCodec;
 import lombok.ToString;
 
@@ -53,7 +54,8 @@ public enum ProtocolVersion {
     MINECRAFT_PE_1_16_210(428, Bedrock_v428.V428_CODEC, 10),
     MINECRAFT_PE_1_16_220(431, Bedrock_v431.V431_CODEC, 10),
     MINECRAFT_PE_1_17_0(440, Bedrock_v440.V440_CODEC, 10),
-    MINECRAFT_PE_1_17_10(448, Bedrock_v448.V448_CODEC, 10);
+    MINECRAFT_PE_1_17_10(448, Bedrock_v448.V448_CODEC, 10),
+    MINECRAFT_PE_1_17_30(465, Bedrock_v465.V465_CODEC, 10);
 
     private final int protocol;
     private final int raknetVersion;

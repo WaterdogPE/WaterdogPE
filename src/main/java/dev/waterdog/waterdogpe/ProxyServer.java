@@ -77,7 +77,9 @@ public class ProxyServer {
 
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
-    private ProxyListenerInterface proxyListener = new ProxyListenerInterface(){};
+    private IForcedHostHandler forcedHostHandler;
+    private ProxyListenerInterface proxyListener = new ProxyListenerInterface() {
+    };
 
     private final ScheduledExecutorService tickExecutor;
     private ScheduledFuture<?> tickFuture;
@@ -123,6 +125,7 @@ public class ProxyServer {
         this.configurationManager.loadLanguage();
         // Default Handlers
         this.reconnectHandler = new VanillaReconnectHandler();
+        this.forcedHostHandler = new VanillaForcedHostHandler();
         this.joinHandler = new VanillaJoinHandler(this);
         this.pluginManager = new PluginManager(this);
         this.configurationManager.loadServerInfos(this.serverInfoMap);
@@ -208,10 +211,10 @@ public class ProxyServer {
 
     private void shutdown0() throws Exception {
         this.pluginManager.disableAllPlugins();
-
+        String disconnectReason = new TranslationContainer("waterdog.server.shutdown").getTranslated();
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
-            player.getValue().disconnect("Proxy Shutdown", true);
+            player.getValue().disconnect(disconnectReason, true);
         }
         Thread.sleep(500); // Give small delay to send packet
 
@@ -327,6 +330,7 @@ public class ProxyServer {
 
     /**
      * Allows to add servers dynamically to server map
+     *
      * @return if server was registered
      */
     public boolean registerServerInfo(ServerInfo serverInfo) {
@@ -336,6 +340,7 @@ public class ProxyServer {
 
     /**
      * Remove server from server map
+     *
      * @return removed ServerInfo or null
      */
     public ServerInfo removeServerInfo(String serverName) {
@@ -350,6 +355,7 @@ public class ProxyServer {
 
     /**
      * Get ServerInfo by address and port
+     *
      * @return ServerInfo instance of matched server
      */
     public ServerInfo getServerInfo(String address, int port) {
@@ -364,6 +370,7 @@ public class ProxyServer {
 
     /**
      * Get ServerInfo instance using hostname
+     *
      * @return ServerInfo assigned to forced host
      */
     public ServerInfo getForcedHost(String serverHostname) {
@@ -374,6 +381,7 @@ public class ProxyServer {
 
     /**
      * Get all registered ServerInfo instances
+     *
      * @return an unmodifiable collection containing all registered ServerInfo instances
      */
     public Collection<ServerInfo> getServers() {
@@ -431,6 +439,14 @@ public class ProxyServer {
 
     public IReconnectHandler getReconnectHandler() {
         return this.reconnectHandler;
+    }
+
+    public IForcedHostHandler getForcedHostHandler() {
+        return forcedHostHandler;
+    }
+
+    public void setForcedHostHandler(IForcedHostHandler forcedHostHandler) {
+        this.forcedHostHandler = forcedHostHandler;
     }
 
     public void setReconnectHandler(IReconnectHandler reconnectHandler) {

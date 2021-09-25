@@ -66,6 +66,7 @@ public class BedrockCodec313 extends BedrockCodec {
         builder.registerPacket(MobEquipmentPacket.class, MobEquipmentSerializer_v291.INSTANCE, 31);
         builder.registerPacket(MobArmorEquipmentPacket.class, MobArmorEquipmentSerializer_v291.INSTANCE, 32);
         builder.registerPacket(InteractPacket.class, InteractSerializer_v291.INSTANCE, 33);
+        builder.registerPacket(EntityPickRequestPacket.class, EntityPickRequestSerializer_v291.INSTANCE, 35);
         builder.registerPacket(PlayerActionPacket.class, PlayerActionSerializer_v291.INSTANCE, 36);
         builder.registerPacket(SetEntityDataPacket.class, SetEntityDataSerializer_v291.INSTANCE, 39);
         builder.registerPacket(SetEntityMotionPacket.class, SetEntityMotionSerializer_v291.INSTANCE, 40);
