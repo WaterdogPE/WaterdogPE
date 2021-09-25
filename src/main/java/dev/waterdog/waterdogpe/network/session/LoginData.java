@@ -17,6 +17,8 @@ package dev.waterdog.waterdogpe.network.session;
 
 import com.google.gson.JsonObject;
 import com.nimbusds.jose.JWSObject;
+import com.nimbusds.jose.shaded.json.JSONObject;
+import com.nimbusds.jose.shaded.json.JSONStyle;
 import com.nukkitx.protocol.bedrock.packet.ClientCacheStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
@@ -26,8 +28,6 @@ import dev.waterdog.waterdogpe.player.PlayerRewriteUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.util.AsciiString;
 import lombok.Builder;
-import net.minidev.json.JSONObject;
-import net.minidev.json.JSONStyle;
 
 import java.net.InetSocketAddress;
 import java.security.KeyPair;
