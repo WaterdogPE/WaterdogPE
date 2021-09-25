@@ -155,6 +155,10 @@ public class WaterdogScheduler {
         }
     }
 
+    public ExecutorService getThreadedExecutor() {
+        return this.threadedExecutor;
+    }
+
     public int getCurrentTick() {
         return this.proxy.getCurrentTick();
     }
