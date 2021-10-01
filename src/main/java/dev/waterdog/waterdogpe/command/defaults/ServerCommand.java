@@ -54,7 +54,7 @@ public class ServerCommand extends Command {
             player = (ProxiedPlayer) sender;
         } else {
             if (!sender.hasPermission("waterdog.command.server.permission.other")) {
-                sender.sendMessage(new TextContainer("§cYou don't have the permission to move other players. (waterdog.command.server.permission.other)"));
+                sender.sendMessage(new TextContainer("§cYou don't have the permission to move other players."));
                 return false;
             }
 
