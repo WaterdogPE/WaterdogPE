@@ -76,6 +76,7 @@ public class ProtocolConstants {
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_17_0, new BedrockCodec440());
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_17_10, new BedrockCodec448());
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_17_30, new BedrockCodec465());
+        registerCodec(ProtocolVersion.MINECRAFT_PE_1_17_40, new BedrockCodec471());
     }
 
     /**
