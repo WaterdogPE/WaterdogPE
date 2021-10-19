@@ -17,7 +17,6 @@ package dev.waterdog.waterdogpe.network.protocol;
 
 import com.google.common.base.Preconditions;
 import dev.waterdog.waterdogpe.ProxyServer;
-import dev.waterdog.waterdogpe.VersionInfo;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.network.protocol.codec.*;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
@@ -76,6 +75,7 @@ public class ProtocolConstants {
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_17_0, new BedrockCodec440());
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_17_10, new BedrockCodec448());
         registerCodec(ProtocolVersion.MINECRAFT_PE_1_17_30, new BedrockCodec465());
+        registerCodec(ProtocolVersion.MINECRAFT_PE_1_17_40, new BedrockCodec471());
     }
 
     /**
