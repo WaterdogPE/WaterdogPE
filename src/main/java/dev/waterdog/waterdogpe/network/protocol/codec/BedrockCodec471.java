@@ -19,7 +19,7 @@ import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import com.nukkitx.protocol.bedrock.v471.BedrockPacketHelper_v471;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 
-public class BedrockCodec471 extends BedrockCodec448 {
+public class BedrockCodec471 extends BedrockCodec465 {
 
     @Override
     public ProtocolVersion getProtocol() {
