@@ -37,7 +37,6 @@ public class WaterdogPE {
         Thread.currentThread().setName("WaterdogPE-main");
         System.out.println("Starting WaterdogPE....");
         System.setProperty("log4j.skipJansi", "false");
-        System.setSecurityManager(null);
         ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
 
         MainLogger logger = MainLogger.getLogger();
