@@ -21,7 +21,7 @@ public class VersionInfo {
 
     public static final boolean DEFAULT_DEBUG = true;
 
-    private final String baseVersion = "1.1.3";
+    private final String baseVersion = "1.1.4";
     private final String buildVersion = "#build";
     private final int latestProtocolVersion = 471;
     private final String author = "WaterdogTEAM";
