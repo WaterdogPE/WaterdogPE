@@ -15,7 +15,6 @@
 
 package dev.waterdog.waterdogpe.network.session.bedrock;
 
-import com.nukkitx.network.raknet.RakNetSession;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import dev.waterdog.waterdogpe.WaterdogPE;
@@ -83,11 +82,10 @@ public class BedrockDefaultSession implements DownstreamSession {
 
         // Change downstream bridge on same eventLoop as packet are being processed on to
         // prevent packet reordering in some situations
-        RakNetSession rakSession = (RakNetSession) this.session.getConnection();
-        if (rakSession.getEventLoop().inEventLoop()) {
+        if (this.session.getEventLoop().inEventLoop()) {
             this.onTransferCompleted0(player, completedCallback);
         } else {
-            rakSession.getEventLoop().execute(() -> this.onTransferCompleted0(player, completedCallback));
+            this.session.getEventLoop().execute(() -> this.onTransferCompleted0(player, completedCallback));
         }
     }
 
