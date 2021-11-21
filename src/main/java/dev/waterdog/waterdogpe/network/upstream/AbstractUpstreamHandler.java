@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.upstream;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import com.nukkitx.protocol.bedrock.packet.ClientCacheStatusPacket;
 import com.nukkitx.protocol.bedrock.packet.PacketViolationWarningPacket;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
@@ -26,6 +27,12 @@ public class AbstractUpstreamHandler implements BedrockPacketHandler {
 
     public AbstractUpstreamHandler(ProxiedPlayer player) {
         this.player = player;
+    }
+
+    @Override
+    public boolean handle(ClientCacheStatusPacket packet) {
+        this.player.getLoginData().setCachePacket(packet);
+        return this.cancel();
     }
 
     @Override
