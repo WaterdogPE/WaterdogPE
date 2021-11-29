@@ -15,7 +15,6 @@
 
 package dev.waterdog.waterdogpe.network.session.bedrock;
 
-import com.nukkitx.network.raknet.RakNetSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BatchHandler;
@@ -41,21 +40,19 @@ public class BedrockTransferBatchBridge extends TransferBatchBridge implements B
 
     @Override
     public void flushQueue() {
-        RakNetSession rakSession = (RakNetSession) this.session.getSession().getConnection();
-        if (rakSession.getEventLoop().inEventLoop()) {
+        if (this.session.getSession().getEventLoop().inEventLoop()) {
             super.flushQueue();
         } else {
-            rakSession.getEventLoop().execute(super::flushQueue);
+            this.session.getSession().getEventLoop().execute(super::flushQueue);
         }
     }
 
     @Override
     public void free() {
-        RakNetSession rakSession = (RakNetSession) this.session.getSession().getConnection();
-        if (rakSession.getEventLoop().inEventLoop()) {
+        if (this.session.getSession().getEventLoop().inEventLoop()) {
             super.free();
         } else {
-            rakSession.getEventLoop().execute(super::free);
+            this.session.getSession().getEventLoop().execute(super::free);
         }
     }
 }

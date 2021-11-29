@@ -17,6 +17,8 @@ package dev.waterdog.waterdogpe;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.nukkitx.network.util.EventLoops;
+import com.nukkitx.network.util.NetworkThreadFactory;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import dev.waterdog.waterdogpe.command.*;
@@ -41,6 +43,7 @@ import dev.waterdog.waterdogpe.utils.config.ProxyConfig;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
 import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
 import dev.waterdog.waterdogpe.utils.types.*;
+import io.netty.channel.EventLoopGroup;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 
 import java.net.InetSocketAddress;
@@ -78,9 +81,10 @@ public class ProxyServer {
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
     private IForcedHostHandler forcedHostHandler;
-    private ProxyListenerInterface proxyListener = new ProxyListenerInterface() {
-    };
+    private ProxyListenerInterface proxyListener = new ProxyListenerInterface(){};
 
+    private final EventLoopGroup bossEventLoopGroup;
+    private final EventLoopGroup workerEventLoopGroup;
     private final ScheduledExecutorService tickExecutor;
     private ScheduledFuture<?> tickFuture;
     private boolean shutdown = false;
@@ -95,24 +99,21 @@ public class ProxyServer {
 
         if (!this.pluginPath.toFile().exists()) {
             if (this.pluginPath.toFile().mkdirs())
-                this.logger.info("Created Plugin Folder at " + this.pluginPath.toString());
+                this.logger.info("Created Plugin Folder at " + this.pluginPath);
             else
-                this.logger.warning("Could not create Plugin Folder at " + this.pluginPath.toString());
+                this.logger.warning("Could not create Plugin Folder at " + this.pluginPath);
         }
 
         if (!this.packsPath.toFile().exists()) {
             if (this.packsPath.toFile().mkdirs())
-                this.logger.info("Created Packs Folder at " + this.packsPath.toString());
+                this.logger.info("Created Packs Folder at " + this.packsPath);
             else
-                this.logger.warning("Could not create Packs Folder at " + this.packsPath.toString());
+                this.logger.warning("Could not create Packs Folder at " + this.packsPath);
         }
-
-        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
-        builder.setNameFormat("WaterdogTick Executor");
-        this.tickExecutor = Executors.newScheduledThreadPool(1, builder.build());
 
         this.configurationManager = new ConfigurationManager(this);
         this.configurationManager.loadProxyConfig();
+        this.configurationManager.loadLanguage();
 
         if (!this.getConfiguration().isIpv6Enabled()) {
             // Some devices and networks may not support IPv6
@@ -122,7 +123,30 @@ public class ProxyServer {
         if (this.getConfiguration().isDebug()) {
             WaterdogPE.version().debug(true);
         }
-        this.configurationManager.loadLanguage();
+
+        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
+        builder.setNameFormat("WaterdogTick Executor");
+        this.tickExecutor = Executors.newScheduledThreadPool(1, builder.build());
+
+        EventLoops.ChannelType channelType = EventLoops.getChannelType();
+        this.logger.info("Using " + channelType.name() + " channel implementation as default!");
+        for (EventLoops.ChannelType type : EventLoops.ChannelType.values()) {
+            this.logger.debug("Supported " + type.name() + " channels: " + type.isAvailable());
+        }
+
+        NetworkThreadFactory workerFactory = NetworkThreadFactory.builder()
+                .format("Bedrock Listener - #%d")
+                .priority(5)
+                .daemon(true)
+                .build();
+        NetworkThreadFactory bossFactory = NetworkThreadFactory.builder()
+                .format("RakNet Listener - #%d")
+                .priority(8)
+                .daemon(true)
+                .build();
+        this.workerEventLoopGroup = channelType.newEventLoopGroup(0, workerFactory);
+        this.bossEventLoopGroup = channelType.newEventLoopGroup(0, bossFactory);
+
         // Default Handlers
         this.reconnectHandler = new VanillaReconnectHandler();
         this.forcedHostHandler = new VanillaForcedHostHandler();
@@ -163,7 +187,7 @@ public class ProxyServer {
             this.queryHandler = new QueryHandler(this, bindAddress);
         }
 
-        this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors());
+        this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors(), this.bossEventLoopGroup, this.workerEventLoopGroup, false);
         this.bedrockServer.setHandler(new ProxyListener(this));
         this.bedrockServer.bind().join();
 
@@ -266,7 +290,7 @@ public class ProxyServer {
 
     public BedrockClient createBedrockClient() {
         InetSocketAddress address = new InetSocketAddress("0.0.0.0", 0);
-        return new BedrockClient(address);
+        return new BedrockClient(address, this.bossEventLoopGroup);
     }
 
     public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
