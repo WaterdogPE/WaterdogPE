@@ -35,7 +35,9 @@ public class BedrockCodec408 extends BedrockCodec407 {
 
         // Since this version block palettes are client authoritative,
         // which means we don't need to handle this anymore
-        builder.deregisterPacket(LevelChunkPacket.class);
+        // However, we cannot deregister LevelChunkPacket as we are sending it,
+        // We might consider implementing different upstream and downstream codecs in the future
+        // builder.deregisterPacket(LevelChunkPacket.class);
         builder.deregisterPacket(UpdateBlockPacket.class);
     }
 }
