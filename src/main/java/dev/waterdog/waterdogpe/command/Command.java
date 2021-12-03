@@ -16,9 +16,9 @@
 package dev.waterdog.waterdogpe.command;
 
 import com.nukkitx.protocol.bedrock.data.command.CommandData;
+import com.nukkitx.protocol.bedrock.data.command.CommandEnumData;
 import com.nukkitx.protocol.bedrock.data.command.CommandParam;
 import com.nukkitx.protocol.bedrock.data.command.CommandParamData;
-import com.nukkitx.protocol.bedrock.data.command.CommandParamType;
 
 import java.util.Collections;
 
@@ -87,6 +87,6 @@ public abstract class Command {
         CommandParamData[][] parameterData = new CommandParamData[][]{{
                 new CommandParamData(this.name, true, null, CommandParam.TEXT, null, Collections.emptyList())
         }};
-        return new CommandData(this.name, this.getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
+        return new CommandData(this.name, this.getDescription(), Collections.emptyList(), (byte) 0, new CommandEnumData(this.name, getAliases(), false), parameterData);
     }
 }

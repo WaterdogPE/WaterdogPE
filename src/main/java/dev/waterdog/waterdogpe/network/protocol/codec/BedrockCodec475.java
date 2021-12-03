@@ -16,28 +16,24 @@
 package dev.waterdog.waterdogpe.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
-import com.nukkitx.protocol.bedrock.packet.LevelChunkPacket;
-import com.nukkitx.protocol.bedrock.packet.UpdateBlockPacket;
-import com.nukkitx.protocol.bedrock.v407.BedrockPacketHelper_v407;
+import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
+import com.nukkitx.protocol.bedrock.v475.BedrockPacketHelper_v475;
+import com.nukkitx.protocol.bedrock.v475.serializer.StartGameSerializer_v475;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 
-public class BedrockCodec408 extends BedrockCodec407 {
+public class BedrockCodec475 extends BedrockCodec471 {
 
     @Override
     public ProtocolVersion getProtocol() {
-        return ProtocolVersion.MINECRAFT_PE_1_16_20;
+        return ProtocolVersion.MINECRAFT_PE_1_18_0;
     }
 
     @Override
     public void buildCodec(BedrockPacketCodec.Builder builder) {
         super.buildCodec(builder);
-        builder.helper(BedrockPacketHelper_v407.INSTANCE);
+        builder.helper(BedrockPacketHelper_v475.INSTANCE);
 
-        // Since this version block palettes are client authoritative,
-        // which means we don't need to handle this anymore
-        // However, we cannot deregister LevelChunkPacket as we are sending it,
-        // We might consider implementing different upstream and downstream codecs in the future
-        // builder.deregisterPacket(LevelChunkPacket.class);
-        builder.deregisterPacket(UpdateBlockPacket.class);
+        builder.deregisterPacket(StartGamePacket.class);
+        builder.registerPacket(StartGamePacket.class, StartGameSerializer_v475.INSTANCE, 11);
     }
 }

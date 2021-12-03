@@ -19,7 +19,6 @@ import com.nukkitx.protocol.bedrock.data.PlayerActionType;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.PlayerChatEvent;
-import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
 import dev.waterdog.waterdogpe.network.session.TransferCallback;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
@@ -31,12 +30,6 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler {
 
     public ConnectedUpstreamHandler(ProxiedPlayer player) {
         super(player);
-    }
-
-    @Override
-    public boolean handle(ClientCacheStatusPacket packet) {
-        this.player.getLoginData().setCachePacket(packet);
-        return this.cancel();
     }
 
     @Override

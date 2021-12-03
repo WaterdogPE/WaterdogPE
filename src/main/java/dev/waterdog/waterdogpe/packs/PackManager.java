@@ -187,7 +187,7 @@ public class PackManager {
         packet.setPackId(resourcePack.getPackId());
         packet.setPackVersion(resourcePack.getVersion().toString());
         packet.setMaxChunkSize(CHUNK_SIZE);
-        packet.setChunkCount(resourcePack.getPackSize() / packet.getMaxChunkSize());
+        packet.setChunkCount((resourcePack.getPackSize() - 1) / packet.getMaxChunkSize() + 1);
         packet.setCompressedPackSize(resourcePack.getPackSize());
         packet.setHash(resourcePack.getHash());
         packet.setType(ResourcePackType.RESOURCE);
