@@ -50,34 +50,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
     }
 
     @Override
-    public final boolean handle(SetDisplayObjectivePacket packet) {
-        this.player.getScoreboards().add(packet.getObjectiveId());
-        return false;
-    }
-
-    @Override
-    public final boolean handle(RemoveObjectivePacket packet) {
-        this.player.getScoreboards().remove(packet.getObjectiveId());
-        return false;
-    }
-
-    @Override
-    public final boolean handle(SetScorePacket packet) {
-        for(ScoreInfo info : packet.getInfos()) {
-            this.player.getScoreInfos().stream().
-                    filter(info1 -> info1.getScoreboardId() == info.getScoreboardId()).
-                    findFirst().ifPresent(info1 -> this.player.getScoreInfos().remove(info1));
-        }
-
-        if(packet.getAction() == SetScorePacket.Action.SET) {
-            for(ScoreInfo info : packet.getInfos()) {
-                this.player.getScoreInfos().add(info);
-            }
-        }
-        return false;
-    }
-
-    @Override
     public final boolean handle(ServerToClientHandshakePacket packet) {
         try {
             SignedJWT saltJwt = SignedJWT.parse(packet.getJwt());
