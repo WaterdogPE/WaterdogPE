@@ -218,7 +218,7 @@ public class PlayerRewriteUtils {
         }
         SetScorePacket packet = new SetScorePacket();
         packet.setAction(SetScorePacket.Action.REMOVE);
-        packet.setInfos(new ArrayList<>(scoreInfos));
+        packet.getInfos().addAll(scoreInfos);
         session.sendPacket(packet);
     }
 
