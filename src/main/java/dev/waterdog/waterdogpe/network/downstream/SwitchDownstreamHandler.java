@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
+import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
@@ -46,6 +47,34 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
     public DownstreamSession getDownstream() {
         return this.client.getSession();
+    }
+
+    @Override
+    public final boolean handle(SetDisplayObjectivePacket packet) {
+        this.player.getScoreboards().add(packet.getObjectiveId());
+        return false;
+    }
+
+    @Override
+    public final boolean handle(RemoveObjectivePacket packet) {
+        this.player.getScoreboards().remove(packet.getObjectiveId());
+        return false;
+    }
+
+    @Override
+    public final boolean handle(SetScorePacket packet) {
+        for(ScoreInfo info : packet.getInfos()) {
+            this.player.getScoreInfos().stream().
+                    filter(info1 -> info1.getScoreboardId() == info.getScoreboardId()).
+                    findFirst().ifPresent(info1 -> this.player.getScoreInfos().remove(info1));
+        }
+
+        if(packet.getAction() == SetScorePacket.Action.SET) {
+            for(ScoreInfo info : packet.getInfos()) {
+                this.player.getScoreInfos().add(info);
+            }
+        }
+        return false;
     }
 
     @Override
@@ -128,6 +157,10 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             injectRemoveEntity(this.player.getUpstream(), entityId);
         }
         entities.clear();
+
+        ObjectSet<ScoreInfo> scoreInfos = this.player.getScoreInfos();
+        injectRemoveScoreInfos(this.player.getUpstream(), scoreInfos);
+        scoreInfos.clear();
 
         ObjectSet<String> scoreboards = this.player.getScoreboards();
         for (String scoreboard : scoreboards) {
