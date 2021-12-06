@@ -49,19 +49,22 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public final boolean handle(SetScorePacket packet) {
-        for(ScoreInfo info : packet.getInfos()) {
-            for(ObjectIterator<ScoreInfo> iterator = this.player.getScoreInfos().iterator(); iterator.hasNext(); ) {
-                if(iterator.next().getScoreboardId() == info.getScoreboardId()) {
-                    iterator.remove();
-                    break;
+        switch(packet.getAction()) {
+            case SET:
+                for(ScoreInfo info : packet.getInfos()) {
+                    this.player.getScoreInfos().add(info);
                 }
-            }
-        }
-
-        if(packet.getAction() == SetScorePacket.Action.SET) {
-            for(ScoreInfo info : packet.getInfos()) {
-                this.player.getScoreInfos().add(info);
-            }
+                break;
+            case REMOVE:
+                for(ScoreInfo info : packet.getInfos()) {
+                    for(ObjectIterator<ScoreInfo> iterator = this.player.getScoreInfos().iterator(); iterator.hasNext(); ) {
+                        if(iterator.next().getScoreboardId() == info.getScoreboardId()) {
+                            iterator.remove();
+                            break;
+                        }
+                    }
+                }
+                break;
         }
         return false;
     }
