@@ -24,6 +24,7 @@ import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.GameType;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
+import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
 import com.nukkitx.protocol.bedrock.data.entity.EntityFlags;
@@ -31,6 +32,7 @@ import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.packet.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -207,6 +209,16 @@ public class PlayerRewriteUtils {
         }
         RemoveObjectivePacket packet = new RemoveObjectivePacket();
         packet.setObjectiveId(objectiveId);
+        session.sendPacket(packet);
+    }
+
+    public static void injectRemoveScoreInfos(BedrockSession session, Long2ObjectMap<ScoreInfo> scoreInfos) {
+        if (session == null || session.isClosed()) {
+            return;
+        }
+        SetScorePacket packet = new SetScorePacket();
+        packet.setAction(SetScorePacket.Action.REMOVE);
+        packet.getInfos().addAll(scoreInfos.values());
         session.sendPacket(packet);
     }
 

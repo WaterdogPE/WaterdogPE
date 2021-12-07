@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
+import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.data.command.CommandOriginData;
 import com.nukkitx.protocol.bedrock.data.command.CommandOriginType;
 import com.nukkitx.protocol.bedrock.packet.CommandRequestPacket;
@@ -69,6 +70,7 @@ public class ProxiedPlayer implements CommandSender {
     private final LongSet bossbars = LongSets.synchronize(new LongOpenHashSet());
     private final ObjectSet<UUID> players = ObjectSets.synchronize(new ObjectOpenHashSet<>());
     private final ObjectSet<String> scoreboards = ObjectSets.synchronize(new ObjectOpenHashSet<>());
+    private final Long2ObjectMap<ScoreInfo> scoreInfos = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
     private final Long2LongMap entityLinks = Long2LongMaps.synchronize(new Long2LongOpenHashMap());
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private DownstreamClient downstreamConnection;
@@ -765,6 +767,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public ObjectSet<String> getScoreboards() {
         return this.scoreboards;
+    }
+
+    public Long2ObjectMap<ScoreInfo> getScoreInfos() {
+        return this.scoreInfos;
     }
 
     public Long2LongMap getEntityLinks() {

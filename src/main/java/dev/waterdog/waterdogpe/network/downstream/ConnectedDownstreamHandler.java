@@ -15,17 +15,18 @@
 
 package dev.waterdog.waterdogpe.network.downstream;
 
+import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.event.defaults.FastTransferRequestEvent;
 import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
-import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.session.DownstreamClient;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 
-import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.*;
+import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.injectEntityImmobile;
 
 public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
@@ -42,6 +43,23 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
     @Override
     public final boolean handle(RemoveObjectivePacket packet) {
         this.player.getScoreboards().remove(packet.getObjectiveId());
+        return false;
+    }
+
+    @Override
+    public final boolean handle(SetScorePacket packet) {
+        switch(packet.getAction()) {
+            case SET:
+                for(ScoreInfo info : packet.getInfos()) {
+                    this.player.getScoreInfos().put(info.getScoreboardId(), info);
+                }
+                break;
+            case REMOVE:
+                for(ScoreInfo info : packet.getInfos()) {
+                    this.player.getScoreInfos().remove(info.getScoreboardId());
+                }
+                break;
+        }
         return false;
     }
 
