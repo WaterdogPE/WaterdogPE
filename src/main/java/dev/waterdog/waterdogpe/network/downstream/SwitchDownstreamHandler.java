@@ -27,6 +27,7 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
@@ -130,7 +131,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         }
         entities.clear();
 
-        ObjectSet<ScoreInfo> scoreInfos = this.player.getScoreInfos();
+        Long2ObjectMap<ScoreInfo> scoreInfos = this.player.getScoreInfos();
         injectRemoveScoreInfos(this.player.getUpstream(), scoreInfos);
         scoreInfos.clear();
 

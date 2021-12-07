@@ -25,7 +25,6 @@ import dev.waterdog.waterdogpe.network.session.DownstreamClient;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
 
 import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.injectEntityImmobile;
 
@@ -52,17 +51,12 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
         switch(packet.getAction()) {
             case SET:
                 for(ScoreInfo info : packet.getInfos()) {
-                    this.player.getScoreInfos().add(info);
+                    this.player.getScoreInfos().put(info.getScoreboardId(), info);
                 }
                 break;
             case REMOVE:
                 for(ScoreInfo info : packet.getInfos()) {
-                    for(ObjectIterator<ScoreInfo> iterator = this.player.getScoreInfos().iterator(); iterator.hasNext(); ) {
-                        if(iterator.next().getScoreboardId() == info.getScoreboardId()) {
-                            iterator.remove();
-                            break;
-                        }
-                    }
+                    this.player.getScoreInfos().remove(info.getScoreboardId());
                 }
                 break;
         }

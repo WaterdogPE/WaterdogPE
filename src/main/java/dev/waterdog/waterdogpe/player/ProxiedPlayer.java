@@ -70,7 +70,7 @@ public class ProxiedPlayer implements CommandSender {
     private final LongSet bossbars = LongSets.synchronize(new LongOpenHashSet());
     private final ObjectSet<UUID> players = ObjectSets.synchronize(new ObjectOpenHashSet<>());
     private final ObjectSet<String> scoreboards = ObjectSets.synchronize(new ObjectOpenHashSet<>());
-    private final ObjectSet<ScoreInfo> scoreInfos = ObjectSets.synchronize(new ObjectOpenHashSet<>());
+    private final Long2ObjectMap<ScoreInfo> scoreInfos = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
     private final Long2LongMap entityLinks = Long2LongMaps.synchronize(new Long2LongOpenHashMap());
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private DownstreamClient downstreamConnection;
@@ -769,7 +769,7 @@ public class ProxiedPlayer implements CommandSender {
         return this.scoreboards;
     }
 
-    public ObjectSet<ScoreInfo> getScoreInfos() {
+    public Long2ObjectMap<ScoreInfo> getScoreInfos() {
         return this.scoreInfos;
     }
 

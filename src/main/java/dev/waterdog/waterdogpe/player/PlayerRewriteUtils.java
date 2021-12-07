@@ -32,7 +32,7 @@ import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.packet.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -212,13 +212,13 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
-    public static void injectRemoveScoreInfos(BedrockSession session, ObjectSet<ScoreInfo> scoreInfos) {
+    public static void injectRemoveScoreInfos(BedrockSession session, Long2ObjectMap<ScoreInfo> scoreInfos) {
         if (session == null || session.isClosed()) {
             return;
         }
         SetScorePacket packet = new SetScorePacket();
         packet.setAction(SetScorePacket.Action.REMOVE);
-        packet.getInfos().addAll(scoreInfos);
+        packet.getInfos().addAll(scoreInfos.values());
         session.sendPacket(packet);
     }
 
