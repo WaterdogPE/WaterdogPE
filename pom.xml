@@ -22,6 +22,10 @@
 
     <repositories>
         <repository>
+            <id>apache-snapshots</id>
+            <url>https://repository.apache.org/snapshots/</url>
+        </repository>
+        <repository>
             <id>nukkitx-repo-release</id>
             <url>https://repo.opencollab.dev/maven-releases/</url>
         </repository>
