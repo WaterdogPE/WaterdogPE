@@ -16,15 +16,11 @@
         <raklib.version>1.6.28-SNAPSHOT</raklib.version>
         <protocol.protocol>bedrock-v475</protocol.protocol>
         <protocol.version>2.9.4-SNAPSHOT</protocol.version>
-        <log4j2.version>2.15.0-20211206.182754-101</log4j2.version>
+        <log4j2.version>2.15.0</log4j2.version>
         <jline.version>3.9.0</jline.version>
     </properties>
 
     <repositories>
-        <repository>
-            <id>apache-snapshots</id>
-            <url>https://repository.apache.org/snapshots/</url>
-        </repository>
         <repository>
             <id>nukkitx-repo-release</id>
             <url>https://repo.opencollab.dev/maven-releases/</url>
