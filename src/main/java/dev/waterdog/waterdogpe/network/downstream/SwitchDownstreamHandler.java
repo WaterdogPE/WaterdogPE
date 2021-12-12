@@ -119,6 +119,12 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         injectRemoveAllPlayers(this.player.getUpstream(), playerList);
         playerList.clear();
 
+        LongSet bossbars = this.player.getBossbars();
+        for (long bossbarId : bossbars) {
+            injectRemoveBossbar(this.player.getUpstream(), bossbarId);
+        }
+        bossbars.clear();
+
         Long2LongMap entityLinks = this.player.getEntityLinks();
         for (Long2LongMap.Entry entry : entityLinks.long2LongEntrySet()) {
             injectRemoveEntityLink(this.player.getUpstream(), entry.getLongKey(), entry.getLongValue());
@@ -140,12 +146,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             injectRemoveObjective(this.player.getUpstream(), scoreboard);
         }
         scoreboards.clear();
-
-        LongSet bossbars = this.player.getBossbars();
-        for (long bossbarId : bossbars) {
-            injectRemoveBossbar(this.player.getUpstream(), bossbarId);
-        }
-        bossbars.clear();
 
         injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
         injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
