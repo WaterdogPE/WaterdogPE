@@ -68,8 +68,10 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
         switch (packet.getAction()) {
             case CREATE:
                 this.player.getBossbars().add(packet.getBossUniqueEntityId());
+                break;
             case REMOVE:
                 this.player.getBossbars().remove(packet.getBossUniqueEntityId());
+                break;
         }
         return false;
     }
