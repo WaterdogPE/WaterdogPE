@@ -36,6 +36,8 @@ import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.injectEntityImmobile;
+
 public class InitialHandler extends AbstractDownstreamHandler {
 
     public InitialHandler(ProxiedPlayer player, DownstreamClient client) {
@@ -120,6 +122,8 @@ public class InitialHandler extends AbstractDownstreamHandler {
 
         packet.setRuntimeEntityId(rewriteData.getEntityId());
         packet.setUniqueEntityId(rewriteData.getEntityId());
+
+        injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), true);
 
         int blockingId = client.getSession().getHardcodedBlockingId();
         this.player.getUpstream().getHardcodedBlockingId().set(blockingId);
