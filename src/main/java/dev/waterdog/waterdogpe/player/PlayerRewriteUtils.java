@@ -276,11 +276,10 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
-    public static void injectEntityImmobile(BedrockSession session, long runtimeId, boolean immobile) {
+    public static void injectEntityImmobile(BedrockSession session, long runtimeId, EntityFlags flags, boolean immobile) {
         if (session == null || session.isClosed()){
             return;
         }
-        EntityFlags flags = new EntityFlags();
         flags.setFlag(EntityFlag.NO_AI, immobile);
         flags.setFlag(EntityFlag.BREATHING, true); // Hide bubbles
         flags.setFlag(EntityFlag.HAS_GRAVITY, true); // Disable floating

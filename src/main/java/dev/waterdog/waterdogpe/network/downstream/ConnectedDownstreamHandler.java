@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network.downstream;
 
 import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
+import com.nukkitx.protocol.bedrock.data.entity.EntityFlags;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.event.defaults.FastTransferRequestEvent;
 import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
@@ -27,6 +28,7 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 
+import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.injectClearWeather;
 import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.injectEntityImmobile;
 
 public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
@@ -85,7 +87,8 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
         this.player.setAcceptPlayStatus(false);
         RewriteData rewriteData = this.player.getRewriteData();
-        injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), rewriteData.getMetadata() != null && rewriteData.getMetadata().getFlags() != null && rewriteData.getMetadata().getFlags().getFlag(EntityFlag.NO_AI));
+        EntityFlags flags = rewriteData.getMetadata().getOrCreateFlags();
+        injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), flags, flags.getFlag(EntityFlag.NO_AI));
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(rewriteData.getEntityId());

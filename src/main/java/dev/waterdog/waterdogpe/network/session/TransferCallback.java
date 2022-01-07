@@ -70,7 +70,7 @@ public class TransferCallback {
 
     private void onTransferPhase1Completed() {
         RewriteData rewriteData = this.player.getRewriteData();
-        injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), true);
+        injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), rewriteData.getMetadata().getOrCreateFlags(), true);
 
         if (rewriteData.getDimension() != this.targetDimension) {
             // Send second dim-change to correct dimension

@@ -58,7 +58,7 @@ public class RewriteData {
     private Vector3f spawnPosition;
     private Vector2f rotation;
 
-    private EntityDataMap metadata;
+    private EntityDataMap metadata = new EntityDataMap();
 
     public RewriteData() {
     }
@@ -144,7 +144,7 @@ public class RewriteData {
     }
 
     public EntityDataMap getMetadata() {
-        return metadata;
+        return metadata == null ? metadata = new EntityDataMap() : metadata;
     }
 
     public void setMetadata(EntityDataMap metadata) {
