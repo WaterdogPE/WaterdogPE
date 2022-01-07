@@ -87,6 +87,7 @@ public class EntityMap implements BedrockPacketHandler {
     @Override
     public boolean handle(SetEntityDataPacket packet) {
         packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        this.rewrite.setMetadata(packet.getMetadata());
         return true;
     }
 

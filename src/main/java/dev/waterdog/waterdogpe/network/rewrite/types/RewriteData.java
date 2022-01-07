@@ -19,6 +19,7 @@ import com.nukkitx.math.vector.Vector2f;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.data.BlockPropertyData;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
+import com.nukkitx.protocol.bedrock.data.entity.EntityDataMap;
 import dev.waterdog.waterdogpe.network.session.TransferCallback;
 
 import java.util.List;
@@ -56,6 +57,8 @@ public class RewriteData {
 
     private Vector3f spawnPosition;
     private Vector2f rotation;
+
+    private EntityDataMap metadata;
 
     public RewriteData() {
     }
@@ -138,5 +141,13 @@ public class RewriteData {
 
     public void setRotation(Vector2f rotation) {
         this.rotation = rotation;
+    }
+
+    public EntityDataMap getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(EntityDataMap metadata) {
+        this.metadata = metadata;
     }
 }
