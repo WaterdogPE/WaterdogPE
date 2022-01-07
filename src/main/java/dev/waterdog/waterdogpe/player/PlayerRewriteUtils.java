@@ -25,10 +25,7 @@ import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.GameType;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
 import com.nukkitx.protocol.bedrock.data.ScoreInfo;
-import com.nukkitx.protocol.bedrock.data.entity.EntityData;
-import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
-import com.nukkitx.protocol.bedrock.data.entity.EntityFlags;
-import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
+import com.nukkitx.protocol.bedrock.data.entity.*;
 import com.nukkitx.protocol.bedrock.packet.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -289,5 +286,9 @@ public class PlayerRewriteUtils {
         packet.setRuntimeEntityId(runtimeId);
         packet.getMetadata().putFlags(flags);
         session.sendPacket(packet);
+    }
+
+    public static boolean checkForImmobileFlag(EntityDataMap dataMap) {
+        return dataMap != null && dataMap.containsKey(EntityData.FLAGS) && dataMap.getFlags().getFlag(EntityFlag.NO_AI);
     }
 }

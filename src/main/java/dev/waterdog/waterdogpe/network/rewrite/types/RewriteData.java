@@ -56,6 +56,11 @@ public class RewriteData {
 
     private Vector3f spawnPosition;
     private Vector2f rotation;
+    /**
+     * Server known value of immobile flag
+     * Actually applied value may be different during server transfer
+     */
+    private boolean immobileFlag;
 
     public RewriteData() {
     }
@@ -138,5 +143,13 @@ public class RewriteData {
 
     public void setRotation(Vector2f rotation) {
         this.rotation = rotation;
+    }
+
+    public boolean hasImmobileFlag() {
+        return this.immobileFlag;
+    }
+
+    public void setImmobileFlag(boolean immobileFlag) {
+        this.immobileFlag = immobileFlag;
     }
 }
