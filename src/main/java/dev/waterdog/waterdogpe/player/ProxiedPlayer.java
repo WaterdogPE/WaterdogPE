@@ -357,7 +357,7 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     /**
-     * Sends a immediately packet to the upstream connection
+     * Sends immediately packet to the upstream connection
      *
      * @param packet the packet to send
      */
