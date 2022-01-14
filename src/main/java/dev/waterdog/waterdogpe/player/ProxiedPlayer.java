@@ -478,6 +478,7 @@ public class ProxiedPlayer implements CommandSender {
         packet.setType(SetTitlePacket.Type.SUBTITLE);
         packet.setText(subtitle);
         packet.setXuid(this.getXuid());
+        packet.setPlatformOnlineId("");
         this.sendPacket(packet);
     }
 
@@ -496,6 +497,7 @@ public class ProxiedPlayer implements CommandSender {
         packet.setFadeOutTime(fadeout);
         packet.setXuid(this.getXuid());
         packet.setText("");
+        packet.setPlatformOnlineId("");
         this.sendPacket(packet);
     }
 
@@ -509,6 +511,7 @@ public class ProxiedPlayer implements CommandSender {
         packet.setType(SetTitlePacket.Type.TITLE);
         packet.setText(text);
         packet.setXuid(this.getXuid());
+        packet.setPlatformOnlineId("");
         this.sendPacket(packet);
     }
 
@@ -520,6 +523,7 @@ public class ProxiedPlayer implements CommandSender {
         packet.setType(SetTitlePacket.Type.CLEAR);
         packet.setText("");
         packet.setXuid(this.getXuid());
+        packet.setPlatformOnlineId("");
         this.sendPacket(packet);
     }
 
@@ -531,6 +535,7 @@ public class ProxiedPlayer implements CommandSender {
         packet.setType(SetTitlePacket.Type.RESET);
         packet.setText("");
         packet.setXuid(this.getXuid());
+        packet.setPlatformOnlineId("");
         this.sendPacket(packet);
     }
 
