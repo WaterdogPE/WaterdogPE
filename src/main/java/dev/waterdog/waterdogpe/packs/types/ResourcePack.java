@@ -44,10 +44,14 @@ public abstract class ResourcePack {
 
     public abstract InputStream getStream(Path path) throws IOException;
 
-    public void loadManifest() throws IOException {
+    public boolean loadManifest() throws IOException {
         try (InputStream stream = this.getStream(PackManifest.MANIFEST_PATH)) {
-            this.packManifest = PackManifest.fromStream(stream);
+            if (stream != null) {
+                this.packManifest = PackManifest.fromStream(stream);
+                return true;
+            }
         }
+        return false;
     }
 
     public PackManifest getPackManifest() {

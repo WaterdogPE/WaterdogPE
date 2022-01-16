@@ -82,22 +82,16 @@ public class PackManager {
             if (pack != null) {
                 return pack;
             }
-            this.proxy.getLogger().error("Resource pack has invalid manifest file!");
+            this.proxy.getLogger().error("Resource pack manifest.json is invalid or was not found in " + packPath.getFileName());
         } catch (Exception e) {
-            this.proxy.getLogger().error("Can not load resource pack!", e);
+            this.proxy.getLogger().error("Can not load resource pack from: " + packPath.getFileName(), e);
         }
         return null;
     }
 
     private ResourcePack loadPack(Path packPath, Class<? extends ResourcePack> clazz) throws Exception {
         ResourcePack pack = clazz.getDeclaredConstructor(Path.class).newInstance(packPath);
-        try {
-            pack.loadManifest();
-        } catch (IOException e) {
-            throw new IOException("Can not load manifest!");
-        }
-
-        if (!pack.getPackManifest().validate()) {
+        if (!pack.loadManifest() || !pack.getPackManifest().validate()) {
             return null;
         }
 
