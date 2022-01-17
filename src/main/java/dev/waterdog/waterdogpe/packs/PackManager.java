@@ -160,9 +160,7 @@ public class PackManager {
             if (pack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
                 this.packsInfoPacket.getResourcePackInfos().add(infoEntry);
                 this.stackPacket.getResourcePacks().add(stackEntry);
-                continue;
-            }
-            if (pack.getType().equals(ResourcePack.TYPE_DATA)) {
+            } else if (pack.getType().equals(ResourcePack.TYPE_DATA)) {
                 this.packsInfoPacket.getBehaviorPackInfos().add(infoEntry);
                 this.stackPacket.getBehaviorPacks().add(stackEntry);
             }
