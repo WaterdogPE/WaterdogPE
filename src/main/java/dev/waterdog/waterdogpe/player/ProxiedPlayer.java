@@ -319,7 +319,7 @@ public class ProxiedPlayer implements CommandSender {
 
         this.proxy.getPlayerManager().removePlayer(this);
         this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Upstream has disconnected");
-        if (reason != null) this.getLogger().info("[" + this.getName() + "] -> Disconnected with: §c" + reason);
+        if (reason != null) this.getLogger().info("[" + this.getName() + "] -> Disconnected with: " + reason);
     }
 
     /**

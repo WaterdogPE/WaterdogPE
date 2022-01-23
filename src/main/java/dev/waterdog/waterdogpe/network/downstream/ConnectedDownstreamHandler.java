@@ -15,7 +15,6 @@
 
 package dev.waterdog.waterdogpe.network.downstream;
 
-import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.event.defaults.FastTransferRequestEvent;
 import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
@@ -32,48 +31,6 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
     public ConnectedDownstreamHandler(ProxiedPlayer player, DownstreamClient client) {
         super(player, client);
-    }
-
-    @Override
-    public final boolean handle(SetDisplayObjectivePacket packet) {
-        this.player.getScoreboards().add(packet.getObjectiveId());
-        return false;
-    }
-
-    @Override
-    public final boolean handle(RemoveObjectivePacket packet) {
-        this.player.getScoreboards().remove(packet.getObjectiveId());
-        return false;
-    }
-
-    @Override
-    public final boolean handle(SetScorePacket packet) {
-        switch(packet.getAction()) {
-            case SET:
-                for(ScoreInfo info : packet.getInfos()) {
-                    this.player.getScoreInfos().put(info.getScoreboardId(), info);
-                }
-                break;
-            case REMOVE:
-                for(ScoreInfo info : packet.getInfos()) {
-                    this.player.getScoreInfos().remove(info.getScoreboardId());
-                }
-                break;
-        }
-        return false;
-    }
-
-    @Override
-    public final boolean handle(BossEventPacket packet) {
-        switch (packet.getAction()) {
-            case CREATE:
-                this.player.getBossbars().add(packet.getBossUniqueEntityId());
-                break;
-            case REMOVE:
-                this.player.getBossbars().remove(packet.getBossUniqueEntityId());
-                break;
-        }
-        return false;
     }
 
     @Override

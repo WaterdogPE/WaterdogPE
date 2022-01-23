@@ -43,6 +43,7 @@ public class TransferBatchBridge extends AbstractDownstreamBatchBridge {
 
     public TransferBatchBridge(ProxiedPlayer player, BedrockSession upstreamSession) {
         super(player, upstreamSession);
+        this.trackEntities = false;
     }
 
     @Override
@@ -87,6 +88,7 @@ public class TransferBatchBridge extends AbstractDownstreamBatchBridge {
         boolean isStartGame = packet.getPacketType() == BedrockPacketType.START_GAME;
         if (isStartGame) {
             this.hasStartGame = true;
+            this.trackEntities = true;
         }
         super.handlePacket(packet, handler);
         // Packets after StartGamePacket should be queued
