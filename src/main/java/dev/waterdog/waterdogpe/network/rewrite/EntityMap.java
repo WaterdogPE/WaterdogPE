@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.rewrite;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
+import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
@@ -87,6 +88,9 @@ public class EntityMap implements BedrockPacketHandler {
     @Override
     public boolean handle(SetEntityDataPacket packet) {
         packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+
+        PlayerRewriteUtils.rewriteEntityMetadata(packet.getMetadata(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
+
         return true;
     }
 
