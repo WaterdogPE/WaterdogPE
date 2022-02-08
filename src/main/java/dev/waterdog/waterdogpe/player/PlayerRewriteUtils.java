@@ -84,17 +84,16 @@ public class PlayerRewriteUtils {
         return from == origin ? rewritten : (from == rewritten ? origin : from);
     }
 
-    public static void rewriteEntityMetadata(EntityDataMap entityDataMap, long entityId, long originalEntityId){
+    public static void rewriteEntityMetadata(EntityDataMap entityDataMap, long entityId, long originalEntityId) {
         rewriteEntityProperty(entityDataMap, EntityData.TARGET_EID, entityId, originalEntityId);
         rewriteEntityProperty(entityDataMap, EntityData.OWNER_EID, entityId, originalEntityId);
         rewriteEntityProperty(entityDataMap, EntityData.TRADE_TARGET_EID, entityId, originalEntityId);
         rewriteEntityProperty(entityDataMap, EntityData.LEASH_HOLDER_EID, entityId, originalEntityId);
     }
 
-    public static void rewriteEntityProperty(EntityDataMap map, EntityData targetEntry, long entityId, long originalEntityId){
-        long currentId = map.getLong(targetEntry);
-        if(currentId != 0L){
-            map.replace(targetEntry, rewriteId(currentId, entityId, originalEntityId));
+    public static void rewriteEntityProperty(EntityDataMap map, EntityData targetEntry, long entityId, long originalEntityId) {
+        if(map.containsKey(targetEntry)) {
+            map.replace(targetEntry, rewriteId(map.getLong(targetEntry), entityId, originalEntityId));
         }
     }
 
