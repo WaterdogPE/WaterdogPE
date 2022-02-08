@@ -47,7 +47,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
         return this.onPlayStatus(packet, message -> {
             ServerInfo serverInfo = this.player.getServerInfo();
             if (!this.player.sendToFallback(serverInfo, message)) {
-                this.player.disconnect(new TranslationContainer("waterdog.connected.fallback", serverInfo.getServerName(), message));
+                this.player.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), message));
             }
         }, this.client.getSession());
     }
