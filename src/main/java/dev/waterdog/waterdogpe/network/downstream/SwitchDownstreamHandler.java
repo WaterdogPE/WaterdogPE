@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
+import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
@@ -26,6 +27,7 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import it.unimi.dsi.fastutil.longs.Long2LongMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
@@ -117,6 +119,12 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         injectRemoveAllPlayers(this.player.getUpstream(), playerList);
         playerList.clear();
 
+        LongSet bossbars = this.player.getBossbars();
+        for (long bossbarId : bossbars) {
+            injectRemoveBossbar(this.player.getUpstream(), bossbarId);
+        }
+        bossbars.clear();
+
         Long2LongMap entityLinks = this.player.getEntityLinks();
         for (Long2LongMap.Entry entry : entityLinks.long2LongEntrySet()) {
             injectRemoveEntityLink(this.player.getUpstream(), entry.getLongKey(), entry.getLongValue());
@@ -129,17 +137,15 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         }
         entities.clear();
 
+        Long2ObjectMap<ScoreInfo> scoreInfos = this.player.getScoreInfos();
+        injectRemoveScoreInfos(this.player.getUpstream(), scoreInfos);
+        scoreInfos.clear();
+
         ObjectSet<String> scoreboards = this.player.getScoreboards();
         for (String scoreboard : scoreboards) {
             injectRemoveObjective(this.player.getUpstream(), scoreboard);
         }
         scoreboards.clear();
-
-        LongSet bossbars = this.player.getBossbars();
-        for (long bossbarId : bossbars) {
-            injectRemoveBossbar(this.player.getUpstream(), bossbarId);
-        }
-        bossbars.clear();
 
         injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
         injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());

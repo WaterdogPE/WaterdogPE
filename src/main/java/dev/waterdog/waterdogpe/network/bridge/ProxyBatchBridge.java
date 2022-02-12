@@ -37,8 +37,8 @@ import java.util.List;
 public abstract class ProxyBatchBridge {
 
     protected final ProxiedPlayer player;
-    protected boolean trackEntities = true;
-    protected boolean forceEncodePackets = false;
+    protected volatile boolean trackEntities = true;
+    protected volatile boolean forceEncodePackets = false;
 
     public ProxyBatchBridge(ProxiedPlayer player) {
         this.player = player;

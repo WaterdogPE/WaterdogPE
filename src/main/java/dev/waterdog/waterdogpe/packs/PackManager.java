@@ -82,22 +82,16 @@ public class PackManager {
             if (pack != null) {
                 return pack;
             }
-            this.proxy.getLogger().error("Resource pack has invalid manifest file!");
+            this.proxy.getLogger().error("Resource pack manifest.json is invalid or was not found in " + packPath.getFileName());
         } catch (Exception e) {
-            this.proxy.getLogger().error("Can not load resource pack!", e);
+            this.proxy.getLogger().error("Can not load resource pack from: " + packPath.getFileName(), e);
         }
         return null;
     }
 
     private ResourcePack loadPack(Path packPath, Class<? extends ResourcePack> clazz) throws Exception {
         ResourcePack pack = clazz.getDeclaredConstructor(Path.class).newInstance(packPath);
-        try {
-            pack.loadManifest();
-        } catch (IOException e) {
-            throw new IOException("Can not load manifest!");
-        }
-
-        if (!pack.getPackManifest().validate()) {
+        if (!pack.loadManifest() || !pack.getPackManifest().validate()) {
             return null;
         }
 
@@ -156,23 +150,25 @@ public class PackManager {
 
         this.stackPacket.getBehaviorPacks().clear();
         this.stackPacket.getResourcePacks().clear();
+
         this.stackPacket.setGameVersion("");
 
         for (ResourcePack pack : this.packs.values()) {
-            if (!pack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
-                continue;
-            }
             ResourcePacksInfoPacket.Entry infoEntry = new ResourcePacksInfoPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(),
                     pack.getPackSize(), "", "", "", false, false);
-            this.packsInfoPacket.getResourcePackInfos().add(infoEntry);
             ResourcePackStackPacket.Entry stackEntry = new ResourcePackStackPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(), "");
-            this.stackPacket.getResourcePacks().add(stackEntry);
+            if (pack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
+                this.packsInfoPacket.getResourcePackInfos().add(infoEntry);
+                this.stackPacket.getResourcePacks().add(stackEntry);
+            } else if (pack.getType().equals(ResourcePack.TYPE_DATA)) {
+                this.packsInfoPacket.getBehaviorPackInfos().add(infoEntry);
+                this.stackPacket.getBehaviorPacks().add(stackEntry);
+            }
         }
 
         if (this.proxy.getConfiguration().enableEducationFeatures()) {
             this.stackPacket.getBehaviorPacks().add(EDU_PACK);
         }
-
         ResourcePacksRebuildEvent event = new ResourcePacksRebuildEvent(this.packsInfoPacket, this.stackPacket);
         this.proxy.getEventManager().callEvent(event);
     }
@@ -190,7 +186,11 @@ public class PackManager {
         packet.setChunkCount((resourcePack.getPackSize() - 1) / packet.getMaxChunkSize() + 1);
         packet.setCompressedPackSize(resourcePack.getPackSize());
         packet.setHash(resourcePack.getHash());
-        packet.setType(ResourcePackType.RESOURCE);
+        if (resourcePack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
+            packet.setType(ResourcePackType.RESOURCE);
+        } else if (resourcePack.getType().equals(ResourcePack.TYPE_DATA)) {
+            packet.setType(ResourcePackType.BEHAVIOR);
+        }
         return packet;
     }
 

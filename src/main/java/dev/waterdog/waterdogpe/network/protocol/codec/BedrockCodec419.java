@@ -32,6 +32,12 @@ public class BedrockCodec419 extends BedrockCodec408 {
     public void buildCodec(BedrockPacketCodec.Builder builder) {
         super.buildCodec(builder);
         builder.helper(BedrockPacketHelper_v419.INSTANCE);
+        // Since this version block palettes are client authoritative,
+        // which means we don't need to handle this anymore
+        // However, we cannot deregister LevelChunkPacket as we are sending it,
+        // We might consider implementing different upstream and downstream codecs in the future
+        // builder.deregisterPacket(LevelChunkPacket.class);
+        builder.deregisterPacket(UpdateBlockPacket.class);
 
         builder.deregisterPacket(ResourcePackStackPacket.class);
         builder.registerPacket(ResourcePackStackPacket.class, ResourcePackStackSerializer_v419.INSTANCE, 7);

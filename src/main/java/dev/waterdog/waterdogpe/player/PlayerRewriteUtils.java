@@ -24,13 +24,12 @@ import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
 import com.nukkitx.protocol.bedrock.data.GameType;
 import com.nukkitx.protocol.bedrock.data.LevelEventType;
-import com.nukkitx.protocol.bedrock.data.entity.EntityData;
-import com.nukkitx.protocol.bedrock.data.entity.EntityFlag;
-import com.nukkitx.protocol.bedrock.data.entity.EntityFlags;
-import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
+import com.nukkitx.protocol.bedrock.data.ScoreInfo;
+import com.nukkitx.protocol.bedrock.data.entity.*;
 import com.nukkitx.protocol.bedrock.packet.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -83,6 +82,19 @@ public class PlayerRewriteUtils {
 
     public static long rewriteId(long from, long rewritten, long origin) {
         return from == origin ? rewritten : (from == rewritten ? origin : from);
+    }
+
+    public static void rewriteEntityMetadata(EntityDataMap entityDataMap, long entityId, long originalEntityId) {
+        rewriteEntityProperty(entityDataMap, EntityData.TARGET_EID, entityId, originalEntityId);
+        rewriteEntityProperty(entityDataMap, EntityData.OWNER_EID, entityId, originalEntityId);
+        rewriteEntityProperty(entityDataMap, EntityData.TRADE_TARGET_EID, entityId, originalEntityId);
+        rewriteEntityProperty(entityDataMap, EntityData.LEASH_HOLDER_EID, entityId, originalEntityId);
+    }
+
+    public static void rewriteEntityProperty(EntityDataMap map, EntityData targetEntry, long entityId, long originalEntityId) {
+        if(map.containsKey(targetEntry)) {
+            map.replace(targetEntry, rewriteId(map.getLong(targetEntry), entityId, originalEntityId));
+        }
     }
 
     public static int determineDimensionId(int from, int to) {
@@ -210,6 +222,16 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
+    public static void injectRemoveScoreInfos(BedrockSession session, Long2ObjectMap<ScoreInfo> scoreInfos) {
+        if (session == null || session.isClosed()) {
+            return;
+        }
+        SetScorePacket packet = new SetScorePacket();
+        packet.setAction(SetScorePacket.Action.REMOVE);
+        packet.getInfos().addAll(scoreInfos.values());
+        session.sendPacket(packet);
+    }
+
     public static void injectRemoveBossbar(BedrockSession session, long bossbarId) {
         if (session == null || session.isClosed()) {
             return;
@@ -277,5 +299,9 @@ public class PlayerRewriteUtils {
         packet.setRuntimeEntityId(runtimeId);
         packet.getMetadata().putFlags(flags);
         session.sendPacket(packet);
+    }
+
+    public static boolean checkForImmobileFlag(EntityDataMap dataMap) {
+        return dataMap != null && dataMap.containsKey(EntityData.FLAGS) && dataMap.getFlags().getFlag(EntityFlag.NO_AI);
     }
 }

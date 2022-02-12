@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.event;
 
+import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.utils.exceptions.EventException;
 
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ public class EventHandler {
         }).thenAccept(futureEvent -> futureEvent.completeFuture(future)).whenComplete((ignore, error) -> {
             if (error != null && !future.isDone()) {
                 future.completeExceptionally(error);
+                ProxyServer.getInstance().getLogger().error("Exception was thrown in event handler", error);
             }
         });
         return future;

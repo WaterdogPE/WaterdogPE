@@ -16,9 +16,11 @@
 package dev.waterdog.waterdogpe.network.rewrite;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
+import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
+import dev.waterdog.waterdogpe.player.PlayerRewriteUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 import java.util.List;
@@ -97,5 +99,56 @@ public class EntityTracker implements BedrockPacketHandler {
         } else {
             this.player.getEntityLinks().put(entityLink.getFrom(), entityLink.getTo());
         }
+    }
+
+    @Override
+    public boolean handle(SetEntityDataPacket packet) {
+        if (packet.getRuntimeEntityId() == this.player.getRewriteData().getOriginalEntityId()) {
+            boolean immobile = PlayerRewriteUtils.checkForImmobileFlag(packet.getMetadata());
+            this.player.getRewriteData().setImmobileFlag(immobile);
+        }
+        return false;
+    }
+
+    @Override
+    public final boolean handle(SetDisplayObjectivePacket packet) {
+        this.player.getScoreboards().add(packet.getObjectiveId());
+        return false;
+    }
+
+    @Override
+    public final boolean handle(RemoveObjectivePacket packet) {
+        this.player.getScoreboards().remove(packet.getObjectiveId());
+        return false;
+    }
+
+    @Override
+    public final boolean handle(SetScorePacket packet) {
+        switch(packet.getAction()) {
+            case SET:
+                for(ScoreInfo info : packet.getInfos()) {
+                    this.player.getScoreInfos().put(info.getScoreboardId(), info);
+                }
+                break;
+            case REMOVE:
+                for(ScoreInfo info : packet.getInfos()) {
+                    this.player.getScoreInfos().remove(info.getScoreboardId());
+                }
+                break;
+        }
+        return false;
+    }
+
+    @Override
+    public final boolean handle(BossEventPacket packet) {
+        switch (packet.getAction()) {
+            case CREATE:
+                this.player.getBossbars().add(packet.getBossUniqueEntityId());
+                break;
+            case REMOVE:
+                this.player.getBossbars().remove(packet.getBossUniqueEntityId());
+                break;
+        }
+        return false;
     }
 }

@@ -103,7 +103,7 @@ public class BedrockDefaultSession implements DownstreamSession {
 
     private TransferBatchBridge getBatchBridge() {
         if (this.session.getBatchHandler() instanceof TransferBatchBridge) {
-            return  (TransferBatchBridge) this.session.getBatchHandler();
+            return (TransferBatchBridge) this.session.getBatchHandler();
         }
         return null;
     }

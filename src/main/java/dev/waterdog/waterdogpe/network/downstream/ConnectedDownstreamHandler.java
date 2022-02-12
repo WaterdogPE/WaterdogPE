@@ -18,42 +18,19 @@ package dev.waterdog.waterdogpe.network.downstream;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.event.defaults.FastTransferRequestEvent;
 import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
-import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.session.DownstreamClient;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 
-import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.*;
+import static dev.waterdog.waterdogpe.player.PlayerRewriteUtils.injectEntityImmobile;
 
 public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
     public ConnectedDownstreamHandler(ProxiedPlayer player, DownstreamClient client) {
         super(player, client);
-    }
-
-    @Override
-    public final boolean handle(SetDisplayObjectivePacket packet) {
-        this.player.getScoreboards().add(packet.getObjectiveId());
-        return false;
-    }
-
-    @Override
-    public final boolean handle(RemoveObjectivePacket packet) {
-        this.player.getScoreboards().remove(packet.getObjectiveId());
-        return false;
-    }
-
-    @Override
-    public final boolean handle(BossEventPacket packet) {
-        switch (packet.getAction()) {
-            case CREATE:
-                this.player.getBossbars().add(packet.getBossUniqueEntityId());
-            case REMOVE:
-                this.player.getBossbars().remove(packet.getBossUniqueEntityId());
-        }
-        return false;
     }
 
     @Override
@@ -64,7 +41,9 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
         this.player.setAcceptPlayStatus(false);
         RewriteData rewriteData = this.player.getRewriteData();
-        injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), false);
+        if (!rewriteData.hasImmobileFlag()) {
+            injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), false);
+        }
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(rewriteData.getEntityId());

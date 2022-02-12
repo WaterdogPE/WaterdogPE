@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.rewrite;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
+import com.nukkitx.protocol.bedrock.data.entity.EntityData;
 import com.nukkitx.protocol.bedrock.data.entity.EntityLinkData;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
@@ -87,6 +88,7 @@ public class EntityMap implements BedrockPacketHandler {
     @Override
     public boolean handle(SetEntityDataPacket packet) {
         packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        PlayerRewriteUtils.rewriteEntityMetadata(packet.getMetadata(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
         return true;
     }
 
@@ -112,6 +114,8 @@ public class EntityMap implements BedrockPacketHandler {
     public boolean handle(AddPlayerPacket packet) {
         packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        // Currently unused, but don't forget about this
+        // PlayerRewriteUtils.rewriteEntityMetadata(packet.getMetadata(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
 
         ListIterator<EntityLinkData> iterator = packet.getEntityLinks().listIterator();
         while (iterator.hasNext()) {
@@ -129,6 +133,8 @@ public class EntityMap implements BedrockPacketHandler {
     public boolean handle(AddEntityPacket packet) {
         packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        // Currently unused, but don't forget about this
+        // PlayerRewriteUtils.rewriteEntityMetadata(packet.getMetadata(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
 
         ListIterator<EntityLinkData> iterator = packet.getEntityLinks().listIterator();
         while (iterator.hasNext()) {
@@ -146,6 +152,8 @@ public class EntityMap implements BedrockPacketHandler {
     public boolean handle(AddItemEntityPacket packet) {
         packet.setRuntimeEntityId(PlayerRewriteUtils.rewriteId(packet.getRuntimeEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
         packet.setUniqueEntityId(PlayerRewriteUtils.rewriteId(packet.getUniqueEntityId(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId()));
+        // Currently unused, but don't forget about this
+        // PlayerRewriteUtils.rewriteEntityMetadata(packet.getMetadata(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
         return true;
     }
 

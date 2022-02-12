@@ -23,13 +23,13 @@ import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.jodah.expiringmap.ExpiringMap;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class QueryHandler {
 
@@ -44,12 +44,19 @@ public class QueryHandler {
     private final ProxyServer proxy;
     private final InetSocketAddress bindAddress;
 
-    private final Object2ObjectMap<InetAddress, QuerySession> querySessions = new Object2ObjectOpenHashMap<>();
+    private final ExpiringMap<InetAddress, QuerySession> querySessions = ExpiringMap.builder()
+            .expirationListener(this::onQueryExpired)
+            .expiration(60, TimeUnit.SECONDS)
+            .build();
 
     public QueryHandler(ProxyServer proxy, InetSocketAddress bindAddress) {
         this.proxy = proxy;
         this.bindAddress = bindAddress;
         this.proxy.getLogger().info(new TranslationContainer("waterdog.query.start", bindAddress.toString()).getTranslated());
+    }
+
+    public void onQueryExpired(InetAddress address, QuerySession session) {
+        this.proxy.getLogger().warning("Pending query from " + address + " has expired: token=" + session.token);
     }
 
     private void writeInt(ByteBuf buf, int i) {
@@ -64,6 +71,10 @@ public class QueryHandler {
     }
 
     public void onQuery(InetSocketAddress address, ByteBuf packet, ChannelHandlerContext ctx) {
+        if (address.getAddress() == null) {
+            // We got unresolved address
+            return;
+        }
         short packetId = packet.readUnsignedByte();
         int sessionId = packet.readInt();
 
