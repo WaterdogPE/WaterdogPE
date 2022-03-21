@@ -57,7 +57,7 @@ public class EventHandler {
                 this.handlePriority(priority, event);
             }
             return event;
-        }).thenAccept(futureEvent -> futureEvent.completeFuture(future)).whenComplete((ignore, error) -> {
+        }, this.eventManager.getThreadedExecutor()).thenAccept(futureEvent -> futureEvent.completeFuture(future)).whenComplete((ignore, error) -> {
             if (error != null && !future.isDone()) {
                 future.completeExceptionally(error);
                 ProxyServer.getInstance().getLogger().error("Exception was thrown in event handler", error);
