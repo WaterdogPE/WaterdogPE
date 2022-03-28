@@ -71,6 +71,12 @@ public abstract class ProxyBatchBridge {
             this.sendWrapped(buf, this.isEncrypted());
         }
 
+        if (changed) {
+            player.getProxy().getMetricsHandler().changedBatch();
+        } else {
+            player.getProxy().getMetricsHandler().unchangedBatch();
+        }
+
         // Packets from array aren't used so we can deallocate whole.
         this.deallocatePackets(allPackets);
     }

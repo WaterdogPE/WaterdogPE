@@ -71,6 +71,7 @@ public class TransferBatchBridge extends AbstractDownstreamBatchBridge {
             this.player.disconnect("Transfer packet queue got too large!");
             // Deallocate packet queue manually because result of TransferBatchBridge#release called
             // from disconnect handler can be ignored as BatchHandler can be already changed.
+            player.getProxy().getMetricsHandler().packetQueueTooLarge();
             this.free();
             return;
         }
