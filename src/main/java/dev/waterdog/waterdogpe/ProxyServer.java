@@ -480,6 +480,7 @@ public class ProxyServer {
     }
 
     public void setMetricsHandler(IMetricsHandler metricsHandler) {
+        Preconditions.checkNotNull(metricsHandler, "You cannot set the metricsHandler to null!");
         this.metricsHandler = metricsHandler;
     }
 
