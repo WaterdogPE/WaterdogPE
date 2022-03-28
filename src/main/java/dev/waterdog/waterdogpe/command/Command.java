@@ -21,10 +21,7 @@ import com.nukkitx.protocol.bedrock.data.command.CommandParam;
 import com.nukkitx.protocol.bedrock.data.command.CommandParamData;
 import org.apache.commons.lang3.ArrayUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Base class for proxy commands
@@ -91,10 +88,9 @@ public abstract class Command {
         CommandParamData[][] parameterData = new CommandParamData[][]{{
                 new CommandParamData(this.name, true, null, CommandParam.TEXT, null, Collections.emptyList())
         }};
-        List<String> aliases = new ArrayList<>(Arrays.asList(getAliases()));
-        if (!aliases.contains(this.name)) {
-            aliases.add(this.name);
-        }
+        Set<String> aliases = new HashSet<>(getAliases().length + 1);
+        Collections.addAll(aliases, getAliases());
+        aliases.add(this.name);
         return new CommandData(this.name, this.getDescription(), Collections.emptyList(), (byte) 0, new CommandEnumData(this.name, aliases.toArray(ArrayUtils.EMPTY_STRING_ARRAY), false), parameterData);
     }
 }
