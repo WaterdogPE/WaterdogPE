@@ -23,9 +23,9 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 
 /**
- * This is the downstream implementation of BatchBridge which is used after initial connection initialization or
- * after transfer proccess is completed.
- * Decoded packets are from here passed to rewrite maps and optionaly to plugin handler.
+ * This is the downstream implementation of the {@link AbstractDownstreamBatchBridge} which is used after initial connection initialization or
+ * after transfer process is completed.
+ * From here decoded maps are passed to the rewrite maps and optionally the plugin handlers.
  */
 public class DownstreamBridge extends AbstractDownstreamBatchBridge {
 

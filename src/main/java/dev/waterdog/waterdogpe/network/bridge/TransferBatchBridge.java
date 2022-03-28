@@ -58,7 +58,7 @@ public class TransferBatchBridge extends AbstractDownstreamBatchBridge {
     /**
      * Here we send all queued packets from downstream to upstream.
      * Packets will be sent after StartGamePacket is received and dimension change sequence has been passed.
-     * Please notice that we use eventLoop of RakNet session instead of BedrockSession because
+     * Please be aware that we use eventLoop of RakNet session instead of BedrockSession because
      * received packets are also handled by RakNet eventLoop!
      */
     public void flushQueue() {

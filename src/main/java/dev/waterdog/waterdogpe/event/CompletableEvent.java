@@ -25,8 +25,8 @@ import java.lang.annotation.Target;
  * Completable futures are used when event should be completed later than its handlers.
  * When calling event with this Annotation, CompletableFuture<Event> will be returned and will be completed once
  * all assigned completable futures are completed.
- * Therefore eventFuture.whenComplete(futureEvent, error) should be used processing completed event.
- * It is NOT recommended to use this Annotation if event is called really often or is excepted to return result immediately.
+ * Therefore, eventFuture.whenComplete(futureEvent, error) should be used processing completed event.
+ * It is NOT recommended using this Annotation if event is called really often or is excepted to return result immediately.
  * Events with @AsyncEvent Annotation implements this behaviour by default.
  */
 @Retention(RetentionPolicy.RUNTIME)
