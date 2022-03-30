@@ -80,7 +80,7 @@ public class LoginData {
         return this.loginPacket = loginPacket;
     }
 
-    public void doLogin(DownstreamSession session, ProxiedPlayer player) {
+    public void doLogin(DownstreamSession session) {
         session.sendPacketImmediately(this.getLoginPacket());
     }
 
