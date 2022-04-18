@@ -161,7 +161,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setDimension(newDimension);
         rewriteData.setTransferCallback(transferCallback);
         this.player.setDimensionChangeState(TransferCallback.TRANSFER_PHASE_1);
-        injectDimensionChange(this.player.getUpstream(), newDimension, packet.getPlayerPosition());
+        injectDimensionChange(this.player.getUpstream(), newDimension, packet.getPlayerPosition(), this.player.getProtocol());
 
         if (newDimension == packet.getDimensionId()) {
             // Transfer between different dimensions
