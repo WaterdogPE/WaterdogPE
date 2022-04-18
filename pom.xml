@@ -14,8 +14,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <raklib.version>1.6.28-SNAPSHOT</raklib.version>
-        <protocol.protocol>bedrock-v486</protocol.protocol>
-        <protocol.version>2.9.5-SNAPSHOT</protocol.version>
+        <protocol.protocol>bedrock-v503</protocol.protocol>
+        <protocol.version>2.9.6-SNAPSHOT</protocol.version>
         <log4j2.version>2.17.1</log4j2.version>
         <jline.version>3.9.0</jline.version>
     </properties>
