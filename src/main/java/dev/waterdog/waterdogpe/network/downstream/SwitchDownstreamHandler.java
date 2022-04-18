@@ -167,6 +167,11 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             // Transfer between different dimensions
             // Simulate two dim-change behaviour
             transferCallback.onDimChangeSuccess();
+        }  else {
+            // Force client to exit first dim screen after one second
+            PlayStatusPacket status = new PlayStatusPacket();
+            status.setStatus(PlayStatusPacket.Status.PLAYER_SPAWN);
+            this.player.getProxy().getScheduler().scheduleDelayed(() -> this.player.sendPacket(status), 20);
         }
         this.getDownstream().onServerConnected(player);
         throw CancelSignalException.CANCEL;
