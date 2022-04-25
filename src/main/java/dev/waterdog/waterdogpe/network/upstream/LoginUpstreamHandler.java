@@ -50,7 +50,9 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
     private void onLoginFailed(boolean xboxAuth, Throwable throwable, String disconnectReason) {
         String message = this.proxy.getProxyListener().onLoginFailed(this.session.getAddress(), xboxAuth, throwable, disconnectReason);
-        this.session.disconnect(message);
+        if (!this.session.isClosed()) {
+            this.session.disconnect(message);
+        }
     }
 
     @Override

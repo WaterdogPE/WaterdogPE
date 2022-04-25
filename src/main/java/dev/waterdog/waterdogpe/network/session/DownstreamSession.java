@@ -67,15 +67,15 @@ public interface DownstreamSession {
     void sendPacket(BedrockPacket packet);
 
     /**
-     * Sends packet immediatelly to the downstream
+     * Sends packet immediately to the downstream
      * @param packet Packet to be send
      */
     void sendPacketImmediately(BedrockPacket packet);
 
     /**
-     * Creates the batch of the packets which might be encrypted and than are sent to the downstream.
+     * Sends the given packet batch to the downstream server.
      * @param packets Collection of packets
-     * @param encrypt Whatever encrypt created batch
+     * @param encrypt Whether the batch should have encryption enabled or not
      */
     void sendWrapped(Collection<BedrockPacket> packets, boolean encrypt);
 

@@ -20,7 +20,7 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 /**
  * Called whenever a client is being kicked from a downstream server
- * Can be used to easily setup a fallback to transfer the player to another server
+ * Can be used to easily set up a fallback to transfer the player to another server
  */
 public interface IReconnectHandler {
 

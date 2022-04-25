@@ -29,8 +29,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * This is the class where things get interrested.
- * BatchBridge classes are responsible for reencoding, resending packets from upstream to downstream and vice-versa.
+ * This is the class where things get interesting.
+ * BatchBridge classes are responsible for re-encoding and resending packets from upstream to downstream and vice-versa.
  * WARNING: This class includes more tricks which might be harder to understand.
  * Do NOT touch anything here unless you understand what you are doing and are aware of all consequences!
  */
@@ -69,6 +69,12 @@ public abstract class ProxyBatchBridge {
         if (!changed && allPackets.size() == packets.size()) {
             buf.resetReaderIndex(); // Set reader index to position where payload is decrypted.
             this.sendWrapped(buf, this.isEncrypted());
+        }
+
+        if (changed) {
+            player.getProxy().getMetricsHandler().changedBatch();
+        } else {
+            player.getProxy().getMetricsHandler().unchangedBatch();
         }
 
         // Packets from array aren't used so we can deallocate whole.

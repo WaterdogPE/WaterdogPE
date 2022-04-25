@@ -16,29 +16,31 @@
 package dev.waterdog.waterdogpe.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
-import com.nukkitx.protocol.bedrock.packet.BossEventPacket;
-import com.nukkitx.protocol.bedrock.packet.LevelChunkPacket;
-import com.nukkitx.protocol.bedrock.v486.BedrockPacketHelper_v486;
-import com.nukkitx.protocol.bedrock.v486.serializer.BossEventSerializer_v486;
-import com.nukkitx.protocol.bedrock.v486.serializer.LevelChunkSerializer_v486;
+import com.nukkitx.protocol.bedrock.packet.*;
+import com.nukkitx.protocol.bedrock.v503.BedrockPacketHelper_v503;
+import com.nukkitx.protocol.bedrock.v503.serializer.AddPlayerSerializer_v503;
+import com.nukkitx.protocol.bedrock.v503.serializer.StartGameSerializer_v503;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 
-public class BedrockCodec486 extends BedrockCodec475 {
+public class BedrockCodec503 extends BedrockCodec486 {
 
     @Override
     public ProtocolVersion getProtocol() {
-        return ProtocolVersion.MINECRAFT_PE_1_18_10;
+        return ProtocolVersion.MINECRAFT_PE_1_18_30;
     }
 
     @Override
     public void buildCodec(BedrockPacketCodec.Builder builder) {
         super.buildCodec(builder);
-        builder.helper(BedrockPacketHelper_v486.INSTANCE);
+        builder.helper(BedrockPacketHelper_v503.INSTANCE);
 
-        builder.deregisterPacket(BossEventPacket.class);
-        builder.registerPacket(BossEventPacket.class, BossEventSerializer_v486.INSTANCE, 74);
+        builder.deregisterPacket(StartGamePacket.class);
+        builder.registerPacket(StartGamePacket.class, StartGameSerializer_v503.INSTANCE, 11);
 
-        builder.deregisterPacket(LevelChunkPacket.class);
-        builder.registerPacket(LevelChunkPacket.class, LevelChunkSerializer_v486.INSTANCE, 58);
+        builder.deregisterPacket(AddPlayerPacket.class);
+        builder.registerPacket(AddPlayerPacket.class, AddPlayerSerializer_v503.INSTANCE, 12);
+
+        // Working data-driven dimensions soon, maybe?
+        // builder.registerPacket(DimensionDataPacket.class, DimensionDataSerializer_v503.INSTANCE, 180);
     }
 }

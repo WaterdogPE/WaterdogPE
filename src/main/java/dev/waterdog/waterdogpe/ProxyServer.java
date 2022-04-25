@@ -81,6 +81,7 @@ public class ProxyServer {
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
     private IForcedHostHandler forcedHostHandler;
+    private IMetricsHandler metricsHandler;
     private ProxyListenerInterface proxyListener = new ProxyListenerInterface(){};
 
     private final EventLoopGroup bossEventLoopGroup;
@@ -150,6 +151,7 @@ public class ProxyServer {
         // Default Handlers
         this.reconnectHandler = new VanillaReconnectHandler();
         this.forcedHostHandler = new VanillaForcedHostHandler();
+        this.metricsHandler = new VanillaMetricsHandler();
         this.joinHandler = new VanillaJoinHandler(this);
         this.pluginManager = new PluginManager(this);
         this.configurationManager.loadServerInfos(this.serverInfoMap);
@@ -471,6 +473,15 @@ public class ProxyServer {
 
     public void setForcedHostHandler(IForcedHostHandler forcedHostHandler) {
         this.forcedHostHandler = forcedHostHandler;
+    }
+
+    public IMetricsHandler getMetricsHandler() {
+        return metricsHandler;
+    }
+
+    public void setMetricsHandler(IMetricsHandler metricsHandler) {
+        Preconditions.checkNotNull(metricsHandler, "You cannot set the metricsHandler to null!");
+        this.metricsHandler = metricsHandler;
     }
 
     public void setReconnectHandler(IReconnectHandler reconnectHandler) {
