@@ -161,12 +161,17 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setDimension(newDimension);
         rewriteData.setTransferCallback(transferCallback);
         this.player.setDimensionChangeState(TransferCallback.TRANSFER_PHASE_1);
-        injectDimensionChange(this.player.getUpstream(), newDimension, packet.getPlayerPosition());
+        injectDimensionChange(this.player.getUpstream(), newDimension, packet.getPlayerPosition(), this.player.getProtocol());
 
         if (newDimension == packet.getDimensionId()) {
             // Transfer between different dimensions
             // Simulate two dim-change behaviour
             transferCallback.onDimChangeSuccess();
+        }  else {
+            // Force client to exit first dim screen after one second
+            PlayStatusPacket status = new PlayStatusPacket();
+            status.setStatus(PlayStatusPacket.Status.PLAYER_SPAWN);
+            this.player.getProxy().getScheduler().scheduleDelayed(() -> this.player.sendPacket(status), 20);
         }
         this.getDownstream().onServerConnected(player);
         throw CancelSignalException.CANCEL;
