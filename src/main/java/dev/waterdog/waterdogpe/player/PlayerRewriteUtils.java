@@ -50,17 +50,27 @@ public class PlayerRewriteUtils {
     public static final int DIMENSION_END = 2;
 
     // Current format for 1.18+ versions
-    private static final byte[] fakeChunkData;
+    private static final byte[] fakeChunkDataBlameMojang;
+    // This are 1.18.30+
+    private static final byte[] fakeChunkDataOverworld;
+    private static final byte[] fakeChunkDataNether;
+    private static final byte[] fakeChunkDataEnd;
 
     static {
         defaultChunkRadius.setRadius(8);
         // Here we create hardcoded "empty" chunk which is accepted by client
         // Because client does not accept empty array list we try to hardcode this
         // Keep in mind that this CAN change with newer versions!
-        fakeChunkData = createChunkData(1);
+
+        // Biome sections are just hardcoded to 25 without any reason- thank you Mojang
+        fakeChunkDataBlameMojang = createChunkData(1, 25);
+        // Since 1.18.30 biomes count is equal to max dim height >> 4
+        fakeChunkDataOverworld = createChunkData(1, 24);
+        fakeChunkDataNether = createChunkData(1, 8);
+        fakeChunkDataEnd = createChunkData(1, 16);
     }
 
-    private static byte[] createChunkData(int sections) {
+    private static byte[] createChunkData(int sections, int biomeSections) {
         final ByteBuf buffer = Unpooled.buffer();
         for (int i = 0; i < sections; i++) {
             buffer.writeByte(8); // section version
@@ -68,7 +78,9 @@ public class PlayerRewriteUtils {
             // writePalette(buffer, 0); AIR in palette
         }
         // buffer.writeZero(512); // map height - ??
-        writePalette(buffer, 0); // paletted biomes - 1.18
+        for (int i = 0; i < biomeSections; i++) {
+            writePalette(buffer, 0); // paletted biomes - 1.18
+        }
         buffer.writeByte(0); // Borders
 
         byte[] bytes = new byte[buffer.readableBytes()];
@@ -284,9 +296,23 @@ public class PlayerRewriteUtils {
         LevelChunkPacket packet = new LevelChunkPacket();
         packet.setChunkX(chunkX);
         packet.setChunkZ(chunkZ);
-        if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_18_0)) {
+        if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_18_30)) {
             packet.setSubChunksLength(1);
-            packet.setData(fakeChunkData);
+            switch (dimension) {
+                case DIMENSION_NETHER:
+                    packet.setData(fakeChunkDataNether);
+                    break;
+                case DIMENSION_END:
+                    packet.setData(fakeChunkDataEnd);
+                    break;
+                case DIMENSION_OVERWORLD:
+                default:
+                    packet.setData(fakeChunkDataOverworld);
+                    break;
+            }
+        } else if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_18_0)) {
+            packet.setSubChunksLength(1);
+            packet.setData(fakeChunkDataBlameMojang);
         } else {
             packet.setData(new byte[257]);
         }
