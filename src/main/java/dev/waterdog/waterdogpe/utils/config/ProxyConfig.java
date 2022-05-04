@@ -92,7 +92,7 @@ public class ProxyConfig extends YamlConfig {
 
     @Path("use_login_extras")
     @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")
-    private boolean useLoginExtras = true;
+    private boolean useLoginExtras = false;
 
     @Path("replace_username_spaces")
     @Comment("Replaces username spaces with underscores if enabled")
