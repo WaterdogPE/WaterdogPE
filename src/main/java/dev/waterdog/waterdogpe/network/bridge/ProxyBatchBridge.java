@@ -61,6 +61,12 @@ public abstract class ProxyBatchBridge {
             }
         }
 
+        if (changed) {
+            player.getProxy().getMetricsHandler().changedBatch();
+        } else {
+            player.getProxy().getMetricsHandler().unchangedBatch();
+        }
+
         if (this.forceEncodePackets || !allPackets.isEmpty() && (changed || allPackets.size() != packets.size())) {
             this.sendWrapped(allPackets, this.isEncrypted());
             return;
@@ -69,12 +75,6 @@ public abstract class ProxyBatchBridge {
         if (!changed && allPackets.size() == packets.size()) {
             buf.resetReaderIndex(); // Set reader index to position where payload is decrypted.
             this.sendWrapped(buf, this.isEncrypted());
-        }
-
-        if (changed) {
-            player.getProxy().getMetricsHandler().changedBatch();
-        } else {
-            player.getProxy().getMetricsHandler().unchangedBatch();
         }
 
         // Packets from array aren't used so we can deallocate whole.
