@@ -30,6 +30,7 @@ import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.LongSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,6 +56,7 @@ public class PlayerRewriteUtils {
     private static final byte[] fakeChunkDataOverworld;
     private static final byte[] fakeChunkDataNether;
     private static final byte[] fakeChunkDataEnd;
+    private static final byte[] emptyChukRaw;
 
     static {
         defaultChunkRadius.setRadius(8);
@@ -68,6 +70,17 @@ public class PlayerRewriteUtils {
         fakeChunkDataOverworld = createChunkData(1, 24);
         fakeChunkDataNether = createChunkData(1, 8);
         fakeChunkDataEnd = createChunkData(1, 16);
+        emptyChukRaw = createChunkDataRaw();
+    }
+
+    private static byte[] createChunkDataRaw() {
+        final ByteBuf buffer = Unpooled.buffer();
+        buffer.writeByte(8); // section version
+        buffer.writeByte(0); // zero block storages
+
+        byte[] bytes = new byte[buffer.readableBytes()];
+        buffer.readBytes(bytes);
+        return bytes;
     }
 
     private static byte[] createChunkData(int sections, int biomeSections) {
@@ -296,6 +309,7 @@ public class PlayerRewriteUtils {
         LevelChunkPacket packet = new LevelChunkPacket();
         packet.setChunkX(chunkX);
         packet.setChunkZ(chunkZ);
+        packet.setCachingEnabled(false);
         if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_18_30)) {
             packet.setSubChunksLength(1);
             switch (dimension) {
@@ -315,6 +329,18 @@ public class PlayerRewriteUtils {
             packet.setData(fakeChunkDataBlameMojang);
         } else {
             packet.setData(new byte[257]);
+        }
+        session.sendPacket(packet);
+    }
+
+    public static void injectChunkCacheBlobs(BedrockSession session, LongSet blobs) {
+        if (session == null || session.isClosed()){
+            return;
+        }
+
+        ClientCacheMissResponsePacket packet = new ClientCacheMissResponsePacket();
+        for (long blob : blobs) {
+            packet.getBlobs().put(blob, emptyChukRaw);
         }
         session.sendPacket(packet);
     }

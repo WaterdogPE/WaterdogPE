@@ -147,6 +147,13 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         }
         scoreboards.clear();
 
+        LongSet blobs = this.player.getChunkBlobs();
+        if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_18_30) &&
+                this.player.getLoginData().getCachePacket().isSupported() && !blobs.isEmpty()) {
+            injectChunkCacheBlobs(this.player.getUpstream(), blobs);
+        }
+        this.player.getChunkBlobs().clear();
+
         injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
         injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
         injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());

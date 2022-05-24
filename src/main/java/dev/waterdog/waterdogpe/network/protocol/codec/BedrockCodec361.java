@@ -46,5 +46,7 @@ public class BedrockCodec361 extends BedrockCodec354 {
         builder.registerPacket(LevelChunkPacket.class, LevelChunkSerializer_v361.INSTANCE, 58);
 
         builder.registerPacket(ClientCacheStatusPacket.class, ClientCacheStatusSerializer_v361.INSTANCE, 129);
+        builder.registerPacket(ClientCacheBlobStatusPacket.class, ClientCacheBlobStatusSerializer_v361.INSTANCE, 135);
+        builder.registerPacket(ClientCacheMissResponsePacket.class, ClientCacheMissResponseSerializer_v361.INSTANCE, 136);
     }
 }

@@ -72,6 +72,7 @@ public class ProxiedPlayer implements CommandSender {
     private final ObjectSet<String> scoreboards = ObjectSets.synchronize(new ObjectOpenHashSet<>());
     private final Long2ObjectMap<ScoreInfo> scoreInfos = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
     private final Long2LongMap entityLinks = Long2LongMaps.synchronize(new Long2LongOpenHashMap());
+    private final LongSet chunkBlobs = LongSets.synchronize(new LongOpenHashSet());
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private DownstreamClient downstreamConnection;
     private DownstreamClient pendingConnection;
@@ -784,6 +785,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public PacketHandler getPluginUpstreamHandler() {
         return this.pluginUpstreamHandler;
+    }
+
+    public LongSet getChunkBlobs() {
+        return this.chunkBlobs;
     }
 
     public void setPluginUpstreamHandler(PacketHandler pluginUpstreamHandler) {

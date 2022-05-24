@@ -19,6 +19,7 @@ import com.nukkitx.protocol.bedrock.data.PlayerActionType;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.PlayerChatEvent;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.session.TransferCallback;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
@@ -56,7 +57,6 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler {
         PlayerChatEvent event = new PlayerChatEvent(this.player, packet.getMessage());
         ProxyServer.getInstance().getEventManager().callEvent(event);
         packet.setMessage(event.getMessage());
-
         if (event.isCancelled()) {
             throw CancelSignalException.CANCEL;
         }
@@ -68,6 +68,14 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler {
         String message = packet.getCommand();
         if (this.player.getProxy().handlePlayerCommand(this.player, message)) {
             throw CancelSignalException.CANCEL;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean handle(ClientCacheBlobStatusPacket packet) {
+        if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_18_30)) {
+            this.player.getChunkBlobs().addAll(packet.getNaks());
         }
         return false;
     }
