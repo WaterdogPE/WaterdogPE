@@ -56,7 +56,7 @@ public class PlayerRewriteUtils {
     private static final byte[] fakeChunkDataOverworld;
     private static final byte[] fakeChunkDataNether;
     private static final byte[] fakeChunkDataEnd;
-    private static final byte[] emptyChukRaw;
+    private static final byte[] emptyChunkRaw;
 
     static {
         defaultChunkRadius.setRadius(8);
@@ -70,7 +70,7 @@ public class PlayerRewriteUtils {
         fakeChunkDataOverworld = createChunkData(1, 24);
         fakeChunkDataNether = createChunkData(1, 8);
         fakeChunkDataEnd = createChunkData(1, 16);
-        emptyChukRaw = createChunkDataRaw();
+        emptyChunkRaw = createChunkDataRaw();
     }
 
     private static byte[] createChunkDataRaw() {
@@ -340,7 +340,7 @@ public class PlayerRewriteUtils {
 
         ClientCacheMissResponsePacket packet = new ClientCacheMissResponsePacket();
         for (long blob : blobs) {
-            packet.getBlobs().put(blob, emptyChukRaw);
+            packet.getBlobs().put(blob, emptyChunkRaw);
         }
         session.sendPacket(packet);
     }
