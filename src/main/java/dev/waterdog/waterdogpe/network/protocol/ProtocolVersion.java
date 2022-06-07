@@ -67,6 +67,8 @@ public enum ProtocolVersion {
     MINECRAFT_PE_1_18_30(503, Bedrock_v503.V503_CODEC, 10),
     MINECRAFT_PE_1_19_0(527, Bedrock_v527.V527_CODEC, 10);
 
+    private static final ProtocolVersion[] VALUES = values();
+
     private final int protocol;
     private final int raknetVersion;
 
@@ -117,5 +119,13 @@ public enum ProtocolVersion {
 
     public String getMinecraftVersion() {
         return this.getCodec().getMinecraftVersion();
+    }
+
+    public static ProtocolVersion latest() {
+        return VALUES[VALUES.length - 1];
+    }
+
+    public static ProtocolVersion oldest() {
+        return VALUES[0];
     }
 }
