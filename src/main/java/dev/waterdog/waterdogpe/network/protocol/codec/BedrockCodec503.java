@@ -17,6 +17,8 @@ package dev.waterdog.waterdogpe.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import com.nukkitx.protocol.bedrock.packet.*;
+import com.nukkitx.protocol.bedrock.v361.serializer.ClientCacheBlobStatusSerializer_v361;
+import com.nukkitx.protocol.bedrock.v361.serializer.ClientCacheMissResponseSerializer_v361;
 import com.nukkitx.protocol.bedrock.v503.BedrockPacketHelper_v503;
 import com.nukkitx.protocol.bedrock.v503.serializer.AddPlayerSerializer_v503;
 import com.nukkitx.protocol.bedrock.v503.serializer.StartGameSerializer_v503;
@@ -39,6 +41,10 @@ public class BedrockCodec503 extends BedrockCodec486 {
 
         builder.deregisterPacket(AddPlayerPacket.class);
         builder.registerPacket(AddPlayerPacket.class, AddPlayerSerializer_v503.INSTANCE, 12);
+
+        // We do not track chunk blob IDs in this version
+        builder.deregisterPacket(ClientCacheBlobStatusPacket.class);
+        builder.deregisterPacket(ClientCacheMissResponsePacket.class);
 
         // Working data-driven dimensions soon, maybe?
         // builder.registerPacket(DimensionDataPacket.class, DimensionDataSerializer_v503.INSTANCE, 180);

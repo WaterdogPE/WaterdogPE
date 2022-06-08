@@ -16,10 +16,7 @@
 package dev.waterdog.waterdogpe.network.downstream;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.AvailableCommandsPacket;
-import com.nukkitx.protocol.bedrock.packet.ChangeDimensionPacket;
-import com.nukkitx.protocol.bedrock.packet.ChunkRadiusUpdatedPacket;
-import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.command.Command;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.session.DownstreamClient;
@@ -63,6 +60,14 @@ public abstract class AbstractDownstreamHandler implements BedrockPacketHandler 
     @Override
     public boolean handle(ChangeDimensionPacket packet) {
         this.player.getRewriteData().setDimension(packet.getDimension());
+        return false;
+    }
+
+    @Override
+    public boolean handle(ClientCacheMissResponsePacket packet) {
+        if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_18_30)) {
+            this.player.getChunkBlobs().removeAll(packet.getBlobs().keySet());
+        }
         return false;
     }
 
