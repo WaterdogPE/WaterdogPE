@@ -20,7 +20,7 @@ import org.apache.logging.log4j.Level;
 
 public class VersionInfo {
 
-    public static final boolean DEFAULT_DEBUG = true;
+    public static final boolean DEFAULT_DEBUG = false;
 
     private final String baseVersion = "1.1.8";
     private final String buildVersion = "#build";
