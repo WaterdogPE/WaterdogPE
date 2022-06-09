@@ -31,8 +31,9 @@ public enum Platform {
     WINDOWS_10("Windows 10", 7),
     WINDOWS("Windows", 8),
     DEDICATED("Dedicated", 9),
-    PLAYSTATION("PlayStation", 10),
-    SWITCH("Switch", 11, 12),
+    TVOS("TVOS", 10),
+    PLAYSTATION("PlayStation", 11),
+    SWITCH("Switch", 12),
     XBOX_ONE("Xbox One", 13),
     WINDOWS_PHONE("Windows Phone", 14);
 
