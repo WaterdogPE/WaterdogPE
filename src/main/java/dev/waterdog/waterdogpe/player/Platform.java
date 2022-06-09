@@ -35,7 +35,8 @@ public enum Platform {
     PLAYSTATION("PlayStation", 11),
     SWITCH("Switch", 12),
     XBOX_ONE("Xbox One", 13),
-    WINDOWS_PHONE("Windows Phone", 14);
+    WINDOWS_PHONE("Windows Phone", 14),
+    LINUX("Linux", 15);
 
     private static Map<Integer, Platform> PLATFORM_BY_ID = new HashMap<>();
 
