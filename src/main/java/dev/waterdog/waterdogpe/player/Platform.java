@@ -42,9 +42,7 @@ public enum Platform {
 
     static {
         for (Platform platform : Platform.values()) {
-            for (int id : platform.getIds()) {
-                PLATFORM_BY_ID.put(id, platform);
-            }
+            PLATFORM_BY_ID.put(platform.getId(), platform);
         }
     }
 
@@ -56,15 +54,17 @@ public enum Platform {
         return Platform.UNKNOWN;
     }
 
+    public static Platform[] VALUES = values();
+
     @Getter
     private final String name;
 
     @Getter
-    private final int[] ids;
+    private final int id;
 
-    Platform(String name, int... ids) {
+    Platform(String name, int id) {
         this.name = name;
-        this.ids = ids;
+        this.id = id;
     }
 
 
