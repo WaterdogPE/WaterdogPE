@@ -119,7 +119,7 @@ public class ProxyConfig extends YamlConfig {
     private int upstreamCompression = 6;
 
     @Path("downstream_compression_level")
-    @Comment("Upstream server compression ratio(proxy to downstream server), higher = less bandwidth, more cpu, lower vice versa")
+    @Comment("Downstream server compression ratio(proxy to downstream server), higher = less bandwidth, more cpu, lower vice versa")
     private int downstreamCompression = 2;
 
     @Path("enable_edu_features")
