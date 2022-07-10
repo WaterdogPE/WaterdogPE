@@ -52,7 +52,6 @@ public class BedrockCodec534 extends BedrockCodec527 {
         builder.deregisterPacket(AddEntityPacket.class);
         builder.registerPacket(AddEntityPacket.class, AddEntitySerializer_v534.INSTANCE, 13);
 
-        builder.deregisterPacket(UpdateAbilitiesPacket.class);
         builder.registerPacket(UpdateAbilitiesPacket.class, UpdateAbilitiesSerializer_v534.INSTANCE, 187);
     }
 }
