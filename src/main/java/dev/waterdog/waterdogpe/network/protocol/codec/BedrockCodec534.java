@@ -19,10 +19,12 @@ import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
 import com.nukkitx.protocol.bedrock.packet.AddEntityPacket;
 import com.nukkitx.protocol.bedrock.packet.AddPlayerPacket;
 import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
+import com.nukkitx.protocol.bedrock.packet.UpdateAbilitiesPacket;
 import com.nukkitx.protocol.bedrock.v534.BedrockPacketHelper_v534;
 import com.nukkitx.protocol.bedrock.v534.serializer.AddEntitySerializer_v534;
 import com.nukkitx.protocol.bedrock.v534.serializer.AddPlayerSerializer_v534;
 import com.nukkitx.protocol.bedrock.v534.serializer.StartGameSerializer_v534;
+import com.nukkitx.protocol.bedrock.v534.serializer.UpdateAbilitiesSerializer_v534;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 
 /**
@@ -49,5 +51,8 @@ public class BedrockCodec534 extends BedrockCodec527 {
 
         builder.deregisterPacket(AddEntityPacket.class);
         builder.registerPacket(AddEntityPacket.class, AddEntitySerializer_v534.INSTANCE, 13);
+
+        builder.deregisterPacket(UpdateAbilitiesPacket.class);
+        builder.registerPacket(UpdateAbilitiesPacket.class, UpdateAbilitiesSerializer_v534.INSTANCE, 187);
     }
 }
