@@ -739,6 +739,18 @@ public class ProxiedPlayer implements CommandSender {
         return this.loginData.getXuid();
     }
 
+    public Platform getDevicePlatform() {
+        return this.loginData.getDevicePlatform();
+    }
+
+    public String getDeviceModel() {
+        return this.loginData.getDeviceModel();
+    }
+
+    public String getDeviceId() {
+        return this.loginData.getDeviceId();
+    }
+
     public ProtocolVersion getProtocol() {
         return this.loginData.getProtocol();
     }

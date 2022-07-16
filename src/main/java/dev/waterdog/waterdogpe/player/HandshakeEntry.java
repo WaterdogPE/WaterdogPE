@@ -59,6 +59,16 @@ public class HandshakeEntry {
         builder.keyPair(event.getKeyPair());
         builder.clientData(this.clientData);
         builder.extraData(this.extraData);
+        if (this.clientData.has("DeviceModel")) {
+            builder.deviceModel(this.clientData.get("DeviceModel").getAsString());
+        }
+        if (this.clientData.has("DeviceOS")) {
+            builder.devicePlatform(Platform.getPlatformByID(this.clientData.get("DeviceOS").getAsInt()));
+        }
+        if (this.clientData.has("DeviceId")) {
+            builder.deviceId(this.clientData.get("DeviceId").getAsString());
+        }
+
 
         if (proxy.getConfiguration().isUpstreamEncryption()) {
             HandshakeUtils.processEncryption(session, this.identityPublicKey);

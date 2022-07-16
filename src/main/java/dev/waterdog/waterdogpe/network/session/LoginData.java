@@ -24,6 +24,7 @@ import com.nukkitx.protocol.bedrock.packet.LoginPacket;
 import com.nukkitx.protocol.bedrock.packet.RequestChunkRadiusPacket;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.player.HandshakeUtils;
+import dev.waterdog.waterdogpe.player.Platform;
 import dev.waterdog.waterdogpe.player.PlayerRewriteUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.util.AsciiString;
@@ -47,6 +48,13 @@ public class LoginData {
     private final InetSocketAddress address;
     private final ProtocolVersion protocol;
     private final String joinHostname;
+
+    @Builder.Default
+    private final Platform devicePlatform = Platform.UNKNOWN;
+    @Builder.Default
+    private final String deviceModel = null;
+    @Builder.Default
+    private final String deviceId = null;
 
     private final KeyPair keyPair;
     private final JsonObject clientData;
@@ -122,6 +130,18 @@ public class LoginData {
 
     public String getJoinHostname() {
         return this.joinHostname;
+    }
+
+    public Platform getDevicePlatform() {
+        return devicePlatform;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public String getDeviceModel() {
+        return deviceModel;
     }
 
     public LoginPacket getLoginPacket() {
