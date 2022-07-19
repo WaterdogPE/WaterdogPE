@@ -70,6 +70,11 @@ To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
 </dependencies>
 ```
 
+## Runnning in docker
+```
+docker run -dit --restart always -p 19132:19132/udp --name=CONTAINER_NAME oop1nk/waterdogpe:latest 
+```
+
 ## Included libraries
 
 - [Yamler: a forked yaml parsing library](https://github.com/WaterdogPE/Yamler)
