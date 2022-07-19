@@ -72,7 +72,7 @@ To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
 
 ## Runnning in docker
 ```
-docker run -dit --restart always -p 19132:19132/udp --name=CONTAINER_NAME oop1nk/waterdogpe:latest 
+docker run -dit --restart always -p 19132:19132/udp -v /some/volume:/data:rw --name=CONTAINER_NAME oop1nk/waterdogpe:latest 
 ```
 
 ## Included libraries
