@@ -29,7 +29,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.AppenderRef;
 import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.apache.logging.log4j.spi.ExtendedLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,7 +82,7 @@ public abstract class Plugin {
         };
 
         // Primary logger
-        LoggerConfig logger = LoggerConfig.createLogger(false, logLevel, "Chunky",
+        LoggerConfig logger = LoggerConfig.createLogger(false, logLevel, this.getName(),
                 "", appenderRefs, null, config, null);
         logger.addAppender(config.getAppender("File-Plugin"), null, null);
         logger.addAppender(config.getAppender("Console-Plugin"), logLevel, null);
