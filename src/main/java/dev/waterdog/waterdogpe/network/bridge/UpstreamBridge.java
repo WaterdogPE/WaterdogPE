@@ -26,7 +26,6 @@ import dev.waterdog.waterdogpe.utils.types.PacketHandler;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Collection;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This is the default upstream to downstream implementation of BatchBridge which is used during all life cycles of the connection.
