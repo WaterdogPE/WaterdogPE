@@ -119,7 +119,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
         this.player.setCanRewrite(true);
         this.player.setPendingConnection(null);
 
-        packet.setLevelName(this.player.getProxy().getConfiguration().getMotd());
+        packet.setLevelName(rewriteData.getProxyName());
         packet.setRuntimeEntityId(rewriteData.getEntityId());
         packet.setUniqueEntityId(rewriteData.getEntityId());
 
