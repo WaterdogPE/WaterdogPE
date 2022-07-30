@@ -25,6 +25,7 @@ import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This is the default upstream to downstream implementation of BatchBridge which is used during all life cycles of the connection.
@@ -65,10 +66,14 @@ public class UpstreamBridge extends ProxyBatchBridge implements BatchHandler {
     @Override
     public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
         boolean changed = super.handlePacket(packet, handler);
-        boolean pluginHandled = false;
-        if (this.player.getPluginUpstreamHandler() != null) {
-            pluginHandled = this.player.getPluginUpstreamHandler().handlePacket(packet);
+        AtomicBoolean pluginHandled = new AtomicBoolean(false);
+        if (!this.player.getPluginUpstreamHandlers().isEmpty()) {
+            this.player.getPluginUpstreamHandlers().forEach(pluginHandler -> {
+                if (pluginHandler.handlePacket(packet)) {
+                    pluginHandled.set(true);
+                }
+            });
         }
-        return changed || pluginHandled;
+        return changed || pluginHandled.get();
     }
 }
