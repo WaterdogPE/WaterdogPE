@@ -19,6 +19,7 @@ import com.nukkitx.math.vector.Vector2f;
 import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.protocol.bedrock.data.BlockPropertyData;
 import com.nukkitx.protocol.bedrock.data.GameRuleData;
+import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.session.TransferCallback;
 
 import java.util.List;
@@ -62,7 +63,13 @@ public class RewriteData {
      */
     private boolean immobileFlag;
 
+    /**
+     * The name that is shown up in the player list (or pause menu)
+     */
+    private String proxyName;
+
     public RewriteData() {
+        this.proxyName = ProxyServer.getInstance().getConfiguration().getName();
     }
 
     public long getEntityId() {
@@ -151,5 +158,13 @@ public class RewriteData {
 
     public void setImmobileFlag(boolean immobileFlag) {
         this.immobileFlag = immobileFlag;
+    }
+
+    public String getProxyName() {
+        return this.proxyName;
+    }
+
+    public void setProxyName(String proxyName) {
+        this.proxyName = proxyName;
     }
 }
