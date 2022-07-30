@@ -48,6 +48,7 @@ import it.unimi.dsi.fastutil.objects.*;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -106,8 +107,8 @@ public class ProxiedPlayer implements CommandSender {
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
      */
-    private PacketHandler pluginUpstreamHandler = null;
-    private PacketHandler pluginDownstreamHandler = null;
+    private final List<PacketHandler> pluginUpstreamHandlers = new ObjectArrayList<>();
+    private final List<PacketHandler> pluginDownstreamHandlers = new ObjectArrayList<>();
 
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData) {
         this.proxy = proxy;
@@ -795,24 +796,48 @@ public class ProxiedPlayer implements CommandSender {
         return this.entityLinks;
     }
 
+    /**
+     * This method is deprecated. Please use {@link #getPluginUpstreamHandlers()} instead.
+     */
+    @Deprecated()
     public PacketHandler getPluginUpstreamHandler() {
-        return this.pluginUpstreamHandler;
+        return this.pluginUpstreamHandlers.get(0);
+    }
+
+    public List<PacketHandler> getPluginUpstreamHandlers() {
+        return this.pluginUpstreamHandlers;
     }
 
     public LongSet getChunkBlobs() {
         return this.chunkBlobs;
     }
 
+    /**
+     * This method is deprecated. Please use {@link #getPluginDownstreamHandlers()}.add() instead.
+     */
+    @Deprecated()
     public void setPluginUpstreamHandler(PacketHandler pluginUpstreamHandler) {
-        this.pluginUpstreamHandler = pluginUpstreamHandler;
+        this.pluginUpstreamHandlers.add(pluginUpstreamHandler);
     }
 
+    /**
+     * This method is deprecated. Please use {@link #getPluginDownstreamHandlers()} instead.
+     */
+    @Deprecated()
     public PacketHandler getPluginDownstreamHandler() {
-        return this.pluginDownstreamHandler;
+        return this.pluginDownstreamHandlers.get(0);
     }
 
+    public List<PacketHandler> getPluginDownstreamHandlers() {
+        return this.pluginDownstreamHandlers;
+    }
+
+    /**
+     * This method is deprecated. Please use {@link #getPluginDownstreamHandlers()}.add() instead.
+     */
+    @Deprecated()
     public void setPluginDownstreamHandler(PacketHandler pluginDownstreamHandler) {
-        this.pluginDownstreamHandler = pluginDownstreamHandler;
+        this.pluginDownstreamHandlers.add(pluginDownstreamHandler);
     }
 
     public void setAcceptPlayStatus(boolean acceptPlayStatus) {
