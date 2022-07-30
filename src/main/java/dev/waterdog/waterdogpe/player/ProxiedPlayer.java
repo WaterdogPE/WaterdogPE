@@ -800,8 +800,8 @@ public class ProxiedPlayer implements CommandSender {
      * This method is deprecated. Please use {@link #getPluginUpstreamHandlers()} instead.
      */
     @Deprecated()
-    public List<PacketHandler> getPluginUpstreamHandler() {
-        return this.pluginUpstreamHandlers;
+    public PacketHandler getPluginUpstreamHandler() {
+        return this.pluginUpstreamHandlers.get(0);
     }
 
     public List<PacketHandler> getPluginUpstreamHandlers() {
@@ -824,8 +824,8 @@ public class ProxiedPlayer implements CommandSender {
      * This method is deprecated. Please use {@link #getPluginDownstreamHandlers()} instead.
      */
     @Deprecated()
-    public List<PacketHandler> getPluginDownstreamHandler() {
-        return this.pluginDownstreamHandlers;
+    public PacketHandler getPluginDownstreamHandler() {
+        return this.pluginDownstreamHandlers.get(0);
     }
 
     public List<PacketHandler> getPluginDownstreamHandlers() {
