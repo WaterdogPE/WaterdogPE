@@ -799,9 +799,9 @@ public class ProxiedPlayer implements CommandSender {
     /**
      * This method is deprecated. Please use {@link #getPluginUpstreamHandlers()} instead.
      */
-    @Deprecated()
+    @Deprecated
     public PacketHandler getPluginUpstreamHandler() {
-        return this.pluginUpstreamHandlers.get(0);
+        return this.pluginUpstreamHandlers.isEmpty() ? null : this.pluginUpstreamHandlers.get(0);
     }
 
     public List<PacketHandler> getPluginUpstreamHandlers() {
@@ -815,7 +815,7 @@ public class ProxiedPlayer implements CommandSender {
     /**
      * This method is deprecated. Please use {@link #getPluginDownstreamHandlers()}.add() instead.
      */
-    @Deprecated()
+    @Deprecated
     public void setPluginUpstreamHandler(PacketHandler pluginUpstreamHandler) {
         this.pluginUpstreamHandlers.add(pluginUpstreamHandler);
     }
@@ -823,9 +823,9 @@ public class ProxiedPlayer implements CommandSender {
     /**
      * This method is deprecated. Please use {@link #getPluginDownstreamHandlers()} instead.
      */
-    @Deprecated()
+    @Deprecated
     public PacketHandler getPluginDownstreamHandler() {
-        return this.pluginDownstreamHandlers.get(0);
+        return this.pluginDownstreamHandlers.isEmpty() ? null : this.pluginDownstreamHandlers.get(0);
     }
 
     public List<PacketHandler> getPluginDownstreamHandlers() {
@@ -835,7 +835,7 @@ public class ProxiedPlayer implements CommandSender {
     /**
      * This method is deprecated. Please use {@link #getPluginDownstreamHandlers()}.add() instead.
      */
-    @Deprecated()
+    @Deprecated
     public void setPluginDownstreamHandler(PacketHandler pluginDownstreamHandler) {
         this.pluginDownstreamHandlers.add(pluginDownstreamHandler);
     }
