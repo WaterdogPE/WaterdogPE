@@ -43,6 +43,10 @@ public class ProxyConfig extends YamlConfig {
     @Comment("The Motd which will be displayed in the server tab of a player and returned during ping")
     private String motd = "§bWaterdog§3PE";
 
+    @Path("listener.name")
+    @Comment("The name that is shown up in the player list (pause menu)")
+    private String name = "§bWaterdog§3PE";
+
     @Path("listener.priorities")
     @Comment("The server priority list. If not changed by plugins, the proxy will connect the player to the first of those servers")
     private List<String> priorities = new ArrayList<>(Collections.singletonList("lobby1"));
@@ -164,6 +168,14 @@ public class ProxyConfig extends YamlConfig {
 
     public void setMotd(String motd) {
         this.motd = motd;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getMaxPlayerCount() {
