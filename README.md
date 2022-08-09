@@ -10,6 +10,7 @@ If you want to discuss things without joining the discord server, please use the
 
 ## Links
 
+- [Website](https://waterdog.dev)
 - [Discord](https://discord.gg/sJ452xNugw)
 - [Official documentation](https://docs.waterdog.dev)
 - [Issue Tracker](https://github.com/WaterdogPE/WaterdogPE/issues)
