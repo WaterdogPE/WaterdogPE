@@ -42,5 +42,8 @@ public class BedrockCodec527 extends BedrockCodec503 {
 
         builder.deregisterPacket(PlayerActionPacket.class);
         builder.registerPacket(PlayerActionPacket.class, PlayerActionSerializer_v527.INSTANCE, 36);
+
+        builder.registerPacket(RequestPermissionsPacket.class, RequestPermissionsSerializer_v527.INSTANCE, 185);
+        builder.registerPacket(ToastRequestPacket.class, ToastRequestSerializer_v527.INSTANCE, 186);
     }
 }

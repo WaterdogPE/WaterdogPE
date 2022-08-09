@@ -82,7 +82,7 @@ public class PackManager {
             if (pack != null) {
                 return pack;
             }
-            this.proxy.getLogger().error("Resource pack manifest.json is invalid or was not found in " + packPath.getFileName());
+            this.proxy.getLogger().error("Resource pack manifest.json is invalid or was not found in " + packPath.getFileName() + ", please make sure that you zip the content of the pack and not the folder! Read more on troubleshooting here: https://docs.waterdog.dev/books/waterdogpe-setup/page/troubleshooting");
         } catch (Exception e) {
             this.proxy.getLogger().error("Can not load resource pack from: " + packPath.getFileName(), e);
         }

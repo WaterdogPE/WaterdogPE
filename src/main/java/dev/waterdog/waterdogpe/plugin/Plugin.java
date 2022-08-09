@@ -89,10 +89,12 @@ public abstract class Plugin {
         config.addLogger(this.getName(), logger);
 
         // Plugin class logger
-        LoggerConfig clazzLogger = ((org.apache.logging.log4j.core.Logger) LogManager.getLogger(this.getClass())).get();
+        LoggerConfig clazzLogger = LoggerConfig.createLogger(false, logLevel, this.getClass().getCanonicalName(),
+                "", appenderRefs, null, config, null);
         clazzLogger.getAppenders().keySet().forEach(clazzLogger::removeAppender);
         clazzLogger.addAppender(config.getAppender("File-Plugin"), null, null);
         clazzLogger.addAppender(config.getAppender("Console-Plugin"), logLevel, null);
+        config.addLogger(this.getClass().getCanonicalName(), clazzLogger);
 
         context.updateLoggers();
         return LogManager.getLogger(this.getName());
