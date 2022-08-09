@@ -22,11 +22,7 @@ import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.data.command.CommandOriginData;
 import com.nukkitx.protocol.bedrock.data.command.CommandOriginType;
-import com.nukkitx.protocol.bedrock.packet.CommandRequestPacket;
-import com.nukkitx.protocol.bedrock.packet.ResourcePacksInfoPacket;
-import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
-import com.nukkitx.protocol.bedrock.packet.TextPacket;
-import com.nukkitx.protocol.bedrock.packet.TransferPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.command.CommandSender;
 import dev.waterdog.waterdogpe.event.defaults.*;
@@ -564,6 +560,23 @@ public class ProxiedPlayer implements CommandSender {
             this.setSubtitle(subtitle);
         }
         this.setTitle(Strings.isNullOrEmpty(title) ? " " : title);
+    }
+
+    /**
+     * Sends a toast notification with a message to the player
+     *
+     * @param title the notification title
+     * @param content the message content
+     */
+    public void sendToastMessage(String title, String content) {
+        if (this.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_19_0)) {
+            return;
+        }
+
+        ToastRequestPacket packet = new ToastRequestPacket();
+        packet.setTitle(title);
+        packet.setContent(content);
+        this.sendPacket(packet);
     }
 
     /**
