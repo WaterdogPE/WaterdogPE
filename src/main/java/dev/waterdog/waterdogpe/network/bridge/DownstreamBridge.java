@@ -21,6 +21,7 @@ import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import dev.waterdog.waterdogpe.network.rewrite.RewriteMaps;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
+import dev.waterdog.waterdogpe.utils.types.PacketHandler;
 
 /**
  * This is the downstream implementation of the {@link AbstractDownstreamBatchBridge} which is used after initial connection initialization or
@@ -41,8 +42,12 @@ public class DownstreamBridge extends AbstractDownstreamBatchBridge {
         boolean rewroteBlock = rewriteMaps.getBlockMap() != null && rewriteMaps.getBlockMap().doRewrite(packet);
 
         boolean pluginHandled = false;
-        if (this.player.getPluginDownstreamHandler() != null) {
-            pluginHandled = this.player.getPluginDownstreamHandler().handlePacket(packet);
+        if (!this.player.getPluginDownstreamHandlers().isEmpty()) {
+            for (PacketHandler pluginHandler : this.player.getPluginDownstreamHandlers()) {
+                if (pluginHandler.handlePacket(packet)) {
+                    pluginHandled = true;
+                }
+            }
         }
         return changed || rewroteBlock || pluginHandled;
     }
