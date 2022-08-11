@@ -17,12 +17,18 @@ package dev.waterdog.waterdogpe.plugin;
 
 import com.google.common.base.Preconditions;
 import dev.waterdog.waterdogpe.ProxyServer;
-import dev.waterdog.waterdogpe.logger.Logger;
-import dev.waterdog.waterdogpe.logger.PluginLogger;
+import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.utils.config.Configuration;
 import dev.waterdog.waterdogpe.utils.FileUtils;
 import dev.waterdog.waterdogpe.utils.config.YamlConfig;
 import dev.waterdog.waterdogpe.utils.exceptions.PluginChangeStateException;
+import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.AppenderRef;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +39,7 @@ import java.util.jar.JarFile;
 /**
  * Base plugin class all plugins must extend
  */
+@Log4j2()
 public abstract class Plugin {
 
     protected boolean enabled = false;
@@ -53,7 +60,7 @@ public abstract class Plugin {
         this.initialized = true;
         this.description = description;
         this.proxy = proxy;
-        this.logger = new PluginLogger(this);
+        this.logger = this.buildLogger();
 
         this.pluginFile = pluginFile;
         this.dataFolder = new File(proxy.getPluginPath() + "/" + description.getName().toLowerCase() + "/");
@@ -61,6 +68,36 @@ public abstract class Plugin {
             this.dataFolder.mkdirs();
         }
         this.configFile = new File(this.dataFolder, "config.yml");
+    }
+
+    private Logger buildLogger() {
+        LoggerContext context = (LoggerContext) LogManager.getContext(false);
+        org.apache.logging.log4j.core.config.Configuration config = context.getConfiguration();
+
+        Level logLevel = WaterdogPE.version().debug() ? Level.DEBUG : Level.INFO;
+
+        AppenderRef[] appenderRefs = new AppenderRef[]{
+                AppenderRef.createAppenderRef("File-Plugin", null, null),
+                AppenderRef.createAppenderRef("Console-Plugin", logLevel, null)
+        };
+
+        // Primary logger
+        LoggerConfig logger = LoggerConfig.createLogger(false, logLevel, this.getName(),
+                "", appenderRefs, null, config, null);
+        logger.addAppender(config.getAppender("File-Plugin"), null, null);
+        logger.addAppender(config.getAppender("Console-Plugin"), logLevel, null);
+        config.addLogger(this.getName(), logger);
+
+        // Plugin class logger
+        LoggerConfig clazzLogger = LoggerConfig.createLogger(false, logLevel, this.getClass().getCanonicalName(),
+                "", appenderRefs, null, config, null);
+        clazzLogger.getAppenders().keySet().forEach(clazzLogger::removeAppender);
+        clazzLogger.addAppender(config.getAppender("File-Plugin"), null, null);
+        clazzLogger.addAppender(config.getAppender("Console-Plugin"), logLevel, null);
+        config.addLogger(this.getClass().getCanonicalName(), clazzLogger);
+
+        context.updateLoggers();
+        return LogManager.getLogger(this.getName());
     }
 
     /**
