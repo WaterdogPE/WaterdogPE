@@ -38,6 +38,7 @@ import dev.waterdog.waterdogpe.plugin.PluginManager;
 import dev.waterdog.waterdogpe.query.QueryHandler;
 import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
+import dev.waterdog.waterdogpe.utils.bstats.Metrics;
 import dev.waterdog.waterdogpe.utils.config.LangConfig;
 import dev.waterdog.waterdogpe.utils.config.ProxyConfig;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
@@ -90,6 +91,7 @@ public class ProxyServer {
     private ScheduledFuture<?> tickFuture;
     private boolean shutdown = false;
     private int currentTick = 0;
+    private Metrics metrics;
 
     public ProxyServer(MainLogger logger, String filePath, String pluginPath) throws InvalidConfigurationException {
         instance = this;
@@ -176,6 +178,11 @@ public class ProxyServer {
         if (this.getConfiguration().useFastCodec()) {
             this.logger.debug("Using fast codec! Please ensure plugin compatibility!");
             ProtocolConstants.registerCodecs();
+        }
+
+        if(this.getConfiguration().isEnableAnonymousStatistics()){
+            Metrics.WaterdogMetrics.startMetrics(this, this.getConfiguration());
+            this.getLogger().info("Enabling anonymous statistics.");
         }
 
         if (this.getConfiguration().enabledResourcePacks()) {

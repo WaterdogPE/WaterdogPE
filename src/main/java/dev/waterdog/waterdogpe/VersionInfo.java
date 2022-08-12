@@ -25,6 +25,7 @@ public class VersionInfo {
     private final String baseVersion = "1.1.11";
     private final String buildVersion = "#build";
     private final String author = "WaterdogTEAM";
+    private final int metricsId = 15678;
     private final int latestProtocolVersion;
 
     private final String branchName;
@@ -71,6 +72,10 @@ public class VersionInfo {
             WaterdogPE.setLoggerLevel(Level.DEBUG);
         }
         this.debug = debug;
+    }
+
+    public int metricsId() {
+        return metricsId;
     }
 
     public boolean debug() {
