@@ -150,6 +150,10 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Creating threads may be in some situations expensive. Specify minimum count of idle threads per internal thread executors. Set to -1 to auto-detect by core count.")
     private int defaultIdleThreads = -1;
 
+    @Path("enable_statistics")
+    @Comment("Enable anonymous statistics that are sent to bstats. For more information, check out our bstats page at https://bstats.org/plugin/server-implementation/WaterdogPE/15678")
+    private boolean enableAnonymousStatistics = true;
+
     public ProxyConfig(File file) {
         this.CONFIG_HEADER = new String[]{"Waterdog Main Configuration file", "Configure your desired network settings here."};
         this.CONFIG_FILE = file;
@@ -316,5 +320,9 @@ public class ProxyConfig extends YamlConfig {
 
     public int getIdleThreads() {
         return this.defaultIdleThreads < 1 ? Runtime.getRuntime().availableProcessors() : this.defaultIdleThreads;
+    }
+
+    public boolean isEnableAnonymousStatistics() {
+        return enableAnonymousStatistics;
     }
 }
