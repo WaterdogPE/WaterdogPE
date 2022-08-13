@@ -43,7 +43,6 @@ public class WaterdogPE {
         logger.info("§bStarting WaterDogPE proxy software!");
         logger.info("§3Software Version: " + versionInfo.baseVersion());
         logger.info("§3Build Version: " + versionInfo.buildVersion());
-        logger.info("§3Metrics publisher ID: " + versionInfo.metricsId());
         logger.info("§3Development Build: " + versionInfo.debug());
         logger.info("§3Software Authors: " + versionInfo.author());
 
