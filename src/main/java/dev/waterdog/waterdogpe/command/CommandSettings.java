@@ -26,18 +26,24 @@ public class CommandSettings {
 
     private final String usageMessage;
     private final String description;
+    private final boolean quoteAware;
 
     private final String permission;
     private final String permissionMessage;
 
     private final String[] aliases;
 
-    private CommandSettings(String usageMessage, String description, String permission, String[] aliases, String permissionMessage) {
+    private CommandSettings(String usageMessage, String description, String permission, String[] aliases, String permissionMessage, boolean quoteAware) {
         this.usageMessage = new TranslationContainer(usageMessage).getTranslated();
         this.description = new TranslationContainer(description).getTranslated();
         this.permission = new TranslationContainer(permission).getTranslated();
         this.permissionMessage = new TranslationContainer(permissionMessage).getTranslated();
+        this.quoteAware = quoteAware;
         this.aliases = aliases;
+    }
+
+    private CommandSettings(String usageMessage, String description, String permission, String[] aliases, String permissionMessage){
+        this(usageMessage, description, permission, aliases, permissionMessage, false);
     }
 
     public static CommandSettings empty() {
@@ -68,12 +74,17 @@ public class CommandSettings {
         return this.aliases;
     }
 
+    public boolean isQuoteAware() {
+        return quoteAware;
+    }
+
     public static class Builder {
         private String usageMessage = "";
         private String description = null;
         private String permission = "";
         private String permissionMessage = "waterdog.command.permission.failed";
         private String[] aliases = new String[0];
+        private boolean quoteAware = false;
 
         public CommandSettings build() {
             return new CommandSettings(
@@ -81,7 +92,8 @@ public class CommandSettings {
                     this.description == null ? this.usageMessage : this.description,
                     this.permission,
                     this.aliases,
-                    this.permissionMessage
+                    this.permissionMessage,
+                    this.quoteAware
             );
         }
 
@@ -91,6 +103,16 @@ public class CommandSettings {
 
         public Builder setUsageMessage(String usageMessage) {
             this.usageMessage = usageMessage;
+            return this;
+        }
+
+        public boolean isQuoteAware() {
+            return quoteAware;
+        }
+
+        public Builder setQuoteAware(boolean quoteAware) {
+            this.quoteAware = quoteAware;
+
             return this;
         }
 
