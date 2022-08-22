@@ -309,7 +309,7 @@ public class ProxyServer {
         if(command.getSettings().isQuoteAware()){ // Quote aware parsing
             List<String> val = CommandUtils.parseArguments(message);
             val.remove(0);
-            shiftedArgs = (String[]) val.toArray();
+            shiftedArgs = val.toArray(String[]::new);
         }else{
             shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
         }
