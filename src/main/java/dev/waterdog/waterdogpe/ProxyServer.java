@@ -29,10 +29,9 @@ import dev.waterdog.waterdogpe.event.defaults.DispatchCommandEvent;
 import dev.waterdog.waterdogpe.event.defaults.ProxyStartEvent;
 import dev.waterdog.waterdogpe.logger.MainLogger;
 import dev.waterdog.waterdogpe.network.ProxyListener;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
-import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
-import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
 import dev.waterdog.waterdogpe.packs.PackManager;
 import dev.waterdog.waterdogpe.player.PlayerManager;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -42,6 +41,8 @@ import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
 import dev.waterdog.waterdogpe.utils.config.LangConfig;
 import dev.waterdog.waterdogpe.utils.config.ProxyConfig;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
+import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
 import dev.waterdog.waterdogpe.utils.types.*;
 import io.netty.channel.EventLoopGroup;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
@@ -73,7 +74,6 @@ public class ProxyServer {
     private final ServerInfoMap serverInfoMap = new ServerInfoMap();
 
     private BedrockServer bedrockServer;
-    private Set<BedrockServer> additionalPorts = new HashSet<>();
     private QueryHandler queryHandler;
 
     private CommandMap commandMap;
@@ -83,8 +83,7 @@ public class ProxyServer {
     private IJoinHandler joinHandler;
     private IForcedHostHandler forcedHostHandler;
     private IMetricsHandler metricsHandler;
-    private ProxyListenerInterface proxyListener = new ProxyListenerInterface() {
-    };
+    private ProxyListenerInterface proxyListener = new ProxyListenerInterface(){};
 
     private final EventLoopGroup bossEventLoopGroup;
     private final EventLoopGroup workerEventLoopGroup;
@@ -192,21 +191,8 @@ public class ProxyServer {
         }
 
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors(), this.bossEventLoopGroup, this.workerEventLoopGroup, false);
-        this.bedrockServer.setHandler(new ProxyListener(this, this.queryHandler, bindAddress));
+        this.bedrockServer.setHandler(new ProxyListener(this));
         this.bedrockServer.bind().join();
-
-        for (Integer port : this.getConfiguration().getAdditionalPorts()) {
-            logger.info("Starting additional port " + port);
-            InetSocketAddress additionalBind = new InetSocketAddress(bindAddress.getAddress(), port);
-
-            BedrockServer newServer = new BedrockServer(additionalBind, Runtime.getRuntime().availableProcessors(), this.bossEventLoopGroup, this.workerEventLoopGroup, false);
-            newServer.setHandler(new ProxyListener(this, new QueryHandler(this, additionalBind), additionalBind));
-            newServer.bind().join();
-            logger.info("Set up additional port " + port + ".");
-
-            additionalPorts.add(newServer);
-        }
-
 
         ProxyStartEvent event = new ProxyStartEvent(this);
         this.eventManager.callEvent(event);
@@ -267,8 +253,6 @@ public class ProxyServer {
             if (this.bedrockServer != null) {
                 this.bedrockServer.close();
             }
-
-            this.additionalPorts.forEach(BedrockServer::close);
         } catch (Exception e) {
             this.getLogger().error("Error while shutting down ProxyServer", e);
         }

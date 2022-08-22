@@ -90,10 +90,6 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, the proxy will be able to bind to an Ipv6 Address")
     private boolean enableIpv6 = false;
 
-    @Path("additional_ports")
-    @Comment("Additional ports to listen to")
-    private List<Integer> additionalPorts = new ArrayList<>();
-
     @Path("use_login_extras")
     @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")
     private boolean useLoginExtras = false;
@@ -268,10 +264,6 @@ public class ProxyConfig extends YamlConfig {
 
     public boolean enableEducationFeatures() {
         return this.enableEducationFeatures;
-    }
-
-    public List<Integer> getAdditionalPorts() {
-        return additionalPorts;
     }
 
     public boolean enabledResourcePacks() {
