@@ -21,7 +21,7 @@ import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
  * @author Tobias Grether
  * @version 1.0
  */
-public class BedrockCodec545 extends BedrockCodec534 {
+public class BedrockCodec545 extends BedrockCodec544 {
 
     @Override
     public ProtocolVersion getProtocol() {
