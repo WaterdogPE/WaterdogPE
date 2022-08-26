@@ -50,10 +50,7 @@ import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class ProxyServer {
