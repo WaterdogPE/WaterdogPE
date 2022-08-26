@@ -29,9 +29,10 @@ import dev.waterdog.waterdogpe.event.defaults.DispatchCommandEvent;
 import dev.waterdog.waterdogpe.event.defaults.ProxyStartEvent;
 import dev.waterdog.waterdogpe.logger.MainLogger;
 import dev.waterdog.waterdogpe.network.ProxyListener;
-import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
 import dev.waterdog.waterdogpe.packs.PackManager;
 import dev.waterdog.waterdogpe.player.PlayerManager;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -41,8 +42,6 @@ import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
 import dev.waterdog.waterdogpe.utils.config.LangConfig;
 import dev.waterdog.waterdogpe.utils.config.ProxyConfig;
-import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
-import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
 import dev.waterdog.waterdogpe.utils.types.*;
 import io.netty.channel.EventLoopGroup;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
@@ -83,7 +82,8 @@ public class ProxyServer {
     private IJoinHandler joinHandler;
     private IForcedHostHandler forcedHostHandler;
     private IMetricsHandler metricsHandler;
-    private ProxyListenerInterface proxyListener = new ProxyListenerInterface(){};
+    private ProxyListenerInterface proxyListener = new ProxyListenerInterface() {
+    };
 
     private final EventLoopGroup bossEventLoopGroup;
     private final EventLoopGroup workerEventLoopGroup;
@@ -290,11 +290,11 @@ public class ProxyServer {
 
         String[] shiftedArgs;
 
-        if(command.getSettings().isQuoteAware()){ // Quote aware parsing
+        if (command.getSettings().isQuoteAware()) { // Quote aware parsing
             ArrayList<String> val = CommandUtils.parseArguments(message);
             val.remove(0);
             shiftedArgs = val.toArray(String[]::new);
-        }else{
+        } else {
             shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
         }
 
