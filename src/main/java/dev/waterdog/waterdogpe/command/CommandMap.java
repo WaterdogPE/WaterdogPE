@@ -44,6 +44,12 @@ public interface CommandMap {
 
     boolean unregisterCommand(String name);
 
+    /**
+     * @param name the name of the command or alias, case-insensitive
+     * @return The Command instance of the registered Command, or null if no command or alias with this name could be found.
+     */
+    Command getCommand(String name);
+
     boolean isRegistered(String name);
 
     /**

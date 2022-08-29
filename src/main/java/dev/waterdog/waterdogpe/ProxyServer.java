@@ -292,7 +292,7 @@ public class ProxyServer {
             return false;
         }
 
-        Command command = getCommandMap().getCommands().get(args[0]);
+        Command command = getCommandMap().getCommand(args[0]);
         if (command == null) return false;
 
         String[] shiftedArgs;
