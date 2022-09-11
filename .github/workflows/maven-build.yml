@@ -17,3 +17,13 @@ jobs:
           distribution: adopt-hotspot
       - name: Build with Maven
         run: mvn -B package --file pom.xml
+      - name: Upload pre-release
+        if: github.ref == 'refs/heads/master'
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Snapshot Build"
+          files: |
+            target/Waterdog.jar
