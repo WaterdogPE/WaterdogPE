@@ -46,6 +46,13 @@ public class WaterdogPE {
         logger.info("§3Development Build: " + versionInfo.debug());
         logger.info("§3Software Authors: " + versionInfo.author());
 
+
+        int javaVersion = getJavaVersion();
+        if (javaVersion < 17) {
+            logger.error("Using unsupported Java version! Minimum supported version is Java 17, found Java " + javaVersion);
+            return;
+        }
+
         if (versionInfo.buildVersion().equals("#build") || versionInfo.branchName().equals("unknown")) {
             logger.warning("Custom build? Unofficial builds should be not run in production!");
         } else {
@@ -96,5 +103,18 @@ public class WaterdogPE {
 
     public static VersionInfo version() {
         return versionInfo;
+    }
+
+    private static int getJavaVersion() {
+        String version = System.getProperty("java.version");
+        if (version.startsWith("1.")) {
+            return Integer.parseInt(version.substring(2, 3));
+        }
+
+        int index = version.indexOf(".");
+        if (index != -1) {
+            version = version.substring(0, index);
+        }
+        return Integer.parseInt(version);
     }
 }
