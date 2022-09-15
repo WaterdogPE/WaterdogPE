@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network.session.bedrock;
 
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
+import com.nukkitx.protocol.bedrock.data.PacketCompressionAlgorithm;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.network.bridge.TransferBatchBridge;
 import dev.waterdog.waterdogpe.network.downstream.ConnectedDownstreamHandler;
@@ -43,6 +44,7 @@ public class BedrockDefaultSession implements DownstreamSession {
 
     @Override
     public void onDownstreamInit(ProxiedPlayer player, boolean initial) {
+        this.session.setCompression(PacketCompressionAlgorithm.ZLIB);
         this.session.setCompressionLevel(player.getProxy().getConfiguration().getDownstreamCompression());
 
         if (initial) {

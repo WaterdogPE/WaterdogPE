@@ -19,8 +19,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.nukkitx.protocol.bedrock.BedrockServerSession;
+import com.nukkitx.protocol.bedrock.data.PacketCompressionAlgorithm;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
-import com.nukkitx.protocol.bedrock.packet.*;
+import com.nukkitx.protocol.bedrock.packet.LoginPacket;
+import com.nukkitx.protocol.bedrock.packet.NetworkSettingsPacket;
+import com.nukkitx.protocol.bedrock.packet.PlayStatusPacket;
+import com.nukkitx.protocol.bedrock.packet.RequestNetworkSettingsPacket;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.event.defaults.PlayerPreLoginEvent;
@@ -31,7 +35,6 @@ import dev.waterdog.waterdogpe.player.HandshakeEntry;
 import dev.waterdog.waterdogpe.player.HandshakeUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 
@@ -56,30 +59,31 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
     }
 
     @Override
+    public boolean handle(RequestNetworkSettingsPacket packet) {
+        if (!this.isCompatibleProtocol(this.proxy.getProxyListener(), packet.getProtocolVersion())) {
+            return false;
+        }
+
+        this.session.setCompression(PacketCompressionAlgorithm.ZLIB);
+
+        NetworkSettingsPacket networkSettingsPacket = new NetworkSettingsPacket();
+        networkSettingsPacket.setCompressionThreshold(0);
+        networkSettingsPacket.setCompressionAlgorithm(PacketCompressionAlgorithm.ZLIB);
+
+        this.session.sendPacketImmediately(networkSettingsPacket);
+
+        return true;
+    }
+
+    @Override
     public boolean handle(LoginPacket packet) {
-        ProxyListenerInterface listener = this.proxy.getProxyListener();
-        if (!listener.onLoginAttempt(this.session.getAddress())) {
-            this.proxy.getLogger().debug("[" + this.session.getAddress() + "] <-> Login denied");
-            this.session.disconnect("Login denied");
-            return true;
+        final int protocolVersion = packet.getProtocolVersion();
+
+        if (!isCompatibleProtocol(this.proxy.getProxyListener(), protocolVersion)) {
+            return false;
         }
 
-        int protocolVersion = packet.getProtocolVersion();
-        ProtocolVersion protocol = ProtocolConstants.get(protocolVersion);
-        this.session.setPacketCodec(protocol == null ? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
-
-        if (protocol == null) {
-            PlayStatusPacket status = new PlayStatusPacket();
-            status.setStatus((protocolVersion > WaterdogPE.version().latestProtocolVersion() ?
-                    PlayStatusPacket.Status.LOGIN_FAILED_SERVER_OLD :
-                    PlayStatusPacket.Status.LOGIN_FAILED_CLIENT_OLD));
-            this.session.sendPacketImmediately(status);
-            this.session.disconnect();
-
-            listener.onIncorrectVersionLogin(protocolVersion, this.session.getAddress());
-            this.proxy.getLogger().alert("[" + this.session.getAddress() + "] <-> Upstream has disconnected due to incompatible protocol (protocol=" + protocolVersion + ")");
-            return true;
-        }
+        final ProtocolVersion protocol = ProtocolConstants.get(protocolVersion);
 
         boolean xboxAuth = false;
         this.session.setLogging(WaterdogPE.version().debug());
@@ -124,6 +128,32 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             this.onLoginFailed(xboxAuth, e, "Login failed: " + e.getMessage());
             this.proxy.getLogger().error("[" + this.session.getAddress() + "] Unable to complete login", e);
         }
+        return true;
+    }
+
+    private boolean isCompatibleProtocol(ProxyListenerInterface listener, int protocolVersion) {
+        if (!listener.onLoginAttempt(this.session.getAddress())) {
+            this.proxy.getLogger().debug("[" + this.session.getAddress() + "] <-> Login denied");
+            this.session.disconnect("Login denied");
+            return false;
+        }
+
+        ProtocolVersion protocol = ProtocolConstants.get(protocolVersion);
+        this.session.setPacketCodec(protocol == null ? ProtocolConstants.getLatestProtocol().getCodec() : protocol.getCodec());
+
+        if (protocol == null) {
+            PlayStatusPacket status = new PlayStatusPacket();
+            status.setStatus((protocolVersion > WaterdogPE.version().latestProtocolVersion() ?
+                PlayStatusPacket.Status.LOGIN_FAILED_SERVER_OLD :
+                PlayStatusPacket.Status.LOGIN_FAILED_CLIENT_OLD));
+            this.session.sendPacketImmediately(status);
+            this.session.disconnect();
+
+            listener.onIncorrectVersionLogin(protocolVersion, this.session.getAddress());
+            this.proxy.getLogger().alert("[" + this.session.getAddress() + "] <-> Upstream has disconnected due to incompatible protocol (protocol=" + protocolVersion + ")");
+            return false;
+        }
+
         return true;
     }
 
