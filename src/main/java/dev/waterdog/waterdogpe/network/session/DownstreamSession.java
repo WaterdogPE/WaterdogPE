@@ -118,6 +118,18 @@ public interface DownstreamSession {
     long getLatency();
 
     /**
+     * Gets the compression algorIthm used by this session
+     * @return Compression algorIthm
+     */
+    CompressionAlgorithm getCompression();
+
+    /**
+     * Sets the compression algorIthm
+     * @param compression compression to be used
+     */
+    void setCompression(CompressionAlgorithm compression);
+
+    /**
      * Checks if the session is ready for communication.
      * @return Whatever session was not closed
      */

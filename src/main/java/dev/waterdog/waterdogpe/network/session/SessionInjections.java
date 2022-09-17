@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network.session;
 
 import com.nukkitx.network.util.DisconnectReason;
 import com.nukkitx.protocol.bedrock.BedrockSession;
+import com.nukkitx.protocol.bedrock.packet.RequestNetworkSettingsPacket;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 public class SessionInjections {
@@ -38,5 +39,11 @@ public class SessionInjections {
                 player.onDownstreamTimeout();
             }
         });
+    }
+
+    public static void requestNetworkSettings(ProxiedPlayer player, DownstreamSession downstream) {
+        RequestNetworkSettingsPacket packet = new RequestNetworkSettingsPacket();
+        packet.setProtocolVersion(player.getProtocol().getProtocol());
+        downstream.sendPacketImmediately(packet);
     }
 }

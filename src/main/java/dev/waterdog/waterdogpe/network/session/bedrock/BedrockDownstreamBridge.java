@@ -26,12 +26,15 @@ import java.util.Collection;
 
 public class BedrockDownstreamBridge extends DownstreamBridge implements BatchHandler {
 
-    public BedrockDownstreamBridge(ProxiedPlayer player, BedrockSession upstreamSession) {
+    private final BedrockDefaultSession session;
+
+    public BedrockDownstreamBridge(ProxiedPlayer player, BedrockSession upstreamSession, BedrockDefaultSession session) {
         super(player, upstreamSession);
+        this.session = session;
     }
 
     @Override
     public void handle(BedrockSession bedrockSession, ByteBuf byteBuf, Collection<BedrockPacket> packets) {
-        this.handle(bedrockSession.getPacketHandler(), byteBuf, packets);
+        this.handle(bedrockSession.getPacketHandler(), byteBuf, packets, this.session.getCompression());
     }
 }
