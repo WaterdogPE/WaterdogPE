@@ -19,22 +19,10 @@ jobs:
           sed -i -e s/#build/"release"/g ./src/main/java/dev/waterdog/waterdogpe/VersionInfo.java
           mvn -B install --file pom.xml
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }} by ${{ github.actor }}
-          draft: false
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/Waterdog.jar
-          asset_name: Waterdog.jar
-          asset_content_type: application/zip
+          title: "Release ${{ github.ref }} by ${{ github.actor }}"
+          files: |
+            target/Waterdog.jar
