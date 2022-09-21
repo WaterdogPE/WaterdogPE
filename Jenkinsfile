@@ -2,7 +2,7 @@ pipeline {
     agent any
     tools {
         maven 'Maven 3'
-        jdk 'Java 11'
+        jdk 'Java 17'
     }
     options {
         buildDiscarder(logRotator(artifactNumToKeepStr: '15'))

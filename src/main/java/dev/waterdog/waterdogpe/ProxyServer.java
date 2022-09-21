@@ -22,6 +22,7 @@ import com.nukkitx.network.util.NetworkThreadFactory;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import dev.waterdog.waterdogpe.command.*;
+import dev.waterdog.waterdogpe.command.utils.CommandUtils;
 import dev.waterdog.waterdogpe.console.TerminalConsole;
 import dev.waterdog.waterdogpe.event.EventManager;
 import dev.waterdog.waterdogpe.event.defaults.DispatchCommandEvent;
@@ -49,10 +50,7 @@ import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 
 public class ProxyServer {
@@ -294,7 +292,19 @@ public class ProxyServer {
             return false;
         }
 
-        String[] shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
+        Command command = getCommandMap().getCommand(args[0]);
+        if (command == null) return false;
+
+        String[] shiftedArgs;
+
+        if (command.getSettings().isQuoteAware()) { // Quote aware parsing
+            ArrayList<String> val = CommandUtils.parseArguments(message);
+            val.remove(0);
+            shiftedArgs = val.toArray(String[]::new);
+        } else {
+            shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
+        }
+
         DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs);
         this.eventManager.callEvent(event);
         return !event.isCancelled() && this.commandMap.handleCommand(sender, args[0], shiftedArgs);
