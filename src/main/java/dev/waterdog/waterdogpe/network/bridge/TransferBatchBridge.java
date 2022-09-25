@@ -20,6 +20,7 @@ import com.nukkitx.protocol.bedrock.BedrockPacketType;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import io.netty.buffer.ByteBuf;
@@ -47,8 +48,8 @@ public class TransferBatchBridge extends AbstractDownstreamBatchBridge {
     }
 
     @Override
-    public void handle(BedrockPacketHandler handler, ByteBuf buf, Collection<BedrockPacket> packets) {
-        super.handle(handler, buf, packets);
+    public void handle(BedrockPacketHandler handler, ByteBuf compressed, Collection<BedrockPacket> packets, CompressionAlgorithm compression) {
+        super.handle(handler, compressed, packets, compression);
         if (this.hasStartGame && !this.dimLockActive) {
             // Send queued packets to upstream if dim lock is disabled
             this.flushQueue();

@@ -19,6 +19,7 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.UnknownPacket;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
 import io.netty.buffer.ByteBuf;
@@ -44,7 +45,14 @@ public abstract class ProxyBatchBridge {
         this.player = player;
     }
 
-    public void handle(BedrockPacketHandler handler, ByteBuf buf, Collection<BedrockPacket> packets) {
+    /**
+     * Handle packets and do all the logic to forward packets
+     * @param handler handler of the session which sent the packets
+     * @param compressed buffer with compressed data
+     * @param packets decoded packets of buffer
+     * @param compression compression used for compressed buffer
+     */
+    public void handle(BedrockPacketHandler handler, ByteBuf compressed, Collection<BedrockPacket> packets, CompressionAlgorithm compression) {
         List<BedrockPacket> allPackets = new ObjectArrayList<>();
         boolean changed = false;
 
@@ -67,14 +75,14 @@ public abstract class ProxyBatchBridge {
             player.getProxy().getMetricsHandler().unchangedBatch();
         }
 
-        if (this.forceEncodePackets || !allPackets.isEmpty() && (changed || allPackets.size() != packets.size())) {
+        if (this.forceEncodePackets || compression != this.getCompression() || !allPackets.isEmpty() && (changed || allPackets.size() != packets.size())) {
             this.sendWrapped(allPackets, this.isEncrypted());
             return;
         }
 
         if (!changed && allPackets.size() == packets.size()) {
-            buf.resetReaderIndex(); // Set reader index to position where payload is decrypted.
-            this.sendWrapped(buf, this.isEncrypted());
+            compressed.resetReaderIndex(); // Set reader index to position where payload is decrypted.
+            this.sendWrapped(compressed, this.isEncrypted());
         }
 
         // Packets from array aren't used so we can deallocate whole.
@@ -85,6 +93,8 @@ public abstract class ProxyBatchBridge {
     public abstract void sendWrapped(ByteBuf compressed, boolean encrypt);
 
     public abstract boolean isEncrypted();
+
+    public abstract CompressionAlgorithm getCompression();
 
     protected void deallocatePackets(Collection<BedrockPacket> packets) {
         for (BedrockPacket packet : packets) {

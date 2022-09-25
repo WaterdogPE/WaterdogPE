@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network.bridge;
 
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.buffer.ByteBuf;
 
@@ -42,6 +43,11 @@ public abstract class AbstractDownstreamBatchBridge extends ProxyBatchBridge {
     @Override
     public void sendWrapped(ByteBuf compressed, boolean encrypt) {
         this.upstreamSession.sendWrapped(compressed, encrypt);
+    }
+
+    @Override
+    public CompressionAlgorithm getCompression() {
+        return this.player.getUpstreamCompression();
     }
 
     @Override

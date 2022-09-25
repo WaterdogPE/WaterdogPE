@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.session.bedrock;
 
+import com.google.common.base.Preconditions;
 import com.nukkitx.protocol.bedrock.BedrockClientSession;
 import com.nukkitx.protocol.bedrock.BedrockPacket;
 import dev.waterdog.waterdogpe.WaterdogPE;
@@ -22,6 +23,8 @@ import dev.waterdog.waterdogpe.network.bridge.TransferBatchBridge;
 import dev.waterdog.waterdogpe.network.downstream.ConnectedDownstreamHandler;
 import dev.waterdog.waterdogpe.network.downstream.InitialHandler;
 import dev.waterdog.waterdogpe.network.downstream.SwitchDownstreamHandler;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.network.session.DownstreamSession;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.buffer.ByteBuf;
@@ -36,6 +39,8 @@ public class BedrockDefaultSession implements DownstreamSession {
     private final BedrockDefaultClient client;
     private final BedrockClientSession session;
 
+    private CompressionAlgorithm compression = CompressionAlgorithm.ZLIB;
+
     public BedrockDefaultSession(BedrockDefaultClient client, BedrockClientSession session) {
         this.client = client;
         this.session = session;
@@ -44,19 +49,23 @@ public class BedrockDefaultSession implements DownstreamSession {
     @Override
     public void onDownstreamInit(ProxiedPlayer player, boolean initial) {
         this.session.setCompressionLevel(player.getProxy().getConfiguration().getDownstreamCompression());
+        this.session.setPacketCodec(player.getProtocol().getCodec());
+        this.session.setLogging(WaterdogPE.version().debug());
+
+        // Disable compression before we receive NetworkSettings from server
+        if (player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_30)) {
+            this.compression = CompressionAlgorithm.NONE;
+        }
 
         if (initial) {
             this.session.setPacketHandler(new InitialHandler(player, this.client));
-            this.session.setBatchHandler(new BedrockDownstreamBridge(player, player.getUpstream()));
+            this.session.setBatchHandler(new BedrockDownstreamBridge(player, player.getUpstream(), this));
         } else {
             this.session.setPacketHandler(new SwitchDownstreamHandler(player, this.client));
             this.session.setBatchHandler(new BedrockTransferBatchBridge(player, player.getUpstream(), this));
             // Make sure TransferBatchBridge queue is released and there is no memory leak
             this.session.addDisconnectHandler(reason -> TransferBatchBridge.release(this.session.getBatchHandler()));
         }
-
-        this.session.setPacketCodec(player.getProtocol().getCodec());
-        this.session.setLogging(WaterdogPE.version().debug());
     }
 
     @Override
@@ -91,7 +100,7 @@ public class BedrockDefaultSession implements DownstreamSession {
 
     private void onTransferCompleted0(ProxiedPlayer player, Runnable completedCallback) {
         TransferBatchBridge batchBridge = this.getBatchBridge();
-        this.session.setBatchHandler(new BedrockDownstreamBridge(player, player.getUpstream()));
+        this.session.setBatchHandler(new BedrockDownstreamBridge(player, player.getUpstream(), this));
         this.session.setPacketHandler(new ConnectedDownstreamHandler(player, this.client));
 
         if (batchBridge != null) {
@@ -106,6 +115,18 @@ public class BedrockDefaultSession implements DownstreamSession {
             return (TransferBatchBridge) this.session.getBatchHandler();
         }
         return null;
+    }
+
+    @Override
+    public void setCompression(CompressionAlgorithm compression) {
+        Preconditions.checkArgument(this.compression == null || this.compression == CompressionAlgorithm.NONE, "Compression was already set");
+        this.compression = compression;
+        this.session.setCompression(compression.getBedrockCompression());
+    }
+
+    @Override
+    public CompressionAlgorithm getCompression() {
+        return this.compression;
     }
 
     @Override
@@ -171,5 +192,4 @@ public class BedrockDefaultSession implements DownstreamSession {
     public BedrockClientSession getSession() {
         return this.session;
     }
-
 }
