@@ -33,6 +33,7 @@ import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.packs.PackManager;
 import dev.waterdog.waterdogpe.player.PlayerManager;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -126,6 +127,12 @@ public class ProxyServer {
 
         if (this.getConfiguration().isDebug()) {
             WaterdogPE.version().debug(true);
+        }
+
+        CompressionAlgorithm compression = this.getConfiguration().getCompression();
+        if (compression.getBedrockCompression() == null) {
+            this.logger.error("Bedrock compression supports only ZLIB or Snappy! Currently provided " + compression + ", defaulting to ZLIB!");
+            this.getConfiguration().setCompression(CompressionAlgorithm.ZLIB);
         }
 
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
@@ -292,15 +299,16 @@ public class ProxyServer {
             return false;
         }
 
-        Command command = getCommandMap().getCommand(args[0]);
-        if (command == null) return false;
+        Command command = this.getCommandMap().getCommand(args[0]);
+        if (command == null)  {
+            return false;
+        }
 
         String[] shiftedArgs;
-
         if (command.getSettings().isQuoteAware()) { // Quote aware parsing
-            ArrayList<String> val = CommandUtils.parseArguments(message);
-            val.remove(0);
-            shiftedArgs = val.toArray(String[]::new);
+            List<String> arguments = CommandUtils.parseArguments(message);
+            arguments.remove(0);
+            shiftedArgs = arguments.toArray(String[]::new);
         } else {
             shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
         }

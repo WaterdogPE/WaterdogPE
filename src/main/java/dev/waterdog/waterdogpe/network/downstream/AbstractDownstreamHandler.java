@@ -19,6 +19,7 @@ import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.command.Command;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.network.session.DownstreamClient;
 import dev.waterdog.waterdogpe.network.session.DownstreamSession;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -34,6 +35,15 @@ public abstract class AbstractDownstreamHandler implements BedrockPacketHandler 
     public AbstractDownstreamHandler(ProxiedPlayer player, DownstreamClient client) {
         this.player = player;
         this.client = client;
+    }
+
+    // TODO: move this to separate handler once more API breaking changes are done
+    @Override
+    public boolean handle(NetworkSettingsPacket packet) {
+        CompressionAlgorithm compression = CompressionAlgorithm.fromBedrockCompression(packet.getCompressionAlgorithm());
+        this.client.getSession().setCompression(compression);
+        this.player.getLoginData().doLogin(this.client.getSession());
+        throw CancelSignalException.CANCEL;
     }
 
     @Override

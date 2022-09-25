@@ -17,6 +17,11 @@ jobs:
           distribution: adopt-hotspot
       - name: Build with Maven
         run: mvn -B package --file pom.xml
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: waterdog
+          path: target/Waterdog.jar
       - name: Upload pre-release
         if: github.ref == 'refs/heads/master'
         uses: "marvinpinto/action-automatic-releases@latest"
