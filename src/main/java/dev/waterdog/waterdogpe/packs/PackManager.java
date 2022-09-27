@@ -154,8 +154,9 @@ public class PackManager {
         this.stackPacket.setGameVersion("");
 
         for (ResourcePack pack : this.packs.values()) {
+            String contentKey = ProxyServer.getInstance().getCredentials().getTextureKeys().get(pack.getPackId().toString());
             ResourcePacksInfoPacket.Entry infoEntry = new ResourcePacksInfoPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(),
-                    pack.getPackSize(), "", "", "", false, false);
+                    pack.getPackSize(), contentKey != null ? contentKey : "", "", contentKey != null ? pack.getPackId().toString() : "", false, false);
             ResourcePackStackPacket.Entry stackEntry = new ResourcePackStackPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(), "");
             if (pack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
                 this.packsInfoPacket.getResourcePackInfos().add(infoEntry);
