@@ -354,7 +354,7 @@ public class ProxyServer {
     }
 
     public CredentialsConfig getCredentials() {
-        return this.configurationManager.getCredentials();
+        return this.configurationManager.getCredentialsConfig();
     }
 
     public LangConfig getLanguageConfig() {
