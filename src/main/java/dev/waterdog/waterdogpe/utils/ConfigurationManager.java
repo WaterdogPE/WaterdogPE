@@ -83,7 +83,7 @@ public class ConfigurationManager {
         this.langConfig = new LangConfig(langFile);
     }
 
-    public void loadCredentials(){
+    public void loadCredentials() throws InvalidConfigurationException {
         File credentialsFile = new File(this.proxy.getDataPath().toString() + "/credentials.yml");
         CredentialsConfig credentialsConfig = new CredentialsConfig(credentialsFile);
         credentialsConfig.init();
