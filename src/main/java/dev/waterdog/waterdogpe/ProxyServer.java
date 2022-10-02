@@ -118,7 +118,6 @@ public class ProxyServer {
         this.configurationManager = new ConfigurationManager(this);
         this.configurationManager.loadProxyConfig();
         this.configurationManager.loadLanguage();
-        this.configurationManager.loadCredentials();
 
         if (!this.getConfiguration().isIpv6Enabled()) {
             // Some devices and networks may not support IPv6
@@ -351,10 +350,6 @@ public class ProxyServer {
 
     public ProxyConfig getConfiguration() {
         return this.configurationManager.getProxyConfig();
-    }
-
-    public CredentialsConfig getCredentials() {
-        return this.configurationManager.getCredentialsConfig();
     }
 
     public LangConfig getLanguageConfig() {

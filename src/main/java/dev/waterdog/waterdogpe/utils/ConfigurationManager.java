@@ -31,7 +31,6 @@ public class ConfigurationManager {
     private final ProxyServer proxy;
     private ProxyConfig proxyConfig;
     private LangConfig langConfig;
-    private CredentialsConfig credentialsConfig;
 
     public ConfigurationManager(ProxyServer proxy) {
         this.proxy = proxy;
@@ -83,13 +82,6 @@ public class ConfigurationManager {
         this.langConfig = new LangConfig(langFile);
     }
 
-    public void loadCredentials() throws InvalidConfigurationException {
-        File credentialsFile = new File(this.proxy.getDataPath().toString() + "/credentials.yml");
-        CredentialsConfig credentialsConfig = new CredentialsConfig(credentialsFile);
-        credentialsConfig.init();
-        this.credentialsConfig = credentialsConfig;
-    }
-
     public ProxyServer getProxy() {
         return this.proxy;
     }
@@ -100,10 +92,6 @@ public class ConfigurationManager {
 
     public LangConfig getLangConfig() {
         return this.langConfig;
-    }
-
-    public CredentialsConfig getCredentialsConfig() {
-        return this.credentialsConfig;
     }
 
     @AllArgsConstructor
