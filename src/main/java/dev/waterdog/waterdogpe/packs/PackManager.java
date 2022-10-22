@@ -98,7 +98,7 @@ public class PackManager {
         }
 
         File contentKeyFile = new File(packPath.getParent().toFile(), packPath.toFile().getName() + ".key");
-        pack.setContentKey(contentKeyFile.exists() ? Files.readString(contentKeyFile.toPath(), StandardCharsets.UTF_8) : "");
+        pack.setContentKey(contentKeyFile.exists() ? Files.readString(contentKeyFile.toPath(), StandardCharsets.UTF_8).replace("\n", "") : "");
 
         if (this.proxy.getConfiguration().getPackCacheSize() >= (pack.getPackSize() / FileUtils.INT_MEGABYTE)) {
             pack.saveToCache();
