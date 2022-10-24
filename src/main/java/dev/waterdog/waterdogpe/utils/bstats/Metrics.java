@@ -59,7 +59,7 @@ public class Metrics {
                 this::appendPlatformData,
                 jsonObjectBuilder -> { /* NOP */ },
                 null,
-                () -> true,
+                () -> ProxyServer.getInstance().isRunning(),
                 logger::warn,
                 logger::info,
                 config.isLogErrorsEnabled(),
