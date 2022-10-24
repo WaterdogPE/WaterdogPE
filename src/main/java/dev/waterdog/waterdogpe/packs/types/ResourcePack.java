@@ -28,6 +28,7 @@ public abstract class ResourcePack {
 
     protected final Path packPath;
     protected PackManifest packManifest;
+    protected String contentKey;
 
     public ResourcePack(Path packPath) {
         this.packPath = packPath;
@@ -77,5 +78,13 @@ public abstract class ResourcePack {
 
     public Path getPackPath() {
         return this.packPath;
+    }
+
+    public String getContentKey() {
+        return contentKey;
+    }
+
+    public void setContentKey(String contentKey) {
+        this.contentKey = contentKey;
     }
 }

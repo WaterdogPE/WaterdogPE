@@ -38,7 +38,7 @@ public class EventManager {
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
         builder.setNameFormat("WaterdogEvents Executor");
         int idleThreads = this.proxy.getConfiguration().getIdleThreads();
-        this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(), builder.build());
+        this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(true), builder.build());
     }
 
     public <T extends Event> void subscribe(Class<T> event, Consumer<T> handler) {

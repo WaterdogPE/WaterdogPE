@@ -16,10 +16,7 @@
 package dev.waterdog.waterdogpe.utils.config;
 
 import dev.waterdog.waterdogpe.ProxyServer;
-import dev.waterdog.waterdogpe.utils.config.InetSocketAddressConverter;
-import dev.waterdog.waterdogpe.utils.config.ServerEntryConverter;
-import dev.waterdog.waterdogpe.utils.config.ServerList;
-import dev.waterdog.waterdogpe.utils.config.ServerListConverter;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.cubespace.Yamler.Config.YamlConfig;
 import net.cubespace.Yamler.Config.*;
@@ -42,6 +39,10 @@ public class ProxyConfig extends YamlConfig {
     @Path("listener.motd")
     @Comment("The Motd which will be displayed in the server tab of a player and returned during ping")
     private String motd = "§bWaterdog§3PE";
+
+    @Path("listener.name")
+    @Comment("The name that is shown up in the player list (pause menu)")
+    private String name = "§bWaterdog§3PE";
 
     @Path("listener.priorities")
     @Comment("The server priority list. If not changed by plugins, the proxy will connect the player to the first of those servers")
@@ -118,6 +119,13 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, the proxy will inject all the proxy commands in the AvailableCommandsPacket, enabling autocompletion")
     private boolean injectCommands = true;
 
+    @Path("compression")
+    @Comments({
+            "Algorithm used for upstream compression. Currently supported: zlib, snappy",
+            "This is only applicable on 1.19.30 and newer versions"
+    })
+    private CompressionAlgorithm compression = CompressionAlgorithm.ZLIB;
+
     @Path("upstream_compression_level")
     @Comment("Upstream server compression ratio(proxy to client), higher = less bandwidth, more cpu, lower vice versa")
     private int upstreamCompression = 6;
@@ -150,6 +158,10 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Creating threads may be in some situations expensive. Specify minimum count of idle threads per internal thread executors. Set to -1 to auto-detect by core count.")
     private int defaultIdleThreads = -1;
 
+    @Path("enable_statistics")
+    @Comment("Enable anonymous statistics that are sent to bstats. For more information, check out our bstats page at https://bstats.org/plugin/server-implementation/WaterdogPE/15678")
+    private boolean enableAnonymousStatistics = true;
+
     public ProxyConfig(File file) {
         this.CONFIG_HEADER = new String[]{"Waterdog Main Configuration file", "Configure your desired network settings here."};
         this.CONFIG_FILE = file;
@@ -157,6 +169,7 @@ public class ProxyConfig extends YamlConfig {
             this.addConverter(InetSocketAddressConverter.class);
             this.addConverter(ServerEntryConverter.class);
             this.addConverter(ServerListConverter.class);
+            this.addConverter(CompressionAlgorithmConverter.class);
         } catch (InvalidConverterException e) {
             ProxyServer.getInstance().getLogger().error("Error while initiating config converters", e);
         }
@@ -168,6 +181,14 @@ public class ProxyConfig extends YamlConfig {
 
     public void setMotd(String motd) {
         this.motd = motd;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public int getMaxPlayerCount() {
@@ -312,5 +333,20 @@ public class ProxyConfig extends YamlConfig {
 
     public int getIdleThreads() {
         return this.defaultIdleThreads < 1 ? Runtime.getRuntime().availableProcessors() : this.defaultIdleThreads;
+    }
+
+    public boolean isEnableAnonymousStatistics() {
+        return this.enableAnonymousStatistics;
+    }
+
+    public CompressionAlgorithm getCompression() {
+        return this.compression;
+    }
+
+    public void setCompression(CompressionAlgorithm compression) {
+        if (compression.getBedrockCompression() == null) {
+            throw new IllegalArgumentException("Unsupported compression type: " + compression);
+        }
+        this.compression = compression;
     }
 }

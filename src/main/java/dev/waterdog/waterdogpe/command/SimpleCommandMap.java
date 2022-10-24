@@ -21,6 +21,8 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 
+import java.util.Locale;
+
 public class SimpleCommandMap implements CommandMap {
 
     public static final String DEFAULT_PREFIX = "/";
@@ -73,6 +75,17 @@ public class SimpleCommandMap implements CommandMap {
             this.aliasesMap.remove(alias.toLowerCase());
         }
         return true;
+    }
+
+    @Override
+    public Command getCommand(String name) {
+        Command result = this.commandsMap.get(name.toLowerCase());
+
+        if(result == null){
+            result = this.aliasesMap.get(name.toLowerCase());
+        }
+
+        return result;
     }
 
     @Override

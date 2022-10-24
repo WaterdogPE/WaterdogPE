@@ -24,7 +24,9 @@ import dev.waterdog.waterdogpe.packs.types.ResourcePack;
 import dev.waterdog.waterdogpe.packs.types.ZipResourcePack;
 import dev.waterdog.waterdogpe.utils.FileUtils;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,7 +84,7 @@ public class PackManager {
             if (pack != null) {
                 return pack;
             }
-            this.proxy.getLogger().error("Resource pack manifest.json is invalid or was not found in " + packPath.getFileName());
+            this.proxy.getLogger().error("Resource pack manifest.json is invalid or was not found in " + packPath.getFileName() + ", please make sure that you zip the content of the pack and not the folder! Read more on troubleshooting here: https://docs.waterdog.dev/books/waterdogpe-setup/page/troubleshooting");
         } catch (Exception e) {
             this.proxy.getLogger().error("Can not load resource pack from: " + packPath.getFileName(), e);
         }
@@ -94,6 +96,9 @@ public class PackManager {
         if (!pack.loadManifest() || !pack.getPackManifest().validate()) {
             return null;
         }
+
+        File contentKeyFile = new File(packPath.getParent().toFile(), packPath.toFile().getName() + ".key");
+        pack.setContentKey(contentKeyFile.exists() ? Files.readString(contentKeyFile.toPath(), StandardCharsets.UTF_8).replace("\n", "") : "");
 
         if (this.proxy.getConfiguration().getPackCacheSize() >= (pack.getPackSize() / FileUtils.INT_MEGABYTE)) {
             pack.saveToCache();
@@ -155,7 +160,7 @@ public class PackManager {
 
         for (ResourcePack pack : this.packs.values()) {
             ResourcePacksInfoPacket.Entry infoEntry = new ResourcePacksInfoPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(),
-                    pack.getPackSize(), "", "", "", false, false);
+                    pack.getPackSize(), pack.getContentKey(), "", pack.getContentKey().equals("") ? "" : pack.getPackId().toString(), false, false);
             ResourcePackStackPacket.Entry stackEntry = new ResourcePackStackPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(), "");
             if (pack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
                 this.packsInfoPacket.getResourcePackInfos().add(infoEntry);

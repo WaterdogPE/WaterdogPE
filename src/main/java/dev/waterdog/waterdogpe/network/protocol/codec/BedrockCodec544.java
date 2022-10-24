@@ -16,34 +16,36 @@
 package dev.waterdog.waterdogpe.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
-import com.nukkitx.protocol.bedrock.packet.*;
-import com.nukkitx.protocol.bedrock.v527.BedrockPacketHelper_v527;
-import com.nukkitx.protocol.bedrock.v527.serializer.*;
+import com.nukkitx.protocol.bedrock.packet.NetworkChunkPublisherUpdatePacket;
+import com.nukkitx.protocol.bedrock.packet.StartGamePacket;
+import com.nukkitx.protocol.bedrock.packet.UpdateAttributesPacket;
+import com.nukkitx.protocol.bedrock.v544.serializer.NetworkChunkPublisherUpdateSerializer_v544;
+import com.nukkitx.protocol.bedrock.v544.serializer.StartGameSerializer_v544;
+import com.nukkitx.protocol.bedrock.v544.serializer.UpdateAttributesSerializer_v544;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 
 /**
  * @author Kaooot
  * @version 1.0
  */
-public class BedrockCodec527 extends BedrockCodec503 {
+public class BedrockCodec544 extends BedrockCodec534 {
 
     @Override
     public ProtocolVersion getProtocol() {
-        return ProtocolVersion.MINECRAFT_PE_1_19_0;
+        return ProtocolVersion.MINECRAFT_PE_1_19_20;
     }
 
     @Override
     public void buildCodec(BedrockPacketCodec.Builder builder) {
         super.buildCodec(builder);
-        builder.helper(BedrockPacketHelper_v527.INSTANCE);
 
         builder.deregisterPacket(StartGamePacket.class);
-        builder.registerPacket(StartGamePacket.class, StartGameSerializer_v527.INSTANCE, 11);
+        builder.registerPacket(StartGamePacket.class, StartGameSerializer_v544.INSTANCE, 11);
 
-        builder.deregisterPacket(PlayerActionPacket.class);
-        builder.registerPacket(PlayerActionPacket.class, PlayerActionSerializer_v527.INSTANCE, 36);
+        builder.deregisterPacket(UpdateAttributesPacket.class);
+        builder.registerPacket(UpdateAttributesPacket.class, UpdateAttributesSerializer_v544.INSTANCE, 29);
 
-        builder.registerPacket(RequestPermissionsPacket.class, RequestPermissionsSerializer_v527.INSTANCE, 185);
-        builder.registerPacket(ToastRequestPacket.class, ToastRequestSerializer_v527.INSTANCE, 186);
+        builder.deregisterPacket(NetworkChunkPublisherUpdatePacket.class);
+        builder.registerPacket(NetworkChunkPublisherUpdatePacket.class, NetworkChunkPublisherUpdateSerializer_v544.INSTANCE, 121);
     }
 }

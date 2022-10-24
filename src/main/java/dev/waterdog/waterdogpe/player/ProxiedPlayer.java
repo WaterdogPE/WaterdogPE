@@ -22,11 +22,7 @@ import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.data.command.CommandOriginData;
 import com.nukkitx.protocol.bedrock.data.command.CommandOriginType;
-import com.nukkitx.protocol.bedrock.packet.CommandRequestPacket;
-import com.nukkitx.protocol.bedrock.packet.ResourcePacksInfoPacket;
-import com.nukkitx.protocol.bedrock.packet.SetTitlePacket;
-import com.nukkitx.protocol.bedrock.packet.TextPacket;
-import com.nukkitx.protocol.bedrock.packet.TransferPacket;
+import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.command.CommandSender;
 import dev.waterdog.waterdogpe.event.defaults.*;
@@ -48,6 +44,7 @@ import it.unimi.dsi.fastutil.objects.*;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -62,6 +59,8 @@ public class ProxiedPlayer implements CommandSender {
     private final ProxyServer proxy;
 
     private final BedrockServerSession upstream;
+    private final CompressionAlgorithm upstreamCompression;
+
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
@@ -106,12 +105,13 @@ public class ProxiedPlayer implements CommandSender {
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
      */
-    private PacketHandler pluginUpstreamHandler = null;
-    private PacketHandler pluginDownstreamHandler = null;
+    private final List<PacketHandler> pluginUpstreamHandlers = new ObjectArrayList<>();
+    private final List<PacketHandler> pluginDownstreamHandlers = new ObjectArrayList<>();
 
-    public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData) {
+    public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, CompressionAlgorithm compression, LoginData loginData) {
         this.proxy = proxy;
         this.upstream = session;
+        this.upstreamCompression = compression;
         this.loginData = loginData;
         this.rewriteMaps = new RewriteMaps(this);
         this.proxy.getPlayerManager().subscribePermissions(this);
@@ -242,7 +242,12 @@ public class ProxiedPlayer implements CommandSender {
             downstream.onDownstreamInit(this, initial);
             SessionInjections.injectNewDownstream(this, downstream, client);
 
-            this.loginData.doLogin(downstream);
+            if (this.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_30)) {
+                SessionInjections.requestNetworkSettings(this, downstream);
+            } else {
+                this.loginData.doLogin(downstream);
+            }
+
             this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         })).whenComplete((ignore, error) -> {
             if (error != null) {
@@ -566,6 +571,23 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     /**
+     * Sends a toast notification with a message to the player
+     *
+     * @param title the notification title
+     * @param content the message content
+     */
+    public void sendToastMessage(String title, String content) {
+        if (this.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_19_0)) {
+            return;
+        }
+
+        ToastRequestPacket packet = new ToastRequestPacket();
+        packet.setTitle(title);
+        packet.setContent(content);
+        this.sendPacket(packet);
+    }
+
+    /**
      * Transfer player to another server using "slow" reconnect method
      *
      * @param serverInfo destination server
@@ -795,24 +817,48 @@ public class ProxiedPlayer implements CommandSender {
         return this.entityLinks;
     }
 
+    /**
+     * This method is deprecated. Please use {@link #getPluginUpstreamHandlers()} instead.
+     */
+    @Deprecated
     public PacketHandler getPluginUpstreamHandler() {
-        return this.pluginUpstreamHandler;
+        return this.pluginUpstreamHandlers.isEmpty() ? null : this.pluginUpstreamHandlers.get(0);
+    }
+
+    public List<PacketHandler> getPluginUpstreamHandlers() {
+        return this.pluginUpstreamHandlers;
     }
 
     public LongSet getChunkBlobs() {
         return this.chunkBlobs;
     }
 
+    /**
+     * This method is deprecated. Please use {@link #getPluginDownstreamHandlers()}.add() instead.
+     */
+    @Deprecated
     public void setPluginUpstreamHandler(PacketHandler pluginUpstreamHandler) {
-        this.pluginUpstreamHandler = pluginUpstreamHandler;
+        this.pluginUpstreamHandlers.add(pluginUpstreamHandler);
     }
 
+    /**
+     * This method is deprecated. Please use {@link #getPluginDownstreamHandlers()} instead.
+     */
+    @Deprecated
     public PacketHandler getPluginDownstreamHandler() {
-        return this.pluginDownstreamHandler;
+        return this.pluginDownstreamHandlers.isEmpty() ? null : this.pluginDownstreamHandlers.get(0);
     }
 
+    public List<PacketHandler> getPluginDownstreamHandlers() {
+        return this.pluginDownstreamHandlers;
+    }
+
+    /**
+     * This method is deprecated. Please use {@link #getPluginDownstreamHandlers()}.add() instead.
+     */
+    @Deprecated
     public void setPluginDownstreamHandler(PacketHandler pluginDownstreamHandler) {
-        this.pluginDownstreamHandler = pluginDownstreamHandler;
+        this.pluginDownstreamHandlers.add(pluginDownstreamHandler);
     }
 
     public void setAcceptPlayStatus(boolean acceptPlayStatus) {
@@ -833,6 +879,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public int getDimensionChangeState() {
         return this.dimensionChangeState.get();
+    }
+
+    public CompressionAlgorithm getUpstreamCompression() {
+        return this.upstreamCompression;
     }
 
     @Override

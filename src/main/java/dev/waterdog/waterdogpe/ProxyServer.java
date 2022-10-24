@@ -22,6 +22,7 @@ import com.nukkitx.network.util.NetworkThreadFactory;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import dev.waterdog.waterdogpe.command.*;
+import dev.waterdog.waterdogpe.command.utils.CommandUtils;
 import dev.waterdog.waterdogpe.console.TerminalConsole;
 import dev.waterdog.waterdogpe.event.EventManager;
 import dev.waterdog.waterdogpe.event.defaults.DispatchCommandEvent;
@@ -32,6 +33,7 @@ import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.packs.PackManager;
 import dev.waterdog.waterdogpe.player.PlayerManager;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -39,8 +41,8 @@ import dev.waterdog.waterdogpe.plugin.PluginManager;
 import dev.waterdog.waterdogpe.query.QueryHandler;
 import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
-import dev.waterdog.waterdogpe.utils.config.LangConfig;
-import dev.waterdog.waterdogpe.utils.config.ProxyConfig;
+import dev.waterdog.waterdogpe.utils.bstats.Metrics;
+import dev.waterdog.waterdogpe.utils.config.*;
 import dev.waterdog.waterdogpe.utils.types.*;
 import io.netty.channel.EventLoopGroup;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
@@ -91,6 +93,7 @@ public class ProxyServer {
     private ScheduledFuture<?> tickFuture;
     private boolean shutdown = false;
     private int currentTick = 0;
+    private Metrics metrics;
 
     public ProxyServer(MainLogger logger, String filePath, String pluginPath) throws InvalidConfigurationException {
         instance = this;
@@ -124,6 +127,12 @@ public class ProxyServer {
 
         if (this.getConfiguration().isDebug()) {
             WaterdogPE.version().debug(true);
+        }
+
+        CompressionAlgorithm compression = this.getConfiguration().getCompression();
+        if (compression.getBedrockCompression() == null) {
+            this.logger.error("Bedrock compression supports only ZLIB or Snappy! Currently provided " + compression + ", defaulting to ZLIB!");
+            this.getConfiguration().setCompression(CompressionAlgorithm.ZLIB);
         }
 
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
@@ -177,6 +186,11 @@ public class ProxyServer {
         if (this.getConfiguration().useFastCodec()) {
             this.logger.debug("Using fast codec! Please ensure plugin compatibility!");
             ProtocolConstants.registerCodecs();
+        }
+
+        if(this.getConfiguration().isEnableAnonymousStatistics()){
+            Metrics.WaterdogMetrics.startMetrics(this, this.getConfiguration());
+            this.getLogger().info("Enabling anonymous statistics.");
         }
 
         if (this.getConfiguration().enabledResourcePacks()) {
@@ -266,8 +280,6 @@ public class ProxyServer {
             if (this.bedrockServer != null) {
                 this.bedrockServer.close();
             }
-
-            this.additionalPorts.forEach(BedrockServer::close);
         } catch (Exception e) {
             this.getLogger().error("Error while shutting down ProxyServer", e);
         }

@@ -19,9 +19,11 @@ import com.nukkitx.protocol.bedrock.BedrockPacket;
 import com.nukkitx.protocol.bedrock.BedrockSession;
 import com.nukkitx.protocol.bedrock.handler.BatchHandler;
 import com.nukkitx.protocol.bedrock.handler.BedrockPacketHandler;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.network.session.DownstreamSession;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.exceptions.CancelSignalException;
+import dev.waterdog.waterdogpe.utils.types.PacketHandler;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Collection;
@@ -44,7 +46,7 @@ public class UpstreamBridge extends ProxyBatchBridge implements BatchHandler {
 
     @Override
     public void handle(BedrockSession session, ByteBuf byteBuf, Collection<BedrockPacket> packets) {
-        this.handle(session.getPacketHandler(), byteBuf, packets);
+        this.handle(session.getPacketHandler(), byteBuf, packets, this.player.getUpstreamCompression());
     }
 
     @Override
@@ -63,11 +65,20 @@ public class UpstreamBridge extends ProxyBatchBridge implements BatchHandler {
     }
 
     @Override
+    public CompressionAlgorithm getCompression() {
+        return this.session.getCompression();
+    }
+
+    @Override
     public boolean handlePacket(BedrockPacket packet, BedrockPacketHandler handler) throws CancelSignalException {
         boolean changed = super.handlePacket(packet, handler);
         boolean pluginHandled = false;
-        if (this.player.getPluginUpstreamHandler() != null) {
-            pluginHandled = this.player.getPluginUpstreamHandler().handlePacket(packet);
+        if (!this.player.getPluginUpstreamHandlers().isEmpty()) {
+            for (PacketHandler pluginHandler : this.player.getPluginUpstreamHandlers()) {
+                if (pluginHandler.handlePacket(packet)) {
+                    pluginHandled = true;
+                }
+            }
         }
         return changed || pluginHandled;
     }
