@@ -108,7 +108,7 @@ public class ProxyListener implements BedrockServerEventHandler {
 
             QueryHandler queryHandler = this.queryHandler;
             if (queryHandler != null && Arrays.equals(prefix, QueryHandler.QUERY_SIGNATURE)) {
-                queryHandler.onQuery(packet.sender(), buf, ctx);
+                queryHandler.onQuery(packet.sender(), buf, ctx, this.bindAddress);
             }
         } catch (Exception e) {
             this.proxy.getLogger().error("Can not handle packet!", e);

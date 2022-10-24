@@ -187,21 +187,21 @@ public class ProxyServer {
         this.logger.info("Binding to " + bindAddress);
 
         if (this.getConfiguration().isEnabledQuery()) {
-            this.queryHandler = new QueryHandler(this, bindAddress);
+            this.queryHandler = new QueryHandler(this);
         }
 
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors(), this.bossEventLoopGroup, this.workerEventLoopGroup, false);
         this.bedrockServer.setHandler(new ProxyListener(this, this.queryHandler, bindAddress));
+        this.getLogger().info(new TranslationContainer("waterdog.query.start", bindAddress.toString()).getTranslated());
         this.bedrockServer.bind().join();
 
         for (Integer port : this.getConfiguration().getAdditionalPorts()) {
-            logger.info("Starting additional port " + port);
             InetSocketAddress additionalBind = new InetSocketAddress(bindAddress.getAddress(), port);
 
             BedrockServer newServer = new BedrockServer(additionalBind, Runtime.getRuntime().availableProcessors(), this.bossEventLoopGroup, this.workerEventLoopGroup, false);
-            newServer.setHandler(new ProxyListener(this, new QueryHandler(this, additionalBind), additionalBind));
+            newServer.setHandler(new ProxyListener(this, this.queryHandler, additionalBind));
             newServer.bind().join();
-            logger.info("Set up additional port " + port + ".");
+            logger.info("Set up additional port: " + port);
 
             additionalPorts.add(newServer);
         }
