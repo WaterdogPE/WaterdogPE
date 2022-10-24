@@ -22,6 +22,7 @@ import com.nukkitx.network.util.NetworkThreadFactory;
 import com.nukkitx.protocol.bedrock.BedrockClient;
 import com.nukkitx.protocol.bedrock.BedrockServer;
 import dev.waterdog.waterdogpe.command.*;
+import dev.waterdog.waterdogpe.command.utils.CommandUtils;
 import dev.waterdog.waterdogpe.console.TerminalConsole;
 import dev.waterdog.waterdogpe.event.EventManager;
 import dev.waterdog.waterdogpe.event.defaults.DispatchCommandEvent;
@@ -311,7 +312,20 @@ public class ProxyServer {
             return false;
         }
 
-        String[] shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
+        Command command = this.getCommandMap().getCommand(args[0]);
+        if (command == null)  {
+            return false;
+        }
+
+        String[] shiftedArgs;
+        if (command.getSettings().isQuoteAware()) { // Quote aware parsing
+            List<String> arguments = CommandUtils.parseArguments(message);
+            arguments.remove(0);
+            shiftedArgs = arguments.toArray(String[]::new);
+        } else {
+            shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
+        }
+
         DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs);
         this.eventManager.callEvent(event);
         return !event.isCancelled() && this.commandMap.handleCommand(sender, args[0], shiftedArgs);
@@ -428,7 +442,14 @@ public class ProxyServer {
      */
     public ServerInfo getForcedHost(String serverHostname) {
         Preconditions.checkNotNull(serverHostname, "ServerHostname can not be null!");
-        String serverName = this.getConfiguration().getForcedHosts().get(serverHostname);
+        String serverName = null;
+
+        for (String forcedHost : this.getConfiguration().getForcedHosts().keySet()) {
+            if (forcedHost.equalsIgnoreCase(serverHostname)) {
+                serverName = this.getConfiguration().getForcedHosts().get(forcedHost);
+                break;
+            }
+        }
         return serverName == null ? null : this.serverInfoMap.get(serverName);
     }
 
