@@ -33,6 +33,7 @@ import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.packs.PackManager;
 import dev.waterdog.waterdogpe.player.PlayerManager;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -41,8 +42,7 @@ import dev.waterdog.waterdogpe.query.QueryHandler;
 import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
 import dev.waterdog.waterdogpe.utils.bstats.Metrics;
-import dev.waterdog.waterdogpe.utils.config.LangConfig;
-import dev.waterdog.waterdogpe.utils.config.ProxyConfig;
+import dev.waterdog.waterdogpe.utils.config.*;
 import dev.waterdog.waterdogpe.utils.types.*;
 import io.netty.channel.EventLoopGroup;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
@@ -74,6 +74,7 @@ public class ProxyServer {
     private final ServerInfoMap serverInfoMap = new ServerInfoMap();
 
     private BedrockServer bedrockServer;
+    private Set<BedrockServer> additionalPorts = new HashSet<>();
     private QueryHandler queryHandler;
 
     private CommandMap commandMap;
@@ -126,6 +127,12 @@ public class ProxyServer {
 
         if (this.getConfiguration().isDebug()) {
             WaterdogPE.version().debug(true);
+        }
+
+        CompressionAlgorithm compression = this.getConfiguration().getCompression();
+        if (compression.getBedrockCompression() == null) {
+            this.logger.error("Bedrock compression supports only ZLIB or Snappy! Currently provided " + compression + ", defaulting to ZLIB!");
+            this.getConfiguration().setCompression(CompressionAlgorithm.ZLIB);
         }
 
         ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
@@ -194,12 +201,25 @@ public class ProxyServer {
         this.logger.info("Binding to " + bindAddress);
 
         if (this.getConfiguration().isEnabledQuery()) {
-            this.queryHandler = new QueryHandler(this, bindAddress);
+            this.queryHandler = new QueryHandler(this);
         }
 
         this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors(), this.bossEventLoopGroup, this.workerEventLoopGroup, false);
-        this.bedrockServer.setHandler(new ProxyListener(this));
+        this.bedrockServer.setHandler(new ProxyListener(this, this.queryHandler, bindAddress));
+        this.getLogger().info(new TranslationContainer("waterdog.query.start", bindAddress.toString()).getTranslated());
         this.bedrockServer.bind().join();
+
+        for (Integer port : this.getConfiguration().getAdditionalPorts()) {
+            InetSocketAddress additionalBind = new InetSocketAddress(bindAddress.getAddress(), port);
+
+            BedrockServer newServer = new BedrockServer(additionalBind, Runtime.getRuntime().availableProcessors(), this.bossEventLoopGroup, this.workerEventLoopGroup, false);
+            newServer.setHandler(new ProxyListener(this, this.queryHandler, additionalBind));
+            newServer.bind().join();
+            logger.info("Set up additional port: " + port);
+
+            additionalPorts.add(newServer);
+        }
+
 
         ProxyStartEvent event = new ProxyStartEvent(this);
         this.eventManager.callEvent(event);
@@ -292,15 +312,16 @@ public class ProxyServer {
             return false;
         }
 
-        Command command = getCommandMap().getCommand(args[0]);
-        if (command == null) return false;
+        Command command = this.getCommandMap().getCommand(args[0]);
+        if (command == null)  {
+            return false;
+        }
 
         String[] shiftedArgs;
-
         if (command.getSettings().isQuoteAware()) { // Quote aware parsing
-            ArrayList<String> val = CommandUtils.parseArguments(message);
-            val.remove(0);
-            shiftedArgs = val.toArray(String[]::new);
+            List<String> arguments = CommandUtils.parseArguments(message);
+            arguments.remove(0);
+            shiftedArgs = arguments.toArray(String[]::new);
         } else {
             shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
         }

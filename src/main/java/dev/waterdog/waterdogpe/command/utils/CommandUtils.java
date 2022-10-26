@@ -16,11 +16,12 @@
 package dev.waterdog.waterdogpe.command.utils;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CommandUtils {
-    public static ArrayList<String> parseArguments(String cmdLine) {
+    public static List<String> parseArguments(String cmdLine) {
         StringBuilder sb = new StringBuilder(cmdLine);
-        ArrayList<String> args = new ArrayList<>();
+        List<String> args = new ArrayList<>();
         boolean notQuoted = true;
         int start = 0;
 

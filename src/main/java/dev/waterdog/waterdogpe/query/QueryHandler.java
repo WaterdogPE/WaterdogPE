@@ -42,17 +42,14 @@ public class QueryHandler {
     private static final String GAME_ID = "MINECRAFTPE";
 
     private final ProxyServer proxy;
-    private final InetSocketAddress bindAddress;
 
     private final ExpiringMap<InetAddress, QuerySession> querySessions = ExpiringMap.builder()
             .expirationListener(this::onQueryExpired)
             .expiration(60, TimeUnit.SECONDS)
             .build();
 
-    public QueryHandler(ProxyServer proxy, InetSocketAddress bindAddress) {
+    public QueryHandler(ProxyServer proxy) {
         this.proxy = proxy;
-        this.bindAddress = bindAddress;
-        this.proxy.getLogger().info(new TranslationContainer("waterdog.query.start", bindAddress.toString()).getTranslated());
     }
 
     public void onQueryExpired(InetAddress address, QuerySession session) {
@@ -70,7 +67,7 @@ public class QueryHandler {
         buf.writeByte(0);
     }
 
-    public void onQuery(InetSocketAddress address, ByteBuf packet, ChannelHandlerContext ctx) {
+    public void onQuery(InetSocketAddress address, ByteBuf packet, ChannelHandlerContext ctx, InetSocketAddress bindAddress) {
         if (address.getAddress() == null) {
             // We got unresolved address
             return;
@@ -101,12 +98,12 @@ public class QueryHandler {
             reply.writeByte(PACKET_STATISTICS);
             reply.writeInt(sessionId);
 
-            this.writeData(address, packet.readableBytes() == 8, reply);
+            this.writeData(address, packet.readableBytes() == 8, reply, bindAddress);
             this.proxy.getBedrockServer().getRakNet().send(address, reply);
         }
     }
 
-    private void writeData(InetSocketAddress address, boolean simple, ByteBuf buf) {
+    private void writeData(InetSocketAddress address, boolean simple, ByteBuf buf, InetSocketAddress bindAddress) {
         ProxyConfig config = this.proxy.getConfiguration();
         ProxyQueryEvent event = new ProxyQueryEvent(
                 config.getMotd(),
@@ -126,8 +123,8 @@ public class QueryHandler {
             this.writeString(buf, event.getMap());
             this.writeString(buf, Integer.toString(event.getPlayerCount()));
             this.writeString(buf, Integer.toString(event.getMaximumPlayerCount()));
-            buf.writeShortLE(this.bindAddress.getPort());
-            this.writeString(buf, this.bindAddress.getHostName());
+            buf.writeShortLE(bindAddress.getPort());
+            this.writeString(buf, bindAddress.getHostName());
             return;
         }
 
@@ -137,8 +134,8 @@ public class QueryHandler {
         map.put("map", event.getMap());
         map.put("numplayers", Integer.toString(event.getPlayerCount()));
         map.put("maxplayers", Integer.toString(event.getMaximumPlayerCount()));
-        map.put("hostport", Integer.toString(this.bindAddress.getPort()));
-        map.put("hostip", this.bindAddress.getHostName());
+        map.put("hostport", Integer.toString(bindAddress.getPort()));
+        map.put("hostip", bindAddress.getHostName());
         map.put("game_id", GAME_ID);
         map.put("version", event.getVersion());
         map.put("plugins", ""); // Do not list plugins

@@ -16,10 +16,7 @@
 package dev.waterdog.waterdogpe.utils.config;
 
 import dev.waterdog.waterdogpe.ProxyServer;
-import dev.waterdog.waterdogpe.utils.config.InetSocketAddressConverter;
-import dev.waterdog.waterdogpe.utils.config.ServerEntryConverter;
-import dev.waterdog.waterdogpe.utils.config.ServerList;
-import dev.waterdog.waterdogpe.utils.config.ServerListConverter;
+import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.cubespace.Yamler.Config.YamlConfig;
 import net.cubespace.Yamler.Config.*;
@@ -94,6 +91,10 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, the proxy will be able to bind to an Ipv6 Address")
     private boolean enableIpv6 = false;
 
+    @Path("additional_ports")
+    @Comment("Additional ports to listen to")
+    private List<Integer> additionalPorts = new ArrayList<>();
+
     @Path("use_login_extras")
     @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")
     private boolean useLoginExtras = false;
@@ -117,6 +118,13 @@ public class ProxyConfig extends YamlConfig {
     @Path("inject_proxy_commands")
     @Comment("If enabled, the proxy will inject all the proxy commands in the AvailableCommandsPacket, enabling autocompletion")
     private boolean injectCommands = true;
+
+    @Path("compression")
+    @Comments({
+            "Algorithm used for upstream compression. Currently supported: zlib, snappy",
+            "This is only applicable on 1.19.30 and newer versions"
+    })
+    private CompressionAlgorithm compression = CompressionAlgorithm.ZLIB;
 
     @Path("upstream_compression_level")
     @Comment("Upstream server compression ratio(proxy to client), higher = less bandwidth, more cpu, lower vice versa")
@@ -161,6 +169,7 @@ public class ProxyConfig extends YamlConfig {
             this.addConverter(InetSocketAddressConverter.class);
             this.addConverter(ServerEntryConverter.class);
             this.addConverter(ServerListConverter.class);
+            this.addConverter(CompressionAlgorithmConverter.class);
         } catch (InvalidConverterException e) {
             ProxyServer.getInstance().getLogger().error("Error while initiating config converters", e);
         }
@@ -282,6 +291,10 @@ public class ProxyConfig extends YamlConfig {
         return this.enableEducationFeatures;
     }
 
+    public List<Integer> getAdditionalPorts() {
+        return additionalPorts;
+    }
+
     public boolean enabledResourcePacks() {
         return this.enableResourcePacks;
     }
@@ -323,6 +336,17 @@ public class ProxyConfig extends YamlConfig {
     }
 
     public boolean isEnableAnonymousStatistics() {
-        return enableAnonymousStatistics;
+        return this.enableAnonymousStatistics;
+    }
+
+    public CompressionAlgorithm getCompression() {
+        return this.compression;
+    }
+
+    public void setCompression(CompressionAlgorithm compression) {
+        if (compression.getBedrockCompression() == null) {
+            throw new IllegalArgumentException("Unsupported compression type: " + compression);
+        }
+        this.compression = compression;
     }
 }

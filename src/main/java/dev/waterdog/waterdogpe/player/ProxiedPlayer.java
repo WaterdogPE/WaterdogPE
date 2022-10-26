@@ -59,6 +59,8 @@ public class ProxiedPlayer implements CommandSender {
     private final ProxyServer proxy;
 
     private final BedrockServerSession upstream;
+    private final CompressionAlgorithm upstreamCompression;
+
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
@@ -106,9 +108,10 @@ public class ProxiedPlayer implements CommandSender {
     private final List<PacketHandler> pluginUpstreamHandlers = new ObjectArrayList<>();
     private final List<PacketHandler> pluginDownstreamHandlers = new ObjectArrayList<>();
 
-    public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, LoginData loginData) {
+    public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, CompressionAlgorithm compression, LoginData loginData) {
         this.proxy = proxy;
         this.upstream = session;
+        this.upstreamCompression = compression;
         this.loginData = loginData;
         this.rewriteMaps = new RewriteMaps(this);
         this.proxy.getPlayerManager().subscribePermissions(this);
@@ -240,7 +243,12 @@ public class ProxiedPlayer implements CommandSender {
             downstream.onDownstreamInit(this, initial);
             SessionInjections.injectNewDownstream(this, downstream, client);
 
-            this.loginData.doLogin(downstream);
+            if (this.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_30)) {
+                SessionInjections.requestNetworkSettings(this, downstream);
+            } else {
+                this.loginData.doLogin(downstream);
+            }
+
             this.getLogger().info("[" + this.getAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
         })).whenComplete((ignore, error) -> {
             if (error != null) {
@@ -872,6 +880,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public int getDimensionChangeState() {
         return this.dimensionChangeState.get();
+    }
+
+    public CompressionAlgorithm getUpstreamCompression() {
+        return this.upstreamCompression;
     }
 
     @Override
