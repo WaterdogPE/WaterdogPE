@@ -40,9 +40,13 @@ public class ProxyListener implements BedrockServerEventHandler {
     private static final ThreadLocal<BedrockPong> PONG_THREAD_LOCAL = ThreadLocal.withInitial(BedrockPong::new);
 
     private final ProxyServer proxy;
+    private final QueryHandler queryHandler;
+    private final InetSocketAddress bindAddress;
 
-    public ProxyListener(ProxyServer proxy) {
+    public ProxyListener(ProxyServer proxy, QueryHandler queryHandler, InetSocketAddress bindAddress) {
         this.proxy = proxy;
+        this.queryHandler = queryHandler;
+        this.bindAddress = bindAddress;
     }
 
     @Override
@@ -77,8 +81,8 @@ public class ProxyListener implements BedrockServerEventHandler {
         pong.setGameType(event.getGameType());
         pong.setMaximumPlayerCount(event.getMaximumPlayerCount());
         pong.setPlayerCount(event.getPlayerCount());
-        pong.setIpv4Port(config.getBindAddress().getPort());
-        pong.setIpv6Port(config.getBindAddress().getPort());
+        pong.setIpv4Port(this.bindAddress.getPort());
+        pong.setIpv6Port(this.bindAddress.getPort());
         pong.setProtocolVersion(ProtocolConstants.getLatestProtocol().getProtocol());
         pong.setVersion(event.getVersion());
         pong.setNintendoLimited(false);
@@ -102,9 +106,9 @@ public class ProxyListener implements BedrockServerEventHandler {
             byte[] prefix = new byte[2];
             buf.readBytes(prefix);
 
-            QueryHandler queryHandler = this.proxy.getQueryHandler();
+            QueryHandler queryHandler = this.queryHandler;
             if (queryHandler != null && Arrays.equals(prefix, QueryHandler.QUERY_SIGNATURE)) {
-                queryHandler.onQuery(packet.sender(), buf, ctx);
+                queryHandler.onQuery(packet.sender(), buf, ctx, this.bindAddress);
             }
         } catch (Exception e) {
             this.proxy.getLogger().error("Can not handle packet!", e);
