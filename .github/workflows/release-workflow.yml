@@ -26,3 +26,15 @@ jobs:
           title: "Release ${{ github.ref }} by ${{ github.actor }}"
           files: |
             target/Waterdog.jar
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: waterdogpe
+          password: ${{ secrets.docker_pat }}
+      - name: Publish Docker release
+        uses: docker/build-push-action@v3.1.1
+        with:
+          context: ./
+          push: true
+          tags: waterdogpe/waterdogpe:release,waterdogpe/waterdogpe:${{ github.ref }}
+

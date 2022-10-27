@@ -32,3 +32,16 @@ jobs:
           title: "Snapshot Build"
           files: |
             target/Waterdog.jar
+      - name: Login to DockerHub
+        if: github.ref == 'refs/heads/master'
+        uses: docker/login-action@v2
+        with:
+          username: waterdogpe
+          password: ${{ secrets.docker_pat }}
+      - name: Publish Docker latest
+        if: github.ref == 'refs/heads/master'
+        uses: docker/build-push-action@v3.1.1
+        with:
+          context: ./
+          push: true
+          tags: waterdogpe/waterdogpe:latest
