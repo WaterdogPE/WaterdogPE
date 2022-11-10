@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Found a bug in WPDE? Something thats not behaving correctly? Report it here!
 title: "[BUG] This is a bug!"
 labels: bug, unconfirmed
 assignees: ''
