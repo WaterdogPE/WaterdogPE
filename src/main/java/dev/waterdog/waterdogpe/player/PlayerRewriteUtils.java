@@ -20,10 +20,7 @@ import com.nukkitx.math.vector.Vector3f;
 import com.nukkitx.math.vector.Vector3i;
 import com.nukkitx.network.VarInts;
 import com.nukkitx.protocol.bedrock.BedrockSession;
-import com.nukkitx.protocol.bedrock.data.GameRuleData;
-import com.nukkitx.protocol.bedrock.data.GameType;
-import com.nukkitx.protocol.bedrock.data.LevelEventType;
-import com.nukkitx.protocol.bedrock.data.ScoreInfo;
+import com.nukkitx.protocol.bedrock.data.*;
 import com.nukkitx.protocol.bedrock.data.entity.*;
 import com.nukkitx.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
@@ -282,7 +279,7 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
-    public static void injectDimensionChange(BedrockSession session, int dimensionId, Vector3f position, ProtocolVersion version) {
+    public static void injectDimensionChange(BedrockSession session, int dimensionId, Vector3f position, long runtimeId, ProtocolVersion version) {
         if (session == null || session.isClosed()){
             return;
         }
@@ -293,6 +290,18 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
         injectChunkPublisherUpdate(session, position.toInt(), 3);
         injectEmptyChunks(session, position, 3, dimensionId, version);
+
+        if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_50)) {
+            // The game does for some unknown reason expect client dim change ACK
+            // to be sent from server in order to fully finish the transfer
+            PlayerActionPacket actionPacket = new PlayerActionPacket();
+            actionPacket.setRuntimeEntityId(runtimeId);
+            actionPacket.setAction(PlayerActionType.DIMENSION_CHANGE_SUCCESS);
+            actionPacket.setBlockPosition(Vector3i.ZERO);
+            actionPacket.setResultPosition(Vector3i.ZERO);
+            actionPacket.setFace(0);
+            session.sendPacket(actionPacket);
+        }
     }
 
     public static void injectEmptyChunks(BedrockSession session, Vector3f spawnPosition, int radius, int dimension, ProtocolVersion version) {
