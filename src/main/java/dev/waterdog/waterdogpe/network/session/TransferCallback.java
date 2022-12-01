@@ -75,7 +75,7 @@ public class TransferCallback {
         if (rewriteData.getDimension() != this.targetDimension) {
             // Send second dim-change to correct dimension
             rewriteData.setDimension(determineDimensionId(rewriteData.getDimension(), this.targetDimension));
-            injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), this.player.getProtocol());
+            injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), rewriteData.getEntityId(), this.player.getProtocol());
         }
 
         injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
