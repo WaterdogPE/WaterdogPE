@@ -16,7 +16,9 @@
 package dev.waterdog.waterdogpe.network.protocol.codec;
 
 import com.nukkitx.protocol.bedrock.BedrockPacketCodec;
-import com.nukkitx.protocol.bedrock.packet.*;
+import com.nukkitx.protocol.bedrock.packet.AddEntityPacket;
+import com.nukkitx.protocol.bedrock.packet.AddPlayerPacket;
+import com.nukkitx.protocol.bedrock.packet.SetEntityDataPacket;
 import com.nukkitx.protocol.bedrock.v557.BedrockPacketHelper_v557;
 import com.nukkitx.protocol.bedrock.v557.serializer.AddEntitySerializer_v557;
 import com.nukkitx.protocol.bedrock.v557.serializer.AddPlayerSerializer_v557;
@@ -35,11 +37,11 @@ public class BedrockCodec557 extends BedrockCodec554 {
         super.buildCodec(builder);
         builder.helper(BedrockPacketHelper_v557.INSTANCE);
 
-        builder.deregisterPacket(AddEntityPacket.class);
-        builder.registerPacket(AddEntityPacket.class, AddEntitySerializer_v557.INSTANCE, 13);
-
         builder.deregisterPacket(AddPlayerPacket.class);
         builder.registerPacket(AddPlayerPacket.class, AddPlayerSerializer_v557.INSTANCE, 12);
+
+        builder.deregisterPacket(AddEntityPacket.class);
+        builder.registerPacket(AddEntityPacket.class, AddEntitySerializer_v557.INSTANCE, 13);
 
         builder.deregisterPacket(SetEntityDataPacket.class);
         builder.registerPacket(SetEntityDataPacket.class, SetEntityDataSerializer_v557.INSTANCE, 39);
