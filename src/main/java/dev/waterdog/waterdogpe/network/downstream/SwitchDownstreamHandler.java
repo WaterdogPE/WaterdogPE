@@ -19,6 +19,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
+import dev.waterdog.waterdogpe.event.defaults.PlayerTransferEvent;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.rewrite.types.BlockPalette;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
@@ -114,6 +115,16 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         DownstreamClient oldDownstream = this.player.getDownstream();
         oldDownstream.getServerInfo().removePlayer(this.player);
         oldDownstream.close();
+
+        PlayerTransferEvent event = new PlayerTransferEvent(this.player, oldDownstream.getServerInfo(), this.client);
+        this.player.getProxy().getEventManager().callEvent(event);
+        if (this.getDownstream().isClosed()) {
+            // Plugin probably closed connection
+            this.player.setPendingConnection(null);
+            this.player.sendToFallback(this.client.getServerInfo(), new TranslationContainer("waterdog.downstream.transfer.cancelled",
+                    this.client.getServerInfo().getServerName()).getTranslated());
+            throw CancelSignalException.CANCEL;
+        }
 
         Collection<UUID> playerList = this.player.getPlayers();
         injectRemoveAllPlayers(this.player.getUpstream(), playerList);
