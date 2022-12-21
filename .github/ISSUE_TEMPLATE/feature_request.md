@@ -1,6 +1,9 @@
 ---
-name: Feature request about: Suggest an idea for this project title: ''
-labels: enhancement assignees: ''
+name: Feature request
+about: Suggest an idea or feature for WDPE
+title: ''
+labels: enhancement
+assignees: ''
 
 ---
 

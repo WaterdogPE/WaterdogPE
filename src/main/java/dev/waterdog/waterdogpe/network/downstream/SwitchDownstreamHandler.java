@@ -19,6 +19,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nukkitx.protocol.bedrock.data.ScoreInfo;
 import com.nukkitx.protocol.bedrock.packet.*;
 import com.nukkitx.protocol.bedrock.util.EncryptionUtils;
+import dev.waterdog.waterdogpe.event.defaults.PlayerTransferEvent;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.rewrite.types.BlockPalette;
 import dev.waterdog.waterdogpe.network.rewrite.types.RewriteData;
@@ -115,6 +116,16 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         oldDownstream.getServerInfo().removePlayer(this.player);
         oldDownstream.close();
 
+        PlayerTransferEvent event = new PlayerTransferEvent(this.player, oldDownstream.getServerInfo(), this.client);
+        this.player.getProxy().getEventManager().callEvent(event);
+        if (this.getDownstream().isClosed()) {
+            // Plugin probably closed connection
+            this.player.setPendingConnection(null);
+            this.player.sendToFallback(this.client.getServerInfo(), new TranslationContainer("waterdog.downstream.transfer.cancelled",
+                    this.client.getServerInfo().getServerName()).getTranslated());
+            throw CancelSignalException.CANCEL;
+        }
+
         Collection<UUID> playerList = this.player.getPlayers();
         injectRemoveAllPlayers(this.player.getUpstream(), playerList);
         playerList.clear();
@@ -168,7 +179,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setDimension(newDimension);
         rewriteData.setTransferCallback(transferCallback);
         this.player.setDimensionChangeState(TransferCallback.TRANSFER_PHASE_1);
-        injectDimensionChange(this.player.getUpstream(), newDimension, packet.getPlayerPosition(), this.player.getProtocol());
+        injectDimensionChange(this.player.getUpstream(), newDimension, packet.getPlayerPosition(), rewriteData.getEntityId(), this.player.getProtocol());
 
         if (newDimension == packet.getDimensionId()) {
             // Transfer between different dimensions
