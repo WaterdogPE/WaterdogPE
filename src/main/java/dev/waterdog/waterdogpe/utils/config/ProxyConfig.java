@@ -162,6 +162,10 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Enable anonymous statistics that are sent to bstats. For more information, check out our bstats page at https://bstats.org/plugin/server-implementation/WaterdogPE/15678")
     private boolean enableAnonymousStatistics = true;
 
+    @Path("max_connections_per_ip")
+    @Comment("Maximum connections per IP")
+    private int maxConnectionsPerIp = 50;
+
     public ProxyConfig(File file) {
         this.CONFIG_HEADER = new String[]{"Waterdog Main Configuration file", "Configure your desired network settings here."};
         this.CONFIG_FILE = file;
@@ -348,5 +352,13 @@ public class ProxyConfig extends YamlConfig {
             throw new IllegalArgumentException("Unsupported compression type: " + compression);
         }
         this.compression = compression;
+    }
+
+    public int getMaxConnectionsPerIp() {
+        return this.maxConnectionsPerIp;
+    }
+
+    public void setMaxConnectionsPerIp(int maxConnectionsPerIp) {
+        this.maxConnectionsPerIp = maxConnectionsPerIp;
     }
 }

@@ -28,8 +28,12 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Main class for Proxy-related traffic.
@@ -42,11 +46,14 @@ public class ProxyListener implements BedrockServerEventHandler {
     private final ProxyServer proxy;
     private final QueryHandler queryHandler;
     private final InetSocketAddress bindAddress;
+    private final ConcurrentHashMap<InetAddress, AtomicInteger> connectionsPerIpCounter = new ConcurrentHashMap<>();
+    private final int maxConnectionsPerIp;
 
     public ProxyListener(ProxyServer proxy, QueryHandler queryHandler, InetSocketAddress bindAddress) {
         this.proxy = proxy;
         this.queryHandler = queryHandler;
         this.bindAddress = bindAddress;
+        this.maxConnectionsPerIp = this.proxy.getConfiguration().getMaxConnectionsPerIp();
     }
 
     @Override
@@ -91,7 +98,22 @@ public class ProxyListener implements BedrockServerEventHandler {
 
     @Override
     public void onSessionCreation(BedrockServerSession session) {
-        this.proxy.getLogger().debug("[" + session.getAddress() + "] <-> Received first data");
+        InetAddress address = session.getAddress().getAddress();
+
+        this.proxy.getLogger().debug("[" + address + "] <-> Received first data");
+
+        session.addDisconnectHandler((reason) -> {
+            if(this.connectionsPerIpCounter.getOrDefault(address, new AtomicInteger(0)).decrementAndGet() < 1) {
+                this.connectionsPerIpCounter.remove(address);
+            }
+        });
+
+        if (this.connectionsPerIpCounter.getOrDefault(address, new AtomicInteger(0)).incrementAndGet() > this.maxConnectionsPerIp) {
+            session.disconnect("Disconnected due reached max connections per IP", true);
+            this.proxy.getBedrockServer().getRakNet().block(address, 3600, TimeUnit.SECONDS); // Block to prevent further attack
+            return;
+        }
+
         session.setPacketHandler(new LoginUpstreamHandler(this.proxy, session));
     }
 
