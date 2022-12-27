@@ -102,17 +102,17 @@ public class ProxyListener implements BedrockServerEventHandler {
 
         this.proxy.getLogger().debug("[" + address + "] <-> Received first data");
 
-        if (this.connectionsPerIpCounter.getOrDefault(address, new AtomicInteger(0)).incrementAndGet() > this.maxConnectionsPerIp) {
-            session.disconnect("Disconnected due reached max connections per IP", true);
-            this.proxy.getBedrockServer().getRakNet().block(address, 3600, TimeUnit.SECONDS); // Block to prevent further attack
-            return;
-        }
-
         session.addDisconnectHandler((reason) -> {
             if(this.connectionsPerIpCounter.getOrDefault(address, new AtomicInteger(0)).decrementAndGet() < 1) {
                 this.connectionsPerIpCounter.remove(address);
             }
         });
+
+        if (this.connectionsPerIpCounter.getOrDefault(address, new AtomicInteger(0)).incrementAndGet() > this.maxConnectionsPerIp) {
+            session.disconnect("Disconnected due reached max connections per IP", true);
+            this.proxy.getBedrockServer().getRakNet().block(address, 3600, TimeUnit.SECONDS); // Block to prevent further attack
+            return;
+        }
 
         session.setPacketHandler(new LoginUpstreamHandler(this.proxy, session));
     }
