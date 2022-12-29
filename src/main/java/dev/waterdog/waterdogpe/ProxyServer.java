@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,12 +15,6 @@
 
 package dev.waterdog.waterdogpe;
 
-import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.nukkitx.network.util.EventLoops;
-import com.nukkitx.network.util.NetworkThreadFactory;
-import com.nukkitx.protocol.bedrock.BedrockClient;
-import com.nukkitx.protocol.bedrock.BedrockServer;
 import dev.waterdog.waterdogpe.command.*;
 import dev.waterdog.waterdogpe.command.utils.CommandUtils;
 import dev.waterdog.waterdogpe.console.TerminalConsole;
@@ -28,24 +22,40 @@ import dev.waterdog.waterdogpe.event.EventManager;
 import dev.waterdog.waterdogpe.event.defaults.DispatchCommandEvent;
 import dev.waterdog.waterdogpe.event.defaults.ProxyStartEvent;
 import dev.waterdog.waterdogpe.logger.MainLogger;
-import dev.waterdog.waterdogpe.network.ProxyListener;
-import dev.waterdog.waterdogpe.network.protocol.ProtocolConstants;
+import dev.waterdog.waterdogpe.network.EventLoops;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
+import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedServerSessionInitializer;
+import dev.waterdog.waterdogpe.network.connection.codec.initializer.OfflineServerChannelInitializer;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolCodecs;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
-import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.packs.PackManager;
 import dev.waterdog.waterdogpe.player.PlayerManager;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.plugin.PluginManager;
-import dev.waterdog.waterdogpe.query.QueryHandler;
+import dev.waterdog.waterdogpe.network.connection.codec.query.QueryHandler;
 import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
+import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.utils.bstats.Metrics;
 import dev.waterdog.waterdogpe.utils.config.*;
 import dev.waterdog.waterdogpe.utils.types.*;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.unix.UnixChannelOption;
+import io.netty.util.concurrent.DefaultPromise;
+import io.netty.util.concurrent.PromiseCombiner;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
+import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
+import org.cloudburstmc.netty.channel.raknet.RakConstants;
+import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
+import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
@@ -54,7 +64,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class ProxyServer {
-
     private static ProxyServer instance;
 
     private final Path dataPath;
@@ -73,8 +82,9 @@ public class ProxyServer {
 
     private final ServerInfoMap serverInfoMap = new ServerInfoMap();
 
-    private BedrockServer bedrockServer;
-    private Set<BedrockServer> additionalPorts = new HashSet<>();
+    private final long serverId;
+    private final List<Channel> serverChannels = new ObjectArrayList<>();
+
     private QueryHandler queryHandler;
 
     private CommandMap commandMap;
@@ -84,8 +94,7 @@ public class ProxyServer {
     private IJoinHandler joinHandler;
     private IForcedHostHandler forcedHostHandler;
     private IMetricsHandler metricsHandler;
-    private ProxyListenerInterface proxyListener = new ProxyListenerInterface() {
-    };
+    private ProxyListenerInterface proxyListener = new ProxyListenerInterface() {};
 
     private final EventLoopGroup bossEventLoopGroup;
     private final EventLoopGroup workerEventLoopGroup;
@@ -130,14 +139,16 @@ public class ProxyServer {
         }
 
         CompressionAlgorithm compression = this.getConfiguration().getCompression();
-        if (compression.getBedrockCompression() == null) {
+        if (compression.getBedrockAlgorithm() == null) {
             this.logger.error("Bedrock compression supports only ZLIB or Snappy! Currently provided " + compression + ", defaulting to ZLIB!");
             this.getConfiguration().setCompression(CompressionAlgorithm.ZLIB);
         }
 
-        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
-        builder.setNameFormat("WaterdogTick Executor");
-        this.tickExecutor = Executors.newScheduledThreadPool(1, builder.build());
+        ThreadFactoryBuilder builder = ThreadFactoryBuilder
+                .builder()
+                .format("WaterdogTick Executor - #%d")
+                .build();
+        this.tickExecutor = Executors.newScheduledThreadPool(1, builder);
 
         EventLoops.ChannelType channelType = EventLoops.getChannelType();
         this.logger.info("Using " + channelType.name() + " channel implementation as default!");
@@ -145,12 +156,12 @@ public class ProxyServer {
             this.logger.debug("Supported " + type.name() + " channels: " + type.isAvailable());
         }
 
-        NetworkThreadFactory workerFactory = NetworkThreadFactory.builder()
+        ThreadFactoryBuilder workerFactory = ThreadFactoryBuilder.builder()
                 .format("Bedrock Listener - #%d")
                 .priority(5)
                 .daemon(true)
                 .build();
-        NetworkThreadFactory bossFactory = NetworkThreadFactory.builder()
+        ThreadFactoryBuilder bossFactory = ThreadFactoryBuilder.builder()
                 .format("RakNet Listener - #%d")
                 .priority(8)
                 .daemon(true)
@@ -173,6 +184,7 @@ public class ProxyServer {
         this.commandSender = new ConsoleCommandSender(this);
         this.commandMap = new DefaultCommandMap(this, SimpleCommandMap.DEFAULT_PREFIX);
         this.console = new TerminalConsole(this);
+        this.serverId = ThreadLocalRandom.current().nextLong();
         this.boot();
     }
 
@@ -185,7 +197,9 @@ public class ProxyServer {
         this.pluginManager.enableAllPlugins();
         if (this.getConfiguration().useFastCodec()) {
             this.logger.debug("Using fast codec! Please ensure plugin compatibility!");
-            ProtocolConstants.registerCodecs();
+            for (ProtocolVersion version : ProtocolVersion.values()) {
+                version.setBedrockCodec(ProtocolCodecs.buildCodec(version.getDefaultCodec()));
+            }
         }
 
         if(this.getConfiguration().isEnableAnonymousStatistics()){
@@ -204,22 +218,11 @@ public class ProxyServer {
             this.queryHandler = new QueryHandler(this);
         }
 
-        this.bedrockServer = new BedrockServer(bindAddress, Runtime.getRuntime().availableProcessors(), this.bossEventLoopGroup, this.workerEventLoopGroup, false);
-        this.bedrockServer.setHandler(new ProxyListener(this, this.queryHandler, bindAddress));
-        this.getLogger().info(new TranslationContainer("waterdog.query.start", bindAddress.toString()).getTranslated());
-        this.bedrockServer.bind().join();
-
+        this.bindChannels(bindAddress);
         for (Integer port : this.getConfiguration().getAdditionalPorts()) {
             InetSocketAddress additionalBind = new InetSocketAddress(bindAddress.getAddress(), port);
-
-            BedrockServer newServer = new BedrockServer(additionalBind, Runtime.getRuntime().availableProcessors(), this.bossEventLoopGroup, this.workerEventLoopGroup, false);
-            newServer.setHandler(new ProxyListener(this, this.queryHandler, additionalBind));
-            newServer.bind().join();
-            logger.info("Set up additional port: " + port);
-
-            additionalPorts.add(newServer);
+            this.bindChannels(additionalBind);
         }
-
 
         ProxyStartEvent event = new ProxyStartEvent(this);
         this.eventManager.callEvent(event);
@@ -231,10 +234,42 @@ public class ProxyServer {
         this.tickFuture = this.tickExecutor.scheduleAtFixedRate(this::tickProcessor, 50, 50, TimeUnit.MILLISECONDS);
     }
 
+    private void bindChannels(InetSocketAddress address) {
+        boolean allowEpoll = Epoll.isAvailable();
+        int bindCount = allowEpoll && EventLoops.getChannelType() != EventLoops.ChannelType.NIO
+                ? Runtime.getRuntime().availableProcessors() : 1;
+
+        for (int i = 0; i < bindCount; i++) {
+            ServerBootstrap bootstrap = new ServerBootstrap()
+                    .channelFactory(RakChannelFactory.server(EventLoops.getChannelType().getDatagramChannel()))
+                    .group(this.bossEventLoopGroup, this.workerEventLoopGroup)
+                    // .option(CustomChannelOption.IP_DONT_FRAG, 2 /* IP_PMTUDISC_DO */)
+                    .option(RakChannelOption.RAK_GUID, this.serverId)
+                    .option(RakChannelOption.RAK_HANDLE_PING, true)
+                    .option(RakChannelOption.RAK_MAX_MTU, RakConstants.MAXIMUM_MTU_SIZE)
+                    .childOption(RakChannelOption.RAK_ORDERING_CHANNELS, 1)
+                    .handler(new OfflineServerChannelInitializer(this))
+                    .childHandler(new ProxiedServerSessionInitializer(this));
+            if (allowEpoll) {
+                bootstrap.option(UnixChannelOption.SO_REUSEPORT, true);
+            }
+            ChannelFuture future = bootstrap
+                    .bind(address)
+                    .syncUninterruptibly();
+            if (future.isSuccess()) {
+                this.serverChannels.add(future.channel());
+            } else {
+                throw new IllegalStateException("Can not start server on " + address, future.cause());
+            }
+        }
+
+        this.getLogger().info(new TranslationContainer("waterdog.query.start", address.toString()).getTranslated());
+    }
+
     private void tickProcessor() {
         if (this.shutdown && !this.tickFuture.isCancelled()) {
             this.tickFuture.cancel(false);
-            this.bedrockServer.close();
+            this.serverChannels.forEach(Channel::close);
         }
 
         try {
@@ -268,7 +303,7 @@ public class ProxyServer {
         String disconnectReason = new TranslationContainer("waterdog.server.shutdown").getTranslated();
         for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
             this.logger.info("Disconnecting " + player.getValue().getName());
-            player.getValue().disconnect(disconnectReason, true);
+            player.getValue().disconnect(disconnectReason);
         }
         Thread.sleep(500); // Give small delay to send packet
 
@@ -277,8 +312,10 @@ public class ProxyServer {
         this.scheduler.shutdown();
         this.eventManager.getThreadedExecutor().shutdown();
         try {
-            if (this.bedrockServer != null) {
-                this.bedrockServer.close();
+            for (Channel channel : this.serverChannels) {
+                if (channel.isOpen()) {
+                    channel.close().sync();
+                }
             }
         } catch (Exception e) {
             this.getLogger().error("Error while shutting down ProxyServer", e);
@@ -331,27 +368,12 @@ public class ProxyServer {
         return !event.isCancelled() && this.commandMap.handleCommand(sender, args[0], shiftedArgs);
     }
 
-    public BedrockClient createBedrockClient() {
-        InetSocketAddress address = new InetSocketAddress("0.0.0.0", 0);
-        return new BedrockClient(address, this.bossEventLoopGroup);
-    }
-
-    public CompletableFuture<BedrockClient> bindClient(ProtocolVersion protocol) {
-        BedrockClient client = this.createBedrockClient();
-        client.setRakNetVersion(protocol.getRaknetVersion());
-        return client.bind().thenApply(i -> client);
-    }
-
     public boolean isRunning() {
         return !this.shutdown;
     }
 
     public MainLogger getLogger() {
         return this.logger;
-    }
-
-    public BedrockServer getBedrockServer() {
-        return this.bedrockServer;
     }
 
     public Path getDataPath() {
@@ -548,5 +570,9 @@ public class ProxyServer {
 
     public ProxyListenerInterface getProxyListener() {
         return this.proxyListener;
+    }
+
+    public EventLoopGroup getWorkerEventLoopGroup() {
+        return this.workerEventLoopGroup;
     }
 }

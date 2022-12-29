@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,8 +15,8 @@
 
 package dev.waterdog.waterdogpe.scheduler;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.utils.exceptions.SchedulerException;
 
 import java.util.LinkedList;
@@ -44,10 +44,11 @@ public class WaterdogScheduler {
         instance = this;
         this.proxy = proxy;
 
-        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
-        builder.setNameFormat("WaterdogScheduler Executor");
+        ThreadFactoryBuilder builder = ThreadFactoryBuilder.builder()
+                .format("WaterdogScheduler Executor - #%d")
+                .build();
         int idleThreads = this.proxy.getConfiguration().getIdleThreads();
-        this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(), builder.build());
+        this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(), builder);
     }
 
     public static WaterdogScheduler getInstance() {

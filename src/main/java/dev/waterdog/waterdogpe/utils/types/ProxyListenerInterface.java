@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +15,7 @@
 
 package dev.waterdog.waterdogpe.utils.types;
 
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 /**
  * This interface is used as alternative to events in situation when calling an event can expensive and
@@ -28,7 +28,7 @@ public interface ProxyListenerInterface {
      * @param address of the sender.
      * @return if new session can be created.
      */
-    default boolean onConnectionCreation(InetSocketAddress address) {
+    default boolean onConnectionCreation(SocketAddress address) {
         return true;
     }
 
@@ -37,7 +37,7 @@ public interface ProxyListenerInterface {
      * @param address of the sender.
      * @return true if login is allowed.
      */
-    default boolean onLoginAttempt(InetSocketAddress address) {
+    default boolean onLoginAttempt(SocketAddress address) {
         return true;
     }
 
@@ -46,7 +46,7 @@ public interface ProxyListenerInterface {
      * @param protocolVersion game version of connection.
      * @param address of the sender.
      */
-    default void onIncorrectVersionLogin(int protocolVersion, InetSocketAddress address) {
+    default void onIncorrectVersionLogin(int protocolVersion, SocketAddress address) {
     }
 
     /**
@@ -58,7 +58,7 @@ public interface ProxyListenerInterface {
      * @param reason if login is allowed.
      * @return disconnect message sent to client.
      */
-    default String onLoginFailed(InetSocketAddress address, boolean xboxAuth, Throwable throwable, String reason) {
+    default String onLoginFailed(SocketAddress address, boolean xboxAuth, Throwable throwable, String reason) {
         return reason;
     }
 }

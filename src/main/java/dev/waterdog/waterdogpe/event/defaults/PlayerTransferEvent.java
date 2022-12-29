@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,8 +15,8 @@
 
 package dev.waterdog.waterdogpe.event.defaults;
 
+import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
-import dev.waterdog.waterdogpe.network.session.DownstreamClient;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 /**
@@ -26,9 +26,9 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 public class PlayerTransferEvent extends PlayerEvent {
 
     private final ServerInfo oldServer;
-    private final DownstreamClient serverConnection;
+    private final ClientConnection serverConnection;
 
-    public PlayerTransferEvent(ProxiedPlayer player, ServerInfo oldServer, DownstreamClient serverConnection) {
+    public PlayerTransferEvent(ProxiedPlayer player, ServerInfo oldServer, ClientConnection serverConnection) {
         super(player);
         this.oldServer = oldServer;
         this.serverConnection = serverConnection;
@@ -38,7 +38,7 @@ public class PlayerTransferEvent extends PlayerEvent {
         return this.oldServer;
     }
 
-    public DownstreamClient getServerConnection() {
+    public ClientConnection getServerConnection() {
         return this.serverConnection;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,7 +62,7 @@ public class ServerEntryConverter implements Converter {
             address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, section.get("address"), null);
             publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, section.get("public_address"), null);
             serverType = (String) inetConverter.fromConfig(String.class, section.get("server_type"), null);
-            return new ServerEntry(section.get("name"), address, publicAddress, ServerInfoType.getOrBedrock(serverType));
+            return new ServerEntry(section.get("name"), address, publicAddress, this.requireServerType(serverType));
         }
 
         if (object instanceof Map) {
@@ -71,10 +71,18 @@ public class ServerEntryConverter implements Converter {
                 address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, subMap.getValue().get("address"), null);
                 publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, subMap.getValue().get("public_address"), null);
                 serverType = (String) subMap.getValue().get("server_type");
-                return new ServerEntry(subMap.getKey(), address, publicAddress, ServerInfoType.getOrBedrock(serverType));
+                return new ServerEntry(subMap.getKey(), address, publicAddress, this.requireServerType(serverType));
             }
         }
         throw new IllegalArgumentException("ServerInfoConverter#fromConfig cannot parse obj: " + object.getClass().getName());
+    }
+
+    private ServerInfoType requireServerType(String serverType) {
+        ServerInfoType serverInfoType = ServerInfoType.fromString(serverType);
+        if (serverInfoType == null) {
+            throw new IllegalArgumentException("Unsupported ServerInfoType " + serverType + "! Make sure your config is valid and provided ServerInfoType was registered");
+        }
+        return serverInfoType;
     }
 
     @Override

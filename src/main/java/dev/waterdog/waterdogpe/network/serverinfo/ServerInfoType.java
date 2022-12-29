@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,8 +15,10 @@
 
 package dev.waterdog.waterdogpe.network.serverinfo;
 
-import com.google.common.base.Preconditions;
+import lombok.Getter;
+import org.cloudburstmc.protocol.common.util.Preconditions;
 
+import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -24,52 +26,76 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * This is the identifier class for custom ServerInfo types.
- * The aim is to allow simple comparing between the custom types. Therefore ServerInfoType#fromString()
+ * The aim is to allow simple comparing between the custom types. Therefore, ServerInfoType#fromString()
  * method should be used to create new ServerInfoType.
  */
+@Getter
 public class ServerInfoType implements Comparable<ServerInfoType> {
     private static final Map<String, ServerInfoType> types = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
-    private final String name;
 
-    public static final ServerInfoType BEDROCK = ServerInfoType.fromString("bedrock");
+    public static final ServerInfoType BEDROCK = ServerInfoType.builder()
+            .identifier("bedrock")
+            .serverInfoFactory(BedrockServerInfo::new)
+            .register();
 
-    private ServerInfoType(String name) {
-        this.name = name;
+    private final String identifier;
+    private final ServerInfoFactory serverInfoFactory;
+
+    private ServerInfoType(String identifier, ServerInfoFactory serverInfoFactory) {
+        this.identifier = identifier;
+        this.serverInfoFactory = serverInfoFactory;
     }
 
     public static ServerInfoType fromString(String string) {
         Preconditions.checkNotNull(string, "ServerInfoType name can not be null");
         Preconditions.checkArgument(!string.isEmpty(), "ServerInfoType name can not be empty");
-
-        ServerInfoType serverInfoType = types.get(string);
-        if (serverInfoType == null) {
-            types.put(string, serverInfoType = new ServerInfoType(string));
-        }
-        return serverInfoType;
-    }
-
-    public static ServerInfoType getOrBedrock(String string) {
-        if (string == null || string.isEmpty()) {
-            return BEDROCK;
-        }
-        return fromString(string);
+        return types.get(string);
     }
 
     public static Collection<ServerInfoType> values() {
         return Collections.unmodifiableCollection(types.values());
     }
 
-    public String getName() {
-        return this.name;
-    }
-
     @Override
     public String toString() {
-        return this.name;
+        return this.identifier;
     }
 
     @Override
     public int compareTo(ServerInfoType serverInfoType) {
-        return this.name.compareTo(serverInfoType.getName());
+        return this.identifier.compareTo(serverInfoType.getIdentifier());
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String identifier;
+        private ServerInfoFactory serverInfoFactory;
+
+        public Builder identifier(String name) {
+            this.identifier = name;
+            return this;
+        }
+
+        public Builder serverInfoFactory(ServerInfoFactory factory) {
+            this.serverInfoFactory = factory;
+            return this;
+        }
+
+        public ServerInfoType register() {
+            Preconditions.checkNotNull(this.identifier, "identifier");
+            Preconditions.checkNotNull(this.serverInfoFactory, "server info factory");
+            Preconditions.checkArgument(!types.containsKey(this.identifier), "ServerInfoType " + this.identifier + " already exists");
+
+            ServerInfoType type = new ServerInfoType(this.identifier, this.serverInfoFactory);
+            types.put(this.identifier, type);
+            return type;
+        }
+    }
+
+    public interface ServerInfoFactory {
+        ServerInfo createServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress);
     }
 }

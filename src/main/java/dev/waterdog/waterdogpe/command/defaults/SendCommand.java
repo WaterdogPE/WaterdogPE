@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,17 +15,12 @@
 
 package dev.waterdog.waterdogpe.command.defaults;
 
-import com.nukkitx.protocol.bedrock.data.command.CommandData;
-import com.nukkitx.protocol.bedrock.data.command.CommandParam;
-import com.nukkitx.protocol.bedrock.data.command.CommandParamData;
 import dev.waterdog.waterdogpe.command.Command;
 import dev.waterdog.waterdogpe.command.CommandSender;
 import dev.waterdog.waterdogpe.command.CommandSettings;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.types.TextContainer;
-
-import java.util.Collections;
 
 public class SendCommand extends Command {
 
@@ -67,12 +62,13 @@ public class SendCommand extends Command {
         return true;
     }
 
-    @Override
+    // TODO:
+    /*@Override
     public CommandData craftNetwork() {
         CommandParamData[][] parameterData = new CommandParamData[][]{{
                 new CommandParamData("destination", false, null, CommandParam.TEXT, null, Collections.emptyList()),
                 new CommandParamData("target", true, null, CommandParam.TEXT, null, Collections.emptyList())
         }};
         return new CommandData(this.getName(), this.getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
-    }
+    }*/
 }

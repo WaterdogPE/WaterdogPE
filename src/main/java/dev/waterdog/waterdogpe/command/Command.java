@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,11 +15,10 @@
 
 package dev.waterdog.waterdogpe.command;
 
-import com.nukkitx.protocol.bedrock.data.command.CommandData;
-import com.nukkitx.protocol.bedrock.data.command.CommandEnumData;
-import com.nukkitx.protocol.bedrock.data.command.CommandParam;
-import com.nukkitx.protocol.bedrock.data.command.CommandParamData;
-import org.apache.commons.lang3.ArrayUtils;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandData;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumData;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandParam;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandParamData;
 
 import java.util.*;
 
@@ -84,13 +83,17 @@ public abstract class Command {
         return this.settings.getAliases();
     }
 
+    // TODO:
     public CommandData craftNetwork() {
-        CommandParamData[][] parameterData = new CommandParamData[][]{{
-                new CommandParamData(this.name, true, null, CommandParam.TEXT, null, Collections.emptyList())
-        }};
+        CommandParamData data = new CommandParamData();
+        data.setName(this.name);
+        data.setOptional(true);
+        data.setType(CommandParam.TEXT);
+
+        CommandParamData[][] parameterData = new CommandParamData[][]{{data}};
         Set<String> aliases = new HashSet<>(getAliases().length + 1);
         Collections.addAll(aliases, getAliases());
         aliases.add(this.name);
-        return new CommandData(this.name, this.getDescription(), Collections.emptyList(), (byte) 0, new CommandEnumData(this.name, aliases.toArray(ArrayUtils.EMPTY_STRING_ARRAY), false), parameterData);
+        return new CommandData(this.name, this.getDescription(), Collections.emptySet(), (byte) 0, new CommandEnumData(this.name, new LinkedHashMap<>(), false), parameterData);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,7 @@ public class WaterdogPE {
         Thread.currentThread().setName("WaterdogPE-main");
         System.out.println("Starting WaterdogPE....");
         System.setProperty("log4j.skipJansi", "false");
-        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
+        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
 
         MainLogger logger = MainLogger.getLogger();
         logger.info("§bStarting WaterDogPE proxy software!");

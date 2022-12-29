@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,7 +15,7 @@
 
 package dev.waterdog.waterdogpe.utils.config;
 
-import dev.waterdog.waterdogpe.network.session.CompressionAlgorithm;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
 import net.cubespace.Yamler.Config.Converter.Converter;
 import net.cubespace.Yamler.Config.InternalConverter;
 
@@ -32,7 +32,7 @@ public class CompressionAlgorithmConverter implements Converter {
     @Override
     public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
         if (object instanceof CompressionAlgorithm algorithm) {
-            return algorithm.getName();
+            return algorithm.getIdentifier();
         } else {
             throw new IllegalArgumentException("Can not serialize " + object.getClass().getSimpleName() + " as CompressionAlgorithm");
         }

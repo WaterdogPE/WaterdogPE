@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,14 +15,15 @@
 
 package dev.waterdog.waterdogpe.packs;
 
-import com.google.common.base.Preconditions;
-import com.nukkitx.protocol.bedrock.data.ResourcePackType;
-import com.nukkitx.protocol.bedrock.packet.*;
+import io.netty.buffer.Unpooled;
+import org.cloudburstmc.protocol.bedrock.data.ResourcePackType;
+import org.cloudburstmc.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.ResourcePacksRebuildEvent;
 import dev.waterdog.waterdogpe.packs.types.ResourcePack;
 import dev.waterdog.waterdogpe.packs.types.ZipResourcePack;
 import dev.waterdog.waterdogpe.utils.FileUtils;
+import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import java.io.File;
 import java.io.IOException;
@@ -192,9 +193,9 @@ public class PackManager {
         packet.setCompressedPackSize(resourcePack.getPackSize());
         packet.setHash(resourcePack.getHash());
         if (resourcePack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
-            packet.setType(ResourcePackType.RESOURCE);
+            packet.setType(ResourcePackType.RESOURCES);
         } else if (resourcePack.getType().equals(ResourcePack.TYPE_DATA)) {
-            packet.setType(ResourcePackType.BEHAVIOR);
+            packet.setType(ResourcePackType.ADDON);
         }
         return packet;
     }
@@ -209,7 +210,7 @@ public class PackManager {
         packet.setPackId(from.getPackId());
         packet.setPackVersion(from.getPackVersion());
         packet.setChunkIndex(from.getChunkIndex());
-        packet.setData(resourcePack.getChunk((int) CHUNK_SIZE * from.getChunkIndex(), (int) CHUNK_SIZE));
+        packet.setData(Unpooled.wrappedBuffer(resourcePack.getChunk((int) CHUNK_SIZE * from.getChunkIndex(), (int) CHUNK_SIZE)));
         packet.setProgress(CHUNK_SIZE * from.getChunkIndex());
         return packet;
     }

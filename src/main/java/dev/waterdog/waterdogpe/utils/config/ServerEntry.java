@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,9 +15,9 @@
 
 package dev.waterdog.waterdogpe.utils.config;
 
-import com.google.common.base.Preconditions;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoType;
 import lombok.ToString;
+import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import java.net.InetSocketAddress;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,8 +15,8 @@
 
 package dev.waterdog.waterdogpe.event;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.util.concurrent.*;
@@ -35,10 +35,11 @@ public class EventManager {
 
     public EventManager(ProxyServer proxy) {
         this.proxy = proxy;
-        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
-        builder.setNameFormat("WaterdogEvents Executor");
+        ThreadFactoryBuilder builder = ThreadFactoryBuilder.builder()
+                .format("WaterdogEvents Executor - #%d")
+                .build();
         int idleThreads = this.proxy.getConfiguration().getIdleThreads();
-        this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(true), builder.build());
+        this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(true), builder);
     }
 
     public <T extends Event> void subscribe(Class<T> event, Consumer<T> handler) {

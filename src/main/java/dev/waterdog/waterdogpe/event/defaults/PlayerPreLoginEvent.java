@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,7 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.CancellableEvent;
 import dev.waterdog.waterdogpe.event.Event;
-import dev.waterdog.waterdogpe.network.session.LoginData;
+import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 import java.net.InetSocketAddress;
