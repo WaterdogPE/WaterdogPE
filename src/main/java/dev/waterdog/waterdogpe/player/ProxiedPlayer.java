@@ -439,7 +439,7 @@ public class ProxiedPlayer implements CommandSender {
             return; // Client wont accept empty string
         }
 
-        ClientConnection connection = this.getClientConnection();
+        ClientConnection connection = this.getDownstreamConnection();
         if (connection == null || !connection.isConnected()) {
             return; // This player is not connected to any server
         }
@@ -704,7 +704,7 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public long getPing() {
-        return this.upstream.getPeer().getPing();
+        return this.upstream.getPing();
     }
 
     /**
@@ -730,11 +730,11 @@ public class ProxiedPlayer implements CommandSender {
         return this.proxy.getLogger();
     }
 
-    public void setClientConnection(ClientConnection downstreamConnection) {
+    public void setDownstreamConnection(ClientConnection downstreamConnection) {
         this.clientConnection = downstreamConnection;
     }
 
-    public ClientConnection getClientConnection() {
+    public ClientConnection getDownstreamConnection() {
         return this.clientConnection;
     }
 

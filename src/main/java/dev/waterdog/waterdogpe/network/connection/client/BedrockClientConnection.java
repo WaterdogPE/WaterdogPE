@@ -161,6 +161,14 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
     }
 
     @Override
+    public long getPing() {
+        if (this.channel instanceof RakChannel rakChannel) {
+            return rakChannel.rakPipeline().get(RakSessionCodec.class).getPing();
+        }
+        return 0;
+    }
+
+    @Override
     public ProxiedPlayer getPlayer() {
         return this.player;
     }

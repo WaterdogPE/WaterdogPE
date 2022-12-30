@@ -41,4 +41,6 @@ public interface ProxiedConnection {
     default int getSubClientId() {
         return 0;
     }
+
+    long getPing();
 }

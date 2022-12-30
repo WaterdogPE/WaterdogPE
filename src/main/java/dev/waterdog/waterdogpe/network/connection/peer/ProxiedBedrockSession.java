@@ -81,4 +81,9 @@ public abstract class ProxiedBedrockSession extends BedrockSession implements Pr
     public ProxiedBedrockPeer getPeer() {
         return (ProxiedBedrockPeer) super.getPeer();
     }
+
+    @Override
+    public long getPing() {
+        return this.getPeer().getPing();
+    }
 }

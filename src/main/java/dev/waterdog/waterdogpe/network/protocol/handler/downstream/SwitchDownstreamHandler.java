@@ -111,11 +111,11 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             rewriteData.setBlockProperties(packet.getBlockProperties());
         }
 
-        ClientConnection oldConnection = this.player.getClientConnection();
+        ClientConnection oldConnection = this.player.getDownstreamConnection();
         oldConnection.getServerInfo().removeConnection(oldConnection);
         oldConnection.disconnect();
         this.player.setConnectingServer(null);
-        this.player.setClientConnection(this.connection);
+        this.player.setDownstreamConnection(this.connection);
         this.connection.getServerInfo().addConnection(this.connection);
         this.player.setAcceptPlayStatus(true);
 
