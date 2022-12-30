@@ -70,7 +70,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
             );
             this.connection.enableEncryption(key);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Failed to enable encryption", e);
         }
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();

@@ -16,20 +16,22 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.AsyncEvent;
-import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
+/**
+ * Called whenever a player gets kicked from the Server (ProxiedPlayer#disconnect)
+ */
 @AsyncEvent
-public class InitialServerDeterminationEvent extends PlayerEvent {
+public class PlayerDisconnectedEvent extends PlayerEvent {
 
-    private final ServerInfo initialServer;
+    private final String reason;
 
-    public InitialServerDeterminationEvent(ProxiedPlayer player, ServerInfo initialServer) {
+    public PlayerDisconnectedEvent(ProxiedPlayer player, String reason) {
         super(player);
-        this.initialServer = initialServer;
+        this.reason = reason;
     }
 
-    public ServerInfo getInitialServer() {
-        return this.initialServer;
+    public String getReason() {
+        return this.reason;
     }
 }

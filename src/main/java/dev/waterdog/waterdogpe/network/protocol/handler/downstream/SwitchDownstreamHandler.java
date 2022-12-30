@@ -22,7 +22,7 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.cloudburstmc.protocol.bedrock.packet.*;
-import dev.waterdog.waterdogpe.event.defaults.PlayerTransferEvent;
+import dev.waterdog.waterdogpe.event.defaults.ServerTransferEvent;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.types.BlockPalette;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.types.RewriteData;
@@ -63,7 +63,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             );
             this.connection.enableEncryption(key);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Failed to enable encryption", e);
         }
 
         ClientToServerHandshakePacket clientToServerHandshake = new ClientToServerHandshakePacket();
@@ -119,15 +119,8 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         this.connection.getServerInfo().addConnection(this.connection);
         this.player.setAcceptPlayStatus(true);
 
-        PlayerTransferEvent event = new PlayerTransferEvent(this.player, oldConnection.getServerInfo(), this.connection);
+        ServerTransferEvent event = new ServerTransferEvent(this.player, oldConnection.getServerInfo(), this.connection.getServerInfo());
         this.player.getProxy().getEventManager().callEvent(event);
-        if (!this.connection.isConnected()) {
-            // Plugin probably closed connection
-            this.player.setConnectingServer(null);
-            this.player.sendToFallback(this.connection.getServerInfo(), new TranslationContainer("waterdog.downstream.transfer.cancelled",
-                    this.connection.getServerInfo().getServerName()).getTranslated());
-            return Signals.CANCEL;
-        }
 
         LongSet blobs = this.player.getChunkBlobs();
         if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_18_30) &&
@@ -186,7 +179,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setDimension(newDimension);
         rewriteData.setTransferCallback(transferCallback);
 
-        boolean fastTransfer = true && newDimension != packet.getDimensionId(); // TODO:
+        boolean fastTransfer = event.allowTransferScreen() && newDimension != packet.getDimensionId();
         if (fastTransfer) {
             Vector3f fakePosition = packet.getPlayerPosition().add(2000, 0, 2000);
             injectPosition(this.player.getUpstream(), fakePosition, packet.getRotation(), rewriteData.getEntityId());

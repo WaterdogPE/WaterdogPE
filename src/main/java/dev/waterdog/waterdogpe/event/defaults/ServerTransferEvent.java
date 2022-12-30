@@ -15,7 +15,6 @@
 
 package dev.waterdog.waterdogpe.event.defaults;
 
-import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
@@ -23,23 +22,32 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
  * Signalizing that player is being transferred to a new server.
  * This even is not cancellable. Use PreTransferEvent to cancel transfer.
  */
-public class PlayerTransferEvent extends PlayerEvent {
+public class ServerTransferEvent extends PlayerEvent {
 
-    private final ServerInfo oldServer;
-    private final ClientConnection serverConnection;
+    private final ServerInfo sourceServer;
+    private final ServerInfo targetServer;
+    private boolean allowTransferScreen = true;
 
-    public PlayerTransferEvent(ProxiedPlayer player, ServerInfo oldServer, ClientConnection serverConnection) {
+    public ServerTransferEvent(ProxiedPlayer player, ServerInfo sourceServer, ServerInfo targetServer) {
         super(player);
-        this.oldServer = oldServer;
-        this.serverConnection = serverConnection;
+        this.sourceServer = sourceServer;
+        this.targetServer = targetServer;
     }
 
-    public ServerInfo getOldServer() {
-        return this.oldServer;
+    public ServerInfo getSourceServer() {
+        return this.sourceServer;
     }
 
-    public ClientConnection getServerConnection() {
-        return this.serverConnection;
+    public ServerInfo getTargetServer() {
+        return this.targetServer;
+    }
+
+    public void setAllowTransferScreen(boolean allowTransferScreen) {
+        this.allowTransferScreen = allowTransferScreen;
+    }
+
+    public boolean allowTransferScreen() {
+        return this.allowTransferScreen;
     }
 }
 

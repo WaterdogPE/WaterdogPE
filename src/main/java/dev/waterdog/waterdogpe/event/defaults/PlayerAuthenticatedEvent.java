@@ -28,7 +28,7 @@ import java.net.InetSocketAddress;
  * Can be used to create custom Player classes to override or extend the original class. (No Support)
  * Cancelling this event will lead to the player being kicked for the set cancelReason
  */
-public class PlayerPreLoginEvent extends Event implements CancellableEvent {
+public class PlayerAuthenticatedEvent extends Event implements CancellableEvent {
 
     private final LoginData loginData;
     private final InetSocketAddress address;
@@ -36,7 +36,7 @@ public class PlayerPreLoginEvent extends Event implements CancellableEvent {
     private Class<? extends ProxiedPlayer> baseClass;
     private String cancelReason = "Login was cancelled";
 
-    public PlayerPreLoginEvent(Class<? extends ProxiedPlayer> baseClass, LoginData loginData, InetSocketAddress address) {
+    public PlayerAuthenticatedEvent(Class<? extends ProxiedPlayer> baseClass, LoginData loginData, InetSocketAddress address) {
         this.baseClass = baseClass;
         this.loginData = loginData;
         this.address = address;

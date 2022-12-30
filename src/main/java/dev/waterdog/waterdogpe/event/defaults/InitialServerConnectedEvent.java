@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.AsyncEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 /**
@@ -36,5 +37,9 @@ public class InitialServerConnectedEvent extends PlayerEvent {
 
     public ClientConnection getConnection() {
         return this.connection;
+    }
+
+    public ServerInfo getServerInfo() {
+        return this.connection.getServerInfo();
     }
 }

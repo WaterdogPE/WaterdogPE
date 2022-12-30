@@ -17,7 +17,7 @@ package dev.waterdog.waterdogpe.network.protocol.handler.upstream;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.WaterdogPE;
-import dev.waterdog.waterdogpe.event.defaults.PlayerPreLoginEvent;
+import dev.waterdog.waterdogpe.event.defaults.PlayerAuthenticatedEvent;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
@@ -155,7 +155,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
             LoginData loginData = handshakeEntry.buildData(this.session, this.proxy);
 
-            PlayerPreLoginEvent loginEvent = new PlayerPreLoginEvent(ProxiedPlayer.class, loginData, (InetSocketAddress) this.session.getSocketAddress());
+            PlayerAuthenticatedEvent loginEvent = new PlayerAuthenticatedEvent(ProxiedPlayer.class, loginData, (InetSocketAddress) this.session.getSocketAddress());
             this.proxy.getEventManager().callEvent(loginEvent);
             if (loginEvent.isCancelled()) {
                 this.session.disconnect(loginEvent.getCancelReason());

@@ -120,32 +120,6 @@ public class ProxiedPlayer implements CommandSender {
      * Called after sending LOGIN_SUCCESS in PlayStatusPacket.
      */
     public void initPlayer() {
-        if (!this.proxy.getConfiguration().enableResourcePacks()) {
-            this.initialConnect();
-            return;
-        }
-
-        ResourcePacksInfoPacket packet = this.proxy.getPackManager().getPacksInfoPacket();
-        PlayerResourcePackInfoSendEvent event = new PlayerResourcePackInfoSendEvent(this, packet);
-        this.proxy.getEventManager().callEvent(event);
-        if (event.isCancelled()) {
-            // Connect player to downstream without sending ResourcePacksInfoPacket
-            this.acceptResourcePacks = false;
-            this.initialConnect();
-            return;
-        }
-
-        this.upstream.setPacketHandler(new ResourcePacksHandler(this));
-        this.upstream.sendPacket(event.getPacket());
-    }
-
-    /**
-     * Called only on the initial connect.
-     * Determines the first player the player gets transferred to based on the currently present JoinHandler.
-     */
-    public void initialConnect() {
-        this.upstream.setPacketHandler(new ConnectedUpstreamHandler(this));
-
         PlayerLoginEvent event = new PlayerLoginEvent(this);
         this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, error) -> {
             if (error != null) {
@@ -159,22 +133,49 @@ public class ProxiedPlayer implements CommandSender {
                 return;
             }
 
-            // Determine forced host first
-            ServerInfo initialServer = this.proxy.getForcedHostHandler().resolveForcedHost(this.loginData.getJoinHostname(), this);
-            if (initialServer == null) {
-                initialServer = this.proxy.getJoinHandler().determineServer(this);
+            if (this.proxy.getConfiguration().enableResourcePacks()) {
+                this.sendResourcePacks();
+            } else {
+                this.initialConnect();
             }
-
-            if (initialServer == null) {
-                this.disconnect(new TranslationContainer("waterdog.no.initial.server"));
-                return;
-            }
-
-            // Event should not change initial server. For we use join handler.
-            InitialServerDeterminationEvent serverEvent = new InitialServerDeterminationEvent(this, initialServer);
-            this.proxy.getEventManager().callEvent(serverEvent);
-            this.connect(initialServer);
         });
+    }
+
+    private void sendResourcePacks() {
+        ResourcePacksInfoPacket packet = this.proxy.getPackManager().getPacksInfoPacket();
+        PlayerResourcePackInfoSendEvent event = new PlayerResourcePackInfoSendEvent(this, packet);
+        this.proxy.getEventManager().callEvent(event);
+        if (event.isCancelled()) {
+            // Connect player to downstream without sending ResourcePacksInfoPacket
+            this.acceptResourcePacks = false;
+            this.initialConnect();
+        } else {
+            this.upstream.setPacketHandler(new ResourcePacksHandler(this));
+            this.upstream.sendPacket(event.getPacket());
+        }
+    }
+
+    /**
+     * Called only on the initial connect.
+     * Determines the first player the player gets transferred to based on the currently present JoinHandler.
+     */
+    public final void initialConnect() {
+        this.upstream.setPacketHandler(new ConnectedUpstreamHandler(this));
+        // Determine forced host first
+        ServerInfo initialServer = this.proxy.getForcedHostHandler().resolveForcedHost(this.loginData.getJoinHostname(), this);
+        if (initialServer == null) {
+            initialServer = this.proxy.getJoinHandler().determineServer(this);
+        }
+
+        if (initialServer == null) {
+            this.disconnect(new TranslationContainer("waterdog.no.initial.server"));
+            return;
+        }
+
+        // Event should not change initial server. For we use join handler.
+        InitialServerDeterminedEvent serverEvent = new InitialServerDeterminedEvent(this, initialServer);
+        this.proxy.getEventManager().callEvent(serverEvent);
+        this.connect(initialServer);
     }
 
     /**
@@ -185,7 +186,7 @@ public class ProxiedPlayer implements CommandSender {
     public void connect(ServerInfo serverInfo) {
         Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
 
-        PreTransferEvent event = new PreTransferEvent(this, serverInfo);
+        ServerTransferRequestEvent event = new ServerTransferRequestEvent(this, serverInfo);
         ProxyServer.getInstance().getEventManager().callEvent(event);
         if (event.isCancelled()) {
             return;
@@ -235,6 +236,15 @@ public class ProxiedPlayer implements CommandSender {
     private void connect0(ServerInfo targetServer, ClientConnection connection) {
         if (!this.isConnected()) {
             connection.disconnect();
+            return;
+        }
+
+        ServerConnectedEvent event = new ServerConnectedEvent(this, connection);
+        this.getProxy().getEventManager().callEvent(event);
+        if (event.isCancelled() || !connection.isConnected()) {
+            if (connection.isConnected()) {
+                connection.disconnect();
+            }
             return;
         }
 
@@ -302,7 +312,7 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        PlayerDisconnectEvent event = new PlayerDisconnectEvent(this, reason);
+        PlayerDisconnectedEvent event = new PlayerDisconnectedEvent(this, reason);
         this.proxy.getEventManager().callEvent(event);
 
         if (this.upstream != null && this.upstream.isConnected()) {
