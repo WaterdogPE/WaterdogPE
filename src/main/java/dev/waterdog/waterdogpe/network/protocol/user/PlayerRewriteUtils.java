@@ -318,7 +318,7 @@ public class PlayerRewriteUtils {
             switch (dimension) {
                 case DIMENSION_NETHER -> packet.setData(fakeChunkDataNether.retainedSlice());
                 case DIMENSION_END -> packet.setData(fakeChunkDataEnd.retainedSlice());
-                case DIMENSION_OVERWORLD, default -> packet.setData(fakeChunkDataOverworld.retainedSlice());
+                default -> packet.setData(fakeChunkDataOverworld.retainedSlice());
             }
         } else if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_18_0)) {
             packet.setSubChunksLength(1);

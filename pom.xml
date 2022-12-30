@@ -211,7 +211,6 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
-                    <compilerArgs>--enable-preview</compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
