@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.utils;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
 import dev.waterdog.waterdogpe.utils.config.*;
+import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;

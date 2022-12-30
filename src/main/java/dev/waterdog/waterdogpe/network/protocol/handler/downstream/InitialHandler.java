@@ -80,7 +80,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
 
     @Override
     public final PacketSignal handle(ResourcePacksInfoPacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks() || !this.player.acceptResourcePacks()) {
+        if (!this.player.getProxy().getConfiguration().enableResourcePacks() || !this.player.acceptResourcePacks()) {
             return PacketSignal.UNHANDLED;
         }
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();
@@ -91,7 +91,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
 
     @Override
     public final PacketSignal handle(ResourcePackStackPacket packet) {
-        if (!this.player.getProxy().getConfiguration().enabledResourcePacks() || !this.player.acceptResourcePacks()) {
+        if (!this.player.getProxy().getConfiguration().enableResourcePacks() || !this.player.acceptResourcePacks()) {
             return PacketSignal.UNHANDLED;
         }
         ResourcePackClientResponsePacket response = new ResourcePackClientResponsePacket();

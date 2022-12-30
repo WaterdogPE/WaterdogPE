@@ -13,29 +13,29 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils.config;
+package dev.waterdog.waterdogpe.utils.config.serializer;
 
+import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
 import net.cubespace.Yamler.Config.Converter.Converter;
 import net.cubespace.Yamler.Config.InternalConverter;
 
 import java.lang.reflect.ParameterizedType;
-import java.net.InetSocketAddress;
 
-public class InetSocketAddressConverter implements Converter {
+public class CompressionAlgorithmConverter implements Converter {
 
     private final InternalConverter internalConverter;
 
-    public InetSocketAddressConverter(InternalConverter internalConverter) {
+    public CompressionAlgorithmConverter(InternalConverter internalConverter) {
         this.internalConverter = internalConverter;
     }
 
     @Override
     public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
-        if (object == null) {
-            return null;
+        if (object instanceof CompressionAlgorithm algorithm) {
+            return algorithm.getIdentifier();
+        } else {
+            throw new IllegalArgumentException("Can not serialize " + object.getClass().getSimpleName() + " as CompressionAlgorithm");
         }
-        InetSocketAddress address = (InetSocketAddress) object;
-        return address.getHostName() + ":" + address.getPort();
     }
 
     @Override
@@ -43,14 +43,11 @@ public class InetSocketAddressConverter implements Converter {
         if (object == null) {
             return null;
         }
-        String string = (String) object;
-        String address = string.substring(0, string.lastIndexOf(":"));
-        int port = Integer.parseInt(string.substring(string.lastIndexOf(":") + 1));
-        return new InetSocketAddress(address, port);
+        return CompressionAlgorithm.fromString((String) object);
     }
 
     @Override
     public boolean supports(Class<?> type) {
-        return InetSocketAddress.class.isAssignableFrom(type);
+        return CompressionAlgorithm.class.isAssignableFrom(type);
     }
 }

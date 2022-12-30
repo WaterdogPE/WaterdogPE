@@ -40,16 +40,15 @@ import dev.waterdog.waterdogpe.utils.ConfigurationManager;
 import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.utils.bstats.Metrics;
 import dev.waterdog.waterdogpe.utils.config.*;
+import dev.waterdog.waterdogpe.utils.config.proxy.NetworkSettings;
+import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import dev.waterdog.waterdogpe.utils.types.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.unix.UnixChannelOption;
-import io.netty.util.concurrent.DefaultPromise;
-import io.netty.util.concurrent.PromiseCombiner;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
@@ -129,7 +128,7 @@ public class ProxyServer {
         this.configurationManager.loadProxyConfig();
         this.configurationManager.loadLanguage();
 
-        if (!this.getConfiguration().isIpv6Enabled()) {
+        if (!this.getNetworkSettings().enableIpv6()) {
             // Some devices and networks may not support IPv6
             System.setProperty("java.net.preferIPv4Stack", "true");
         }
@@ -196,7 +195,7 @@ public class ProxyServer {
         this.console.getConsoleThread().start();
         this.pluginManager.enableAllPlugins();
         if (this.getConfiguration().useFastCodec()) {
-            this.logger.debug("Using fast codec! Please ensure plugin compatibility!");
+            this.logger.info("Using fast codec! Please ensure plugin compatibility!");
             for (ProtocolVersion version : ProtocolVersion.values()) {
                 version.setBedrockCodec(ProtocolCodecs.buildCodec(version.getDefaultCodec()));
             }
@@ -207,14 +206,14 @@ public class ProxyServer {
             this.getLogger().info("Enabling anonymous statistics.");
         }
 
-        if (this.getConfiguration().enabledResourcePacks()) {
+        if (this.getConfiguration().enableResourcePacks()) {
             this.packManager.loadPacks(this.packsPath);
         }
 
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
         this.logger.info("Binding to " + bindAddress);
 
-        if (this.getConfiguration().isEnabledQuery()) {
+        if (this.getConfiguration().enableQuery()) {
             this.queryHandler = new QueryHandler(this);
         }
 
@@ -229,6 +228,7 @@ public class ProxyServer {
 
         this.logger.debug("Upstream <-> Proxy compression level " + this.getConfiguration().getUpstreamCompression());
         this.logger.debug("Downstream <-> Proxy compression level " + this.getConfiguration().getDownstreamCompression());
+        this.logger.debug("MTU Settings: max_user=" + this.getNetworkSettings().getMaximumMtu() + " max_server=" + this.getNetworkSettings().getMaximumDownstreamMtu());
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
         this.tickFuture = this.tickExecutor.scheduleAtFixedRate(this::tickProcessor, 50, 50, TimeUnit.MILLISECONDS);
@@ -246,7 +246,7 @@ public class ProxyServer {
                     // .option(CustomChannelOption.IP_DONT_FRAG, 2 /* IP_PMTUDISC_DO */)
                     .option(RakChannelOption.RAK_GUID, this.serverId)
                     .option(RakChannelOption.RAK_HANDLE_PING, true)
-                    .option(RakChannelOption.RAK_MAX_MTU, RakConstants.MAXIMUM_MTU_SIZE)
+                    .option(RakChannelOption.RAK_MAX_MTU, this.getNetworkSettings().getMaximumMtu())
                     .childOption(RakChannelOption.RAK_ORDERING_CHANNELS, 1)
                     .handler(new OfflineServerChannelInitializer(this))
                     .childHandler(new ProxiedServerSessionInitializer(this));
@@ -386,6 +386,10 @@ public class ProxyServer {
 
     public ProxyConfig getConfiguration() {
         return this.configurationManager.getProxyConfig();
+    }
+
+    public NetworkSettings getNetworkSettings() {
+        return this.configurationManager.getProxyConfig().getNetworkSettings();
     }
 
     public LangConfig getLanguageConfig() {

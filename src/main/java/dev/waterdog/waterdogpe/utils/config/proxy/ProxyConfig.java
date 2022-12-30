@@ -13,11 +13,19 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils.config;
+package dev.waterdog.waterdogpe.utils.config.proxy;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
+import dev.waterdog.waterdogpe.utils.config.ServerList;
+import dev.waterdog.waterdogpe.utils.config.serializer.CompressionAlgorithmConverter;
+import dev.waterdog.waterdogpe.utils.config.serializer.InetSocketAddressConverter;
+import dev.waterdog.waterdogpe.utils.config.serializer.ServerEntryConverter;
+import dev.waterdog.waterdogpe.utils.config.serializer.ServerListConverter;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import net.cubespace.Yamler.Config.YamlConfig;
 import net.cubespace.Yamler.Config.*;
 
@@ -25,16 +33,9 @@ import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.*;
 
+@Getter @Setter
 @SerializeOptions(skipFailedObjects = true)
 public class ProxyConfig extends YamlConfig {
-
-    @Path("servers")
-    @Comments({
-            "A list of all downstream servers that are available right after starting",
-            "address field is formatted using ip:port",
-            "publicAddress is optional and can be set to the ip players can directly connect through"
-    })
-    private ServerList serverList = new ServerList().initEmpty();
 
     @Path("listener.motd")
     @Comment("The Motd which will be displayed in the server tab of a player and returned during ping")
@@ -64,6 +65,18 @@ public class ProxyConfig extends YamlConfig {
     })
     private Map<String, String> forcedHosts = new HashMap<>();
 
+    @Path("servers")
+    @Comments({
+            "A list of all downstream servers that are available right after starting",
+            "address field is formatted using ip:port",
+            "publicAddress is optional and can be set to the ip players can directly connect through"
+    })
+    private ServerList serverList = new ServerList().initEmpty();
+
+    @Path("network_settings")
+    @Comment("Connection and security related settings. Do NOT edit unless you know what you are doing!")
+    private NetworkSettings networkSettings = new NetworkSettings();
+
     @Path("permissions")
     @Comment("Case-Sensitive permission list for players (empty using {})")
     private Object2ObjectOpenHashMap<String, List<String>> playerPermissions = new Object2ObjectOpenHashMap<>() {{
@@ -87,15 +100,12 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, only players which are authenticated with XBOX Live can join. If disabled, anyone can connect *with any name*")
     private boolean onlineMode = true;
 
-    @Path("enable_ipv6")
-    @Comment("If enabled, the proxy will be able to bind to an Ipv6 Address")
-    private boolean enableIpv6 = false;
-
-    @Path("additional_ports")
+    @Path("listener.additional_ports")
     @Comment("Additional ports to listen to")
     private List<Integer> additionalPorts = new ArrayList<>();
 
     @Path("use_login_extras")
+    @Accessors(fluent = true)
     @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")
     private boolean useLoginExtras = false;
 
@@ -104,18 +114,22 @@ public class ProxyConfig extends YamlConfig {
     private boolean replaceUsernameSpaces = false;
 
     @Path("enable_query")
+    @Accessors(fluent = true)
     @Comment("Whether server query should be enabled")
     private boolean enableQuery = true;
 
     @Path("prefer_fast_transfer")
+    @Accessors(fluent = true)
     @Comment("If enabled, when receiving a McpeTransferPacket, the proxy will check if the target server is in the downstream list, and if yes, use the fast transfer mechanism")
-    private boolean fastTransfer = true;
+    private boolean useFastTransfer = true;
 
     @Path("use_fast_codec")
+    @Accessors(fluent = true)
     @Comment("Fast-codec only decodes the packets required by the proxy, everything else will be passed rawly. Disabling this can create a performance hit")
-    private boolean fastCodec = true;
+    private boolean useFastCodec = true;
 
     @Path("inject_proxy_commands")
+    @Accessors(fluent = true)
     @Comment("If enabled, the proxy will inject all the proxy commands in the AvailableCommandsPacket, enabling autocompletion")
     private boolean injectCommands = true;
 
@@ -135,10 +149,12 @@ public class ProxyConfig extends YamlConfig {
     private int downstreamCompression = 2;
 
     @Path("enable_edu_features")
+    @Accessors(fluent = true)
     @Comment("Education features require small adjustments to work correctly. Enable this option if any of downstream servers support education features.")
     private boolean enableEducationFeatures = true;
 
     @Path("enable_packs")
+    @Accessors(fluent = true)
     @Comment("Enable/Disable the resource pack system")
     private boolean enableResourcePacks = true;
 
@@ -175,175 +191,7 @@ public class ProxyConfig extends YamlConfig {
         }
     }
 
-    public String getMotd() {
-        return this.motd;
-    }
-
-    public void setMotd(String motd) {
-        this.motd = motd;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public int getMaxPlayerCount() {
-        return this.maxPlayerCount;
-    }
-
-    public void setMaxPlayerCount(int maxPlayerCount) {
-        this.maxPlayerCount = maxPlayerCount;
-    }
-
-    public boolean isUpstreamEncryption() {
-        return this.upstreamEncryption;
-    }
-
-    public boolean isOnlineMode() {
-        return this.onlineMode;
-    }
-
-    public void setEnableQuery(boolean enableQuery) {
-        this.enableQuery = enableQuery;
-    }
-
-    public boolean isEnabledQuery() {
-        return this.enableQuery;
-    }
-
-    public boolean useLoginExtras() {
-        return this.useLoginExtras;
-    }
-
-    public void setUseLoginExtras(boolean useLoginExtras) {
-        this.useLoginExtras = useLoginExtras;
-    }
-
-    public boolean isReplaceUsernameSpaces() {
-        return this.replaceUsernameSpaces;
-    }
-
-    public boolean useFastCodec() {
-        return this.fastCodec;
-    }
-
-    public void setUseFastTransfer(boolean fastTransfer) {
-        this.fastTransfer = fastTransfer;
-    }
-
-    public boolean useFastTransfer() {
-        return this.fastTransfer;
-    }
-
-    public InetSocketAddress getBindAddress() {
-        return this.bindAddress;
-    }
-
-    public List<String> getPriorities() {
-        return this.priorities;
-    }
-
-    public Map<String, String> getForcedHosts() {
-        return this.forcedHosts;
-    }
-
-    public Map<String, List<String>> getPlayerPermissions() {
-        return this.playerPermissions;
-    }
-
-    public List<String> getDefaultPermissions() {
-        return this.defaultPermissions;
-    }
-
-    public void setDefaultPermissions(List<String> defaultPermissions) {
-        this.defaultPermissions = defaultPermissions;
-    }
-
-    public int getUpstreamCompression() {
-        return this.upstreamCompression;
-    }
-
-    public int getDownstreamCompression() {
-        return this.downstreamCompression;
-    }
-
-    public boolean isDebug() {
-        return this.debug;
-    }
-
-    public boolean injectCommands() {
-        return this.injectCommands;
-    }
-
-    public boolean isIpv6Enabled() {
-        return enableIpv6;
-    }
-
-    public void setIpv6Enabled(boolean enableIpv6) {
-        this.enableIpv6 = enableIpv6;
-    }
-
-    public boolean enableEducationFeatures() {
-        return this.enableEducationFeatures;
-    }
-
-    public List<Integer> getAdditionalPorts() {
-        return additionalPorts;
-    }
-
-    public boolean enabledResourcePacks() {
-        return this.enableResourcePacks;
-    }
-
-    public boolean isOverwriteClientPacks() {
-        return overwriteClientPacks;
-    }
-
-    public void setOverwriteClientPacks(boolean overwriteClientPacks) {
-        this.overwriteClientPacks = overwriteClientPacks;
-    }
-
-    public void setForceServerPacks(boolean forceServerPacks) {
-        this.forceServerPacks = forceServerPacks;
-    }
-
-    public boolean isForceServerPacks() {
-        return forceServerPacks;
-    }
-
-    public int getPackCacheSize() {
-        return this.packCacheSize;
-    }
-
-    public void setPackCacheSize(int packCacheSize) {
-        this.packCacheSize = packCacheSize;
-    }
-
-    public ServerList getServerList() {
-        return this.serverList;
-    }
-
-    public int getDefaultIdleThreads() {
-        return this.defaultIdleThreads;
-    }
-
     public int getIdleThreads() {
         return this.defaultIdleThreads < 1 ? Runtime.getRuntime().availableProcessors() : this.defaultIdleThreads;
-    }
-
-    public boolean isEnableAnonymousStatistics() {
-        return this.enableAnonymousStatistics;
-    }
-
-    public CompressionAlgorithm getCompression() {
-        return this.compression;
-    }
-
-    public void setCompression(CompressionAlgorithm compression) {
-        this.compression = compression;
     }
 }

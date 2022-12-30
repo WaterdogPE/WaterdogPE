@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils.config;
+package dev.waterdog.waterdogpe.utils.config.serializer;
 
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoType;
+import dev.waterdog.waterdogpe.utils.config.ServerEntry;
 import net.cubespace.Yamler.Config.ConfigSection;
 import net.cubespace.Yamler.Config.Converter.Converter;
 import net.cubespace.Yamler.Config.InternalConverter;

@@ -120,7 +120,7 @@ public class ProxiedPlayer implements CommandSender {
      * Called after sending LOGIN_SUCCESS in PlayStatusPacket.
      */
     public void initPlayer() {
-        if (!this.proxy.getConfiguration().enabledResourcePacks()) {
+        if (!this.proxy.getConfiguration().enableResourcePacks()) {
             this.initialConnect();
             return;
         }
