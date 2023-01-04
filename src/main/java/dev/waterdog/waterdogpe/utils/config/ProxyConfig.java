@@ -355,7 +355,7 @@ public class ProxyConfig extends YamlConfig {
     }
 
     public int getMaxConnectionsPerIp() {
-        return maxConnectionsPerIp;
+        return this.maxConnectionsPerIp;
     }
 
     public void setMaxConnectionsPerIp(int maxConnectionsPerIp) {
