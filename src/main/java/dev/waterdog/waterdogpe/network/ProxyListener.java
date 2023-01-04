@@ -33,7 +33,6 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Main class for Proxy-related traffic.
@@ -46,7 +45,7 @@ public class ProxyListener implements BedrockServerEventHandler {
     private final ProxyServer proxy;
     private final QueryHandler queryHandler;
     private final InetSocketAddress bindAddress;
-    private final HashMap<InetAddress, int> connectionsPerIpCounter = new HashMap<InetAddress, int>();
+    private final HashMap<InetAddress, Integer> connectionsPerIpCounter = new HashMap<>();
     private final int maxConnectionsPerIp;
 
     public ProxyListener(ProxyServer proxy, QueryHandler queryHandler, InetSocketAddress bindAddress) {
@@ -104,7 +103,7 @@ public class ProxyListener implements BedrockServerEventHandler {
 
         session.addDisconnectHandler((reason) -> {
             synchronized (this.connectionsPerIpCounter) {
-                int connections = this.connectionsPerIpCounter.getOrDefault(address, 0);
+                Integer connections = this.connectionsPerIpCounter.getOrDefault(address, 0);
                 connections--;
                 if (connections < 1) {
                     this.connectionsPerIpCounter.remove(address);
