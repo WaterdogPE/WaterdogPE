@@ -31,7 +31,7 @@ import io.netty.channel.socket.DatagramPacket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -46,7 +46,7 @@ public class ProxyListener implements BedrockServerEventHandler {
     private final ProxyServer proxy;
     private final QueryHandler queryHandler;
     private final InetSocketAddress bindAddress;
-    private final ConcurrentHashMap<InetAddress, AtomicInteger> connectionsPerIpCounter = new ConcurrentHashMap<>();
+    private final HashMap<InetAddress, int> connectionsPerIpCounter = new HashMap<InetAddress, int>();
     private final int maxConnectionsPerIp;
 
     public ProxyListener(ProxyServer proxy, QueryHandler queryHandler, InetSocketAddress bindAddress) {
@@ -103,14 +103,29 @@ public class ProxyListener implements BedrockServerEventHandler {
         this.proxy.getLogger().debug("[" + address + "] <-> Received first data");
 
         session.addDisconnectHandler((reason) -> {
-            if(this.connectionsPerIpCounter.getOrDefault(address, new AtomicInteger(0)).decrementAndGet() < 1) {
-                this.connectionsPerIpCounter.remove(address);
+            synchronized (this.connectionsPerIpCounter) {
+                int connections = this.connectionsPerIpCounter.getOrDefault(address, 0);
+                connections--;
+                if (connections < 1) {
+                    this.connectionsPerIpCounter.remove(address);
+                    return;
+                }
+                this.connectionsPerIpCounter.put(address, connections);
             }
         });
 
-        if (this.connectionsPerIpCounter.getOrDefault(address, new AtomicInteger(0)).incrementAndGet() > this.maxConnectionsPerIp) {
+        boolean reachedMaxConnections = false;
+
+        synchronized (this.connectionsPerIpCounter) {
+            this.connectionsPerIpCounter.put(address, this.connectionsPerIpCounter.getOrDefault(address, 1) + 1);
+            if (this.connectionsPerIpCounter.get(address) > this.maxConnectionsPerIp) {
+                reachedMaxConnections = true;
+            }
+        }
+
+        if (reachedMaxConnections) {
             session.disconnect("Disconnected due reached max connections per IP", true);
-            this.proxy.getBedrockServer().getRakNet().block(address, 3600, TimeUnit.SECONDS); // Block to prevent further attack
+            this.proxy.getBedrockServer().getRakNet().block(address, 3600, TimeUnit.SECONDS);
             return;
         }
 
