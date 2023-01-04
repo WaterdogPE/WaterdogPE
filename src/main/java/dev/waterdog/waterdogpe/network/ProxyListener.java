@@ -116,7 +116,7 @@ public class ProxyListener implements BedrockServerEventHandler {
         boolean reachedMaxConnections = false;
 
         synchronized (this.connectionsPerIpCounter) {
-            this.connectionsPerIpCounter.put(address, this.connectionsPerIpCounter.getOrDefault(address, 1) + 1);
+            this.connectionsPerIpCounter.put(address, this.connectionsPerIpCounter.getOrDefault(address, 0) + 1);
             if (this.connectionsPerIpCounter.get(address) > this.maxConnectionsPerIp) {
                 reachedMaxConnections = true;
             }
