@@ -58,7 +58,7 @@ public class TextContainer implements Cloneable {
         try {
             return (TextContainer) super.clone();
         } catch (CloneNotSupportedException e) {
-            MainLogger.getLogger().logException(e);
+            MainLogger.getLogger().throwing(e);
         }
         return null;
     }

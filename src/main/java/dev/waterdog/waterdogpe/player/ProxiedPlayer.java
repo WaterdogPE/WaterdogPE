@@ -123,7 +123,7 @@ public class ProxiedPlayer implements CommandSender {
         PlayerLoginEvent event = new PlayerLoginEvent(this);
         this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, error) -> {
             if (error != null) {
-                this.getLogger().logException(error);
+                this.getLogger().throwing(error);
                 this.disconnect(new TranslationContainer("waterdog.downstream.initial.connect"));
                 return;
             }

@@ -62,7 +62,7 @@ public class WaterdogPE {
         try {
             new ProxyServer(logger, DATA_PATH, PLUGIN_PATH);
         } catch (Exception e) {
-            logger.logException(e);
+            logger.throwing(e);
             shutdownHook();
         }
     }

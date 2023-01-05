@@ -32,6 +32,7 @@ public interface ProxiedConnection {
     }
 
     BedrockPacketHandler getPacketHandler();
+
     void setPacketHandler(BedrockPacketHandler handler);
 
     SocketAddress getSocketAddress();

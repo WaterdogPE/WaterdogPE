@@ -20,7 +20,6 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.PreClientDataSetEvent;
 import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockSession;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
-import dev.waterdog.waterdogpe.network.protocol.util.HandshakeUtils;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 
 import java.security.interfaces.ECPublicKey;

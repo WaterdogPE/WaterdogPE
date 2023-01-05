@@ -23,7 +23,7 @@ import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeEntry;
-import dev.waterdog.waterdogpe.network.protocol.util.HandshakeUtils;
+import dev.waterdog.waterdogpe.network.protocol.user.HandshakeUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;

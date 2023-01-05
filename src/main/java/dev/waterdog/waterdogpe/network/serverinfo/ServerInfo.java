@@ -16,7 +16,6 @@
 package dev.waterdog.waterdogpe.network.serverinfo;
 
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
-import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.util.concurrent.Future;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;

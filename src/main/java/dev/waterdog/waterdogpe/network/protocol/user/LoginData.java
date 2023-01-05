@@ -18,7 +18,6 @@ package dev.waterdog.waterdogpe.network.protocol.user;
 import com.google.gson.JsonObject;
 import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
-import dev.waterdog.waterdogpe.network.protocol.util.HandshakeUtils;
 import lombok.Builder;
 import org.cloudburstmc.protocol.bedrock.packet.ClientCacheStatusPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;

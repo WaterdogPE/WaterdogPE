@@ -20,35 +20,65 @@ package dev.waterdog.waterdogpe.logger;
  */
 public interface Logger {
 
-    void emergency(String message);
+    void debug(String message);
 
-    void alert(String message);
+    void debug(String message, Object... params);
 
-    void critical(String message);
-
-    void error(String message);
-
-    void warning(String message);
-
-    void notice(String message);
+    void debug(String message, Throwable t);
 
     void info(String message);
 
-    void debug(String message);
-
-    void emergency(String message, Throwable t);
-
-    void alert(String message, Throwable t);
-
-    void critical(String message, Throwable t);
-
-    void error(String message, Throwable t);
-
-    void warning(String message, Throwable t);
-
-    void notice(String message, Throwable t);
+    void info(String message, Object... params);
 
     void info(String message, Throwable t);
 
-    void debug(String message, Throwable t);
+    void warning(String message);
+
+    void warning(String message, Object... params);
+
+    void warning(String message, Throwable t);
+
+    void error(String message);
+
+    void error(String message, Object... params);
+
+    void error(String message, Throwable t);
+
+    void critical(String message);
+
+    void critical(String message, Object... params);
+
+    void critical(String message, Throwable t);
+
+    void throwing(Throwable throwable);
+
+    @Deprecated
+    default void alert(String message) {
+        this.warning(message);
+    }
+
+    @Deprecated
+    default void alert(String message, Throwable t) {
+        this.warning(message, t);
+    }
+
+    @Deprecated
+    default void notice(String message) {
+        this.info(message);
+    }
+
+    @Deprecated
+    default void notice(String message, Throwable t) {
+        this.info(message, t);
+    }
+
+    @Deprecated
+    default void emergency(String message)  {
+        this.warning(message);
+    }
+
+    @Deprecated
+    default void emergency(String message, Throwable t) {
+        this.warning(message, t);
+    }
 }
