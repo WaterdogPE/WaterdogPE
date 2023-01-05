@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.protocol.handler.downstream;
 
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.protocol.handler.PluginPacketHandler;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.event.defaults.FastTransferRequestEvent;
 import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
@@ -26,12 +27,24 @@ import dev.waterdog.waterdogpe.network.protocol.Signals;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import org.cloudburstmc.protocol.common.PacketSignal;
 
+import static dev.waterdog.waterdogpe.network.protocol.Signals.mergeSignals;
 import static dev.waterdog.waterdogpe.network.protocol.user.PlayerRewriteUtils.injectEntityImmobile;
 
 public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
     public ConnectedDownstreamHandler(ProxiedPlayer player, ClientConnection connection) {
         super(player, connection);
+    }
+
+    @Override
+    public PacketSignal handlePacket(BedrockPacket packet) {
+        PacketSignal signal = super.handlePacket(packet);
+        if (player.getPluginPacketHandlers().size() > 0) {
+            for (PluginPacketHandler handler : this.player.getPluginPacketHandlers()) {
+                signal = mergeSignals(signal, handler.handlePacket(packet, PluginPacketHandler.Direction.FROM_SERVER));
+            }
+        }
+        return signal;
     }
 
     @Override

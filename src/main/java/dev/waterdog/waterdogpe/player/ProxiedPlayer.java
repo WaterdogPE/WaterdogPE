@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.player;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.protocol.handler.PluginPacketHandler;
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.CompressionInitHandler;
 import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
 import dev.waterdog.waterdogpe.network.protocol.user.Platform;
@@ -45,10 +46,7 @@ import it.unimi.dsi.fastutil.objects.*;
 import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import java.net.InetSocketAddress;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -100,9 +98,7 @@ public class ProxiedPlayer implements CommandSender {
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
      */
-    // TODO: currently unused
-    // private final List<PacketHandler> pluginUpstreamHandlers = new ObjectArrayList<>();
-    // private final List<PacketHandler> pluginDownstreamHandlers = new ObjectArrayList<>();
+    private final Collection<PluginPacketHandler> pluginPacketHandlers = new ObjectArrayList<>();
 
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, CompressionAlgorithm compression, LoginData loginData) {
         this.proxy = proxy;
@@ -850,15 +846,6 @@ public class ProxiedPlayer implements CommandSender {
         return this.chunkBlobs;
     }
 
-    /*public List<PacketHandler> getPluginUpstreamHandlers() {
-        return this.pluginUpstreamHandlers;
-    }
-
-    public List<PacketHandler> getPluginDownstreamHandlers() {
-        return this.pluginDownstreamHandlers;
-    }*/
-
-
     public void setAcceptPlayStatus(boolean acceptPlayStatus) {
         this.acceptPlayStatus = acceptPlayStatus;
     }
@@ -873,6 +860,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public CompressionAlgorithm getCompression() {
         return this.compression;
+    }
+
+    public Collection<PluginPacketHandler> getPluginPacketHandlers() {
+        return this.pluginPacketHandlers;
     }
 
     @Override
