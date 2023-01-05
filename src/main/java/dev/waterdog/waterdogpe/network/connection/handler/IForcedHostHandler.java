@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 WaterdogTEAM
+ * Copyright 2023 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,22 +13,18 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils.types;
+package dev.waterdog.waterdogpe.network.connection.handler;
 
-import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
-public class VanillaJoinHandler implements IJoinHandler {
+public interface IForcedHostHandler {
 
-    private final ProxyServer server;
-
-    public VanillaJoinHandler(ProxyServer server) {
-        this.server = server;
-    }
-
-    @Override
-    public ServerInfo determineServer(ProxiedPlayer player) {
-        return this.server.getServerInfo(this.server.getConfiguration().getPriorities().get(0));
-    }
+    /**
+     * This handler can be overwritten to implement custom forced-host handler logic.
+     * @param domain The domain used in Minecraft's "Address" tab when connecting
+     * @param player The player object of the player that tried to join
+     * @return A ServerInfo object of the server that player should be moved to, or null if it should use priorities instead
+     */
+    ServerInfo resolveForcedHost(String domain, ProxiedPlayer player);
 }

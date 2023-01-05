@@ -104,6 +104,14 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Additional ports to listen to")
     private List<Integer> additionalPorts = new ArrayList<>();
 
+    @Path("listener.join_handler")
+    @Comment("The join handler used to determine the first entered server. Possible options: DefaultJoinHandler")
+    private String joinHandler = "DefaultJoinHandler";
+
+    @Path("listener.reconnect_handler")
+    @Comment("The reconnect handler used to determine fallback connections. Possible options: DefaultReconnectHandler, RoundRobinReconnectHandler")
+    private String reconnectHandler = "DefaultReconnectHandler";
+
     @Path("use_login_extras")
     @Accessors(fluent = true)
     @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")

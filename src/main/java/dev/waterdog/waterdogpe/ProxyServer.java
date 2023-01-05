@@ -26,6 +26,7 @@ import dev.waterdog.waterdogpe.network.EventLoops;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedServerSessionInitializer;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.OfflineServerChannelInitializer;
+import dev.waterdog.waterdogpe.network.connection.handler.*;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolCodecs;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
@@ -52,7 +53,6 @@ import io.netty.channel.unix.UnixChannelOption;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
-import org.cloudburstmc.netty.channel.raknet.RakConstants;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.protocol.common.util.Preconditions;
 
@@ -169,10 +169,10 @@ public class ProxyServer {
         this.bossEventLoopGroup = channelType.newEventLoopGroup(0, bossFactory);
 
         // Default Handlers
-        this.reconnectHandler = new VanillaReconnectHandler();
-        this.forcedHostHandler = new VanillaForcedHostHandler();
-        this.metricsHandler = new VanillaMetricsHandler();
-        this.joinHandler = new VanillaJoinHandler(this);
+        this.reconnectHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getReconnectHandler(), IReconnectHandler.class);
+        this.joinHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getJoinHandler(), IJoinHandler.class);
+        this.forcedHostHandler = new DefaultForcedHostHandler();
+        this.metricsHandler = new DefaultMetricsHandler();
         this.pluginManager = new PluginManager(this);
         this.configurationManager.loadServerInfos(this.serverInfoMap);
         this.scheduler = new WaterdogScheduler(this);

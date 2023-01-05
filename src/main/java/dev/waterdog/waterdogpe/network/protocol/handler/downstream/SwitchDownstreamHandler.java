@@ -91,7 +91,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
     public PacketSignal handle(PlayStatusPacket packet) {
         return this.onPlayStatus(packet, message -> {
             this.connection.disconnect();
-            this.player.setConnectingServer(null);
             this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.connection.getServerInfo().getServerName(), message));
         }, this.connection);
     }
@@ -114,7 +113,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         ClientConnection oldConnection = this.player.getDownstreamConnection();
         oldConnection.getServerInfo().removeConnection(oldConnection);
         oldConnection.disconnect();
-        this.player.setConnectingServer(null);
         this.player.setDownstreamConnection(this.connection);
         this.connection.getServerInfo().addConnection(this.connection);
         this.player.setAcceptPlayStatus(true);
@@ -217,7 +215,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         }
 
         this.connection.disconnect();
-        this.player.setConnectingServer(null);
         this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.connection.getServerInfo().getServerName(), packet.getKickMessage()));
         return Signals.CANCEL;
     }

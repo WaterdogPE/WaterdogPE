@@ -70,7 +70,7 @@ public class LangConfig {
 
         if (args != null) {
             for (int i = 0; i < args.length; i++) {
-                string = string.replace("{%" + i + "}", args[i]);
+                string = string.replace("{%" + i + "}", String.valueOf(args[i]));
             }
         }
         return string;

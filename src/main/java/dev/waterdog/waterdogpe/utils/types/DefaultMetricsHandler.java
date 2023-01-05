@@ -15,7 +15,7 @@
 
 package dev.waterdog.waterdogpe.utils.types;
 
-public class VanillaMetricsHandler implements IMetricsHandler {
+public class DefaultMetricsHandler implements IMetricsHandler {
     @Override
     public void changedBatch() {
 

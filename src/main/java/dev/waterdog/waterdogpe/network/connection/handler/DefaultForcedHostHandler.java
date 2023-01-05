@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 WaterdogTEAM
+ * Copyright 2023 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils.types;
+package dev.waterdog.waterdogpe.network.connection.handler;
 
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
-public class VanillaForcedHostHandler implements IForcedHostHandler {
+public class DefaultForcedHostHandler implements IForcedHostHandler {
     @Override
     public ServerInfo resolveForcedHost(String domain, ProxiedPlayer player) {
         // Determine forced host first

@@ -26,6 +26,8 @@ import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Optional;
+import java.util.ServiceLoader;
 
 public class ConfigurationManager {
 
@@ -81,6 +83,13 @@ public class ConfigurationManager {
             }
         }
         this.langConfig = new LangConfig(langFile);
+    }
+
+    public <T> T loadServiceProvider(String providerName, Class<T> clazz) {
+        ServiceLoader<T> loader = ServiceLoader.load(clazz);
+        Optional<ServiceLoader.Provider<T>> optional = loader.stream().filter(provider -> provider.type().getSimpleName().equals(providerName) ||
+                provider.type().getName().equals(providerName)).findFirst();
+        return optional.isPresent() ? optional.get().get() : loader.findFirst().orElse(null);
     }
 
     public ProxyServer getProxy() {

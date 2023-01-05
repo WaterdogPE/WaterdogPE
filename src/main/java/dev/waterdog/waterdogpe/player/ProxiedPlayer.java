@@ -47,6 +47,7 @@ import org.cloudburstmc.protocol.common.util.Preconditions;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -74,7 +75,7 @@ public class ProxiedPlayer implements CommandSender {
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private final Collection<ServerInfo> pendingServers = ObjectCollections.synchronize(new ObjectArrayList<>());
     private ClientConnection clientConnection;
-    private ClientConnection connectingServer;
+    private ClientConnection pendingConnection;
 
     private boolean admin = false;
     /**
@@ -205,7 +206,7 @@ public class ProxiedPlayer implements CommandSender {
 
         this.pendingServers.add(targetServer);
 
-        ClientConnection connectingServer = this.getConnectingServer();
+        ClientConnection connectingServer = this.getPendingConnection();
         if (connectingServer != null) {
             if (connectingServer.getServerInfo() == targetServer) {
                 this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
@@ -214,21 +215,21 @@ public class ProxiedPlayer implements CommandSender {
                 connectingServer.disconnect();
                 this.getLogger().debug("Discarding pending connection for " + this.getName() + "! Tried to join " + targetServer.getServerName());
             }
-            this.setConnectingServer(null);
+            this.setPendingConnection(null);
         }
 
         targetServer.createConnection(this).addListener(future -> {
+            ClientConnection connection = null;
             try {
                 this.pendingServers.remove(targetServer);
                 if (future.cause() == null) {
-                    ClientConnection connection = (ClientConnection) future.get();
-                    this.connect0(targetServer, connection);
+                    this.connect0(targetServer, connection = (ClientConnection) future.get());
                 } else {
                     this.connectFailure(null, targetServer, future.cause());
                 }
             } catch (Throwable e) {
-                this.connectFailure((ClientConnection) future.get(), targetServer, e);
-                this.setConnectingServer(null);
+                this.connectFailure(connection, targetServer, e);
+                this.setPendingConnection(null);
             }
         });
     }
@@ -248,7 +249,7 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        this.setConnectingServer(connection);
+        this.setPendingConnection(connection);
 
         connection.setCodecHelper(this.getProtocol().getCodec(),
                 this.upstream.getPeer().getCodecHelper());
@@ -269,7 +270,7 @@ public class ProxiedPlayer implements CommandSender {
             connection.sendPacket(this.loginData.getLoginPacket());
         }
 
-        this.getLogger().info("[" + connection.getSocketAddress() + "|" + this.getName() + "] -> Downstream [" + targetServer.getServerName() + "] has connected");
+        this.getLogger().info("[{}|{}] -> Downstream [{}] has connected", connection.getSocketAddress(), this.getName(), targetServer.getServerName());
     }
 
     private void connectFailure(ClientConnection connection, ServerInfo targetServer, Throwable error) {
@@ -277,8 +278,8 @@ public class ProxiedPlayer implements CommandSender {
             connection.disconnect();
         }
 
-        this.getLogger().error("[" + this.getAddress() + "|" + this.getName() + "] Unable to connect to downstream " + targetServer.getServerName(), error);
-        String exceptionMessage = error.getLocalizedMessage();
+        this.getLogger().error("[{}|{}] Unable to connect to downstream {}", this.getAddress(), this.getName(), targetServer.getServerName(), error);
+        String exceptionMessage = Objects.requireNonNullElse(error.getLocalizedMessage(), error.getClass().getSimpleName());
         if (this.sendToFallback(targetServer, exceptionMessage)) {
             this.sendMessage(new TranslationContainer("waterdog.connected.fallback", targetServer.getServerName()));
         } else {
@@ -324,7 +325,7 @@ public class ProxiedPlayer implements CommandSender {
             this.clientConnection.disconnect();
         }
 
-        ClientConnection connection = this.getConnectingServer();
+        ClientConnection connection = this.getPendingConnection();
         if (connection != null) {
             connection.disconnect();
         }
@@ -363,6 +364,9 @@ public class ProxiedPlayer implements CommandSender {
     public final void onDownstreamDisconnected(ClientConnection connection) {
         this.getLogger().info("[" + connection.getSocketAddress() + "|" + this.getName() + "] -> Downstream [" +
                 connection.getServerInfo().getServerName() + "] has disconnected");
+        if (this.getPendingConnection() == connection) {
+            this.setPendingConnection(null);
+        }
     }
 
     /**
@@ -730,20 +734,31 @@ public class ProxiedPlayer implements CommandSender {
         return this.proxy.getLogger();
     }
 
-    public void setDownstreamConnection(ClientConnection downstreamConnection) {
-        this.clientConnection = downstreamConnection;
+    public void setDownstreamConnection(ClientConnection connection) {
+        this.clientConnection = connection;
+        if (this.getPendingConnection() == connection) {
+            this.setPendingConnection(null);
+        }
     }
 
     public ClientConnection getDownstreamConnection() {
         return this.clientConnection;
     }
 
-    public synchronized ClientConnection getConnectingServer() {
-        return this.connectingServer;
+    private synchronized ClientConnection getPendingConnection() {
+        return this.pendingConnection;
     }
 
-    public synchronized void setConnectingServer(ClientConnection connectingServer) {
-        this.connectingServer = connectingServer;
+    private synchronized void setPendingConnection(ClientConnection connection) {
+        this.pendingConnection = connection;
+    }
+
+    public Collection<ServerInfo> getPendingServers() {
+        return Collections.unmodifiableCollection(this.pendingServers);
+    }
+
+    public ServerInfo getConnectingServer() {
+        return this.pendingConnection == null ? null : this.pendingConnection.getServerInfo();
     }
 
     public BedrockServerSession getUpstream() {

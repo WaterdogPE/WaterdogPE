@@ -202,4 +202,9 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
     public void addDisconnectListener(Runnable listener) {
         this.disconnectListeners.add(listener);
     }
+
+    @Override
+    public String toString() {
+        return "BedrockClientConnection(player=" + this.player.getName() + ", serverInfo=" + this.serverInfo + ", address=" + this.channel.remoteAddress() + ")";
+    }
 }

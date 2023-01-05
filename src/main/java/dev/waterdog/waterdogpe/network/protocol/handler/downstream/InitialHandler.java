@@ -136,7 +136,6 @@ public class InitialHandler extends AbstractDownstreamHandler {
         this.player.setCanRewrite(true);
 
         this.connection.getServerInfo().addConnection(this.connection);
-        this.player.setConnectingServer(null);
         this.player.setDownstreamConnection(this.connection);
 
         this.connection.setPacketHandler(new ConnectedDownstreamHandler(this.player, this.connection));

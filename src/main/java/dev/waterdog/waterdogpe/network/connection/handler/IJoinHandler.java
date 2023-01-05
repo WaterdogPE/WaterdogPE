@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 WaterdogTEAM
+ * Copyright 2023 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,15 +13,23 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils.types;
+package dev.waterdog.waterdogpe.network.connection.handler;
 
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
-public class VanillaReconnectHandler implements IReconnectHandler {
+/**
+ * Interface that can be implemented and assigned to the server.
+ * The JoinHandler is called whenever a player establishes an initial connection.
+ * Its job is to determine what the initial server of the client should be.
+ */
+public interface IJoinHandler {
 
-    @Override
-    public ServerInfo getFallbackServer(ProxiedPlayer player, ServerInfo oldServer, String message) {
-        return null;
-    }
+    /**
+     * determines the initial server
+     *
+     * @param player the player who is connecting to the server
+     * @return ServerInfo if a server is found, or null if no server was found. null will lead to the player getting kicked.
+     */
+    ServerInfo determineServer(ProxiedPlayer player);
 }
