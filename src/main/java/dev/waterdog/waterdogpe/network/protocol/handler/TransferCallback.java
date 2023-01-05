@@ -74,17 +74,17 @@ public class TransferCallback {
 
     private void onTransferPhase1Completed() {
         RewriteData rewriteData = this.player.getRewriteData();
-        injectEntityImmobile(this.player.getUpstream(), rewriteData.getEntityId(), true);
+        injectEntityImmobile(this.player.getConnection(), rewriteData.getEntityId(), true);
         if (rewriteData.getDimension() == this.targetDimension) {
             return;
         }
 
         // Send second dim-change to correct dimension
         Vector3f fakePosition = rewriteData.getSpawnPosition().add(-2000, 0, -2000);
-        injectPosition(this.player.getUpstream(), fakePosition, rewriteData.getRotation(), rewriteData.getEntityId());
+        injectPosition(this.player.getConnection(), fakePosition, rewriteData.getRotation(), rewriteData.getEntityId());
 
         rewriteData.setDimension(determineDimensionId(rewriteData.getDimension(), this.targetDimension));
-        injectDimensionChange(this.player.getUpstream(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), rewriteData.getEntityId(), this.player.getProtocol(), true);
+        injectDimensionChange(this.player.getConnection(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), rewriteData.getEntityId(), this.player.getProtocol(), true);
     }
 
     private void onTransferPhase2Completed() {
@@ -96,7 +96,7 @@ public class TransferCallback {
         soundPacket.setStoppingAllSound(true);
         this.player.sendPacketImmediately(soundPacket);
 
-        injectPosition(this.player.getUpstream(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
+        injectPosition(this.player.getConnection(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
 
         if (!this.connection.isConnected()) {
             this.onTransferFailed();
@@ -109,8 +109,8 @@ public class TransferCallback {
 
         this.connection.setPacketHandler(new ConnectedDownstreamHandler(player, this.connection));
 
-        this.player.getUpstream().setTransferQueueActive(false);
-        if (this.player.getUpstream().getPacketHandler() instanceof ConnectedUpstreamHandler handler) {
+        this.player.getConnection().setTransferQueueActive(false);
+        if (this.player.getConnection().getPacketHandler() instanceof ConnectedUpstreamHandler handler) {
             handler.setTargetConnection(this.connection);
         }
 

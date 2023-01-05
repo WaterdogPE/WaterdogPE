@@ -21,14 +21,12 @@ import dev.waterdog.waterdogpe.network.connection.codec.batch.BedrockBatchDecode
 import dev.waterdog.waterdogpe.network.connection.codec.batch.BedrockBatchEncoder;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.FrameIdCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.client.ClientEventHandler;
+import dev.waterdog.waterdogpe.network.connection.codec.client.ClientPacketQueue;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
+import io.netty.channel.*;
 import io.netty.util.concurrent.Promise;
 import lombok.RequiredArgsConstructor;
 import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionCodec;
@@ -56,18 +54,26 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
                 .addLast(CompressionCodec.NAME, getCompressionCodec(compression, rakVersion, true))
                 .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
                 .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
-                .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion));
+                .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion))
+                .addLast(ClientPacketQueue.NAME, new ClientPacketQueue());
 
-        BedrockClientConnection connection = new BedrockClientConnection(this.player, this.serverInfo, channel);
+        ClientConnection connection = this.createConnection(channel);
+        if (connection instanceof ChannelHandler handler) {
+            channel.pipeline().addLast(ClientConnection.NAME, handler);
+        }
+
         channel.pipeline()
-                .addLast(ClientConnection.NAME, connection)
                 .addLast(ClientEventHandler.NAME, new ClientEventHandler(this.player, connection))
                 .addLast(new ChannelActiveHandler(connection, this.promise)); // this should be the very last handler
     }
 
+    protected ClientConnection createConnection(Channel channel) {
+        return new BedrockClientConnection(this.player, this.serverInfo, channel);
+    }
+
     @RequiredArgsConstructor
     private static class ChannelActiveHandler extends ChannelInboundHandlerAdapter {
-        private final BedrockClientConnection connection;
+        private final ClientConnection connection;
         private final Promise<ClientConnection> promise;
 
         @Override

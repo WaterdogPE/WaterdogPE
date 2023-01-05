@@ -58,8 +58,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ProxiedPlayer implements CommandSender {
     private final ProxyServer proxy;
 
-    private final BedrockServerSession upstream;
-    private final CompressionAlgorithm upstreamCompression;
+    private final BedrockServerSession connection;
+    private final CompressionAlgorithm compression;
 
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
     private final RewriteData rewriteData = new RewriteData();
@@ -106,14 +106,14 @@ public class ProxiedPlayer implements CommandSender {
 
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, CompressionAlgorithm compression, LoginData loginData) {
         this.proxy = proxy;
-        this.upstream = session;
-        this.upstreamCompression = compression;
+        this.connection = session;
+        this.compression = compression;
         this.loginData = loginData;
         this.rewriteMaps = new RewriteMaps(this);
         this.proxy.getPlayerManager().subscribePermissions(this);
 
-        this.upstream.getPeer().setCompressionLevel(this.getProxy().getConfiguration().getUpstreamCompression());
-        this.upstream.addDisconnectListener(this::disconnect);
+        this.connection.getPeer().setCompressionLevel(this.getProxy().getConfiguration().getUpstreamCompression());
+        this.connection.addDisconnectListener(this::disconnect);
         this.rewriteData.setCodecHelper(session.getPeer().getCodecHelper());
     }
 
@@ -151,8 +151,8 @@ public class ProxiedPlayer implements CommandSender {
             this.acceptResourcePacks = false;
             this.initialConnect();
         } else {
-            this.upstream.setPacketHandler(new ResourcePacksHandler(this));
-            this.upstream.sendPacket(event.getPacket());
+            this.connection.setPacketHandler(new ResourcePacksHandler(this));
+            this.connection.sendPacket(event.getPacket());
         }
     }
 
@@ -161,7 +161,7 @@ public class ProxiedPlayer implements CommandSender {
      * Determines the first player the player gets transferred to based on the currently present JoinHandler.
      */
     public final void initialConnect() {
-        this.upstream.setPacketHandler(new ConnectedUpstreamHandler(this));
+        this.connection.setPacketHandler(new ConnectedUpstreamHandler(this));
         // Determine forced host first
         ServerInfo initialServer = this.proxy.getForcedHostHandler().resolveForcedHost(this.loginData.getJoinHostname(), this);
         if (initialServer == null) {
@@ -221,7 +221,6 @@ public class ProxiedPlayer implements CommandSender {
         targetServer.createConnection(this).addListener(future -> {
             ClientConnection connection = null;
             try {
-                this.pendingServers.remove(targetServer);
                 if (future.cause() == null) {
                     this.connect0(targetServer, connection = (ClientConnection) future.get());
                 } else {
@@ -230,6 +229,8 @@ public class ProxiedPlayer implements CommandSender {
             } catch (Throwable e) {
                 this.connectFailure(connection, targetServer, e);
                 this.setPendingConnection(null);
+            } finally {
+                this.pendingServers.remove(targetServer);
             }
         });
     }
@@ -252,11 +253,11 @@ public class ProxiedPlayer implements CommandSender {
         this.setPendingConnection(connection);
 
         connection.setCodecHelper(this.getProtocol().getCodec(),
-                this.upstream.getPeer().getCodecHelper());
+                this.connection.getPeer().getCodecHelper());
 
         BedrockPacketHandler handler;
         if (this.clientConnection == null) {
-            ((ConnectedUpstreamHandler) this.upstream.getPacketHandler()).setTargetConnection(connection);
+            ((ConnectedUpstreamHandler) this.connection.getPacketHandler()).setTargetConnection(connection);
             this.hasUpstreamBridge = true;
             handler = new InitialHandler(this, connection);
         } else {
@@ -316,8 +317,8 @@ public class ProxiedPlayer implements CommandSender {
         PlayerDisconnectedEvent event = new PlayerDisconnectedEvent(this, reason);
         this.proxy.getEventManager().callEvent(event);
 
-        if (this.upstream != null && this.upstream.isConnected()) {
-            this.upstream.disconnect(reason);
+        if (this.connection != null && this.connection.isConnected()) {
+            this.connection.disconnect(reason);
         }
 
         if (this.clientConnection != null) {
@@ -353,7 +354,6 @@ public class ProxiedPlayer implements CommandSender {
 
     // TODO: I'm not super happy with this, but moving it to a netty handler would mean anyone who implements own handler,
     //  has to copy that piece of code. PLS: find a better place for this two methods
-
     public final void onDownstreamTimeout() {
         ServerInfo serverInfo = this.getServerInfo();
         if (!this.sendToFallback(serverInfo, "Downstream Timeout")) {
@@ -375,8 +375,8 @@ public class ProxiedPlayer implements CommandSender {
      * @param packet the packet to send
      */
     public void sendPacket(BedrockPacket packet) {
-        if (this.upstream != null && this.upstream.isConnected()) {
-            this.upstream.sendPacket(packet);
+        if (this.connection != null && this.connection.isConnected()) {
+            this.connection.sendPacket(packet);
         }
     }
 
@@ -386,8 +386,8 @@ public class ProxiedPlayer implements CommandSender {
      * @param packet the packet to send
      */
     public void sendPacketImmediately(BedrockPacket packet) {
-        if (this.upstream != null && this.upstream.isConnected()) {
-            this.upstream.sendPacketImmediately(packet);
+        if (this.connection != null && this.connection.isConnected()) {
+            this.connection.sendPacketImmediately(packet);
         }
     }
 
@@ -708,7 +708,7 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public long getPing() {
-        return this.upstream.getPing();
+        return this.connection.getPing();
     }
 
     /**
@@ -722,7 +722,7 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public InetSocketAddress getAddress() {
-        return this.upstream == null ? null : (InetSocketAddress) this.upstream.getSocketAddress();
+        return this.connection == null ? null : (InetSocketAddress) this.connection.getSocketAddress();
     }
 
     @Override
@@ -761,12 +761,12 @@ public class ProxiedPlayer implements CommandSender {
         return this.pendingConnection == null ? null : this.pendingConnection.getServerInfo();
     }
 
-    public BedrockServerSession getUpstream() {
-        return this.upstream;
+    public BedrockServerSession getConnection() {
+        return this.connection;
     }
 
     public boolean isConnected() {
-        return !this.disconnected.get() && this.upstream != null && this.upstream.isConnected();
+        return !this.disconnected.get() && this.connection != null && this.connection.isConnected();
     }
 
     public RewriteMaps getRewriteMaps() {
@@ -871,8 +871,8 @@ public class ProxiedPlayer implements CommandSender {
         return this.acceptResourcePacks;
     }
 
-    public CompressionAlgorithm getUpstreamCompression() {
-        return this.upstreamCompression;
+    public CompressionAlgorithm getCompression() {
+        return this.compression;
     }
 
     @Override

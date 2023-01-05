@@ -101,7 +101,12 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
 
     @Override
     public void sendPacket(BedrockPacket packet) {
-        this.channel.writeAndFlush(BedrockBatchWrapper.create(0, packet));
+        this.channel.writeAndFlush(packet);
+    }
+
+    @Override
+    public void sendPacketImmediately(BedrockPacket packet) {
+        this.channel.writeAndFlush(BedrockBatchWrapper.create(this.getSubClientId(), packet));
     }
 
     @Override

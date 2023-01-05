@@ -123,7 +123,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
             this.player.getRewriteMaps().setBlockMap(new BlockMapSimple(this.player));
         }
 
-        BedrockCodecHelper codecHelper = this.player.getUpstream()
+        BedrockCodecHelper codecHelper = this.player.getConnection()
                 .getPeer()
                 .getCodecHelper();
         // Setup item registry

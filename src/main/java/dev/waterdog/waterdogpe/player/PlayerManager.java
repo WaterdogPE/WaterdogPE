@@ -43,7 +43,7 @@ public class PlayerManager {
         }
 
         ProxiedPlayer previousSession = this.players.remove(player.getUniqueId());
-        if (previousSession != null && previousSession.getUpstream().isConnected()) {
+        if (previousSession != null && previousSession.getConnection().isConnected()) {
             previousSession.disconnect("disconnectionScreen.loggedinOtherLocation");
         }
         this.players.put(player.getUniqueId(), player);

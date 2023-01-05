@@ -58,7 +58,7 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
             case HAVE_ALL_PACKS:
                 PlayerResourcePackApplyEvent event = new PlayerResourcePackApplyEvent(this.player, packManager.getStackPacket());
                 this.player.getProxy().getEventManager().callEvent(event);
-                this.player.getUpstream().sendPacket(event.getStackPacket());
+                this.player.getConnection().sendPacket(event.getStackPacket());
                 break;
             case COMPLETED:
                 if (!this.player.hasUpstreamBridge()) {

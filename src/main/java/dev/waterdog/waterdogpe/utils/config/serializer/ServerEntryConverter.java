@@ -79,6 +79,10 @@ public class ServerEntryConverter implements Converter {
     }
 
     private ServerInfoType requireServerType(String serverType) {
+        if (serverType == null || serverType.isEmpty()) {
+            return ServerInfoType.BEDROCK;
+        }
+
         ServerInfoType serverInfoType = ServerInfoType.fromString(serverType);
         if (serverInfoType == null) {
             throw new IllegalArgumentException("Unsupported ServerInfoType " + serverType + "! Make sure your config is valid and provided ServerInfoType was registered");

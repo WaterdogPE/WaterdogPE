@@ -123,48 +123,48 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         LongSet blobs = this.player.getChunkBlobs();
         if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_18_30) &&
                 this.player.getLoginData().getCachePacket().isSupported() && !blobs.isEmpty()) {
-            injectChunkCacheBlobs(this.player.getUpstream(), blobs);
+            injectChunkCacheBlobs(this.player.getConnection(), blobs);
         }
         this.player.getChunkBlobs().clear();
 
         Long2LongMap entityLinks = this.player.getEntityLinks();
         for (Long2LongMap.Entry entry : entityLinks.long2LongEntrySet()) {
-            injectRemoveEntityLink(this.player.getUpstream(), entry.getLongKey(), entry.getLongValue());
+            injectRemoveEntityLink(this.player.getConnection(), entry.getLongKey(), entry.getLongValue());
         }
         entityLinks.clear();
 
         LongSet bossbars = this.player.getBossbars();
         for (long bossbarId : bossbars) {
-            injectRemoveBossbar(this.player.getUpstream(), bossbarId);
+            injectRemoveBossbar(this.player.getConnection(), bossbarId);
         }
         bossbars.clear();
 
         Collection<UUID> playerList = this.player.getPlayers();
-        injectRemoveAllPlayers(this.player.getUpstream(), playerList);
+        injectRemoveAllPlayers(this.player.getConnection(), playerList);
         playerList.clear();
 
         LongSet entities = this.player.getEntities();
         for (long entityId : entities) {
-            injectRemoveEntity(this.player.getUpstream(), entityId);
+            injectRemoveEntity(this.player.getConnection(), entityId);
         }
         entities.clear();
 
         Long2ObjectMap<ScoreInfo> scoreInfos = this.player.getScoreInfos();
-        injectRemoveScoreInfos(this.player.getUpstream(), scoreInfos);
+        injectRemoveScoreInfos(this.player.getConnection(), scoreInfos);
         scoreInfos.clear();
 
         ObjectSet<String> scoreboards = this.player.getScoreboards();
         for (String scoreboard : scoreboards) {
-            injectRemoveObjective(this.player.getUpstream(), scoreboard);
+            injectRemoveObjective(this.player.getConnection(), scoreboard);
         }
         scoreboards.clear();
 
-        injectRemoveAllEffects(this.player.getUpstream(), rewriteData.getEntityId());
-        injectClearWeather(this.player.getUpstream());
+        injectRemoveAllEffects(this.player.getConnection(), rewriteData.getEntityId());
+        injectClearWeather(this.player.getConnection());
 
-        injectGameMode(this.player.getUpstream(), packet.getPlayerGameType());
-        injectSetDifficulty(this.player.getUpstream(), packet.getDifficulty());
-        injectGameRules(this.player.getUpstream(), packet.getGamerules());
+        injectGameMode(this.player.getConnection(), packet.getPlayerGameType());
+        injectSetDifficulty(this.player.getConnection(), packet.getDifficulty());
+        injectGameRules(this.player.getConnection(), packet.getGamerules());
 
         this.connection.sendPacket(this.player.getLoginData().getChunkRadius());
 
@@ -180,24 +180,24 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         boolean fastTransfer = event.allowTransferScreen() && newDimension != packet.getDimensionId();
         if (fastTransfer) {
             Vector3f fakePosition = packet.getPlayerPosition().add(2000, 0, 2000);
-            injectPosition(this.player.getUpstream(), fakePosition, packet.getRotation(), rewriteData.getEntityId());
-            this.player.getUpstream().setTransferQueueActive(true);
-            injectDimensionChange(this.player.getUpstream(), newDimension, fakePosition,
+            injectPosition(this.player.getConnection(), fakePosition, packet.getRotation(), rewriteData.getEntityId());
+            this.player.getConnection().setTransferQueueActive(true);
+            injectDimensionChange(this.player.getConnection(), newDimension, fakePosition,
                     rewriteData.getEntityId(), player.getProtocol(), true);
             // Force client to exit first dim screen after one second
             this.player.getProxy().getScheduler().scheduleDelayed(() -> {
                 PlayStatusPacket statusPacket = new PlayStatusPacket();
                 statusPacket.setStatus(PlayStatusPacket.Status.PLAYER_SPAWN);
-                this.player.getUpstream().sendPacketImmediately(statusPacket);
+                this.player.getConnection().sendPacketImmediately(statusPacket);
             }, 40);
         } else if (newDimension == packet.getDimensionId()) {
             // Transfer between different dimensions
-            injectPosition(this.player.getUpstream(), packet.getPlayerPosition(), packet.getRotation(), rewriteData.getEntityId());
-            injectDimensionChange(this.player.getUpstream(), newDimension, packet.getPlayerPosition(),
+            injectPosition(this.player.getConnection(), packet.getPlayerPosition(), packet.getRotation(), rewriteData.getEntityId());
+            injectDimensionChange(this.player.getConnection(), newDimension, packet.getPlayerPosition(),
                     rewriteData.getEntityId(), player.getProtocol(), false);
             transferCallback.onDimChangeSuccess(); // Simulate two dim-change behaviour
         } else {
-            injectPosition(this.player.getUpstream(), packet.getPlayerPosition(), packet.getRotation(), rewriteData.getEntityId());
+            injectPosition(this.player.getConnection(), packet.getPlayerPosition(), packet.getRotation(), rewriteData.getEntityId());
             rewriteData.setDimension(packet.getDimensionId());
             transferCallback.onDimChangeSuccess();
             transferCallback.onDimChangeSuccess();
