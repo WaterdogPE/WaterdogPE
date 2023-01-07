@@ -1,5 +1,6 @@
 package dev.waterdog.waterdogpe.network.connection.codec.server;
 
+import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockSession;
 import io.netty.channel.ChannelDuplexHandler;
@@ -64,6 +65,11 @@ public class PacketQueueHandler extends ChannelDuplexHandler {
             log.warn("[{}] has reached maximum transfer queue capacity: batches={} packets={}", this.session.getSocketAddress(), this.queue.size(), this.packetCounter);
             this.finish(ctx, false);
             this.session.disconnect("Transfer queue got too large");
+
+            NetworkMetrics metrics = ctx.channel().attr(NetworkMetrics.ATTRIBUTE).get();
+            if (metrics != null) {
+                metrics.packetQueueTooLarge();
+            }
         }
     }
 }

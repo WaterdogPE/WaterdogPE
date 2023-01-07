@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.protocol.handler.upstream;
 
+import dev.waterdog.waterdogpe.network.PacketDirection;
 import dev.waterdog.waterdogpe.network.protocol.handler.PluginPacketHandler;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
@@ -37,7 +38,7 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
         PacketSignal signal = BedrockPacketHandler.super.handlePacket(packet);
         if (player.getPluginPacketHandlers().size() > 0) {
             for (PluginPacketHandler handler : this.player.getPluginPacketHandlers()) {
-                signal = mergeSignals(signal, handler.handlePacket(packet, PluginPacketHandler.Direction.FROM_USER));
+                signal = mergeSignals(signal, handler.handlePacket(packet, PacketDirection.FROM_USER));
             }
         }
         return signal;

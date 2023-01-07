@@ -15,6 +15,8 @@
 
 package dev.waterdog.waterdogpe.network.connection.codec.compression;
 
+import dev.waterdog.waterdogpe.network.NetworkMetrics;
+import dev.waterdog.waterdogpe.network.PacketDirection;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -33,9 +35,16 @@ public abstract class ProxiedCompressionCodec extends MessageToMessageCodec<Bedr
             throw new IllegalStateException("Batch was not encoded before");
         }
 
+        NetworkMetrics metrics = ctx.channel().attr(NetworkMetrics.ATTRIBUTE).get();
+        PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
+
         if (msg.getCompressed() == null || msg.isModified()) {
             msg.setCompressed(this.encode0(ctx, msg.getUncompressed()), this.getCompressionAlgorithm());
+            if (metrics != null) metrics.compressedBytes(msg.getCompressed().readableBytes(), direction);
+        } else if (metrics != null) {
+            metrics.passedThroughBytes(msg.getCompressed().readableBytes(), direction);
         }
+
         out.add(msg.retain());
     }
 
@@ -43,6 +52,13 @@ public abstract class ProxiedCompressionCodec extends MessageToMessageCodec<Bedr
     protected void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
         msg.setAlgorithm(this.getCompressionAlgorithm());
         msg.setUncompressed(this.decode0(ctx, msg.getCompressed().slice()));
+
+        NetworkMetrics metrics = ctx.channel().attr(NetworkMetrics.ATTRIBUTE).get();
+        if (metrics != null) {
+            PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
+            metrics.decompressedBytes(msg.getUncompressed().readableBytes(), direction);
+        }
+
         out.add(msg.retain());
     }
 

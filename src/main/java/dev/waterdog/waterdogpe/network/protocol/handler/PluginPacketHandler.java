@@ -15,22 +15,12 @@
 
 package dev.waterdog.waterdogpe.network.protocol.handler;
 
+import dev.waterdog.waterdogpe.network.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
 import org.cloudburstmc.protocol.common.PacketSignal;
 
 public interface PluginPacketHandler extends BedrockPacketHandler {
 
-    PacketSignal handlePacket(BedrockPacket packet, Direction direction);
-
-    enum Direction {
-        /**
-         * Going from user to proxy
-         */
-        FROM_USER,
-        /**
-         * Going from server to proxy
-         */
-        FROM_SERVER;
-    }
+    PacketSignal handlePacket(BedrockPacket packet, PacketDirection direction);
 }

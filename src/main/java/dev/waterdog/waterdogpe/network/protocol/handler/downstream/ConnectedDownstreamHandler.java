@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.protocol.handler.downstream;
 
+import dev.waterdog.waterdogpe.network.PacketDirection;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.protocol.handler.PluginPacketHandler;
 import org.cloudburstmc.protocol.bedrock.packet.*;
@@ -41,7 +42,7 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
         PacketSignal signal = super.handlePacket(packet);
         if (player.getPluginPacketHandlers().size() > 0) {
             for (PluginPacketHandler handler : this.player.getPluginPacketHandlers()) {
-                signal = mergeSignals(signal, handler.handlePacket(packet, PluginPacketHandler.Direction.FROM_SERVER));
+                signal = mergeSignals(signal, handler.handlePacket(packet, PacketDirection.FROM_SERVER));
             }
         }
         return signal;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 WaterdogTEAM
+ * Copyright 2023 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,21 +13,19 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils.types;
+package dev.waterdog.waterdogpe.network;
 
-public class DefaultMetricsHandler implements IMetricsHandler {
-    @Override
-    public void changedBatch() {
+import io.netty.util.AttributeKey;
 
-    }
+public enum PacketDirection {
+    /**
+     * Going from user to proxy
+     */
+    FROM_USER,
+    /**
+     * Going from server to proxy
+     */
+    FROM_SERVER;
 
-    @Override
-    public void unchangedBatch() {
-
-    }
-
-    @Override
-    public void packetQueueTooLarge() {
-
-    }
+    public static final AttributeKey<PacketDirection> ATTRIBUTE = AttributeKey.newInstance("packet_direction");
 }

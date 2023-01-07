@@ -16,12 +16,16 @@
 package dev.waterdog.waterdogpe.network.connection.codec.initializer;
 
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.network.NetworkMetrics;
+import dev.waterdog.waterdogpe.network.PacketDirection;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockPeer;
 import dev.waterdog.waterdogpe.network.protocol.handler.upstream.LoginUpstreamHandler;
 import io.netty.channel.Channel;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
 import org.cloudburstmc.netty.channel.raknet.RakDisconnectReason;
+import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
+import org.cloudburstmc.netty.channel.raknet.config.RakMetrics;
 import org.cloudburstmc.netty.handler.codec.raknet.common.RakSessionCodec;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 
@@ -33,12 +37,23 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
 
     @Override
     protected void initChannel(Channel channel) {
-        if (this.proxy.getProxyListener().onConnectionCreation(channel.remoteAddress())) {
-            super.initChannel(channel);
-        } else {
+        if (!this.proxy.getProxyListener().onConnectionCreation(channel.remoteAddress())) {
             this.proxy.getLogger().info("[" + channel.remoteAddress() + "] <-> Connection request denied");
             disconnect(channel, RakDisconnectReason.DISCONNECTED);
+            return;
         }
+
+        channel.attr(PacketDirection.ATTRIBUTE).set(PacketDirection.FROM_USER);
+
+        NetworkMetrics metrics = this.proxy.getNetworkMetrics();
+        if (metrics != null) {
+            channel.attr(NetworkMetrics.ATTRIBUTE).set(metrics);
+        }
+        if (metrics instanceof RakMetrics rakMetrics) {
+            channel.config().setOption(RakChannelOption.RAK_METRICS, rakMetrics);
+        }
+
+        super.initChannel(channel);
     }
 
     @Override

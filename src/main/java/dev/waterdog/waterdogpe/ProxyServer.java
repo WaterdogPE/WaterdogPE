@@ -23,6 +23,7 @@ import dev.waterdog.waterdogpe.event.defaults.DispatchCommandEvent;
 import dev.waterdog.waterdogpe.event.defaults.ProxyStartEvent;
 import dev.waterdog.waterdogpe.logger.MainLogger;
 import dev.waterdog.waterdogpe.network.EventLoops;
+import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedServerSessionInitializer;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.OfflineServerChannelInitializer;
@@ -54,6 +55,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
+import org.cloudburstmc.netty.channel.raknet.config.RakMetrics;
 import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import java.net.InetSocketAddress;
@@ -92,16 +94,14 @@ public class ProxyServer {
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
     private IForcedHostHandler forcedHostHandler;
-    private IMetricsHandler metricsHandler;
-    private ProxyListenerInterface proxyListener = new ProxyListenerInterface() {};
-
+    private ProxyListenerInterface proxyListener = new ProxyListenerInterface(){}; // TODO:
+    private NetworkMetrics networkMetrics;
     private final EventLoopGroup bossEventLoopGroup;
     private final EventLoopGroup workerEventLoopGroup;
     private final ScheduledExecutorService tickExecutor;
     private ScheduledFuture<?> tickFuture;
     private boolean shutdown = false;
     private int currentTick = 0;
-    private Metrics metrics;
 
     public ProxyServer(MainLogger logger, String filePath, String pluginPath) throws InvalidConfigurationException {
         instance = this;
@@ -172,7 +172,6 @@ public class ProxyServer {
         this.reconnectHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getReconnectHandler(), IReconnectHandler.class);
         this.joinHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getJoinHandler(), IJoinHandler.class);
         this.forcedHostHandler = new DefaultForcedHostHandler();
-        this.metricsHandler = new DefaultMetricsHandler();
         this.pluginManager = new PluginManager(this);
         this.configurationManager.loadServerInfos(this.serverInfoMap);
         this.scheduler = new WaterdogScheduler(this);
@@ -550,13 +549,13 @@ public class ProxyServer {
         this.forcedHostHandler = forcedHostHandler;
     }
 
-    public IMetricsHandler getMetricsHandler() {
-        return metricsHandler;
+    public NetworkMetrics getNetworkMetrics() {
+        return this.networkMetrics;
     }
 
-    public void setMetricsHandler(IMetricsHandler metricsHandler) {
-        Preconditions.checkNotNull(metricsHandler, "You cannot set the metricsHandler to null!");
-        this.metricsHandler = metricsHandler;
+    public void setNetworkMetrics(NetworkMetrics metrics) {
+        Preconditions.checkNotNull(metrics, "You cannot set the metricsHandler to null!");
+        this.networkMetrics = metrics;
     }
 
     public void setReconnectHandler(IReconnectHandler reconnectHandler) {

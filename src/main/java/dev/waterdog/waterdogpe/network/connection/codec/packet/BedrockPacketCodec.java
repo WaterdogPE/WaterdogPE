@@ -15,6 +15,8 @@
 
 package dev.waterdog.waterdogpe.network.connection.codec.packet;
 
+import dev.waterdog.waterdogpe.network.NetworkMetrics;
+import dev.waterdog.waterdogpe.network.PacketDirection;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -39,9 +41,16 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
     @Override
     protected void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
         if (msg.isModified() || msg.getUncompressed() == null) {
+            int passedThought = 0;
+            int encodedPackets = 0;
             for (BedrockPacketWrapper packet : msg.getPackets()) {
-                this.encode(ctx, packet);
+                if (this.encode(ctx, packet)) {
+                    passedThought++;
+                } else {
+                    encodedPackets++;
+                }
             }
+            this.recordMetrics(ctx, passedThought, encodedPackets);
         }
         out.add(msg.retain());
     }
@@ -54,10 +63,10 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         out.add(msg.retain());
     }
 
-    protected final void encode(ChannelHandlerContext ctx, BedrockPacketWrapper msg) throws Exception {
+    protected final boolean encode(ChannelHandlerContext ctx, BedrockPacketWrapper msg) throws Exception {
         if (msg.getPacketBuffer() != null) {
             // We have a pre-encoded packet buffer, just use that.
-            return;
+            return true;
         }
 
         ByteBuf buf = ctx.alloc().buffer(128);
@@ -72,6 +81,7 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         } finally {
             buf.release();
         }
+        return false;
     }
 
     protected final void decode(ChannelHandlerContext ctx, BedrockPacketWrapper wrapper) throws Exception {
@@ -94,6 +104,22 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
     public abstract void encodeHeader(ByteBuf buf, BedrockPacketWrapper msg);
 
     public abstract void decodeHeader(ByteBuf buf, BedrockPacketWrapper msg);
+
+    private void recordMetrics(ChannelHandlerContext ctx, int passedThought, int encodedPackets) {
+        NetworkMetrics metrics = ctx.channel().attr(NetworkMetrics.ATTRIBUTE).get();
+        if (metrics == null) {
+            return;
+        }
+
+        PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
+        if (passedThought > 0) {
+            metrics.passedThroughPackets(passedThought, direction);
+        }
+
+        if (encodedPackets > 0) {
+            metrics.encodedPackets(passedThought, direction);
+        }
+    }
 
     public final int getPacketId(BedrockPacket packet) {
         if (packet instanceof UnknownPacket) {
@@ -125,7 +151,6 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         this.helper = helper;
         return this;
     }
-
 
     public final BedrockCodec getCodec() {
         return codec;
