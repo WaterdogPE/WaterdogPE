@@ -26,6 +26,8 @@ import dev.waterdog.waterdogpe.network.protocol.user.HandshakeEntry;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
+import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
+import org.cloudburstmc.protocol.bedrock.codec.compat.BedrockCompat;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.cloudburstmc.protocol.common.PacketSignal;
@@ -76,10 +78,6 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
     private ProtocolVersion checkVersion(int protocolVersion) {
         ProtocolVersion protocol = ProtocolVersion.get(protocolVersion);
-        if (this.session.getCodec() == null) {
-            this.session.setCodec(protocol == null ? ProtocolVersion.latest().getCodec() : protocol.getCodec());
-        }
-
         if (protocol != null) {
             return protocol;
         }
@@ -131,7 +129,8 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             return PacketSignal.HANDLED;
         }
 
-        if (protocol.isBefore(ProtocolVersion.MINECRAFT_PE_1_19_30)) {
+        BedrockCodec codec = this.session.getCodec();
+        if (codec == null || codec == BedrockCompat.CODEC) {
             this.session.setCodec(protocol.getCodec());
         }
 
