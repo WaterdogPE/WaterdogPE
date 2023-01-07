@@ -4,7 +4,9 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectFunction;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.cloudburstmc.protocol.bedrock.data.defintions.BlockDefinition;
+import org.cloudburstmc.protocol.bedrock.data.defintions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.defintions.SimpleBlockDefinition;
+import org.cloudburstmc.protocol.bedrock.data.defintions.SimpleItemDefinition;
 import org.cloudburstmc.protocol.common.Definition;
 import org.cloudburstmc.protocol.common.DefinitionRegistry;
 
@@ -12,6 +14,10 @@ public class FakeDefinitionRegistry<D extends Definition> implements DefinitionR
 
     public static FakeDefinitionRegistry<BlockDefinition> createBlockRegistry() {
         return new FakeDefinitionRegistry<>(rid -> new SimpleBlockDefinition("unknown", rid, null));
+    }
+
+    public static FakeDefinitionRegistry<ItemDefinition> createItemRegistry() {
+        return new FakeDefinitionRegistry<>(rid -> new SimpleItemDefinition("unknown", rid, false));
     }
 
     private final Int2ObjectMap<D> runtimeMap = new Int2ObjectOpenHashMap<>();

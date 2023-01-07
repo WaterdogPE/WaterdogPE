@@ -131,6 +131,10 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             return PacketSignal.HANDLED;
         }
 
+        if (protocol.isBefore(ProtocolVersion.MINECRAFT_PE_1_19_30)) {
+            this.session.setCodec(protocol.getCodec());
+        }
+
         if (protocol.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_30) && this.compression == null) {
             this.proxy.getLogger().warning("[" + this.session.getSocketAddress() + "] <-> Upstream has not requested network settings (protocol=" + protocol.getProtocol() + ")");
             this.session.disconnect("wrong login flow");
