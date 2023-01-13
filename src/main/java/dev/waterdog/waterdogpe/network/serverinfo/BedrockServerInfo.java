@@ -47,7 +47,7 @@ public class BedrockServerInfo extends ServerInfo {
         ProtocolVersion version = player.getProtocol();
         NetworkSettings networkSettings = player.getProxy().getNetworkSettings();
 
-        // Just pick EventLoop here and we can use it for our promise too
+        // Just pick EventLoop here, and we can use it for our promise too
         EventLoop eventLoop = player.getProxy().getWorkerEventLoopGroup().next();
         Promise<ClientConnection> promise = eventLoop.newPromise();
         new Bootstrap()

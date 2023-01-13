@@ -26,6 +26,8 @@ import org.apache.logging.log4j.core.config.LoggerConfig;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class WaterdogPE {
 
@@ -110,6 +112,11 @@ public class WaterdogPE {
         String version = System.getProperty("java.version");
         if (version.startsWith("1.")) {
             return Integer.parseInt(version.substring(2, 3));
+        }
+
+        Matcher versionMatcher = Pattern.compile("\\d+").matcher(version);
+        if (versionMatcher.find()) {
+            version = versionMatcher.group(0);
         }
 
         int index = version.indexOf(".");
