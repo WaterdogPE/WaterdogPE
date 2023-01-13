@@ -157,8 +157,8 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
 
     @Override
     public void disconnect() {
-        if (this.channel instanceof RakChannel rakChannel) {
-            RakSessionCodec codec = rakChannel.rakPipeline().get(RakSessionCodec.class);
+        if (this.channel instanceof RakChannel rakChannel &&
+                rakChannel.rakPipeline().get(RakSessionCodec.NAME) instanceof RakSessionCodec codec) {
             codec.disconnect(RakDisconnectReason.DISCONNECTED);
         } else {
             this.channel.close();
