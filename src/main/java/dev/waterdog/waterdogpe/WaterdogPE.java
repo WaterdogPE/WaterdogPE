@@ -72,6 +72,7 @@ public class WaterdogPE {
      */
     protected static void shutdownHook() {
         LogManager.shutdown();
+        System.exit(0); // force exit
     }
 
     private static VersionInfo loadVersion() {
