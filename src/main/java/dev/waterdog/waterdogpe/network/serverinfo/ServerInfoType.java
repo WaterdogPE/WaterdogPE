@@ -15,7 +15,9 @@
 
 package dev.waterdog.waterdogpe.network.serverinfo;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import java.net.InetSocketAddress;
@@ -23,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Predicate;
 
 /**
  * This is the identifier class for custom ServerInfo types.
@@ -30,9 +33,14 @@ import java.util.concurrent.ConcurrentSkipListMap;
  * method should be used to create new ServerInfoType.
  */
 @Getter
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class ServerInfoType implements Comparable<ServerInfoType> {
+    private static final Predicate<ServerInfoType> PREDICATE_TRUE = server -> true;
     private static final Map<String, ServerInfoType> types = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
 
+    /**
+     * Vanilla Minecraft: Bedrock connection utilizing RakNet
+     */
     public static final ServerInfoType BEDROCK = ServerInfoType.builder()
             .identifier("bedrock")
             .serverInfoFactory(BedrockServerInfo::new)
@@ -40,11 +48,6 @@ public class ServerInfoType implements Comparable<ServerInfoType> {
 
     private final String identifier;
     private final ServerInfoFactory serverInfoFactory;
-
-    private ServerInfoType(String identifier, ServerInfoFactory serverInfoFactory) {
-        this.identifier = identifier;
-        this.serverInfoFactory = serverInfoFactory;
-    }
 
     public static ServerInfoType fromString(String string) {
         Preconditions.checkNotNull(string, "ServerInfoType name can not be null");
