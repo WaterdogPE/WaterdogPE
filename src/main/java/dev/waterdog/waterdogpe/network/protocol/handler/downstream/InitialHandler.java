@@ -18,6 +18,8 @@ package dev.waterdog.waterdogpe.network.protocol.handler.downstream;
 import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.protocol.registry.FakeDefinitionRegistry;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.data.defintions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.*;
@@ -128,7 +130,14 @@ public class InitialHandler extends AbstractDownstreamHandler {
                 .getCodecHelper();
         // Setup item registry
         SimpleDefinitionRegistry.Builder<ItemDefinition> itemRegistry = SimpleDefinitionRegistry.builder();
-        packet.getItemDefinitions().forEach(itemRegistry::add);
+        IntSet runtimeIds = new IntOpenHashSet();
+        for (ItemDefinition definition : packet.getItemDefinitions()) {
+            if (runtimeIds.add(definition.getRuntimeId())) {
+                itemRegistry.add(definition);
+            } else {
+                this.player.getLogger().warning("[{}|{}] has duplicate item definition: {}", this.player.getName(), this.connection.getServerInfo().getServerName());
+            }
+        }
         codecHelper.setItemDefinitions(itemRegistry.build());
         // Setup block registry
         codecHelper.setBlockDefinitions(FakeDefinitionRegistry.createBlockRegistry());
