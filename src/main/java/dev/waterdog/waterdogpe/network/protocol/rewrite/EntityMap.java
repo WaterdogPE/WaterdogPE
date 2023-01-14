@@ -310,6 +310,11 @@ public class EntityMap implements BedrockPacketHandler {
         return rewriteId(packet.getEntityId(), packet::setEntityId);
     }
 
+    @Override
+    public PacketSignal handle(UpdateAbilitiesPacket packet) {
+        return rewriteId(packet.getUniqueEntityId(), packet::setUniqueEntityId);
+    }
+
     private PacketSignal rewriteMetadata(EntityDataMap metadata) {
         PacketSignal signal = PacketSignal.UNHANDLED;
         for (EntityDataType<Long> data : ENTITY_DATA_FIELDS) {
