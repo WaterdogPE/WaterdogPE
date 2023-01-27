@@ -30,6 +30,7 @@ import dev.waterdog.waterdogpe.network.connection.codec.initializer.OfflineServe
 import dev.waterdog.waterdogpe.network.connection.handler.*;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolCodecs;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
+import dev.waterdog.waterdogpe.network.protocol.updaters.CodecUpdaterCommands;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
 import dev.waterdog.waterdogpe.packs.PackManager;
@@ -195,6 +196,10 @@ public class ProxyServer {
         this.pluginManager.enableAllPlugins();
         if (this.getConfiguration().useFastCodec()) {
             this.logger.info("Using fast codec! Please ensure plugin compatibility!");
+            if (this.getConfiguration().injectCommands()) {
+                ProtocolCodecs.addUpdater(new CodecUpdaterCommands());
+            }
+
             for (ProtocolVersion version : ProtocolVersion.values()) {
                 version.setBedrockCodec(ProtocolCodecs.buildCodec(version.getDefaultCodec()));
             }

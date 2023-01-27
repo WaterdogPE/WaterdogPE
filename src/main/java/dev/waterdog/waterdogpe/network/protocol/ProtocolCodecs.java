@@ -74,7 +74,6 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(RequestChunkRadiusPacket.class);
         HANDLED_PACKETS.add(GameRulesChangedPacket.class);
         HANDLED_PACKETS.add(BossEventPacket.class);
-        HANDLED_PACKETS.add(AvailableCommandsPacket.class);
         HANDLED_PACKETS.add(CommandRequestPacket.class);
         HANDLED_PACKETS.add(UpdateTradePacket.class);
         HANDLED_PACKETS.add(TransferPacket.class);
