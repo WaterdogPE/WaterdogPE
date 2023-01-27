@@ -91,7 +91,9 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
 
         ByteBuf msg = wrapper.getPacketBuffer().retainedSlice();
         try {
+            int index = msg.readerIndex();
             this.decodeHeader(msg, wrapper);
+            wrapper.setHeaderLength(msg.readerIndex() - index);
             wrapper.setPacket(this.codec.tryDecode(helper, msg, wrapper.getPacketId()));
         } catch (Throwable t) {
             log.info("Failed to decode packet", t);
