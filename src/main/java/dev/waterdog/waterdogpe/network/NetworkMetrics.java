@@ -69,4 +69,11 @@ public interface NetworkMetrics {
      */
     default void passedThroughPackets(int count, PacketDirection direction) {
     }
+
+    /**
+     * Called when a datagram packet is dropped because it was blocked
+     * @param count the amount of bytes within dropped datagram packet
+     */
+    default void droppedBytes(int count) {
+    }
 }

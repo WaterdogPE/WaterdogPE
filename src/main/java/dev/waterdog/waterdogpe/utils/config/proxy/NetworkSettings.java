@@ -41,4 +41,16 @@ public class NetworkSettings extends YamlConfig {
     @Path("connection_timeout")
     @Comment("Server connection timeout in seconds")
     private int connectTimeout = 15;
+
+    @Comment("Connection throttle time in milliseconds")
+    @Path("connection_throttle_time")
+    private int connectionThrottleTime = 1000;
+
+    @Comment("Number of connections that can be opened in \"connection_throttle_time\" interval. To disable set value to -1")
+    @Path("connection_throttle")
+    private int connectionThrottle = 10;
+
+    @Comment("Number of login requests that can be made in \"connection_throttle_time\" interval. To disable set value to -1")
+    @Path("login_throttle")
+    private int loginThrottle = 2;
 }

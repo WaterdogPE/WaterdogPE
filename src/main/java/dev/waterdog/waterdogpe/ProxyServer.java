@@ -39,6 +39,8 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.plugin.PluginManager;
 import dev.waterdog.waterdogpe.network.connection.codec.query.QueryHandler;
 import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
+import dev.waterdog.waterdogpe.security.SecurityListener;
+import dev.waterdog.waterdogpe.security.SecurityManager;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
 import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.utils.bstats.Metrics;
@@ -56,7 +58,6 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
-import org.cloudburstmc.netty.channel.raknet.config.RakMetrics;
 import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import java.net.InetSocketAddress;
@@ -92,10 +93,11 @@ public class ProxyServer {
     private CommandMap commandMap;
     private final ConsoleCommandSender commandSender;
 
+    private final SecurityManager securityManager;
+
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
     private IForcedHostHandler forcedHostHandler;
-    private ProxyListenerInterface proxyListener = new ProxyListenerInterface(){}; // TODO:
     private NetworkMetrics networkMetrics;
     private final EventLoopGroup bossEventLoopGroup;
     private final EventLoopGroup workerEventLoopGroup;
@@ -179,6 +181,7 @@ public class ProxyServer {
         this.playerManager = new PlayerManager(this);
         this.eventManager = new EventManager(this);
         this.packManager = new PackManager(this);
+        this.securityManager = new SecurityManager(this);
 
         this.commandSender = new ConsoleCommandSender(this);
         this.commandMap = new DefaultCommandMap(this, SimpleCommandMap.DEFAULT_PREFIX);
@@ -572,13 +575,8 @@ public class ProxyServer {
         return WaterdogPE.version().debug();
     }
 
-    public void setProxyListener(ProxyListenerInterface proxyListener) {
-        Preconditions.checkNotNull(proxyListener, "Proxy listener can not be null!");
-        this.proxyListener = proxyListener;
-    }
-
-    public ProxyListenerInterface getProxyListener() {
-        return this.proxyListener;
+    public SecurityManager getSecurityManager() {
+        return this.securityManager;
     }
 
     public EventLoopGroup getWorkerEventLoopGroup() {

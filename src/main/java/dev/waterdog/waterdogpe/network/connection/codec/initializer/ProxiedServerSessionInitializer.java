@@ -37,7 +37,7 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
 
     @Override
     protected void initChannel(Channel channel) {
-        if (!this.proxy.getProxyListener().onConnectionCreation(channel.remoteAddress())) {
+        if (!this.proxy.getSecurityManager().onConnectionCreated(channel.remoteAddress())) {
             this.proxy.getLogger().info("[" + channel.remoteAddress() + "] <-> Connection request denied");
             disconnect(channel, RakDisconnectReason.DISCONNECTED);
             return;

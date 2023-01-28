@@ -25,7 +25,7 @@ import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeEntry;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
-import dev.waterdog.waterdogpe.utils.types.ProxyListenerInterface;
+import dev.waterdog.waterdogpe.security.SecurityManager;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.compat.BedrockCompat;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
@@ -33,6 +33,7 @@ import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.cloudburstmc.protocol.common.PacketSignal;
 
 import java.net.InetSocketAddress;
+import java.util.Objects;
 
 /**
  * The Pipeline Handler handling the login handshake part of the initial connect. Will be replaced after success.
@@ -55,9 +56,9 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
     }
 
     private void onLoginFailed(boolean xboxAuth, Throwable throwable, String disconnectReason) {
-        String message = this.proxy.getProxyListener().onLoginFailed(this.session.getSocketAddress(), xboxAuth, throwable, disconnectReason);
+        String message = this.proxy.getSecurityManager().onLoginFailed(this.session.getSocketAddress(), xboxAuth, throwable, disconnectReason);
         if (this.session.isConnected()) {
-            this.session.disconnect(message);
+            this.session.disconnect(Objects.requireNonNullElse(message, "Login Failed"));
         }
     }
 
@@ -67,8 +68,8 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
         }
         this.loginInitialized = true;
 
-        ProxyListenerInterface listener = this.proxy.getProxyListener();
-        if (!listener.onLoginAttempt(this.session.getSocketAddress())) {
+        SecurityManager securityManager = this.proxy.getSecurityManager();
+        if (!securityManager.onLoginAttempt(this.session.getSocketAddress())) {
             this.proxy.getLogger().debug("[" + this.session.getSocketAddress() + "] <-> Login denied");
             this.session.disconnect("Login denied");
             return false;
@@ -88,9 +89,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
                 PlayStatusPacket.Status.LOGIN_FAILED_CLIENT_OLD));
         this.session.sendPacketImmediately(status);
         this.session.disconnect();
-
-        this.proxy.getProxyListener().onIncorrectVersionLogin(protocolVersion, this.session.getSocketAddress());
-        this.proxy.getLogger().alert("[" + this.session.getSocketAddress() + "] <-> Upstream has disconnected due to incompatible protocol (protocol=" + protocolVersion + ")");
+        this.proxy.getLogger().warning("[" + this.session.getSocketAddress() + "] <-> Upstream has disconnected due to incompatible protocol (protocol=" + protocolVersion + ")");
         return null;
     }
 

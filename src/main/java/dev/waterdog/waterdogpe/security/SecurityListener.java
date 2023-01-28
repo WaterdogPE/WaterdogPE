@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 WaterdogTEAM
+ * Copyright 2023 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,22 +13,19 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.utils.types;
+package dev.waterdog.waterdogpe.security;
 
+import java.net.InetAddress;
 import java.net.SocketAddress;
 
-/**
- * This interface is used as alternative to events in situation when calling an event can expensive and
- * the benefit of using event is not greater.
- */
-public interface ProxyListenerInterface {
+public interface SecurityListener {
 
     /**
      * Called once new session for connection is being created.
      * @param address of the sender.
      * @return if new session can be created.
      */
-    default boolean onConnectionCreation(SocketAddress address) {
+    default boolean onConnectionCreated(SocketAddress address) {
         return true;
     }
 
@@ -42,14 +39,6 @@ public interface ProxyListenerInterface {
     }
 
     /**
-     * Called when incompatible protocol version is found in LoginPacket.
-     * @param protocolVersion game version of connection.
-     * @param address of the sender.
-     */
-    default void onIncorrectVersionLogin(int protocolVersion, SocketAddress address) {
-    }
-
-    /**
      * Called when pending connection wasn't accepted due failed XBOX authentication or
      * when exception happened during processing handshake data.
      * @param address of the sender.
@@ -60,5 +49,13 @@ public interface ProxyListenerInterface {
      */
     default String onLoginFailed(SocketAddress address, boolean xboxAuth, Throwable throwable, String reason) {
         return reason;
+    }
+
+    /**
+     * Called when specific address reaches a passed throttle limit
+     * @param address address of the connection
+     * @param throttle throttle used to determine limit
+     */
+    default void onThrottleReached(InetAddress address, ConnectionThrottle throttle) {
     }
 }
