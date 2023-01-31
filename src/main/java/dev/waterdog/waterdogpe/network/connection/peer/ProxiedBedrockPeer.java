@@ -149,13 +149,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     @Override
     public void setCodec(BedrockCodec codec) {
         Objects.requireNonNull(codec, "codec");
-        this.getChannel().pipeline().get(BedrockPacketCodec.class).setCodec(codec);
-    }
-
-    public void setCodecHelper(BedrockCodec codec, BedrockCodecHelper helper) {
-        Objects.requireNonNull(codec, "codec");
-        Objects.requireNonNull(helper, "helper");
-        this.getChannel().pipeline().get(BedrockPacketCodec.class).setCodecHelper(codec, helper);
+        this.getChannel().pipeline().get(BedrockPacketCodec.class).setCodecHelper(codec, codec.createHelper());
     }
 
     @Override

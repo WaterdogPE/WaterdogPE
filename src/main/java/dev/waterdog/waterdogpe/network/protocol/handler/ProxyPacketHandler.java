@@ -13,36 +13,26 @@
  * limitations under the License.
  */
 
-package dev.waterdog.waterdogpe.network.connection;
+package dev.waterdog.waterdogpe.network.protocol.handler;
 
+import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
-import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
+import dev.waterdog.waterdogpe.network.protocol.rewrite.RewriteMaps;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
+import org.cloudburstmc.protocol.common.PacketSignal;
 
-import java.net.SocketAddress;
+public interface ProxyPacketHandler extends BedrockPacketHandler {
+    void sendProxiedBatch(BedrockBatchWrapper batch);
 
-public interface ProxiedConnection {
+    ProxiedConnection getConnection();
+    RewriteMaps getRewriteMaps();
 
-    void sendPacket(BedrockBatchWrapper wrapper);
-
-    void sendPacket(BedrockPacket packet);
-
-    default void sendPacketImmediately(BedrockPacket packet) {
-        this.sendPacket(packet);
+    default boolean isForceEncode() {
+        return false;
     }
 
-    BedrockPacketHandler getPacketHandler();
-
-    void setPacketHandler(BedrockPacketHandler handler);
-
-    SocketAddress getSocketAddress();
-
-    boolean isConnected();
-
-    default int getSubClientId() {
-        return 0;
+    default PacketSignal doPacketRewrite(BedrockPacket packet) {
+        return this.getRewriteMaps().getEntityMap().doRewrite(packet);
     }
-
-    long getPing();
 }

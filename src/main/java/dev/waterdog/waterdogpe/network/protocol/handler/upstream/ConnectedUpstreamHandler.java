@@ -18,7 +18,7 @@ package dev.waterdog.waterdogpe.network.protocol.handler.upstream;
 import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
-import dev.waterdog.waterdogpe.network.protocol.handler.ProxyBatchBridge;
+import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.RewriteMaps;
 import lombok.Setter;
 import org.cloudburstmc.protocol.bedrock.data.PlayerActionType;
@@ -34,7 +34,7 @@ import org.cloudburstmc.protocol.common.PacketSignal;
 /**
  * Main handler for handling packets received from upstream.
  */
-public class ConnectedUpstreamHandler extends AbstractUpstreamHandler implements ProxyBatchBridge {
+public class ConnectedUpstreamHandler extends AbstractUpstreamHandler implements ProxyPacketHandler {
 
     @Setter
     private ClientConnection targetConnection;

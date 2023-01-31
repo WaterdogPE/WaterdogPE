@@ -21,12 +21,14 @@ import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
+import io.netty.util.Attribute;
 import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.codec.compat.BedrockCompat;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
+import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketType;
 import org.cloudburstmc.protocol.bedrock.packet.UnknownPacket;
 
 import java.util.List;
@@ -37,6 +39,15 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
 
     private BedrockCodec codec = BedrockCompat.CODEC;
     private BedrockCodecHelper helper = codec.createHelper();
+
+    private boolean alwaysDecode;
+
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        if (ctx.channel().attr(PacketDirection.ATTRIBUTE).get() == PacketDirection.FROM_USER) {
+            this.alwaysDecode = true; // packets from user can be always decoded
+        }
+    }
 
     @Override
     protected void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
@@ -63,21 +74,21 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         out.add(msg.retain());
     }
 
-    protected final boolean encode(ChannelHandlerContext ctx, BedrockPacketWrapper msg) throws Exception {
-        if (msg.getPacketBuffer() != null) {
+    protected final boolean encode(ChannelHandlerContext ctx, BedrockPacketWrapper wrapper) throws Exception {
+        if (wrapper.getPacketBuffer() != null) {
             // We have a pre-encoded packet buffer, just use that.
             return true;
         }
 
         ByteBuf buf = ctx.alloc().buffer(128);
         try {
-            BedrockPacket packet = msg.getPacket();
-            msg.setPacketId(getPacketId(packet));
-            this.encodeHeader(buf, msg);
+            BedrockPacket packet = wrapper.getPacket();
+            wrapper.setPacketId(getPacketId(packet));
+            this.encodeHeader(buf, wrapper);
             this.codec.tryEncode(helper, buf, packet);
-            msg.setPacketBuffer(buf.retain());
+            wrapper.setPacketBuffer(buf.retain());
         } catch (Throwable t) {
-            log.error("Error encoding packet {}", msg.getPacket(), t);
+            log.error("Error encoding packet {}", wrapper.getPacket(), t);
         } finally {
             buf.release();
         }
@@ -94,9 +105,11 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
             int index = msg.readerIndex();
             this.decodeHeader(msg, wrapper);
             wrapper.setHeaderLength(msg.readerIndex() - index);
-            wrapper.setPacket(this.codec.tryDecode(helper, msg, wrapper.getPacketId()));
+            if (this.alwaysDecode) { // Otherwise, we are decoding at other place
+                wrapper.setPacket(this.codec.tryDecode(helper, msg, wrapper.getPacketId()));
+            }
         } catch (Throwable t) {
-            log.info("Failed to decode packet", t);
+            log.error("Failed to decode packet", t);
             throw t;
         } finally {
             msg.release();
@@ -130,18 +143,6 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         return this.codec.getPacketDefinition(packet.getClass()).getId();
     }
 
-    public final BedrockPacketCodec setCodec(BedrockCodec codec) {
-        if (this.codec != BedrockCompat.CODEC) {
-            throw new IllegalStateException("Codec is already set");
-        }
-        if (codec == BedrockCompat.CODEC) {
-            throw new IllegalArgumentException("Cannot set codec to BedrockCompat");
-        }
-        this.codec = codec;
-        this.helper = codec.createHelper();
-        return this;
-    }
-
     public final BedrockPacketCodec setCodecHelper(BedrockCodec codec, BedrockCodecHelper helper) {
         if (this.codec != BedrockCompat.CODEC) {
             throw new IllegalStateException("Codec is already set");
@@ -154,11 +155,16 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         return this;
     }
 
-    public final BedrockCodec getCodec() {
-        return codec;
+    public BedrockCodec getCodec() {
+        return this.codec;
     }
 
     public BedrockCodecHelper getHelper() {
-        return helper;
+        return this.helper;
+    }
+
+    public BedrockPacketCodec setAlwaysDecode(boolean alwaysDecode) {
+        this.alwaysDecode = alwaysDecode;
+        return this;
     }
 }

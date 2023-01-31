@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.network.connection.peer;
 import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyBatchBridge;
+import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import lombok.extern.log4j.Log4j2;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -42,12 +43,12 @@ public abstract class ProxiedBedrockSession extends BedrockSession implements Pr
 
     @Override
     protected void onPacket(BedrockPacket packet) {
-        if (this.getPacketHandler() instanceof ProxyBatchBridge bridge) {
-            PacketSignal signal = bridge.handlePacket(this, packet);
+        if (this.packetHandler instanceof ProxyBatchBridge bridge) {
+            PacketSignal signal = bridge.handlePacket(packet);
             if (signal != Signals.CANCEL) {
                 bridge.sendProxiedBatch(BedrockBatchWrapper.create(0, packet));
             }
-        } else if (this.getPacketHandler() != null) {
+        } else if (this.packetHandler != null) {
             this.getPacketHandler().handlePacket(packet);
         } else {
             log.warn("[{}] Unhandled packet {}", this.getSocketAddress(), packet);
@@ -55,7 +56,7 @@ public abstract class ProxiedBedrockSession extends BedrockSession implements Pr
     }
 
     protected void onBedrockBatch(BedrockBatchWrapper batch) {
-        if (this.getPacketHandler() instanceof ProxyBatchBridge bridge) {
+        if (this.packetHandler instanceof ProxyBatchBridge bridge) {
             bridge.onBedrockBatch(this, batch);
         } else {
             for (BedrockPacketWrapper packet : batch.getPackets()) {
@@ -74,7 +75,24 @@ public abstract class ProxiedBedrockSession extends BedrockSession implements Pr
 
     @Override
     public void setPacketHandler(@NonNull BedrockPacketHandler handler) {
-        super.setPacketHandler(handler);
+        if (handler instanceof ProxyPacketHandler packetHandler) {
+            if (this.packetHandler instanceof ProxyBatchBridge bridge) {
+                bridge.setHandler(packetHandler);
+            } else {
+                super.setPacketHandler(new ProxyBatchBridge(this.getPeer().getCodec(),
+                        this.getPeer().getCodecHelper(), packetHandler));
+            }
+        } else {
+            super.setPacketHandler(handler);
+        }
+    }
+
+    @Override
+    public BedrockPacketHandler getPacketHandler() {
+        if (this.packetHandler instanceof ProxyBatchBridge bridge) {
+            return bridge.getHandler();
+        }
+        return this.packetHandler;
     }
 
     @Override

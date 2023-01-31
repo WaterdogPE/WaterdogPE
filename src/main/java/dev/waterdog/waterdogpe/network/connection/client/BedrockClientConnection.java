@@ -24,6 +24,7 @@ import dev.waterdog.waterdogpe.network.connection.codec.encryption.BedrockEncryp
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyBatchBridge;
+import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.channel.Channel;
@@ -155,6 +156,10 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
         return this.channel.pipeline().get(BedrockPacketCodec.class).getCodec();
     }
 
+    private BedrockCodecHelper getCodecHelper() {
+        return this.channel.pipeline().get(BedrockPacketCodec.class).getHelper();
+    }
+
     @Override
     public void disconnect() {
         if (this.channel instanceof RakChannel rakChannel &&
@@ -199,8 +204,16 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
     }
 
     @Override
-    public void setPacketHandler(BedrockPacketHandler packetHandler) {
-        this.packetHandler = packetHandler;
+    public void setPacketHandler(BedrockPacketHandler handler) {
+        if (handler instanceof ProxyPacketHandler packetHandler) {
+            if (this.getPacketHandler() instanceof ProxyBatchBridge bridge) {
+                bridge.setHandler(packetHandler);
+            } else {
+                this.packetHandler = new ProxyBatchBridge(this.getCodec(), this.getCodecHelper(), packetHandler);
+            }
+        } else {
+            this.packetHandler = handler;
+        }
     }
 
     @Override

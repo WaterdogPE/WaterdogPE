@@ -19,7 +19,7 @@ import dev.waterdog.waterdogpe.command.Command;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
-import dev.waterdog.waterdogpe.network.protocol.handler.ProxyBatchBridge;
+import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.RewriteMaps;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 
 import static dev.waterdog.waterdogpe.network.protocol.Signals.mergeSignals;
 
-public abstract class AbstractDownstreamHandler implements ProxyBatchBridge {
+public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
 
     protected final ClientConnection connection;
     protected final ProxiedPlayer player;
@@ -52,9 +52,9 @@ public abstract class AbstractDownstreamHandler implements ProxyBatchBridge {
         RewriteMaps rewriteMaps = this.player.getRewriteMaps();
         if (rewriteMaps.getBlockMap() != null) {
             return mergeSignals(rewriteMaps.getBlockMap().doRewrite(packet),
-                    ProxyBatchBridge.super.doPacketRewrite(packet));
+                    ProxyPacketHandler.super.doPacketRewrite(packet));
         }
-        return ProxyBatchBridge.super.doPacketRewrite(packet);
+        return ProxyPacketHandler.super.doPacketRewrite(packet);
     }
 
     @Override
