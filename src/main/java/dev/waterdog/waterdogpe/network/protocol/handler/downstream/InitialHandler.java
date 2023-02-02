@@ -135,7 +135,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
             if (runtimeIds.add(definition.getRuntimeId())) {
                 itemRegistry.add(definition);
             } else {
-                this.player.getLogger().warning("[{}|{}] has duplicate item definition: {}", this.player.getName(), this.connection.getServerInfo().getServerName());
+                this.player.getLogger().warning("[{}|{}] has duplicate item definition: {}", this.player.getName(), this.connection.getServerInfo().getServerName(), definition);
             }
         }
         codecHelper.setItemDefinitions(itemRegistry.build());
