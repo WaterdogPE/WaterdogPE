@@ -39,7 +39,12 @@ public class WaterdogPE {
         Thread.currentThread().setName("WaterdogPE-main");
         System.out.println("Starting WaterdogPE....");
         System.setProperty("log4j.skipJansi", "false");
-        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
+        
+        if (versionInfo.debug()) {
+            ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.SIMPLE);
+        } else {
+            ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
+        }
 
         MainLogger logger = MainLogger.getLogger();
         logger.info("§bStarting WaterDogPE proxy software!");
