@@ -110,6 +110,7 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(UpdatePlayerGameTypePacket.class);
         HANDLED_PACKETS.add(SubClientLoginPacket.class);
         HANDLED_PACKETS.add(LevelChunkPacket.class);
+        HANDLED_PACKETS.add(ClientCheatAbilityPacket.class);
     }
 
     private static final List<ProtocolCodecUpdater> UPDATERS = new ObjectArrayList<>();
