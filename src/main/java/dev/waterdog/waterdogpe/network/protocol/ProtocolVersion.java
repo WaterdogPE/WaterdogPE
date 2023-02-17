@@ -45,6 +45,7 @@ import com.nukkitx.protocol.bedrock.v554.Bedrock_v554;
 import com.nukkitx.protocol.bedrock.v557.Bedrock_v557;
 import com.nukkitx.protocol.bedrock.v560.Bedrock_v560;
 import com.nukkitx.protocol.bedrock.v567.Bedrock_v567;
+import com.nukkitx.protocol.bedrock.v567.Bedrock_v567patch;
 import dev.waterdog.waterdogpe.network.protocol.codec.BedrockCodec;
 import lombok.ToString;
 
@@ -79,40 +80,51 @@ public enum ProtocolVersion {
     MINECRAFT_PE_1_19_30(554, Bedrock_v554.V554_CODEC, 11),
     MINECRAFT_PE_1_19_40(557, Bedrock_v557.V557_CODEC, 11),
     MINECRAFT_PE_1_19_50(560, Bedrock_v560.V560_CODEC, 11),
-    MINECRAFT_PE_1_19_60(567, Bedrock_v567.V567_CODEC, 11);
+    MINECRAFT_PE_1_19_60(567, Bedrock_v567.V567_CODEC, 11),
+    MINECRAFT_PE_1_19_62(567, 658, Bedrock_v567patch.BEDROCK_V567PATCH, 11); // this version has not bumped protocol number on client side
 
     private static final ProtocolVersion[] VALUES = values();
 
     private final int protocol;
+    private final int protocolInternal;
     private final int raknetVersion;
 
     private final BedrockPacketCodec defaultCodec;
     private BedrockCodec bedrockCodec;
 
     ProtocolVersion(int protocol, BedrockPacketCodec codec, int raknetVersion) {
+        this(protocol, protocol, codec, raknetVersion);
+    }
+
+    ProtocolVersion(int protocol, int protocolInternal, BedrockPacketCodec codec, int raknetVersion) {
         this.protocol = protocol;
+        this.protocolInternal = protocolInternal;
         this.defaultCodec = codec;
         this.raknetVersion = raknetVersion;
     }
 
     public boolean isBefore(ProtocolVersion version) {
-        return this.protocol < version.protocol;
+        return this.protocolInternal < version.protocolInternal;
     }
 
     public boolean isBeforeOrEqual(ProtocolVersion version) {
-        return this.protocol <= version.protocol;
+        return this.protocolInternal <= version.protocolInternal;
     }
 
     public boolean isAfter(ProtocolVersion version) {
-        return this.protocol > version.protocol;
+        return this.protocolInternal > version.protocolInternal;
     }
 
     public boolean isAfterOrEqual(ProtocolVersion version) {
-        return this.protocol >= version.protocol;
+        return this.protocolInternal >= version.protocolInternal;
     }
 
     public int getProtocol() {
         return this.protocol;
+    }
+
+    public int getProtocolInternal() {
+        return this.protocolInternal;
     }
 
     public int getRaknetVersion() {
