@@ -144,7 +144,11 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
     }
 
     public final BedrockPacketCodec setCodecHelper(BedrockCodec codec, BedrockCodecHelper helper) {
-        if (this.codec != BedrockCompat.CODEC) {
+        return this.setCodecHelper(codec, helper, false);
+    }
+
+    public final BedrockPacketCodec setCodecHelper(BedrockCodec codec, BedrockCodecHelper helper, boolean force) {
+        if (!force && this.codec != BedrockCompat.CODEC) {
             throw new IllegalStateException("Codec is already set");
         }
         if (codec == BedrockCompat.CODEC) {

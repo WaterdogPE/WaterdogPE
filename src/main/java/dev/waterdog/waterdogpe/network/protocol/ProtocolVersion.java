@@ -48,6 +48,7 @@ import org.cloudburstmc.protocol.bedrock.codec.v554.Bedrock_v554;
 import org.cloudburstmc.protocol.bedrock.codec.v557.Bedrock_v557;
 import org.cloudburstmc.protocol.bedrock.codec.v560.Bedrock_v560;
 import org.cloudburstmc.protocol.bedrock.codec.v567.Bedrock_v567;
+import org.cloudburstmc.protocol.bedrock.codec.v568.Bedrock_v568;
 
 @ToString(exclude = {"defaultCodec", "bedrockCodec"})
 public enum ProtocolVersion {
@@ -80,44 +81,55 @@ public enum ProtocolVersion {
     MINECRAFT_PE_1_19_30(554, Bedrock_v554.CODEC),
     MINECRAFT_PE_1_19_40(557, Bedrock_v557.CODEC),
     MINECRAFT_PE_1_19_50(560, Bedrock_v560.CODEC),
-    MINECRAFT_PE_1_19_60(567, Bedrock_v567.CODEC);
+    MINECRAFT_PE_1_19_60(567, Bedrock_v567.CODEC),
+    MINECRAFT_PE_1_19_62(567, 568, Bedrock_v568.CODEC); // this version has not bumped protocol number on client side
 
     private static final ProtocolVersion[] VALUES = values();
     private static final Int2ObjectMap<ProtocolVersion> VERSIONS = new Int2ObjectOpenHashMap<>();
     static {
         for (ProtocolVersion version : values()) {
-            VERSIONS.put(version.getProtocol(), version);
+            VERSIONS.putIfAbsent(version.getProtocol(), version);
         }
     }
 
     private final int protocol;
+    private final int protocolInternal;
 
     private final BedrockCodec defaultCodec;
     private BedrockCodec bedrockCodec;
 
     ProtocolVersion(int protocol, BedrockCodec codec) {
-        this.protocol = protocol;
+        this(protocol, protocol, codec);
+    }
+
+    ProtocolVersion(int protocol, int protocolInternal, BedrockCodec codec) {
+        this.protocol= protocol;
+        this.protocolInternal = protocolInternal;
         this.defaultCodec = codec;
     }
 
     public boolean isBefore(ProtocolVersion version) {
-        return this.protocol < version.protocol;
+        return this.protocolInternal < version.protocolInternal;
     }
 
     public boolean isBeforeOrEqual(ProtocolVersion version) {
-        return this.protocol <= version.protocol;
+        return this.protocolInternal <= version.protocolInternal;
     }
 
     public boolean isAfter(ProtocolVersion version) {
-        return this.protocol > version.protocol;
+        return this.protocolInternal > version.protocolInternal;
     }
 
     public boolean isAfterOrEqual(ProtocolVersion version) {
-        return this.protocol >= version.protocol;
+        return this.protocolInternal >= version.protocolInternal;
     }
 
     public int getProtocol() {
         return this.protocol;
+    }
+
+    public int getProtocolInternal() {
+        return this.protocolInternal;
     }
 
     public int getRaknetVersion() {
