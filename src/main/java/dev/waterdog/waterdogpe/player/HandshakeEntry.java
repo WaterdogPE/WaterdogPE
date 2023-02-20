@@ -54,6 +54,13 @@ public class HandshakeEntry {
         builder.xuid(this.extraData.get("XUID").getAsString());
         builder.xboxAuthed(this.xboxAuthed);
         builder.protocol(this.protocol);
+        // Thank you Mojang: this version includes protocol changes, but protocol version was not increased.
+        var gameVersion = getClientData().has("GameVersion") ? getClientData().get("GameVersion").getAsString().replaceAll("\n", "") : null;
+        if (protocol.equals(ProtocolVersion.MINECRAFT_PE_1_19_60) && ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(gameVersion)) {
+            builder.protocol(ProtocolVersion.MINECRAFT_PE_1_19_62);
+            session.setPacketCodec(protocol.getCodec());
+        }
+
         builder.joinHostname(this.clientData.get("ServerAddress").getAsString().split(":")[0]);
         builder.address(session.getAddress());
         builder.keyPair(event.getKeyPair());
