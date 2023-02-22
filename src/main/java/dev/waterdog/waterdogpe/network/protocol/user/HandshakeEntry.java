@@ -31,7 +31,7 @@ public class HandshakeEntry {
     private final JsonObject clientData;
     private final JsonObject extraData;
     private final boolean xboxAuthed;
-    private final ProtocolVersion protocol;
+    private ProtocolVersion protocol;
 
     public HandshakeEntry(ECPublicKey identityPublicKey, JsonObject clientData, JsonObject extraData, boolean xboxAuthed, ProtocolVersion protocol) {
         this.identityPublicKey = identityPublicKey;
@@ -80,6 +80,10 @@ public class HandshakeEntry {
 
     public String getDisplayName() {
         return this.extraData.get("displayName").getAsString();
+    }
+
+    public void setProtocol(ProtocolVersion protocol) {
+        this.protocol = protocol;
     }
 
     public ProtocolVersion getProtocol() {
