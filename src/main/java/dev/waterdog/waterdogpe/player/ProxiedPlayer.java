@@ -275,6 +275,10 @@ public class ProxiedPlayer implements CommandSender {
             connection.disconnect();
         }
 
+        if (this.disconnected.get()) {
+            return;
+        }
+
         this.getLogger().error("[{}|{}] Unable to connect to downstream {}", this.getAddress(), this.getName(), targetServer.getServerName(), error);
         String exceptionMessage = Objects.requireNonNullElse(error.getLocalizedMessage(), error.getClass().getSimpleName());
         if (this.sendToFallback(targetServer, exceptionMessage)) {
