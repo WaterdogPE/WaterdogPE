@@ -157,7 +157,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             if (protocol.equals(ProtocolVersion.MINECRAFT_PE_1_19_60) && handshakeEntry.getClientData().has("GameVersion") &&
                     ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(handshakeEntry.getClientData().get("GameVersion").getAsString())) {
                 protocol = ProtocolVersion.MINECRAFT_PE_1_19_62;
-                this.session.getPeer().setCodec(protocol.getCodec(), true);
+                this.session.getPeer().setCodec(protocol.getCodec());
             }
 
             this.proxy.getLogger().info("[{}|{}] <-> Upstream has connected (protocol={} version={})", this.session.getSocketAddress(), handshakeEntry.getDisplayName(),

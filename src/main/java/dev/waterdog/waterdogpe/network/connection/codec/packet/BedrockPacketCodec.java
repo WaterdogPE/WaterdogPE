@@ -21,17 +21,17 @@ import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
-import io.netty.util.Attribute;
 import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.codec.compat.BedrockCompat;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
-import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketType;
 import org.cloudburstmc.protocol.bedrock.packet.UnknownPacket;
 
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 @Log4j2
 public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBatchWrapper, BedrockBatchWrapper> {
@@ -144,18 +144,8 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
     }
 
     public final BedrockPacketCodec setCodecHelper(BedrockCodec codec, BedrockCodecHelper helper) {
-        return this.setCodecHelper(codec, helper, false);
-    }
-
-    public final BedrockPacketCodec setCodecHelper(BedrockCodec codec, BedrockCodecHelper helper, boolean force) {
-        if (!force && this.codec != BedrockCompat.CODEC) {
-            throw new IllegalStateException("Codec is already set");
-        }
-        if (codec == BedrockCompat.CODEC) {
-            throw new IllegalArgumentException("Cannot set codec to BedrockCompat");
-        }
-        this.codec = codec;
-        this.helper = helper;
+        this.codec = requireNonNull(codec, "Codec cannot be null");
+        this.helper = requireNonNull(helper, "Helper can not be null");
         return this;
     }
 
