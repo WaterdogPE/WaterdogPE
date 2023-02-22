@@ -32,7 +32,7 @@ public class HandshakeEntry {
     private final JsonObject clientData;
     private final JsonObject extraData;
     private final boolean xboxAuthed;
-    private final ProtocolVersion protocol;
+    private ProtocolVersion protocol;
 
     public HandshakeEntry(ECPublicKey identityPublicKey, JsonObject clientData, JsonObject extraData, boolean xboxAuthed, ProtocolVersion protocol) {
         this.identityPublicKey = identityPublicKey;
@@ -53,14 +53,12 @@ public class HandshakeEntry {
         builder.uuid(UUID.fromString(this.extraData.get("identity").getAsString()));
         builder.xuid(this.extraData.get("XUID").getAsString());
         builder.xboxAuthed(this.xboxAuthed);
-        builder.protocol(this.protocol);
         // Thank you Mojang: this version includes protocol changes, but protocol version was not increased.
         var gameVersion = getClientData().has("GameVersion") ? getClientData().get("GameVersion").getAsString().replaceAll("\n", "") : null;
         if (protocol.equals(ProtocolVersion.MINECRAFT_PE_1_19_60) && ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(gameVersion)) {
-            builder.protocol(ProtocolVersion.MINECRAFT_PE_1_19_62);
-            session.setPacketCodec(protocol.getCodec());
+            setProtocol(ProtocolVersion.MINECRAFT_PE_1_19_62);
         }
-
+        builder.protocol(this.protocol);
         builder.joinHostname(this.clientData.get("ServerAddress").getAsString().split(":")[0]);
         builder.address(session.getAddress());
         builder.keyPair(event.getKeyPair());
@@ -93,6 +91,10 @@ public class HandshakeEntry {
 
     public String getDisplayName() {
         return this.extraData.get("displayName").getAsString();
+    }
+
+    public void setProtocol(ProtocolVersion protocol) {
+        this.protocol = protocol;
     }
 
     public ProtocolVersion getProtocol() {
