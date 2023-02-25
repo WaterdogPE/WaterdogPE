@@ -157,7 +157,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
             LoginData loginData = handshakeEntry.buildData(this.session, this.proxy);
             this.session.setPacketCodec(loginData.getProtocol().getCodec());
-            this.proxy.getLogger().info("[" + this.session.getAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has connected (protocol=" + loginData.getProtocol().getProtocol() + "version=" + loginData.getProtocol().getMinecraftVersion() +")");
+            this.proxy.getLogger().info("[" + this.session.getAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has connected (protocol=" + loginData.getProtocol().getProtocol() + " version=" + loginData.getProtocol().getMinecraftVersion() +")");
 
             PlayerPreLoginEvent loginEvent = new PlayerPreLoginEvent(ProxiedPlayer.class, loginData, this.session.getAddress());
             this.proxy.getEventManager().callEvent(loginEvent);
