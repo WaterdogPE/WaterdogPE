@@ -278,7 +278,7 @@ public class EntityMap implements BedrockPacketHandler {
     }
 
     public PacketSignal handle(NpcDialoguePacket packet) {
-        return rewriteId(packet.getRuntimeEntityId(), packet::setRuntimeEntityId);
+        return rewriteId(packet.getUniqueEntityId(), packet::setUniqueEntityId);
     }
 
     public PacketSignal handle(NpcRequestPacket packet) {
