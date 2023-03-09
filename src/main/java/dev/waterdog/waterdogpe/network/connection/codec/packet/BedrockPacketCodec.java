@@ -52,16 +52,16 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
     @Override
     protected void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
         if (msg.isModified() || msg.getUncompressed() == null) {
-            int passedThought = 0;
+            int passedThrough = 0;
             int encodedPackets = 0;
             for (BedrockPacketWrapper packet : msg.getPackets()) {
                 if (this.encode(ctx, packet)) {
-                    passedThought++;
+                    passedThrough++;
                 } else {
                     encodedPackets++;
                 }
             }
-            this.recordMetrics(ctx, passedThought, encodedPackets);
+            this.recordMetrics(ctx, passedThrough, encodedPackets);
         }
         out.add(msg.retain());
     }
