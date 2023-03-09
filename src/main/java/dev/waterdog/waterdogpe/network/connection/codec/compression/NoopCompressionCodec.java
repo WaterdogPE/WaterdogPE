@@ -23,13 +23,13 @@ import java.util.List;
 
 public class NoopCompressionCodec extends MessageToMessageCodec<BedrockBatchWrapper, BedrockBatchWrapper> {
     @Override
-    protected void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
+    public void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
         msg.setCompressed(msg.getUncompressed().retainedSlice(), null);
         out.add(msg.retain());
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
+    public void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
         msg.setAlgorithm(null);
         msg.setUncompressed(msg.getCompressed().retainedSlice());
         out.add(msg.retain());

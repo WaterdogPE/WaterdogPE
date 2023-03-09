@@ -30,7 +30,7 @@ public class SnappyCompressionCodec extends ProxiedCompressionCodec {
     private static final ThreadLocal<short[]> TABLE = ThreadLocal.withInitial(() -> new short[16384]);
 
     @Override
-    protected ByteBuf encode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+    public ByteBuf encode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
         ByteBuf direct;
         if (!msg.isDirect() || msg instanceof CompositeByteBuf) {
             direct = ctx.alloc().ioBuffer(msg.readableBytes());
@@ -72,7 +72,7 @@ public class SnappyCompressionCodec extends ProxiedCompressionCodec {
     }
 
     @Override
-    protected ByteBuf decode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+    public ByteBuf decode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
         ByteBuf direct;
         if (!msg.isDirect() || msg instanceof CompositeByteBuf) {
             direct = ctx.alloc().ioBuffer(msg.readableBytes());

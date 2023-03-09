@@ -32,7 +32,7 @@ public class ZlibCompressionCodec extends ProxiedCompressionCodec {
     private int level = 7;
 
     @Override
-    protected ByteBuf encode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+    public ByteBuf encode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
         ByteBuf outBuf = ctx.alloc().ioBuffer(msg.readableBytes() << 3);
         try {
             zlib.deflate(msg, outBuf, level);
@@ -43,7 +43,7 @@ public class ZlibCompressionCodec extends ProxiedCompressionCodec {
     }
 
     @Override
-    protected ByteBuf decode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+    public ByteBuf decode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
         return zlib.inflate(msg, MAX_DECOMPRESSED_BYTES);
     }
 

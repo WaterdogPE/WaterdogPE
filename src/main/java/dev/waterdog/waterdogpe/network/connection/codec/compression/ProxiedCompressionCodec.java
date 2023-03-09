@@ -30,7 +30,7 @@ public abstract class ProxiedCompressionCodec extends MessageToMessageCodec<Bedr
     public static final String NAME = "compression-codec";
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
+    public void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
         if (msg.getCompressed() == null && msg.getUncompressed() == null) {
             throw new IllegalStateException("Batch was not encoded before");
         }
@@ -49,7 +49,7 @@ public abstract class ProxiedCompressionCodec extends MessageToMessageCodec<Bedr
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
+    public void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
         msg.setAlgorithm(this.getCompressionAlgorithm());
         msg.setUncompressed(this.decode0(ctx, msg.getCompressed().slice()));
 
