@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.*;
+import io.netty.channel.kqueue.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.ServerSocketChannel;
@@ -38,6 +39,8 @@ public class EventLoops {
 
         if (!disableNative && Epoll.isAvailable()) {
             CHANNEL_TYPE = ChannelType.EPOLL;
+        } else if (!disableNative && KQueue.isAvailable()) {
+            CHANNEL_TYPE = ChannelType.KQUEUE;
         } else {
             CHANNEL_TYPE = ChannelType.NIO;
         }
@@ -51,9 +54,11 @@ public class EventLoops {
     @RequiredArgsConstructor
     public enum ChannelType {
         EPOLL(EpollDatagramChannel.class, EpollSocketChannel.class, EpollServerSocketChannel.class,
-                (threads, factory) -> new EpollEventLoopGroup(threads, factory), Epoll.isAvailable()),
+                EpollEventLoopGroup::new, Epoll.isAvailable()),
+        KQUEUE(KQueueDatagramChannel.class, KQueueSocketChannel.class, KQueueServerSocketChannel.class,
+                NioEventLoopGroup::new, KQueue.isAvailable()),
         NIO(NioDatagramChannel.class, NioSocketChannel.class, NioServerSocketChannel.class,
-                (threads, factory) -> new NioEventLoopGroup(threads, factory), true);
+                KQueueEventLoopGroup::new, true);
 
         private final Class<? extends DatagramChannel> datagramChannel;
         private final Class<? extends SocketChannel> socketChannel;
