@@ -71,7 +71,7 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
         if (channel instanceof RakChannel) {
             ((RakChannel) channel).rakPipeline().get(RakSessionCodec.class).disconnect(reason);
         } else {
-            channel.close();
+            channel.disconnect();
         }
     }
 }

@@ -44,7 +44,7 @@ public class ClientEventHandler extends ChannelInboundHandlerAdapter {
         }
 
         if (reason == RakDisconnectReason.TIMED_OUT) {
-            this.player.onDownstreamTimeout();
+            this.player.onDownstreamTimeout(this.connection.getServerInfo());
         }
     }
 

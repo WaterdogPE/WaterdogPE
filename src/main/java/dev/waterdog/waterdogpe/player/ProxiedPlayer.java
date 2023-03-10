@@ -353,8 +353,7 @@ public class ProxiedPlayer implements CommandSender {
 
     // TODO: I'm not super happy with this, but moving it to a netty handler would mean anyone who implements own handler,
     //  has to copy that piece of code. PLS: find a better place for this two methods
-    public final void onDownstreamTimeout() {
-        ServerInfo serverInfo = this.getServerInfo();
+    public final void onDownstreamTimeout(ServerInfo serverInfo) {
         if (!this.sendToFallback(serverInfo, "Downstream Timeout")) {
             this.disconnect(new TranslationContainer("waterdog.downstream.down", serverInfo.getServerName(), "Timeout"));
         }

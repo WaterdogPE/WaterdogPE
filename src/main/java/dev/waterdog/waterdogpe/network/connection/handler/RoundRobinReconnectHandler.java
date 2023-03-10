@@ -43,7 +43,7 @@ public class RoundRobinReconnectHandler implements IReconnectHandler {
 
         while (iterator.hasNext()) {
             String server = iterator.next();
-            if (!server.equals(oldServer.getServerName())) {
+            if (oldServer == null || !server.equals(oldServer.getServerName())) {
                 return proxy.getServerInfo(server);
             }
         }
