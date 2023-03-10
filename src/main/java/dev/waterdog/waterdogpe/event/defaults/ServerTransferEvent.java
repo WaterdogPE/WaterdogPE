@@ -26,7 +26,7 @@ public class ServerTransferEvent extends PlayerEvent {
 
     private final ServerInfo sourceServer;
     private final ServerInfo targetServer;
-    private boolean allowTransferScreen = true;
+    private boolean transferScreenAllowed = true;
 
     public ServerTransferEvent(ProxiedPlayer player, ServerInfo sourceServer, ServerInfo targetServer) {
         super(player);
@@ -42,12 +42,12 @@ public class ServerTransferEvent extends PlayerEvent {
         return this.targetServer;
     }
 
-    public void setAllowTransferScreen(boolean allowTransferScreen) {
-        this.allowTransferScreen = allowTransferScreen;
+    public void setTransferScreenAllowed(boolean transferScreenAllowed) {
+        this.transferScreenAllowed = transferScreenAllowed;
     }
 
-    public boolean allowTransferScreen() {
-        return this.allowTransferScreen;
+    public boolean isTransferScreenAllowed() {
+        return this.transferScreenAllowed;
     }
 }
 

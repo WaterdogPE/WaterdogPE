@@ -177,7 +177,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         rewriteData.setDimension(newDimension);
         rewriteData.setTransferCallback(transferCallback);
 
-        boolean fastTransfer = event.allowTransferScreen() && newDimension != packet.getDimensionId();
+        boolean fastTransfer = event.isTransferScreenAllowed() && newDimension != packet.getDimensionId();
         if (fastTransfer) {
             Vector3f fakePosition = packet.getPlayerPosition().add(2000, 0, 2000);
             injectPosition(this.player.getConnection(), fakePosition, packet.getRotation(), rewriteData.getEntityId());
