@@ -15,17 +15,17 @@
 
 package dev.waterdog.waterdogpe.plugin;
 
-import dev.waterdog.waterdogpe.logger.MainLogger;
+import lombok.extern.log4j.Log4j2;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+@Log4j2
 public class PluginLoader {
 
     private final PluginManager pluginManager;
@@ -38,16 +38,16 @@ public class PluginLoader {
         return file.getFileName().toString().endsWith(".jar");
     }
 
-    protected Plugin loadPluginJAR(PluginYAML pluginConfig, File pluginJar) {
-        PluginClassLoader loader;
+    protected PluginClassLoader loadClassLoader(PluginYAML pluginConfig, File pluginJar) {
         try {
-            loader = new PluginClassLoader(this.pluginManager, this.getClass().getClassLoader(), pluginJar);
-            this.pluginManager.pluginClassLoaders.put(pluginConfig.getName(), loader);
+            return new PluginClassLoader(this.pluginManager, this.getClass().getClassLoader(), pluginJar);
         } catch (MalformedURLException e) {
-            MainLogger.getLogger().error("Error while creating class loader(plugin=" + pluginConfig.getName() + ")");
-            return null;
+            log.error("Error while creating class loader(plugin={})", pluginConfig.getName());
         }
+        return null;
+    }
 
+    protected Plugin loadPluginJAR(PluginYAML pluginConfig, File pluginJar, PluginClassLoader loader) {
         try {
             Class<?> mainClass = loader.loadClass(pluginConfig.getMain());
             if (!Plugin.class.isAssignableFrom(mainClass)) {
@@ -59,7 +59,7 @@ public class PluginLoader {
             plugin.init(pluginConfig, this.pluginManager.getProxy(), pluginJar);
             return plugin;
         } catch (Exception e) {
-            MainLogger.getLogger().error("Error while loading plugin main class(main=" + pluginConfig.getMain() + ",plugin=" + pluginConfig.getName() + ")", e);
+            log.error("Error while loading plugin main class(main={}, plugin={})", pluginConfig.getMain(), pluginConfig.getName(), e);
         }
         return null;
     }
@@ -72,7 +72,7 @@ public class PluginLoader {
             }
 
             if (configEntry == null) {
-                MainLogger.getLogger().warning("Jar file " + file.getName() + " doesnt contain a waterdog.yml or plugin.yml!");
+                log.warn("Jar file " + file.getName() + " doesnt contain a waterdog.yml or plugin.yml!");
                 return null;
             }
 
@@ -83,9 +83,9 @@ public class PluginLoader {
                     return pluginConfig;
                 }
             }
-            MainLogger.getLogger().warning("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
+            log.warn("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
         } catch (Exception e) {
-            MainLogger.getLogger().error("Can not load plugin files in " + file.getPath(), e);
+            log.error("Can not load plugin files in " + file.getPath(), e);
         }
         return null;
     }

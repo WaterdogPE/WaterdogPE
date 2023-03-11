@@ -36,6 +36,7 @@ import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
 import dev.waterdog.waterdogpe.packs.PackManager;
 import dev.waterdog.waterdogpe.player.PlayerManager;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import dev.waterdog.waterdogpe.plugin.Plugin;
 import dev.waterdog.waterdogpe.plugin.PluginManager;
 import dev.waterdog.waterdogpe.network.connection.codec.query.QueryHandler;
 import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
@@ -172,8 +173,6 @@ public class ProxyServer {
         this.bossEventLoopGroup = channelType.newEventLoopGroup(0, bossFactory);
 
         // Default Handlers
-        this.reconnectHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getReconnectHandler(), IReconnectHandler.class);
-        this.joinHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getJoinHandler(), IJoinHandler.class);
         this.forcedHostHandler = new DefaultForcedHostHandler();
         this.pluginManager = new PluginManager(this);
         this.configurationManager.loadServerInfos(this.serverInfoMap);
@@ -182,11 +181,15 @@ public class ProxyServer {
         this.eventManager = new EventManager(this);
         this.packManager = new PackManager(this);
         this.securityManager = new SecurityManager(this);
-
         this.commandSender = new ConsoleCommandSender(this);
         this.commandMap = new DefaultCommandMap(this, SimpleCommandMap.DEFAULT_PREFIX);
         this.console = new TerminalConsole(this);
         this.serverId = ThreadLocalRandom.current().nextLong();
+
+        this.pluginManager.loadAllPlugins();
+        this.reconnectHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getReconnectHandler(), IReconnectHandler.class, this.pluginManager);
+        this.joinHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getJoinHandler(), IJoinHandler.class, this.pluginManager);
+
         this.boot();
     }
 
