@@ -56,9 +56,9 @@ public class EventLoops {
         EPOLL(EpollDatagramChannel.class, EpollSocketChannel.class, EpollServerSocketChannel.class,
                 EpollEventLoopGroup::new, Epoll.isAvailable()),
         KQUEUE(KQueueDatagramChannel.class, KQueueSocketChannel.class, KQueueServerSocketChannel.class,
-                NioEventLoopGroup::new, KQueue.isAvailable()),
+                KQueueEventLoopGroup::new, KQueue.isAvailable()),
         NIO(NioDatagramChannel.class, NioSocketChannel.class, NioServerSocketChannel.class,
-                KQueueEventLoopGroup::new, true);
+                NioEventLoopGroup::new, true);
 
         private final Class<? extends DatagramChannel> datagramChannel;
         private final Class<? extends SocketChannel> socketChannel;
