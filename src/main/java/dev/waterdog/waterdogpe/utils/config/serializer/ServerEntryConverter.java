@@ -63,7 +63,7 @@ public class ServerEntryConverter implements Converter {
             address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, section.get("address"), null);
             publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, section.get("public_address"), null);
             serverType = (String) inetConverter.fromConfig(String.class, section.get("server_type"), null);
-            return new ServerEntry(section.get("name"), address, publicAddress, this.requireServerType(serverType));
+            return new ServerEntry(section.get("name"), address, publicAddress, this.validateServerType(serverType));
         }
 
         if (object instanceof Map) {
@@ -72,22 +72,17 @@ public class ServerEntryConverter implements Converter {
                 address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, subMap.getValue().get("address"), null);
                 publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, subMap.getValue().get("public_address"), null);
                 serverType = (String) subMap.getValue().get("server_type");
-                return new ServerEntry(subMap.getKey(), address, publicAddress, this.requireServerType(serverType));
+                return new ServerEntry(subMap.getKey(), address, publicAddress, this.validateServerType(serverType));
             }
         }
         throw new IllegalArgumentException("ServerInfoConverter#fromConfig cannot parse obj: " + object.getClass().getName());
     }
 
-    private ServerInfoType requireServerType(String serverType) {
+    private String validateServerType(String serverType) {
         if (serverType == null || serverType.isEmpty()) {
-            return ServerInfoType.BEDROCK;
+            return ServerInfoType.BEDROCK.getIdentifier();
         }
-
-        ServerInfoType serverInfoType = ServerInfoType.fromString(serverType);
-        if (serverInfoType == null) {
-            throw new IllegalArgumentException("Unsupported ServerInfoType " + serverType + "! Make sure your config is valid and provided ServerInfoType was registered");
-        }
-        return serverInfoType;
+        return serverType;
     }
 
     @Override

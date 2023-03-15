@@ -69,6 +69,6 @@ public class ServerInfoMap {
     }
 
     public ServerInfo fromServerEntry(ServerEntry entry) {
-        return this.createServerInfo(entry.getServerName(), entry.getAddress(), entry.getPublicAddress(), entry.getServerType());
+        return this.createServerInfo(entry.getServerName(), entry.getAddress(), entry.getPublicAddress(), entry.getServerInfoType());
     }
 }

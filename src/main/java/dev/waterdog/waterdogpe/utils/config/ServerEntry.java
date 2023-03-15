@@ -30,9 +30,9 @@ public class ServerEntry {
     private final String serverName;
     private final InetSocketAddress address;
     private final InetSocketAddress publicAddress;
-    private final ServerInfoType serverType;
+    private final String serverType;
 
-    public ServerEntry(String serverName, InetSocketAddress address, InetSocketAddress publicAddress, ServerInfoType serverType) {
+    public ServerEntry(String serverName, InetSocketAddress address, InetSocketAddress publicAddress, String serverType) {
         Preconditions.checkArgument(serverName != null && !serverName.isEmpty(), "Server name is not valid");
         Preconditions.checkNotNull(address, "Server address can not be null");
         Preconditions.checkNotNull(serverType, "ServerInfoType can not be null");
@@ -54,7 +54,15 @@ public class ServerEntry {
         return this.publicAddress;
     }
 
-    public ServerInfoType getServerType() {
+    public String getServerType() {
         return this.serverType;
+    }
+
+    public ServerInfoType getServerInfoType() {
+        ServerInfoType serverInfoType = ServerInfoType.fromString(this.serverType);
+        if (serverInfoType == null) {
+            throw new IllegalArgumentException("Unsupported ServerInfoType " + serverType + "! Make sure your config is valid and provided ServerInfoType was registered");
+        }
+        return serverInfoType;
     }
 }

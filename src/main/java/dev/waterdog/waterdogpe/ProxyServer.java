@@ -175,7 +175,6 @@ public class ProxyServer {
         // Default Handlers
         this.forcedHostHandler = new DefaultForcedHostHandler();
         this.pluginManager = new PluginManager(this);
-        this.configurationManager.loadServerInfos(this.serverInfoMap);
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
         this.eventManager = new EventManager(this);
@@ -187,6 +186,7 @@ public class ProxyServer {
         this.serverId = ThreadLocalRandom.current().nextLong();
 
         this.pluginManager.loadAllPlugins();
+        this.configurationManager.loadServerInfos(this.serverInfoMap);
         this.reconnectHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getReconnectHandler(), IReconnectHandler.class, this.pluginManager);
         this.joinHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getJoinHandler(), IJoinHandler.class, this.pluginManager);
 

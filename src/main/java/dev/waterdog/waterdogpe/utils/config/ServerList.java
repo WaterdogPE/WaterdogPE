@@ -55,7 +55,7 @@ public class ServerList {
         this.putIfAbsent("lobby1", new ServerEntry("lobby1",
                 new InetSocketAddress("127.0.0.1", 19133),
                 new InetSocketAddress("play.myserver.com", 19133),
-                ServerInfoMap.DEFAULT_TYPE));
+                ServerInfoMap.DEFAULT_TYPE.getIdentifier()));
         return this;
     }
 }
