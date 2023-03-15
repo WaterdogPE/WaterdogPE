@@ -15,6 +15,8 @@
 
 package dev.waterdog.waterdogpe.security;
 
+import dev.waterdog.waterdogpe.network.protocol.user.HandshakeEntry;
+
 import java.net.InetAddress;
 import java.net.SocketAddress;
 
@@ -42,12 +44,12 @@ public interface SecurityListener {
      * Called when pending connection wasn't accepted due failed XBOX authentication or
      * when exception happened during processing handshake data.
      * @param address of the sender.
-     * @param xboxAuth if player is XBOX authenticated.
+     * @param handshakeEntry the Handshake information of failed connection.
      * @param throwable thrown exception or null.
      * @param reason if login is allowed.
      * @return disconnect message sent to client.
      */
-    default String onLoginFailed(SocketAddress address, boolean xboxAuth, Throwable throwable, String reason) {
+    default String onLoginFailed(SocketAddress address, HandshakeEntry handshakeEntry, Throwable throwable, String reason) {
         return reason;
     }
 

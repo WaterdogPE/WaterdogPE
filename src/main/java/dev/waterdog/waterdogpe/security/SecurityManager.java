@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.security;
 
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.network.protocol.user.HandshakeEntry;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetworkSettings;
 
 import java.net.InetAddress;
@@ -108,9 +109,9 @@ public class SecurityManager {
         return success;
     }
 
-    public String onLoginFailed(SocketAddress address, boolean xboxAuth, Throwable throwable, String reason) {
+    public String onLoginFailed(SocketAddress address, HandshakeEntry handshakeEntry, Throwable throwable, String reason) {
         if (this.listener != null) {
-            return this.listener.onLoginFailed(address, xboxAuth, throwable, reason);
+            return this.listener.onLoginFailed(address, handshakeEntry, throwable, reason);
         }
         // TODO: probably throttle this as well?
         return reason;

@@ -55,8 +55,8 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
         this.session = session;
     }
 
-    private void onLoginFailed(boolean xboxAuth, Throwable throwable, String disconnectReason) {
-        String message = this.proxy.getSecurityManager().onLoginFailed(this.session.getSocketAddress(), xboxAuth, throwable, disconnectReason);
+    private void onLoginFailed(HandshakeEntry handshakeEntry, Throwable throwable, String disconnectReason) {
+        String message = this.proxy.getSecurityManager().onLoginFailed(this.session.getSocketAddress(), handshakeEntry, throwable, disconnectReason);
         if (this.session.isConnected()) {
             this.session.disconnect(Objects.requireNonNullElse(message, "Login Failed"));
         }
@@ -70,7 +70,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
         SecurityManager securityManager = this.proxy.getSecurityManager();
         if (!securityManager.onLoginAttempt(this.session.getSocketAddress())) {
-            this.proxy.getLogger().debug("[" + this.session.getSocketAddress() + "] <-> Login denied");
+            this.proxy.getLogger().debug("[{}] <-> Login denied", this.session.getSocketAddress());
             this.session.disconnect("Login denied");
             return false;
         }
@@ -89,7 +89,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
                 PlayStatusPacket.Status.LOGIN_FAILED_CLIENT_OLD));
         this.session.sendPacketImmediately(status);
         this.session.disconnect();
-        this.proxy.getLogger().warning("[" + this.session.getSocketAddress() + "] <-> Upstream has disconnected due to incompatible protocol (protocol=" + protocolVersion + ")");
+        this.proxy.getLogger().warning("[{}] <-> Upstream has disconnected due to incompatible protocol (protocol={})", this.session.getSocketAddress(), protocolVersion);
         return null;
     }
 
@@ -104,7 +104,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
         if (protocol.isBefore(ProtocolVersion.MINECRAFT_PE_1_19_30)) {
             this.session.disconnect("Illegal packet");
-            this.proxy.getLogger().warning("[" + this.session.getSocketAddress() + "] <-> Upstream has requested network settings, but its version doesn't support it (protocol=" + protocol.getProtocol() + ")");
+            this.proxy.getLogger().warning("[{}] <-> Upstream has requested network settings, but its version doesn't support it (protocol={})", this.session.getSocketAddress(), protocol.getProtocol());
             return PacketSignal.HANDLED;
         }
 
@@ -134,22 +134,22 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
         }
 
         if (protocol.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_30) && this.compression == null) {
-            this.proxy.getLogger().warning("[" + this.session.getSocketAddress() + "] <-> Upstream has not requested network settings (protocol=" + protocol.getProtocol() + ")");
-            this.session.disconnect("wrong login flow");
+            this.proxy.getLogger().warning("[{}] <-> Upstream has not requested network settings (protocol={})", this.session.getSocketAddress(), protocol.getProtocol());
+            this.session.disconnect("Wrong login flow");
             return PacketSignal.HANDLED;
         } else if (this.compression == null) {
             this.compression = CompressionAlgorithm.ZLIB;
         }
 
-        boolean xboxAuth = false;
+        HandshakeEntry handshakeEntry = null;
         boolean strictAuth = this.proxy.getConfiguration().isOnlineMode();
 
         this.session.setLogging(WaterdogPE.version().debug());
         try {
-            HandshakeEntry handshakeEntry = HandshakeUtils.processHandshake(this.session, packet, protocol, strictAuth);
-            if (!(xboxAuth = handshakeEntry.isXboxAuthed()) && strictAuth) {
-                this.onLoginFailed(false, null, "disconnectionScreen.notAuthenticated");
-                this.proxy.getLogger().info("[" + this.session.getSocketAddress() + "|" + handshakeEntry.getDisplayName() + "] <-> Upstream has disconnected due to failed XBOX authentication!");
+            handshakeEntry = HandshakeUtils.processHandshake(this.session, packet, protocol, strictAuth);
+            if (!handshakeEntry.isXboxAuthed() && strictAuth) {
+                this.onLoginFailed(handshakeEntry, null, "disconnectionScreen.notAuthenticated");
+                this.proxy.getLogger().info("[{}|{}] <-> Upstream has disconnected due to failed XBOX authentication!", this.session.getSocketAddress(), handshakeEntry.getDisplayName());
                 return PacketSignal.HANDLED;
             }
 
@@ -184,8 +184,8 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
                 this.finishConnection();
             }
         } catch (Exception e) {
-            this.onLoginFailed(xboxAuth, e, "Login failed: " + e.getMessage());
-            this.proxy.getLogger().error("[" + this.session.getSocketAddress() + "] Unable to complete login", e);
+            this.onLoginFailed(handshakeEntry, e, "Login failed: " + e.getMessage());
+            this.proxy.getLogger().error("[{}] Unable to complete login", this.session.getSocketAddress(), e);
         }
         return PacketSignal.HANDLED;
     }
