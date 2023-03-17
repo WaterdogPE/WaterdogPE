@@ -131,11 +131,6 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, when receiving a McpeTransferPacket, the proxy will check if the target server is in the downstream list, and if yes, use the fast transfer mechanism")
     private boolean useFastTransfer = true;
 
-    @Path("use_fast_codec")
-    @Accessors(fluent = true)
-    @Comment("Fast-codec only decodes the packets required by the proxy, everything else will be passed rawly. Disabling this can create a performance hit")
-    private boolean useFastCodec = true;
-
     @Path("inject_proxy_commands")
     @Accessors(fluent = true)
     @Comment("If enabled, the proxy will inject all the proxy commands in the AvailableCommandsPacket, enabling autocompletion")

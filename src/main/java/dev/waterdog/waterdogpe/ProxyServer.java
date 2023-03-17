@@ -200,8 +200,10 @@ public class ProxyServer {
     private void boot() {
         this.console.getConsoleThread().start();
         this.pluginManager.enableAllPlugins();
-        if (this.getConfiguration().useFastCodec()) {
-            this.logger.info("Using fast codec! Please ensure plugin compatibility!");
+        if (Boolean.parseBoolean(System.getProperty("disableFastCodec", "false"))) {
+            this.logger.warning("Fast codec is disabled! This may impact the proxy performance!");
+        } else {
+            this.logger.info("Using fast codec for improved performance and stability!");
             if (this.getConfiguration().injectCommands()) {
                 ProtocolCodecs.addUpdater(new CodecUpdaterCommands());
             }
@@ -221,7 +223,7 @@ public class ProxyServer {
         }
 
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
-        this.logger.info("Binding to " + bindAddress);
+        this.logger.info("Binding to {}", bindAddress);
 
         if (this.getConfiguration().enableQuery()) {
             this.queryHandler = new QueryHandler(this);
