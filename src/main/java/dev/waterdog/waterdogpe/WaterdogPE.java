@@ -26,6 +26,7 @@ import org.apache.logging.log4j.core.config.LoggerConfig;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -79,7 +80,7 @@ public class WaterdogPE {
      */
     protected static void shutdownHook() {
         LogManager.shutdown();
-        System.exit(0); // force exit
+        Runtime.getRuntime().halt(0); // force exit
     }
 
     private static VersionInfo loadVersion() {

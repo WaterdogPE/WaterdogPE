@@ -104,7 +104,7 @@ public class ProxyServer {
     private final EventLoopGroup workerEventLoopGroup;
     private final ScheduledExecutorService tickExecutor;
     private ScheduledFuture<?> tickFuture;
-    private boolean shutdown = false;
+    private volatile boolean shutdown = false;
     private int currentTick = 0;
 
     public ProxyServer(MainLogger logger, String filePath, String pluginPath) throws InvalidConfigurationException {
@@ -214,8 +214,8 @@ public class ProxyServer {
         }
 
         if(this.getConfiguration().isEnableAnonymousStatistics()){
-            Metrics.WaterdogMetrics.startMetrics(this, this.getConfiguration());
             this.getLogger().info("Enabling anonymous statistics.");
+            Metrics.startMetrics(this, this.getConfiguration());
         }
 
         if (this.getConfiguration().enableResourcePacks()) {
@@ -324,10 +324,15 @@ public class ProxyServer {
         this.tickExecutor.shutdown();
         this.scheduler.shutdown();
         this.eventManager.getThreadedExecutor().shutdown();
+
+        if (Metrics.get() != null) {
+            Metrics.get().shutdown();
+        }
+
         try {
             for (Channel channel : this.serverChannels) {
                 if (channel.isOpen()) {
-                    channel.close().sync();
+                    channel.close().syncUninterruptibly();
                 }
             }
         } catch (Exception e) {
