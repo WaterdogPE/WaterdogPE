@@ -18,8 +18,6 @@ package dev.waterdog.waterdogpe.network.connection.peer;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import dev.waterdog.waterdogpe.network.connection.codec.server.PacketQueueHandler;
 import io.netty.channel.ChannelPipeline;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.protocol.bedrock.BedrockDisconnectReasons;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
@@ -32,7 +30,7 @@ public class BedrockServerSession extends ProxiedBedrockSession {
     }
 
     @Override
-    public void disconnect(@Nullable String reason, boolean hideReason) {
+    public void disconnect(String reason, boolean hideReason) {
         this.checkForClosed();
 
         DisconnectPacket packet = new DisconnectPacket();
@@ -45,7 +43,7 @@ public class BedrockServerSession extends ProxiedBedrockSession {
     }
 
     @Override
-    public void sendPacketImmediately(@NonNull BedrockPacket packet) {
+    public void sendPacketImmediately(BedrockPacket packet) {
         this.getPeer().sendPacket(BedrockBatchWrapper.create(this.subClientId, packet).skipQueue(true));
     }
 

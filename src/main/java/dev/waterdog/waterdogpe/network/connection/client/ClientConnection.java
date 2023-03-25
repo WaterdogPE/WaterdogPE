@@ -19,7 +19,6 @@ import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 
@@ -34,7 +33,7 @@ public interface ClientConnection extends ProxiedConnection {
 
     void setCodecHelper(BedrockCodec codec, BedrockCodecHelper helper);
 
-    default void enableEncryption(@NonNull SecretKey secretKey) {
+    default void enableEncryption(SecretKey secretKey) {
         // No encryption by default
     }
 

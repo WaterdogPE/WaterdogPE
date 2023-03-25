@@ -28,9 +28,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.log4j.Log4j2;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
-import org.cloudburstmc.netty.channel.raknet.RakChildChannel;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.netty.handler.codec.raknet.common.RakSessionCodec;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
@@ -61,7 +59,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     private void onBedrockBatch(BedrockBatchWrapper batch) {
         if (this.firstSession == null) {
             for (BedrockPacketWrapper wrapper : batch.getPackets()) {
-                this.getSession(wrapper.getTargetSubClientId()).onPacket(wrapper.getPacket());
+                this.getSession(wrapper.getTargetSubClientId()).onPacket(wrapper);
             }
         } else {
             this.firstSession.onBedrockBatch(batch);
@@ -153,7 +151,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     }
 
     @Override
-    public void enableEncryption(@NonNull SecretKey secretKey) {
+    public void enableEncryption(SecretKey secretKey) {
         Objects.requireNonNull(secretKey, "secretKey");
         if (!secretKey.getAlgorithm().equals("AES")) {
             throw new IllegalArgumentException("Invalid key algorithm");

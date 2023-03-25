@@ -21,7 +21,6 @@ import dev.waterdog.waterdogpe.network.protocol.handler.ProxyBatchBridge;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import lombok.extern.log4j.Log4j2;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
@@ -42,14 +41,14 @@ public abstract class ProxiedBedrockSession extends BedrockSession implements Pr
     }
 
     @Override
-    protected void onPacket(BedrockPacket packet) {
+    protected void onPacket(BedrockPacketWrapper packet) {
         if (this.packetHandler instanceof ProxyBatchBridge bridge) {
-            PacketSignal signal = bridge.handlePacket(packet);
+            PacketSignal signal = bridge.handlePacket(packet.getPacket());
             if (signal != Signals.CANCEL) {
-                bridge.sendProxiedBatch(BedrockBatchWrapper.create(0, packet));
+                bridge.sendProxiedBatch(BedrockBatchWrapper.create(0, packet.getPacket()));
             }
         } else if (this.packetHandler != null) {
-            this.getPacketHandler().handlePacket(packet);
+            this.getPacketHandler().handlePacket(packet.getPacket());
         } else {
             log.warn("[{}] Unhandled packet {}", this.getSocketAddress(), packet);
         }
@@ -59,9 +58,7 @@ public abstract class ProxiedBedrockSession extends BedrockSession implements Pr
         if (this.packetHandler instanceof ProxyBatchBridge bridge) {
             bridge.onBedrockBatch(this, batch);
         } else {
-            for (BedrockPacketWrapper packet : batch.getPackets()) {
-                this.onPacket(packet.getPacket());
-            }
+            batch.getPackets().forEach(this::onPacket);
         }
     }
 
@@ -74,7 +71,7 @@ public abstract class ProxiedBedrockSession extends BedrockSession implements Pr
     }
 
     @Override
-    public void setPacketHandler(@NonNull BedrockPacketHandler handler) {
+    public void setPacketHandler(BedrockPacketHandler handler) {
         if (handler instanceof ProxyPacketHandler packetHandler) {
             if (this.packetHandler instanceof ProxyBatchBridge bridge) {
                 bridge.setHandler(packetHandler);
