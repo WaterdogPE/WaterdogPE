@@ -1,0 +1,73 @@
+name: "build"
+description: "Default WDPE build action"
+
+inputs:
+  repo_token:
+    description: "GitHub secret token"
+    required: true
+  perform_deploy:
+    description: "Whether to deploy to maven repository"
+    required: true
+  deploy_repository:
+    description: "The maven repository name to deploy"
+    required: true
+  deploy_username:
+    description: "A username to access maven repository"
+    required: true
+  deploy_password:
+    description: "A password of a maven repository user"
+    required: true
+  create_prerelease:
+    description: "Create a pre release build"
+    required: true
+  prerelease_name:
+    description: "A name of pre-release"
+    required: false
+    default: "latest"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Java 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: 17
+        distribution: adopt-hotspot
+
+    - name: Setup maven repo
+      uses: s4u/maven-settings-action@v2.6.0
+      if: ${{ inputs.perform_deploy == 'true' }}
+      with:
+        servers: |
+          [{
+            "id": "${{ inputs.deploy_repository }}",
+            "username": "${{ inputs.deploy_username }}",
+            "password": "${{ inputs.deploy_password }}"
+          }]
+
+    - name: Build
+      if: ${{ inputs.perform_deploy == 'false' }}
+      run: mvn -B package --file pom.xml
+      shell: bash
+
+    - name: Build and Deploy
+      if: ${{ inputs.perform_deploy == 'true' }}
+      run: mvn -B package deploy --file pom.xml
+      shell: bash
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: waterdog
+        path: target/Waterdog.jar
+
+    - name: Create pre-release
+      if: ${{ inputs.create_prerelease == 'true' }}
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ inputs.repo_token }}"
+        automatic_release_tag: "${{ inputs.prerelease_name }}"
+        prerelease: true
+        title: "Snapshot Build"
+        files: |
+          target/Waterdog.jar

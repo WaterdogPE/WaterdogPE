@@ -38,13 +38,11 @@
 
     <distributionManagement>
         <repository>
-            <id>central</id>
-            <name>waterdog-releases</name>
+            <id>waterdog-releases</id>
             <url>https://repo.waterdog.dev/artifactory/releases</url>
         </repository>
         <snapshotRepository>
-            <id>snapshots</id>
-            <name>waterdog-snapshots</name>
+            <id>waterdog-snapshots</id>
             <url>https://repo.waterdog.dev/artifactory/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
