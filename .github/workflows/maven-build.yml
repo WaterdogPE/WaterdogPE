@@ -46,6 +46,7 @@ jobs:
         with:
           images: "ghcr.io/${{ github.repository }}"
           tags: |
+            type=ref,event=branch
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
 
       - name: Docker build and push
