@@ -17,6 +17,11 @@ package dev.waterdog.waterdogpe.command;
 
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * A container holding base information of each command
  */
@@ -31,19 +36,15 @@ public class CommandSettings {
     private final String permission;
     private final String permissionMessage;
 
-    private final String[] aliases;
+    private final Set<String> aliases;
 
-    private CommandSettings(String usageMessage, String description, String permission, String[] aliases, String permissionMessage, boolean quoteAware) {
+    private CommandSettings(String usageMessage, String description, String permission, Set<String> aliases, String permissionMessage, boolean quoteAware) {
         this.usageMessage = new TranslationContainer(usageMessage).getTranslated();
         this.description = new TranslationContainer(description).getTranslated();
         this.permission = new TranslationContainer(permission).getTranslated();
         this.permissionMessage = new TranslationContainer(permissionMessage).getTranslated();
         this.quoteAware = quoteAware;
         this.aliases = aliases;
-    }
-
-    private CommandSettings(String usageMessage, String description, String permission, String[] aliases, String permissionMessage){
-        this(usageMessage, description, permission, aliases, permissionMessage, false);
     }
 
     public static CommandSettings empty() {
@@ -70,7 +71,7 @@ public class CommandSettings {
         return this.permissionMessage;
     }
 
-    public String[] getAliases() {
+    public Set<String> getAliases() {
         return this.aliases;
     }
 
@@ -91,7 +92,7 @@ public class CommandSettings {
                     this.usageMessage,
                     this.description == null ? this.usageMessage : this.description,
                     this.permission,
-                    this.aliases,
+                    Collections.unmodifiableSet(new HashSet<>(Arrays.asList(this.aliases))),
                     this.permissionMessage,
                     this.quoteAware
             );
@@ -147,7 +148,7 @@ public class CommandSettings {
             return this.aliases;
         }
 
-        public Builder setAliases(String[] aliases) {
+        public Builder setAliases(String... aliases) {
             this.aliases = aliases;
             return this;
         }

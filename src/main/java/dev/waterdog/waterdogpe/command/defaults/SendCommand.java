@@ -21,6 +21,8 @@ import dev.waterdog.waterdogpe.command.CommandSettings;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.types.TextContainer;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandParam;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandParamData;
 
 public class SendCommand extends Command {
 
@@ -62,13 +64,18 @@ public class SendCommand extends Command {
         return true;
     }
 
-    // TODO:
-    /*@Override
-    public CommandData craftNetwork() {
-        CommandParamData[][] parameterData = new CommandParamData[][]{{
-                new CommandParamData("destination", false, null, CommandParam.TEXT, null, Collections.emptyList()),
-                new CommandParamData("target", true, null, CommandParam.TEXT, null, Collections.emptyList())
-        }};
-        return new CommandData(this.getName(), this.getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
-    }*/
+    @Override
+    protected CommandParamData[][] buildCommandOverloads() {
+        CommandParamData destination = new CommandParamData();
+        destination.setName("destination");
+        destination.setOptional(false);
+        destination.setType(CommandParam.TEXT);
+
+        CommandParamData target = new CommandParamData();
+        target.setName("target");
+        target.setOptional(false);
+        target.setType(CommandParam.TEXT);
+
+        return new CommandParamData[][]{{ destination, target }};
+    }
 }

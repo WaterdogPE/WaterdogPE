@@ -66,7 +66,7 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
 
         for (Command command : this.player.getProxy().getCommandMap().getCommands().values()) {
             if (command.getPermission() == null || this.player.hasPermission(command.getPermission())) {
-                packet.getCommands().add(command.getData());
+                packet.getCommands().add(command.getCommandData());
             }
         }
         return Signals.fromBoolean(packet.getCommands().size() > sizeBefore);
