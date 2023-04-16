@@ -40,19 +40,13 @@ public class WaterdogPE {
         Thread.currentThread().setName("WaterdogPE-main");
         System.out.println("Starting WaterdogPE....");
         System.setProperty("log4j.skipJansi", "false");
-        
-        if (versionInfo.debug()) {
-            ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.SIMPLE);
-        } else {
-            ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
-        }
 
         MainLogger logger = MainLogger.getLogger();
         logger.info("§bStarting WaterDogPE proxy software!");
-        logger.info("§3Software Version: " + versionInfo.baseVersion());
-        logger.info("§3Build Version: " + versionInfo.buildVersion());
-        logger.info("§3Development Build: " + versionInfo.debug());
-        logger.info("§3Software Authors: " + versionInfo.author());
+        logger.info("§3Software Version: {}", versionInfo.baseVersion());
+        logger.info("§3Build Version: {}", versionInfo.buildVersion());
+        logger.info("§3Development Build: {}", versionInfo.debug());
+        logger.info("§3Software Authors: {}", versionInfo.author());
 
 
         int javaVersion = getJavaVersion();
@@ -64,7 +58,18 @@ public class WaterdogPE {
         if (versionInfo.buildVersion().equals("#build") || versionInfo.branchName().equals("unknown")) {
             logger.warning("Custom build? Unofficial builds should be not run in production!");
         } else {
-            logger.info("§3Discovered branch §b" + versionInfo.branchName() + "§3 commitId §b" + versionInfo.commitId());
+            logger.info("§3Discovered branch §b{}§3 commitId §b{}", versionInfo.branchName(), versionInfo.commitId());
+        }
+
+        if (versionInfo.debug()) {
+            setLeakDetection(ResourceLeakDetector.Level.SIMPLE);
+        } else {
+            setLeakDetection(ResourceLeakDetector.Level.DISABLED);
+        }
+
+        logger.info("§eUsing memory leak detection level: {}", ResourceLeakDetector.getLevel());
+        if (!versionInfo.debug() && ResourceLeakDetector.getLevel().ordinal() > ResourceLeakDetector.Level.SIMPLE.ordinal()) {
+            logger.warning("§eUsing higher memory leak detection levels in production environment can affect application stability and performance!");
         }
 
         try {
@@ -130,5 +135,11 @@ public class WaterdogPE {
             version = version.substring(0, index);
         }
         return Integer.parseInt(version);
+    }
+
+    private static void setLeakDetection(ResourceLeakDetector.Level level) {
+        if (ResourceLeakDetector.getLevel().ordinal() < level.ordinal()) {
+            ResourceLeakDetector.setLevel(level);
+        }
     }
 }
