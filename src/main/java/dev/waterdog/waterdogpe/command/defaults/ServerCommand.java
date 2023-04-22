@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,17 +15,15 @@
 
 package dev.waterdog.waterdogpe.command.defaults;
 
-import com.nukkitx.protocol.bedrock.data.command.CommandData;
-import com.nukkitx.protocol.bedrock.data.command.CommandParam;
-import com.nukkitx.protocol.bedrock.data.command.CommandParamData;
 import dev.waterdog.waterdogpe.command.Command;
 import dev.waterdog.waterdogpe.command.CommandSender;
 import dev.waterdog.waterdogpe.command.CommandSettings;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.types.TextContainer;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandParam;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandParamData;
 
-import java.util.Collections;
 
 public class ServerCommand extends Command {
 
@@ -71,11 +69,16 @@ public class ServerCommand extends Command {
     }
 
     @Override
-    public CommandData craftNetwork() {
-        CommandParamData[][] parameterData = new CommandParamData[][]{{
-                new CommandParamData("server", false, null, CommandParam.TEXT, null, Collections.emptyList()),
-                new CommandParamData("player", true, null, CommandParam.TARGET, null, Collections.emptyList())
-        }};
-        return new CommandData(this.getName(), this.getDescription(), Collections.emptyList(), (byte) 0, null, parameterData);
+    protected CommandParamData[][] buildCommandOverloads() {
+        CommandParamData server = new CommandParamData();
+        server.setName("server");
+        server.setOptional(false);
+        server.setType(CommandParam.TEXT);
+
+        CommandParamData player = new CommandParamData();
+        player.setName("player");
+        player.setOptional(true);
+        player.setType(CommandParam.TARGET);
+        return new CommandParamData[][]{{ server, player }};
     }
 }

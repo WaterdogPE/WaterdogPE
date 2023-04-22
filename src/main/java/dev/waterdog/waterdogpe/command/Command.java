@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,11 +15,7 @@
 
 package dev.waterdog.waterdogpe.command;
 
-import com.nukkitx.protocol.bedrock.data.command.CommandData;
-import com.nukkitx.protocol.bedrock.data.command.CommandEnumData;
-import com.nukkitx.protocol.bedrock.data.command.CommandParam;
-import com.nukkitx.protocol.bedrock.data.command.CommandParamData;
-import org.apache.commons.lang3.ArrayUtils;
+import org.cloudburstmc.protocol.bedrock.data.command.*;
 
 import java.util.*;
 
@@ -38,7 +34,7 @@ public abstract class Command {
      */
     private final CommandSettings settings;
 
-    private final CommandData data;
+    private CommandData commandData;
 
     public Command(String name) {
         this(name, CommandSettings.empty());
@@ -47,7 +43,6 @@ public abstract class Command {
     public Command(String name, CommandSettings settings) {
         this.name = name;
         this.settings = settings;
-        this.data = this.craftNetwork();
     }
 
     public abstract boolean onExecute(CommandSender sender, String alias, String[] args);
@@ -72,25 +67,46 @@ public abstract class Command {
         return this.settings.getPermissionMessage();
     }
 
-    public CommandData getData() {
-        return this.data;
+    public CommandData getCommandData() {
+        if (this.commandData == null) {
+            this.commandData = this.buildNetworkData();
+        }
+        return this.commandData;
     }
 
     public String getPermission() {
         return this.settings.getPermission();
     }
 
-    public String[] getAliases() {
+    public Set<String> getAliases() {
         return this.settings.getAliases();
     }
 
-    public CommandData craftNetwork() {
-        CommandParamData[][] parameterData = new CommandParamData[][]{{
-                new CommandParamData(this.name, true, null, CommandParam.TEXT, null, Collections.emptyList())
-        }};
-        Set<String> aliases = new HashSet<>(getAliases().length + 1);
-        Collections.addAll(aliases, getAliases());
-        aliases.add(this.name);
-        return new CommandData(this.name, this.getDescription(), Collections.emptyList(), (byte) 0, new CommandEnumData(this.name, aliases.toArray(ArrayUtils.EMPTY_STRING_ARRAY), false), parameterData);
+    private CommandData buildNetworkData() {
+        // Create command aliases
+        Map<String, Set<CommandEnumConstraint>> aliases = new LinkedHashMap<>();
+        aliases.put(this.name, EnumSet.of(CommandEnumConstraint.ALLOW_ALIASES));
+
+        for (String alias : this.settings.getAliases()) {
+            aliases.put(alias, EnumSet.of(CommandEnumConstraint.ALLOW_ALIASES));
+        }
+
+        // Build command parameters
+        CommandParamData[][] overloads = this.buildCommandOverloads();
+
+        return new CommandData(this.name,
+                this.getDescription(),
+                Collections.emptySet(),
+                (byte) 0,
+                new CommandEnumData(this.name + "_aliases", aliases, false),
+                overloads);
+    }
+
+    protected CommandParamData[][] buildCommandOverloads() {
+        CommandParamData simpleData = new CommandParamData();
+        simpleData.setName(this.name);
+        simpleData.setOptional(true);
+        simpleData.setType(CommandParam.TEXT);
+        return new CommandParamData[][]{{ simpleData }};
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,8 +17,11 @@ package dev.waterdog.waterdogpe.plugin;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.utils.exceptions.PluginChangeStateException;
+import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectObjectImmutablePair;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
 import org.yaml.snakeyaml.representer.Representer;
@@ -28,6 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class PluginManager {
 
@@ -45,17 +49,19 @@ public class PluginManager {
     private final Object2ObjectMap<String, Plugin> pluginMap = new Object2ObjectArrayMap<>();
     private final Object2ObjectMap<String, Class<?>> cachedClasses = new Object2ObjectArrayMap<>();
 
+    private final List<Pair<PluginYAML, Path>> pluginsToLoad = new ObjectArrayList<>();
+
     public PluginManager(ProxyServer proxy) {
         this.proxy = proxy;
         this.pluginLoader = new PluginLoader(this);
         try {
-            this.loadPluginsIn(this.proxy.getPluginPath());
+            this.loadPluginsInside(this.proxy.getPluginPath());
         } catch (IOException e) {
             this.proxy.getLogger().error("Error while filtering plugin files", e);
         }
     }
 
-    public void loadPluginsIn(Path folderPath) throws IOException {
+    private void loadPluginsInside(Path folderPath) throws IOException {
         Comparator<PluginYAML> comparator = (o1, o2) -> {
             if (o2.getName().equals(o1.getName())) {
                 return 0;
@@ -67,18 +73,18 @@ public class PluginManager {
         };
 
         Map<PluginYAML, Path> plugins = new TreeMap<>(comparator);
-
-        Files.walk(folderPath).filter(Files::isRegularFile).filter(PluginLoader::isJarFile).forEach(jarPath -> {
-            PluginYAML config = this.loadPluginConfig(jarPath);
-            if (config != null) {
-                plugins.put(config, jarPath);
-            }
-        });
-
-        plugins.forEach(this::loadPlugin);
+        try (Stream<Path> stream = Files.walk(folderPath)){
+            stream.filter(Files::isRegularFile).filter(PluginLoader::isJarFile).forEach(jarPath -> {
+                PluginYAML config = this.loadPluginConfig(jarPath);
+                if (config != null) {
+                    plugins.put(config, jarPath);
+                }
+            });
+        }
+        plugins.forEach(this::registerClassLoader);
     }
 
-    public PluginYAML loadPluginConfig(Path path) {
+    private PluginYAML loadPluginConfig(Path path) {
         if (!Files.isRegularFile(path) || !PluginLoader.isJarFile(path)) {
             this.proxy.getLogger().warning("Cannot load plugin: Provided file is no jar file: " + path.getFileName());
             return null;
@@ -88,17 +94,48 @@ public class PluginManager {
         if (!pluginFile.exists()) {
             return null;
         }
-        return this.pluginLoader.loadPluginData(pluginFile, this.yamlLoader);
+        return this.pluginLoader.loadPluginData(pluginFile, yamlLoader);
+    }
+
+    private PluginClassLoader registerClassLoader(PluginYAML config, Path path) {
+        if (this.getPluginByName(config.getName()) != null) {
+            this.proxy.getLogger().warning("Plugin is already loaded: {}", config.getName());
+            return null;
+        }
+
+        PluginClassLoader classLoader = this.pluginLoader.loadClassLoader(config, path.toFile());
+        if (classLoader != null) {
+            this.pluginClassLoaders.put(config.getName(), classLoader);
+            this.pluginsToLoad.add(ObjectObjectImmutablePair.of(config, path));
+            this.proxy.getLogger().debug("Loaded class loader from {}", path.getFileName());
+        }
+        return classLoader;
+    }
+
+    public void loadAllPlugins() {
+        for (Pair<PluginYAML, Path> pair : this.pluginsToLoad) {
+            this.loadPlugin(pair.key(), pair.value());
+        }
+        this.pluginsToLoad.clear();
     }
 
     public Plugin loadPlugin(PluginYAML config, Path path) {
         File pluginFile = path.toFile();
         if (this.getPluginByName(config.getName()) != null) {
-            this.proxy.getLogger().warning("Plugin is already loaded: " + config.getName());
+            this.proxy.getLogger().warning("Plugin is already loaded: {}", config.getName());
             return null;
         }
 
-        Plugin plugin = this.pluginLoader.loadPluginJAR(config, pluginFile);
+        PluginClassLoader classLoader = this.pluginClassLoaders.get(config.getName());
+        if (classLoader == null) {
+            classLoader = this.registerClassLoader(config, path);
+        }
+
+        if (classLoader == null) {
+            return null;
+        }
+
+        Plugin plugin = this.pluginLoader.loadPluginJAR(config, pluginFile, classLoader);
         if (plugin == null) {
             return null;
         }
@@ -106,11 +143,11 @@ public class PluginManager {
         try {
             plugin.onStartup();
         } catch (Exception e) {
-            this.proxy.getLogger().error("failed to load plugin " + config.getName() + "!", e);
+            this.proxy.getLogger().error("Failed to load plugin {}!", config.getName(), e);
             return null;
         }
 
-        this.proxy.getLogger().info("Loaded plugin " + config.getName() + " successfully! (version=" + config.getVersion() + ",author=" + config.getAuthor() + ")");
+        this.proxy.getLogger().info("Loaded plugin {} successfully! (version={}, author={})", config.getName(), config.getVersion(), config.getAuthor());
         this.pluginMap.put(config.getName(), plugin);
         return plugin;
     }
@@ -210,6 +247,10 @@ public class PluginManager {
 
     public Collection<Plugin> getPlugins() {
         return Collections.unmodifiableCollection(this.pluginMap.values());
+    }
+
+    public Collection<PluginClassLoader> getPluginClassLoaders() {
+        return Collections.unmodifiableCollection(this.pluginClassLoaders.values());
     }
 
     public Plugin getPluginByName(String pluginName) {

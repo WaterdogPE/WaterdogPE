@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,8 +16,8 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import com.google.gson.JsonObject;
-import com.nukkitx.protocol.bedrock.BedrockServerSession;
 import dev.waterdog.waterdogpe.event.Event;
+import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
 
 import java.security.KeyPair;
 
@@ -27,20 +27,20 @@ import java.security.KeyPair;
  */
 public class PreClientDataSetEvent extends Event {
 
-    private final BedrockServerSession playerSession;
+    private final ProxiedConnection connection;
     private final JsonObject clientData;
     private final JsonObject extraData;
     private KeyPair keyPair;
 
-    public PreClientDataSetEvent(JsonObject clientData, JsonObject extraData, KeyPair keyPair, BedrockServerSession playerSession) {
+    public PreClientDataSetEvent(JsonObject clientData, JsonObject extraData, KeyPair keyPair, ProxiedConnection playerSession) {
         this.clientData = clientData;
         this.extraData = extraData;
-        this.playerSession = playerSession;
+        this.connection = playerSession;
         this.keyPair = keyPair;
     }
 
-    public BedrockServerSession getPlayerSession() {
-        return this.playerSession;
+    public ProxiedConnection getConnection() {
+        return this.connection;
     }
 
     public JsonObject getClientData() {

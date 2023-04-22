@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,7 +55,7 @@ public class ServerList {
         this.putIfAbsent("lobby1", new ServerEntry("lobby1",
                 new InetSocketAddress("127.0.0.1", 19133),
                 new InetSocketAddress("play.myserver.com", 19133),
-                ServerInfoMap.DEFAULT_TYPE));
+                ServerInfoMap.DEFAULT_TYPE.getIdentifier()));
         return this;
     }
 }
