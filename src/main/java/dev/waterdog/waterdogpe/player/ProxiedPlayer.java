@@ -205,12 +205,12 @@ public class ProxiedPlayer implements CommandSender {
 
         ServerInfo targetServer = event.getTargetServer();
         if (this.clientConnection != null && this.clientConnection.getServerInfo() == targetServer) {
-            this.sendMessage(new TranslationContainer("waterdog.downstream.connected", serverInfo.getServerName()));
+            this.sendMessage(new TranslationContainer("waterdog.downstream.connected", targetServer.getServerName()));
             return;
         }
 
         if (this.pendingServers.contains(targetServer)) {
-            this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
+            this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", targetServer.getServerName()));
             return;
         }
 
@@ -219,7 +219,7 @@ public class ProxiedPlayer implements CommandSender {
         ClientConnection connectingServer = this.getPendingConnection();
         if (connectingServer != null) {
             if (connectingServer.getServerInfo() == targetServer) {
-                this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverInfo.getServerName()));
+                this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", targetServer.getServerName()));
                 return;
             } else {
                 connectingServer.disconnect();
