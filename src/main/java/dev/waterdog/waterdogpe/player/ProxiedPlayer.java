@@ -60,6 +60,7 @@ public class ProxiedPlayer implements CommandSender {
     private final CompressionAlgorithm compression;
 
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
+    private final AtomicBoolean loginCompleted = new AtomicBoolean(false);
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
     private final RewriteMaps rewriteMaps;
@@ -130,6 +131,13 @@ public class ProxiedPlayer implements CommandSender {
                 return;
             }
 
+            if (!this.isConnected()) { // player might have disconnected itself
+                this.disconnect("Already disconnected");
+                return;
+            }
+
+            this.loginCompleted.set(true);
+
             if (this.proxy.getConfiguration().enableResourcePacks()) {
                 this.sendResourcePacks();
             } else {
@@ -157,6 +165,10 @@ public class ProxiedPlayer implements CommandSender {
      * Determines the first player the player gets transferred to based on the currently present JoinHandler.
      */
     public final void initialConnect() {
+        if (this.disconnected.get()) {
+            return;
+        }
+
         this.connection.setPacketHandler(new ConnectedUpstreamHandler(this));
         // Determine forced host first
         ServerInfo initialServer = this.proxy.getForcedHostHandler().resolveForcedHost(this.loginData.getJoinHostname(), this);
@@ -182,6 +194,8 @@ public class ProxiedPlayer implements CommandSender {
      */
     public void connect(ServerInfo serverInfo) {
         Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
+        Preconditions.checkArgument(this.isConnected(), "User not connected");
+        Preconditions.checkArgument(this.loginCompleted.get(), "User not logged in");
 
         ServerTransferRequestEvent event = new ServerTransferRequestEvent(this, serverInfo);
         ProxyServer.getInstance().getEventManager().callEvent(event);
@@ -314,8 +328,10 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        PlayerDisconnectedEvent event = new PlayerDisconnectedEvent(this, reason);
-        this.proxy.getEventManager().callEvent(event);
+        if (this.loginCompleted.get()) {
+            PlayerDisconnectedEvent event = new PlayerDisconnectedEvent(this, reason);
+            this.proxy.getEventManager().callEvent(event);
+        }
 
         if (this.connection != null && this.connection.isConnected()) {
             this.connection.disconnect(reason);
@@ -343,6 +359,10 @@ public class ProxiedPlayer implements CommandSender {
      * @return if connection to downstream was successful.
      */
     public boolean sendToFallback(ServerInfo oldServer, String reason) {
+        if (!this.isConnected()) {
+            return false;
+        }
+
         ServerInfo fallbackServer = this.proxy.getReconnectHandler().getFallbackServer(this, oldServer, reason);
         if (fallbackServer != null && fallbackServer != this.getServerInfo()) {
             this.connect(fallbackServer);
