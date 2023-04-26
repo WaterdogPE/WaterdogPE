@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe;
 
 import dev.waterdog.waterdogpe.logger.MainLogger;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -47,6 +48,7 @@ public class WaterdogPE {
         logger.info("§3Build Version: {}", versionInfo.buildVersion());
         logger.info("§3Development Build: {}", versionInfo.debug());
         logger.info("§3Software Authors: {}", versionInfo.author());
+        logger.info("§3Latest Supported Game Version: {}", ProtocolVersion.latest().getMinecraftVersion());
 
 
         int javaVersion = getJavaVersion();
