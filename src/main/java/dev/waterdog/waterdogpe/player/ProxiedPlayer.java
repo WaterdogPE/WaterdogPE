@@ -120,6 +120,8 @@ public class ProxiedPlayer implements CommandSender {
     public void initPlayer() {
         PlayerLoginEvent event = new PlayerLoginEvent(this);
         this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, error) -> {
+            this.loginCompleted.set(true);
+
             if (error != null) {
                 this.getLogger().throwing(error);
                 this.disconnect(new TranslationContainer("waterdog.downstream.initial.connect"));
@@ -135,8 +137,6 @@ public class ProxiedPlayer implements CommandSender {
                 this.disconnect("Already disconnected");
                 return;
             }
-
-            this.loginCompleted.set(true);
 
             if (this.proxy.getConfiguration().enableResourcePacks()) {
                 this.sendResourcePacks();
