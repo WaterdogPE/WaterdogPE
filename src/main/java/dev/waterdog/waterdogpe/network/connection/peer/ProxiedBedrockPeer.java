@@ -104,10 +104,6 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         }
     }
 
-    public void sendPacket(BedrockPacketWrapper wrapper) {
-        this.packetQueue.offer(ReferenceCountUtil.retain(wrapper));
-    }
-
     public void sendPacket(BedrockBatchWrapper wrapper) {
         if (this.channel.eventLoop().inEventLoop()) {
             this.sendPacket0(wrapper);

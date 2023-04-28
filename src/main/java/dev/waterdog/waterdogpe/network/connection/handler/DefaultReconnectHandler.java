@@ -37,7 +37,7 @@ public class DefaultReconnectHandler implements IReconnectHandler {
         }
 
         int index = servers.indexOf(oldServer.getServerName());
-        if (index == -1 || index >= servers.size()) {
+        if (index == -1 || (index + 1) >= servers.size()) {
             return null;
         }
         return proxy.getServerInfo(servers.get(index + 1));
