@@ -122,20 +122,17 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
     protected PacketSignal onPlayStatus(PlayStatusPacket packet, Consumer<String> failedTask, ClientConnection connection) {
         String message;
         switch (packet.getStatus()) {
-            case LOGIN_SUCCESS:
+            case LOGIN_SUCCESS -> {
                 if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_12)) {
                     connection.sendPacket(this.player.getLoginData().getCachePacket());
                 }
                 return Signals.CANCEL;
-            case LOGIN_FAILED_CLIENT_OLD:
-            case LOGIN_FAILED_SERVER_OLD:
-                message = "Incompatible version";
-                break;
-            case FAILED_SERVER_FULL_SUB_CLIENT:
-                message = "Server is full";
-                break;
-            default:
+            }
+            case LOGIN_FAILED_CLIENT_OLD, LOGIN_FAILED_SERVER_OLD -> message = "Incompatible version";
+            case FAILED_SERVER_FULL_SUB_CLIENT -> message = "Server is full";
+            default -> {
                 return PacketSignal.UNHANDLED;
+            }
         }
 
         failedTask.accept(message);
