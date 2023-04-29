@@ -36,11 +36,9 @@ import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoMap;
 import dev.waterdog.waterdogpe.packs.PackManager;
 import dev.waterdog.waterdogpe.player.PlayerManager;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
-import dev.waterdog.waterdogpe.plugin.Plugin;
 import dev.waterdog.waterdogpe.plugin.PluginManager;
 import dev.waterdog.waterdogpe.network.connection.codec.query.QueryHandler;
 import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
-import dev.waterdog.waterdogpe.security.SecurityListener;
 import dev.waterdog.waterdogpe.security.SecurityManager;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
 import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
@@ -462,6 +460,17 @@ public class ProxyServer {
     public ServerInfo getServerInfo(String serverName) {
         Preconditions.checkNotNull(serverName, "ServerName can not be null!");
         return this.serverInfoMap.get(serverName);
+    }
+
+    public <T extends ServerInfo> T getServerInfo(String serverName, Class<T> implementation) {
+        Preconditions.checkNotNull(serverName, "ServerName can not be null!");
+        Preconditions.checkNotNull(implementation, "Implementation class can not be null!");
+
+        ServerInfo serverInfo = this.serverInfoMap.get(serverName);
+        if (serverInfo != null && !implementation.isAssignableFrom(serverInfo.getClass())) {
+            throw new IllegalStateException("Server " + serverName + " is not type of " + implementation.getSimpleName());
+        }
+        return (T) serverInfo;
     }
 
     /**
