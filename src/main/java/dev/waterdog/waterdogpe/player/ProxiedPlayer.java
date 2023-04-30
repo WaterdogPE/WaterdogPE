@@ -61,6 +61,8 @@ public class ProxiedPlayer implements CommandSender {
 
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
     private final AtomicBoolean loginCompleted = new AtomicBoolean(false);
+    private volatile String disconnectReason;
+
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
     private final RewriteMaps rewriteMaps;
@@ -133,8 +135,8 @@ public class ProxiedPlayer implements CommandSender {
                 return;
             }
 
-            if (!this.isConnected()) { // player might have disconnected itself
-                this.disconnect("Already disconnected");
+            if (!this.isConnected() || this.disconnectReason != null) { // player might have disconnected itself
+                this.disconnect(this.disconnectReason == null ? "Already disconnected" : this.disconnectReason);
                 return;
             }
 
@@ -324,14 +326,20 @@ public class ProxiedPlayer implements CommandSender {
      * @param reason The disconnect reason the player will see on his disconnect screen (Supports Color Codes)
      */
     public void disconnect(String reason) {
+        if (!this.loginCompleted.get()) {
+            // Wait until PlayerLoginEvent completes
+            this.disconnectReason = reason;
+            return;
+        }
+
         if (!this.disconnected.compareAndSet(false, true)) {
             return;
         }
 
-        if (this.loginCompleted.get()) {
-            PlayerDisconnectedEvent event = new PlayerDisconnectedEvent(this, reason);
-            this.proxy.getEventManager().callEvent(event);
-        }
+        this.disconnectReason = reason;
+
+        PlayerDisconnectedEvent event = new PlayerDisconnectedEvent(this, reason);
+        this.proxy.getEventManager().callEvent(event);
 
         if (this.connection != null && this.connection.isConnected()) {
             this.connection.disconnect(reason);
@@ -886,6 +894,10 @@ public class ProxiedPlayer implements CommandSender {
 
     public Collection<PluginPacketHandler> getPluginPacketHandlers() {
         return this.pluginPacketHandlers;
+    }
+
+    public String getDisconnectReason() {
+        return this.disconnectReason;
     }
 
     @Override
