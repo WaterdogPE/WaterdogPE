@@ -55,49 +55,61 @@ public class TransferCallback {
 
     public boolean onDimChangeSuccess() {
         switch (this.transferPhase) {
-            case PHASE_1:
-                // First dimension change was completed successfully.
-                this.onTransferPhase1Completed();
-                this.transferPhase = PHASE_2;
-                break;
-            case PHASE_2:
-                // At this point dimension change sequence was completed.
-                // We can finally fully initialize connection.
-                this.onTransferPhase2Completed();
-                this.transferPhase = RESET;
-                break;
-            default:
+            case PHASE_1 -> this.onTransferPhase1Completed(); // First dimension change was completed successfully.
+            case PHASE_2 -> this.onTransferPhase2Completed(); // At this point dimension change sequence was completed. We can finally fully initialize connection.
+            default -> {
                 return false;
+            }
         }
         return true;
     }
 
-    private void onTransferPhase1Completed() {
-        RewriteData rewriteData = this.player.getRewriteData();
-        injectEntityImmobile(this.player.getConnection(), rewriteData.getEntityId(), true);
-        if (rewriteData.getDimension() == this.targetDimension) {
+    public void onTransferPhase1Completed() {
+        if (this.transferPhase != PHASE_1) {
             return;
         }
+        this.transferPhase = PHASE_2;
+
+        RewriteData rewriteData = this.player.getRewriteData();
+        injectEntityImmobile(this.player.getConnection(), rewriteData.getEntityId(), true);
 
         // Send second dim-change to correct dimension
-        Vector3f fakePosition = rewriteData.getSpawnPosition().add(-2000, 0, -2000);
-        injectPosition(this.player.getConnection(), fakePosition, rewriteData.getRotation(), rewriteData.getEntityId());
+        Vector3f spawnPosition = rewriteData.getSpawnPosition();
+        injectPosition(this.player.getConnection(), spawnPosition, rewriteData.getRotation(), rewriteData.getEntityId());
 
-        rewriteData.setDimension(determineDimensionId(rewriteData.getDimension(), this.targetDimension));
-        injectDimensionChange(this.player.getConnection(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), rewriteData.getEntityId(), this.player.getProtocol(), true);
+        if (rewriteData.getDimension() != this.targetDimension) {
+            rewriteData.setDimension(determineDimensionId(rewriteData.getDimension(), this.targetDimension));
+            injectDimensionChange(this.player.getConnection(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), rewriteData.getEntityId(), this.player.getProtocol(), false);
+            injectChunkPublisherUpdate(this.player.getConnection(), spawnPosition.toInt(), 3);
+
+            StopSoundPacket soundPacket = new StopSoundPacket();
+            soundPacket.setSoundName("*");
+            soundPacket.setStoppingAllSound(true);
+            this.player.sendPacketImmediately(soundPacket);
+        }
+
+        this.player.getConnection().setTransferQueueActive(false);
+        if (this.player.getConnection().getPacketHandler() instanceof ConnectedUpstreamHandler handler) {
+            handler.setTargetConnection(this.connection);
+        }
+
+        this.connection.setPacketHandler(new ConnectedDownstreamHandler(player, this.connection));
     }
 
     private void onTransferPhase2Completed() {
+        if (this.transferPhase != PHASE_2) {
+            return;
+        }
+        this.transferPhase = RESET;
+
         RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setTransferCallback(null);
 
         StopSoundPacket soundPacket = new StopSoundPacket();
-        soundPacket.setSoundName("portal.travel");
+        soundPacket.setSoundName("*");
         soundPacket.setStoppingAllSound(true);
         this.player.sendPacketImmediately(soundPacket);
-
-        injectPosition(this.player.getConnection(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
-
+        
         if (!this.connection.isConnected()) {
             this.onTransferFailed();
             return;
@@ -106,13 +118,6 @@ public class TransferCallback {
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalEntityId());
         this.connection.sendPacket(initializedPacket);
-
-        this.connection.setPacketHandler(new ConnectedDownstreamHandler(player, this.connection));
-
-        this.player.getConnection().setTransferQueueActive(false);
-        if (this.player.getConnection().getPacketHandler() instanceof ConnectedUpstreamHandler handler) {
-            handler.setTargetConnection(this.connection);
-        }
 
         TransferCompleteEvent event = new TransferCompleteEvent(this.sourceServer, this.connection, this.player);
         this.player.getProxy().getEventManager().callEvent(event);

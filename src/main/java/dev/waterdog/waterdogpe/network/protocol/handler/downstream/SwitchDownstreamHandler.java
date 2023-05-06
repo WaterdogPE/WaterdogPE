@@ -97,6 +97,11 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public final PacketSignal handle(StartGamePacket packet) {
+        if (!this.player.isConnected()) {
+            this.connection.disconnect();
+            return Signals.CANCEL;
+        }
+
         RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
         rewriteData.setGameRules(packet.getGamerules());
@@ -189,7 +194,8 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
                 PlayStatusPacket statusPacket = new PlayStatusPacket();
                 statusPacket.setStatus(PlayStatusPacket.Status.PLAYER_SPAWN);
                 this.player.getConnection().sendPacketImmediately(statusPacket);
-            }, 40);
+                transferCallback.onTransferPhase1Completed();
+            }, 10);
         } else if (newDimension == packet.getDimensionId()) {
             // Transfer between different dimensions
             injectPosition(this.player.getConnection(), packet.getPlayerPosition(), packet.getRotation(), rewriteData.getEntityId());
