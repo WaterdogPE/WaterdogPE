@@ -73,6 +73,11 @@ public class TransferCallback {
         RewriteData rewriteData = this.player.getRewriteData();
         injectEntityImmobile(this.player.getConnection(), rewriteData.getEntityId(), true);
 
+        if (!this.connection.isConnected()) {
+            this.onTransferFailed();
+            return;
+        }
+
         // Send second dim-change to correct dimension
         Vector3f spawnPosition = rewriteData.getSpawnPosition();
         injectPosition(this.player.getConnection(), spawnPosition, rewriteData.getRotation(), rewriteData.getEntityId());
@@ -94,6 +99,10 @@ public class TransferCallback {
         }
 
         this.connection.setPacketHandler(new ConnectedDownstreamHandler(player, this.connection));
+
+        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
+        initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalEntityId());
+        this.connection.sendPacket(initializedPacket);
     }
 
     private void onTransferPhase2Completed() {
@@ -114,10 +123,6 @@ public class TransferCallback {
             this.onTransferFailed();
             return;
         }
-
-        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalEntityId());
-        this.connection.sendPacket(initializedPacket);
 
         TransferCompleteEvent event = new TransferCompleteEvent(this.sourceServer, this.connection, this.player);
         this.player.getProxy().getEventManager().callEvent(event);
