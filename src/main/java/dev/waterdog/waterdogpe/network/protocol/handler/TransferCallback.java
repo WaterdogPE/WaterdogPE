@@ -80,7 +80,7 @@ public class TransferCallback {
         if (rewriteData.getDimension() != this.targetDimension) {
             rewriteData.setDimension(determineDimensionId(rewriteData.getDimension(), this.targetDimension));
             injectDimensionChange(this.player.getConnection(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), rewriteData.getEntityId(), this.player.getProtocol(), false);
-            injectChunkPublisherUpdate(this.player.getConnection(), spawnPosition.toInt(), 3);
+            injectChunkPublisherUpdate(this.player.getConnection(), spawnPosition.toInt(), Math.max(4, this.getChunkRadius()));
 
             StopSoundPacket soundPacket = new StopSoundPacket();
             soundPacket.setSoundName("*");
@@ -132,5 +132,13 @@ public class TransferCallback {
 
         this.connection.disconnect();
         this.player.getLogger().warning("Failed to transfer " + this.player.getName() + " to " + this.targetServer.getServerName() + ": Server was closed");
+    }
+
+    private int getChunkRadius() {
+        int chunkRadius = this.player.getLoginData().getChunkRadius().getRadius();
+        if (chunkRadius >= 12) {
+            return chunkRadius - 4;
+        }
+        return chunkRadius - 2;
     }
 }
