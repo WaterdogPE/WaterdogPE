@@ -25,19 +25,19 @@ import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCode
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec_v2;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec_v3;
 import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockPeer;
-import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockSession;
 import io.netty.channel.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.netty.channel.raknet.packet.RakMessage;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
+import org.cloudburstmc.protocol.bedrock.BedrockSession;
 import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionCodec;
 import org.cloudburstmc.protocol.common.util.Zlib;
 
 @Log4j2
 @AllArgsConstructor
-public abstract class ProxiedSessionInitializer<T extends ProxiedBedrockSession> extends ChannelInitializer<Channel> {
+public abstract class ProxiedSessionInitializer<T extends BedrockSession> extends ChannelInitializer<Channel> {
     public static final FrameIdCodec<RakMessage> RAKNET_FRAME_CODEC = FrameIdCodec.RAK_CODEC.apply(0xfe);
     public static final BedrockBatchDecoder BATCH_DECODER = new BedrockBatchDecoder();
 

@@ -15,18 +15,61 @@
 
 package dev.waterdog.waterdogpe.network.connection.peer;
 
+import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import dev.waterdog.waterdogpe.network.connection.codec.server.PacketQueueHandler;
+import dev.waterdog.waterdogpe.network.protocol.Signals;
+import dev.waterdog.waterdogpe.network.protocol.handler.ProxyBatchBridge;
+import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import io.netty.channel.ChannelPipeline;
+import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.protocol.bedrock.BedrockDisconnectReasons;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
+import org.cloudburstmc.protocol.bedrock.BedrockSession;
+import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
+import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
 import org.cloudburstmc.protocol.bedrock.packet.DisconnectPacket;
+import org.cloudburstmc.protocol.common.PacketSignal;
 
-public class BedrockServerSession extends ProxiedBedrockSession {
+import java.util.function.Consumer;
+
+@Log4j2
+public class BedrockServerSession extends BedrockSession implements ProxiedConnection {
 
     public BedrockServerSession(ProxiedBedrockPeer peer, int subClientId) {
         super(peer, subClientId);
+    }
+
+    @Override
+    protected void onPacket(BedrockPacketWrapper packet) {
+        if (this.packetHandler instanceof ProxyBatchBridge bridge) {
+            PacketSignal signal = bridge.handlePacket(packet.getPacket());
+            if (signal != Signals.CANCEL) {
+                bridge.sendProxiedBatch(BedrockBatchWrapper.create(0, packet.getPacket()));
+            }
+        } else if (this.packetHandler != null) {
+            this.getPacketHandler().handlePacket(packet.getPacket());
+        } else {
+            log.warn("[{}] Unhandled packet {}", this.getSocketAddress(), packet);
+        }
+    }
+
+    protected void onBedrockBatch(BedrockBatchWrapper batch) {
+        if (this.packetHandler instanceof ProxyBatchBridge bridge) {
+            bridge.onBedrockBatch(this, batch);
+        } else {
+            batch.getPackets().forEach(this::onPacket);
+        }
+    }
+
+    public void sendPacket(BedrockBatchWrapper batch) {
+        this.getPeer().sendPacket(batch);
+    }
+
+    @Override
+    public void sendPacketImmediately(BedrockPacket packet) {
+        this.getPeer().sendPacket(BedrockBatchWrapper.create(this.subClientId, packet).skipQueue(true));
     }
 
     @Override
@@ -42,12 +85,11 @@ public class BedrockServerSession extends ProxiedBedrockSession {
         this.sendPacketImmediately(packet);
     }
 
-    @Override
-    public void sendPacketImmediately(BedrockPacket packet) {
-        this.getPeer().sendPacket(BedrockBatchWrapper.create(this.subClientId, packet).skipQueue(true));
-    }
-
     public void setTransferQueueActive(boolean enable) {
+        if (!this.getPeer().isConnected()) {
+            throw new IllegalStateException("Connection was already closed");
+        }
+
         ChannelPipeline pipeline = this.getPeer().getChannel().pipeline();
         if (enable) {
             if (pipeline.get(PacketQueueHandler.NAME) == null) {
@@ -58,5 +100,45 @@ public class BedrockServerSession extends ProxiedBedrockSession {
         } else if (pipeline.get(PacketQueueHandler.NAME) != null) {
             pipeline.remove(PacketQueueHandler.NAME);
         }
+    }
+
+    @Override
+    public void setPacketHandler(BedrockPacketHandler handler) {
+        if (handler instanceof ProxyPacketHandler packetHandler) {
+            if (this.packetHandler instanceof ProxyBatchBridge bridge) {
+                bridge.setHandler(packetHandler);
+            } else {
+                super.setPacketHandler(new ProxyBatchBridge(this.getPeer().getCodec(),
+                        this.getPeer().getCodecHelper(), packetHandler));
+            }
+        } else {
+            super.setPacketHandler(handler);
+        }
+    }
+
+    @Override
+    public BedrockPacketHandler getPacketHandler() {
+        if (this.packetHandler instanceof ProxyBatchBridge bridge) {
+            return bridge.getHandler();
+        }
+        return this.packetHandler;
+    }
+
+    public void addDisconnectListener(Consumer<String> listener) {
+        this.getPeer().getChannel().closeFuture().addListener(future -> listener.accept(this.getDisconnectReason()));
+    }
+
+    public int getSubClientId() {
+        return this.subClientId;
+    }
+
+    @Override
+    public ProxiedBedrockPeer getPeer() {
+        return (ProxiedBedrockPeer) super.getPeer();
+    }
+
+    @Override
+    public long getPing() {
+        return this.getPeer().getPing();
     }
 }

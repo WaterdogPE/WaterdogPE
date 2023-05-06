@@ -2,7 +2,7 @@ package dev.waterdog.waterdogpe.network.connection.codec.server;
 
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
-import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockSession;
+import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -17,12 +17,12 @@ public class PacketQueueHandler extends ChannelDuplexHandler {
     private static final int MAX_BATCHES = 256;
     private static final int MAX_PACKETS = 8000;
 
-    private final ProxiedBedrockSession session;
+    private final BedrockServerSession session;
 
     private int packetCounter = 0;
     private final Queue<BedrockBatchWrapper> queue = PlatformDependent.newMpscQueue(MAX_BATCHES);
 
-    public PacketQueueHandler(ProxiedBedrockSession session) {
+    public PacketQueueHandler(BedrockServerSession session) {
         this.session = session;
     }
 

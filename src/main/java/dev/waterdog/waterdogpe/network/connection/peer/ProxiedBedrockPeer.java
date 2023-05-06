@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit;
 
 @Log4j2
 public class ProxiedBedrockPeer extends BedrockPeer {
-    private ProxiedBedrockSession firstSession;
+    private BedrockServerSession firstSession;
     private CompressionAlgorithm compressionAlgorithm;
 
     public ProxiedBedrockPeer(Channel channel, BedrockSessionFactory factory) {
@@ -66,8 +66,8 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         }
     }
 
-    private ProxiedBedrockSession getSession(int sessionId) {
-        ProxiedBedrockSession session = (ProxiedBedrockSession) this.sessions.computeIfAbsent(sessionId, this::onSessionCreated);
+    private BedrockServerSession getSession(int sessionId) {
+        BedrockServerSession session = (BedrockServerSession) this.sessions.computeIfAbsent(sessionId, this::onSessionCreated);
         if (this.firstSession == null) {
             this.firstSession = session;
         }
@@ -75,8 +75,8 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     }
 
     @Override
-    protected ProxiedBedrockSession onSessionCreated(int sessionId) {
-        ProxiedBedrockSession session = (ProxiedBedrockSession) super.onSessionCreated(sessionId);
+    protected BedrockServerSession onSessionCreated(int sessionId) {
+        BedrockServerSession session = (BedrockServerSession) super.onSessionCreated(sessionId);
         if (this.firstSession == null) {
             this.firstSession = session;
         }

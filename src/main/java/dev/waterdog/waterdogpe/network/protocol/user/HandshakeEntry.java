@@ -18,7 +18,7 @@ package dev.waterdog.waterdogpe.network.protocol.user;
 import com.google.gson.JsonObject;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.PreClientDataSetEvent;
-import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockSession;
+import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 
@@ -41,7 +41,7 @@ public class HandshakeEntry {
         this.protocol = protocol;
     }
 
-    public LoginData buildData(ProxiedBedrockSession session, ProxyServer proxy) throws Exception {
+    public LoginData buildData(BedrockServerSession session, ProxyServer proxy) throws Exception {
         // This is first event which exposes new player connecting to proxy.
         // The purpose is to change player's client data or set encryption keypair before joining first downstream.
         PreClientDataSetEvent event = new PreClientDataSetEvent(this.clientData, this.extraData, EncryptionUtils.createKeyPair(), session);
