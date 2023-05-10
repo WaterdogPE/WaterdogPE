@@ -181,6 +181,10 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Enable anonymous statistics that are sent to bstats. For more information, check out our bstats page at https://bstats.org/plugin/server-implementation/WaterdogPE/15678")
     private boolean enableAnonymousStatistics = true;
 
+    @Path("enable_error_reporting")
+    @Comment("Enables anonymous error reporting using bugsnag. This allows the WaterdogPE team to automatically collect issues occurring on WaterdogPE instances.")
+    private boolean enableAnonymousErrorReporting = true;
+
     public ProxyConfig(File file) {
         this.CONFIG_HEADER = new String[]{"Waterdog Main Configuration file", "Configure your desired network settings here."};
         this.CONFIG_FILE = file;
