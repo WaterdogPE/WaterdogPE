@@ -45,7 +45,6 @@ public class WaterdogPE {
         Thread.currentThread().setName("WaterdogPE-main");
         System.out.println("Starting WaterdogPE....");
         System.setProperty("log4j.skipJansi", "false");
-        setupErrorLogger();
 
         MainLogger logger = MainLogger.getLogger();
         logger.info("§bStarting WaterDogPE proxy software!");
@@ -124,19 +123,6 @@ public class WaterdogPE {
 
     public static VersionInfo version() {
         return versionInfo;
-    }
-
-    private static void setupErrorLogger() {
-        LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
-        Configuration config = ctx.getConfiguration();
-        Layout<? extends Serializable> layout = PatternLayout.createDefaultLayout(config);
-
-        Log4j2ErrorReporter reporter = new Log4j2ErrorReporter("ExceptionAppender", null, layout, false);
-
-        reporter.start();
-        config.addAppender(reporter);
-        ctx.getRootLogger().addAppender(reporter);
-        ctx.updateLoggers();
     }
 
     private static int getJavaVersion() {

@@ -19,6 +19,13 @@ import com.bugsnag.Bugsnag;
 import com.bugsnag.Severity;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.WaterdogPE;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Layout;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.layout.PatternLayout;
+
+import java.io.Serializable;
 
 public class ErrorReporting {
 
@@ -44,8 +51,26 @@ public class ErrorReporting {
                 report.addToTab("os", "Version", System.getProperty("os.version"));
                 report.addToTab("os", "Architecture", System.getProperty("os.arch"));
             });
+
+            setupErrorLogger();
+
+            server.getLogger().info("Anonymous error reporting is enabled.");
         }
     }
+
+    private void setupErrorLogger() {
+        LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+        Configuration config = ctx.getConfiguration();
+        Layout<? extends Serializable> layout = PatternLayout.createDefaultLayout(config);
+
+        Log4j2ErrorReporter reporter = new Log4j2ErrorReporter("ExceptionAppender", null, layout, false);
+
+        reporter.start();
+        config.addAppender(reporter);
+        ctx.getRootLogger().addAppender(reporter);
+        ctx.updateLoggers();
+    }
+
 
     public boolean isEnabled() {
         return bugsnag != null;
