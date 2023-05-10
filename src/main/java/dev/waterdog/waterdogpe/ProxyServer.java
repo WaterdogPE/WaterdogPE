@@ -25,9 +25,13 @@ import dev.waterdog.waterdogpe.logger.MainLogger;
 import dev.waterdog.waterdogpe.network.EventLoops;
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
-import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedServerSessionInitializer;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.OfflineServerChannelInitializer;
-import dev.waterdog.waterdogpe.network.connection.handler.*;
+import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedServerSessionInitializer;
+import dev.waterdog.waterdogpe.network.connection.codec.query.QueryHandler;
+import dev.waterdog.waterdogpe.network.connection.handler.DefaultForcedHostHandler;
+import dev.waterdog.waterdogpe.network.connection.handler.IForcedHostHandler;
+import dev.waterdog.waterdogpe.network.connection.handler.IJoinHandler;
+import dev.waterdog.waterdogpe.network.connection.handler.IReconnectHandler;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolCodecs;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.updaters.CodecUpdaterCommands;
@@ -37,16 +41,17 @@ import dev.waterdog.waterdogpe.packs.PackManager;
 import dev.waterdog.waterdogpe.player.PlayerManager;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.plugin.PluginManager;
-import dev.waterdog.waterdogpe.network.connection.codec.query.QueryHandler;
 import dev.waterdog.waterdogpe.scheduler.WaterdogScheduler;
 import dev.waterdog.waterdogpe.security.SecurityManager;
 import dev.waterdog.waterdogpe.utils.ConfigurationManager;
 import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.utils.bstats.Metrics;
-import dev.waterdog.waterdogpe.utils.config.*;
+import dev.waterdog.waterdogpe.utils.config.LangConfig;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetworkSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
-import dev.waterdog.waterdogpe.utils.types.*;
+import dev.waterdog.waterdogpe.utils.reporting.ErrorReporting;
+import dev.waterdog.waterdogpe.utils.types.TextContainer;
+import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -93,6 +98,7 @@ public class ProxyServer {
     private final ConsoleCommandSender commandSender;
 
     private final SecurityManager securityManager;
+    private final ErrorReporting errorReporting;
 
     private IReconnectHandler reconnectHandler;
     private IJoinHandler joinHandler;
@@ -129,6 +135,7 @@ public class ProxyServer {
         this.configurationManager = new ConfigurationManager(this);
         this.configurationManager.loadProxyConfig();
         this.configurationManager.loadLanguage();
+        this.errorReporting = new ErrorReporting(this);
 
         if (!this.getNetworkSettings().enableIpv6()) {
             // Some devices and networks may not support IPv6
@@ -211,7 +218,7 @@ public class ProxyServer {
             }
         }
 
-        if(this.getConfiguration().isEnableAnonymousStatistics()){
+        if (this.getConfiguration().isEnableAnonymousStatistics()) {
             this.getLogger().info("Enabling anonymous statistics.");
             Metrics.startMetrics(this, this.getConfiguration());
         }
@@ -366,7 +373,7 @@ public class ProxyServer {
         }
 
         Command command = this.getCommandMap().getCommand(args[0]);
-        if (command == null)  {
+        if (command == null) {
             return false;
         }
 
@@ -600,5 +607,9 @@ public class ProxyServer {
 
     public EventLoopGroup getWorkerEventLoopGroup() {
         return this.workerEventLoopGroup;
+    }
+
+    public ErrorReporting getErrorReporting() {
+        return errorReporting;
     }
 }
