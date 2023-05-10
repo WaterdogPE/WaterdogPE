@@ -240,8 +240,6 @@ public class ProxyServer {
             this.bindChannels(additionalBind);
         }
 
-        logger.error("Testing", new Throwable("Some error that never exists"));
-
         ProxyStartEvent event = new ProxyStartEvent(this);
         this.eventManager.callEvent(event);
 
