@@ -143,8 +143,10 @@ public class HandshakeUtils {
     }
 
     public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, ProtocolVersion protocol, boolean strict) throws Exception {
-        // Cert chain should be signed by Mojang is is client xbox authenticated
         List<SignedJWT> chain = packet.getChain();
+        if (chain.size() < 1) {
+            throw new IllegalArgumentException("Invalid chain data");
+        }
 
         boolean xboxAuth = HandshakeUtils.validateChain(chain, strict);
         JsonObject payload = (JsonObject) JsonParser.parseString(chain.get(chain.size() - 1).getPayload().toString());
