@@ -31,19 +31,19 @@
             <url>https://repo.opencollab.dev/maven-snapshots/</url>
         </repository>
         <repository>
-            <id>waterdog</id>
-            <url>https://repo.waterdog.dev/artifactory/main/</url>
+            <id>waterdogpe-repo-main</id>
+            <url>https://repo.waterdog.dev/main</url>
         </repository>
     </repositories>
 
     <distributionManagement>
         <repository>
             <id>waterdog-releases</id>
-            <url>https://repo.waterdog.dev/artifactory/releases</url>
+            <url>https://repo.waterdog.dev/releases</url>
         </repository>
         <snapshotRepository>
             <id>waterdog-snapshots</id>
-            <url>https://repo.waterdog.dev/artifactory/snapshots</url>
+            <url>https://repo.waterdog.dev/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 

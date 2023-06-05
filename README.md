@@ -57,7 +57,7 @@ To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
 <repositories>
     <repository>
         <id>waterdog-repo</id>
-        <url>https://repo.waterdog.dev/artifactory/main</url>
+        <url>https://repo.waterdog.dev/main</url>
     </repository>
 </repositories>
 
@@ -65,7 +65,7 @@ To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
     <dependency>
         <groupId>dev.waterdog.waterdogpe</groupId>
         <artifactId>waterdog</artifactId>
-        <version>1.2.5-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
         <scope>provided</scope>
     </dependency>
 </dependencies>
