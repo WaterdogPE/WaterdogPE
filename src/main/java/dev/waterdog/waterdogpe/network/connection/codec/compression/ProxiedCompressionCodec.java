@@ -50,16 +50,21 @@ public abstract class ProxiedCompressionCodec extends MessageToMessageCodec<Bedr
 
     @Override
     public void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
-        msg.setAlgorithm(this.getCompressionAlgorithm());
-        msg.setUncompressed(this.decode0(ctx, msg.getCompressed().slice()));
+        try {
+            msg.setAlgorithm(this.getCompressionAlgorithm());
+            msg.setUncompressed(this.decode0(ctx, msg.getCompressed().slice()));
 
-        NetworkMetrics metrics = ctx.channel().attr(NetworkMetrics.ATTRIBUTE).get();
-        if (metrics != null) {
-            PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
-            metrics.decompressedBytes(msg.getUncompressed().readableBytes(), direction);
+            NetworkMetrics metrics = ctx.channel().attr(NetworkMetrics.ATTRIBUTE).get();
+            if (metrics != null) {
+                PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
+                metrics.decompressedBytes(msg.getUncompressed().readableBytes(), direction);
+            }
+
+            out.add(msg.retain());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
         }
-
-        out.add(msg.retain());
     }
 
     protected abstract ByteBuf encode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception;
