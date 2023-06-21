@@ -43,7 +43,7 @@ public class WaterdogPE {
 
     public static void main(String[] args) {
         Thread.currentThread().setName("WaterdogPE-main");
-        System.out.println("Starting WaterdogPE....");
+        System.out.println("Starting SyodogPE....");
         System.setProperty("log4j.skipJansi", "false");
 
         MainLogger logger = MainLogger.getLogger();
@@ -107,7 +107,7 @@ public class WaterdogPE {
             return VersionInfo.unknown();
         }
 
-        String branchName = properties.getProperty("git.branch", "unknown");
+        String branchName = "SyodogPE";
         String commitId = properties.getProperty("git.commit.id.abbrev", "unknown");
         boolean debug = branchName.equals("release") ? false : VersionInfo.DEFAULT_DEBUG;
         return new VersionInfo(branchName, commitId, debug);
