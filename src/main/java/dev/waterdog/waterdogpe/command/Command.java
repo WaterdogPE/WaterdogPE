@@ -97,7 +97,7 @@ public abstract class Command {
         return new CommandData(this.name,
                 this.getDescription(),
                 Collections.emptySet(),
-                (byte) 0,
+                CommandPermission.ANY,
                 new CommandEnumData(this.name + "_aliases", aliases, false),
                 overloads);
     }
