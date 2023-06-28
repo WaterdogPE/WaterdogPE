@@ -18,7 +18,7 @@ jobs:
         uses: ./.github/actions/build
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          perform_deploy: ${{ github.ref == 'refs/heads/release' }}
+          perform_deploy: true
           deploy_repository: "waterdog-releases"
           deploy_username: ${{ secrets.DEPLOY_USERNAME }}
           deploy_password: ${{ secrets.DEPLOY_PASSWORD }}
