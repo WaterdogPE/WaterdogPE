@@ -16,7 +16,8 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.AsyncEvent;
-import dev.waterdog.waterdogpe.network.session.DownstreamClient;
+import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 /**
@@ -27,14 +28,18 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 @AsyncEvent
 public class InitialServerConnectedEvent extends PlayerEvent {
 
-    private final DownstreamClient initialDownstream;
+    private final ClientConnection connection;
 
-    public InitialServerConnectedEvent(ProxiedPlayer player, DownstreamClient initialDownstream) {
+    public InitialServerConnectedEvent(ProxiedPlayer player, ClientConnection connection) {
         super(player);
-        this.initialDownstream = initialDownstream;
+        this.connection = connection;
     }
 
-    public DownstreamClient getInitialDownstream() {
-        return this.initialDownstream;
+    public ClientConnection getConnection() {
+        return this.connection;
+    }
+
+    public ServerInfo getServerInfo() {
+        return this.connection.getServerInfo();
     }
 }

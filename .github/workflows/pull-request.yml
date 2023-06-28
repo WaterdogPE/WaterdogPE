@@ -1,0 +1,17 @@
+name: Pull Request Check
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build and verify
+        uses: ./.github/actions/build
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          perform_deploy: false
+          create_prerelease: false

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,12 +15,12 @@
 
 package dev.waterdog.waterdogpe.scheduler;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.utils.exceptions.SchedulerException;
+import io.netty.util.internal.PlatformDependent;
 
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,9 +31,9 @@ public class WaterdogScheduler {
 
     private final ExecutorService threadedExecutor;
 
-    private final Map<Integer, TaskHandler> taskHandlerMap = new ConcurrentHashMap<>();
-    private final Map<Integer, LinkedList<TaskHandler>> assignedTasks = new ConcurrentHashMap<>();
-    private final LinkedList<TaskHandler> pendingTasks = new LinkedList<>();
+    private final Map<Integer, TaskHandler<?>> taskHandlerMap = new ConcurrentHashMap<>();
+    private final Map<Integer, LinkedList<TaskHandler<?>>> assignedTasks = new ConcurrentHashMap<>();
+    private final Queue<TaskHandler<?>> pendingTasks = PlatformDependent.newMpscQueue();
 
     private final AtomicInteger currentId = new AtomicInteger();
 
@@ -44,10 +44,11 @@ public class WaterdogScheduler {
         instance = this;
         this.proxy = proxy;
 
-        ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
-        builder.setNameFormat("WaterdogScheduler Executor");
+        ThreadFactoryBuilder builder = ThreadFactoryBuilder.builder()
+                .format("WaterdogScheduler Executor - #%d")
+                .build();
         int idleThreads = this.proxy.getConfiguration().getIdleThreads();
-        this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(), builder.build());
+        this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(), builder);
     }
 
     public static WaterdogScheduler getInstance() {
@@ -94,34 +95,34 @@ public class WaterdogScheduler {
         int currentTick = this.getCurrentTick();
         int taskId = this.currentId.getAndIncrement();
 
-        TaskHandler<T> handler = new TaskHandler(task, taskId, async);
+        TaskHandler<T> handler = new TaskHandler<>(task, taskId, async);
         handler.setDelay(delay);
         handler.setPeriod(period);
         handler.setNextRunTick(handler.isDelayed() ? currentTick + delay : currentTick);
 
-        this.pendingTasks.add(handler);
+        this.pendingTasks.offer(handler);
         this.taskHandlerMap.put(taskId, handler);
         return handler;
     }
 
     public void onTick(int currentTick) {
         // 1. Assign all tasks to queue by nextRunTick
-        TaskHandler task;
+        TaskHandler<?> task;
         while ((task = this.pendingTasks.poll()) != null) {
             int tick = Math.max(currentTick, task.getNextRunTick());
             this.assignedTasks.computeIfAbsent(tick, integer -> new LinkedList<>()).add(task);
         }
 
         // 2. Run all tasks assigned to current tick
-        LinkedList<TaskHandler> queued = this.assignedTasks.remove(currentTick);
+        LinkedList<TaskHandler<?>> queued = this.assignedTasks.remove(currentTick);
         if (queued == null) return;
 
-        for (TaskHandler taskHandler : queued) {
+        for (TaskHandler<?> taskHandler : queued) {
             this.runTask(taskHandler, currentTick);
         }
     }
 
-    private void runTask(TaskHandler taskHandler, int currentTick) {
+    private void runTask(TaskHandler<?> taskHandler, int currentTick) {
         if (taskHandler.isCancelled()) {
             this.taskHandlerMap.remove(taskHandler.getTaskId());
             return;
@@ -134,7 +135,7 @@ public class WaterdogScheduler {
         }
 
         if (taskHandler.calculateNextTick(currentTick)) {
-            this.pendingTasks.add(taskHandler);
+            this.pendingTasks.offer(taskHandler);
             return;
         }
 

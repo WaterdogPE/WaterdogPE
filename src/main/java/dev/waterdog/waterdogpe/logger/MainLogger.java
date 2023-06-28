@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,34 +33,20 @@ public class MainLogger implements Logger {
         return instance;
     }
 
+
     @Override
-    public void emergency(String message) {
-        log.fatal(message);
+    public void debug(String message) {
+        log.debug(message);
     }
 
     @Override
-    public void alert(String message) {
-        log.warn(message);
+    public void debug(String message, Object... params) {
+        log.debug(message, params);
     }
 
     @Override
-    public void critical(String message) {
-        log.fatal(message);
-    }
-
-    @Override
-    public void error(String message) {
-        log.error(message);
-    }
-
-    @Override
-    public void warning(String message) {
-        log.warn(message);
-    }
-
-    @Override
-    public void notice(String message) {
-        log.warn(message);
+    public void debug(String message, Throwable t) {
+        log.debug(message, t);
     }
 
     @Override
@@ -69,42 +55,8 @@ public class MainLogger implements Logger {
     }
 
     @Override
-    public void debug(String message) {
-        log.debug(message);
-    }
-
-    public void logException(Throwable t) {
-        log.throwing(t);
-    }
-
-    @Override
-    public void emergency(String message, Throwable t) {
-        log.fatal(message, t);
-    }
-
-    @Override
-    public void alert(String message, Throwable t) {
-        log.warn(message, t);
-    }
-
-    @Override
-    public void critical(String message, Throwable t) {
-        log.fatal(message, t);
-    }
-
-    @Override
-    public void error(String message, Throwable t) {
-        log.error(message, t);
-    }
-
-    @Override
-    public void warning(String message, Throwable t) {
-        log.warn(message, t);
-    }
-
-    @Override
-    public void notice(String message, Throwable t) {
-        log.warn(message, t);
+    public void info(String message, Object... params) {
+        log.info(message, params);
     }
 
     @Override
@@ -113,7 +65,52 @@ public class MainLogger implements Logger {
     }
 
     @Override
-    public void debug(String message, Throwable t) {
-        log.debug(message, t);
+    public void warning(String message) {
+        log.warn(message);
+    }
+
+    @Override
+    public void warning(String message, Object... params) {
+        log.warn(message, params);
+    }
+
+    @Override
+    public void warning(String message, Throwable t) {
+        log.warn(message, t);
+    }
+
+    @Override
+    public void error(String message) {
+        log.error(message);
+    }
+
+    @Override
+    public void error(String message, Object... params) {
+        log.error(message, params);
+    }
+
+    @Override
+    public void error(String message, Throwable t) {
+        log.error(message, t);
+    }
+
+    @Override
+    public void critical(String message) {
+        log.fatal(message);
+    }
+
+    @Override
+    public void critical(String message, Object... params) {
+        log.fatal(message, params);
+    }
+
+    @Override
+    public void critical(String message, Throwable t) {
+        log.fatal(message, t);
+    }
+
+    @Override
+    public void throwing(Throwable throwable) {
+        log.throwing(throwable);
     }
 }

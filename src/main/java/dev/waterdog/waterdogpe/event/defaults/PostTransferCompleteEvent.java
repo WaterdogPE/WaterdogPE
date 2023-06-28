@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,7 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.AsyncEvent;
-import dev.waterdog.waterdogpe.network.session.DownstreamClient;
+import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 /**
@@ -27,15 +27,15 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 @AsyncEvent
 public class PostTransferCompleteEvent extends PlayerEvent {
 
-    private final DownstreamClient client;
+    private final ClientConnection connection;
 
-    public PostTransferCompleteEvent(DownstreamClient client, ProxiedPlayer player) {
+    public PostTransferCompleteEvent(ClientConnection connection, ProxiedPlayer player) {
         super(player);
-        this.client = client;
+        this.connection = connection;
     }
 
-    public DownstreamClient getClient() {
-        return this.client;
+    public ClientConnection getConnection() {
+        return this.connection;
     }
 }
 

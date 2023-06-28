@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,16 +16,24 @@
 package dev.waterdog.waterdogpe;
 
 import dev.waterdog.waterdogpe.logger.MainLogger;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
+import dev.waterdog.waterdogpe.utils.reporting.Log4j2ErrorReporter;
 import io.netty.util.ResourceLeakDetector;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Properties;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class WaterdogPE {
 
@@ -37,14 +45,14 @@ public class WaterdogPE {
         Thread.currentThread().setName("WaterdogPE-main");
         System.out.println("Starting WaterdogPE....");
         System.setProperty("log4j.skipJansi", "false");
-        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.DISABLED);
 
         MainLogger logger = MainLogger.getLogger();
         logger.info("§bStarting WaterDogPE proxy software!");
-        logger.info("§3Software Version: " + versionInfo.baseVersion());
-        logger.info("§3Build Version: " + versionInfo.buildVersion());
-        logger.info("§3Development Build: " + versionInfo.debug());
-        logger.info("§3Software Authors: " + versionInfo.author());
+        logger.info("§3Software Version: {}", versionInfo.baseVersion());
+        logger.info("§3Build Version: {}", versionInfo.buildVersion());
+        logger.info("§3Development Build: {}", versionInfo.debug());
+        logger.info("§3Software Authors: {}", versionInfo.author());
+        logger.info("§3Latest Supported Game Version: {}", ProtocolVersion.latest().getMinecraftVersion());
 
 
         int javaVersion = getJavaVersion();
@@ -56,13 +64,24 @@ public class WaterdogPE {
         if (versionInfo.buildVersion().equals("#build") || versionInfo.branchName().equals("unknown")) {
             logger.warning("Custom build? Unofficial builds should be not run in production!");
         } else {
-            logger.info("§3Discovered branch §b" + versionInfo.branchName() + "§3 commitId §b" + versionInfo.commitId());
+            logger.info("§3Discovered branch §b{}§3 commitId §b{}", versionInfo.branchName(), versionInfo.commitId());
+        }
+
+        if (versionInfo.debug()) {
+            setLeakDetection(ResourceLeakDetector.Level.SIMPLE);
+        } else {
+            setLeakDetection(ResourceLeakDetector.Level.DISABLED);
+        }
+
+        logger.info("§eUsing memory leak detection level: {}", ResourceLeakDetector.getLevel());
+        if (!versionInfo.debug() && ResourceLeakDetector.getLevel().ordinal() > ResourceLeakDetector.Level.SIMPLE.ordinal()) {
+            logger.warning("§eUsing higher memory leak detection levels in production environment can affect application stability and performance!");
         }
 
         try {
             new ProxyServer(logger, DATA_PATH, PLUGIN_PATH);
         } catch (Exception e) {
-            logger.logException(e);
+            logger.throwing(e);
             shutdownHook();
         }
     }
@@ -72,6 +91,7 @@ public class WaterdogPE {
      */
     protected static void shutdownHook() {
         LogManager.shutdown();
+        Runtime.getRuntime().halt(0); // force exit
     }
 
     private static VersionInfo loadVersion() {
@@ -111,10 +131,21 @@ public class WaterdogPE {
             return Integer.parseInt(version.substring(2, 3));
         }
 
+        Matcher versionMatcher = Pattern.compile("\\d+").matcher(version);
+        if (versionMatcher.find()) {
+            version = versionMatcher.group(0);
+        }
+
         int index = version.indexOf(".");
         if (index != -1) {
             version = version.substring(0, index);
         }
         return Integer.parseInt(version);
+    }
+
+    private static void setLeakDetection(ResourceLeakDetector.Level level) {
+        if (ResourceLeakDetector.getLevel().ordinal() < level.ordinal()) {
+            ResourceLeakDetector.setLevel(level);
+        }
     }
 }

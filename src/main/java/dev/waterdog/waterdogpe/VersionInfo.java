@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,7 +22,7 @@ public class VersionInfo {
 
     public static final boolean DEFAULT_DEBUG = false;
 
-    private final String baseVersion = "1.2.4";
+    private final String baseVersion = "2.0.0";
     private final String buildVersion = "#build";
     private final String author = "WaterdogTEAM";
     private final int metricsId = 15678;

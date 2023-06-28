@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,9 +15,9 @@
 
 package dev.waterdog.waterdogpe.utils.config;
 
-import com.google.common.base.Preconditions;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoType;
 import lombok.ToString;
+import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import java.net.InetSocketAddress;
 
@@ -30,9 +30,9 @@ public class ServerEntry {
     private final String serverName;
     private final InetSocketAddress address;
     private final InetSocketAddress publicAddress;
-    private final ServerInfoType serverType;
+    private final String serverType;
 
-    public ServerEntry(String serverName, InetSocketAddress address, InetSocketAddress publicAddress, ServerInfoType serverType) {
+    public ServerEntry(String serverName, InetSocketAddress address, InetSocketAddress publicAddress, String serverType) {
         Preconditions.checkArgument(serverName != null && !serverName.isEmpty(), "Server name is not valid");
         Preconditions.checkNotNull(address, "Server address can not be null");
         Preconditions.checkNotNull(serverType, "ServerInfoType can not be null");
@@ -54,7 +54,15 @@ public class ServerEntry {
         return this.publicAddress;
     }
 
-    public ServerInfoType getServerType() {
+    public String getServerType() {
         return this.serverType;
+    }
+
+    public ServerInfoType getServerInfoType() {
+        ServerInfoType serverInfoType = ServerInfoType.fromString(this.serverType);
+        if (serverInfoType == null) {
+            throw new IllegalArgumentException("Unsupported ServerInfoType " + serverType + "! Make sure your config is valid and provided ServerInfoType was registered");
+        }
+        return serverInfoType;
     }
 }

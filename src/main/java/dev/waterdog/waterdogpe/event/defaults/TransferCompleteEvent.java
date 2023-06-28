@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 WaterdogTEAM
+ * Copyright 2022 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,8 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.AsyncEvent;
-import dev.waterdog.waterdogpe.network.session.DownstreamClient;
+import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 
 /**
@@ -27,21 +28,25 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 @AsyncEvent
 public class TransferCompleteEvent extends PlayerEvent {
 
-    private final DownstreamClient oldClient;
-    private final DownstreamClient newClient;
+    private final ServerInfo sourceServer;
+    private final ClientConnection connection;
 
-    public TransferCompleteEvent(DownstreamClient oldClient, DownstreamClient newClient, ProxiedPlayer player) {
+    public TransferCompleteEvent(ServerInfo sourceServer, ClientConnection connection, ProxiedPlayer player) {
         super(player);
-        this.oldClient = oldClient;
-        this.newClient = newClient;
+        this.sourceServer = sourceServer;
+        this.connection = connection;
     }
 
-    public DownstreamClient getOldClient() {
-        return this.oldClient;
+    public ServerInfo getSourceServer() {
+        return this.sourceServer;
     }
 
-    public DownstreamClient getNewClient() {
-        return this.newClient;
+    public ServerInfo getTargetServer() {
+        return this.connection.getServerInfo();
+    }
+
+    public ClientConnection getConnection() {
+        return this.connection;
     }
 }
 
