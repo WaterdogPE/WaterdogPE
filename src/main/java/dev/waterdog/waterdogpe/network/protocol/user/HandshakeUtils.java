@@ -50,6 +50,9 @@ import java.util.UUID;
  */
 public class HandshakeUtils {
 
+    private static final ECPublicKey MOJANG_PUBLIC_KEY_OLD;
+    private static final ECPublicKey MOJANG_PUBLIC_KEY;
+
     private static final KeyPair privateKeyPair;
 
     static {
@@ -57,6 +60,9 @@ public class HandshakeUtils {
             KeyPairGenerator generator = KeyPairGenerator.getInstance("EC");
             generator.initialize(Curve.P_384.toECParameterSpec());
             privateKeyPair = generator.generateKeyPair();
+
+            MOJANG_PUBLIC_KEY_OLD = EncryptionUtils.generateKey("MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE8ELkixyLcwlZryUQcu1TvPOmI2B7vX83ndnWRUaXm74wFfa5f/lwQNTfrLVHa2PmenpGI6JhIMUJaWZrjmMj90NoKNFSNBuKdm8rYiXsfaz3K36x/1U26HpG0ZxK/V1V");
+            MOJANG_PUBLIC_KEY = EncryptionUtils.generateKey("MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAECRXueJeTDqNRRgJi/vlRufByu/2G0i2Ebt6YMar5QX/R0DIIyrJMcUpruK4QveTfJSTp3Shlq4Gk34cD/4GUWwkv0DVuzeuB+tXija7HBxii03NHDbPAD0AKnLr2wdAp");
         } catch (Exception e) {
             throw new RuntimeException("Unable to generate private keyPair!", e);
         }
@@ -99,7 +105,7 @@ public class HandshakeUtils {
                 return false;
             }
 
-            if (lastKey.equals(EncryptionUtils.getMojangPublicKey())) {
+            if (MOJANG_PUBLIC_KEY.equals(lastKey) || MOJANG_PUBLIC_KEY_OLD.equals(lastKey)) {
                 authed = true;
             } else if (authed) {
                 return !iterator.hasNext();

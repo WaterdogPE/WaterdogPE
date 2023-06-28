@@ -162,12 +162,12 @@
         <dependency>
             <groupId>org.cloudburstmc.protocol</groupId>
             <artifactId>bedrock-codec</artifactId>
-            <version>${protocol.version}</version>
+            <version>3.0.0.Beta1-20230616.192131-96</version>
         </dependency>
         <dependency>
             <groupId>org.cloudburstmc.protocol</groupId>
             <artifactId>bedrock-connection</artifactId>
-            <version>${protocol.version}</version>
+            <version>3.0.0.Beta1-20230616.192131-95</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.cloudburstmc.netty</groupId>
