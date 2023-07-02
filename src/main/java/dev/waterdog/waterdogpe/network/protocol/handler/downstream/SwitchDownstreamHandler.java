@@ -19,6 +19,7 @@ import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.cloudburstmc.protocol.bedrock.packet.*;
@@ -44,6 +45,7 @@ import java.util.UUID;
 
 import static dev.waterdog.waterdogpe.network.protocol.user.PlayerRewriteUtils.*;
 
+@Log4j2
 public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
     public SwitchDownstreamHandler(ProxiedPlayer player, ClientConnection connection) {
@@ -108,6 +110,20 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             rewriteData.setBlockPaletteRewrite(palette.createRewrite(rewriteData.getBlockPalette()));
         } else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
+        }
+
+        if (!this.player.isConnected()) {
+            this.connection.disconnect();
+            this.player.disconnect("transfer disconnected");
+            return Signals.CANCEL;
+        }
+
+        if (rewriteData.getTransferCallback() != null && rewriteData.getTransferCallback().getPhase() != TransferCallback.TransferPhase.RESET) {
+            this.connection.disconnect();
+            String serverName = this.connection.getServerInfo().getServerName();
+            this.player.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverName));
+            log.warn("[{}] Aborted server transfer to {} because player is already being transferred!", this.player.getName(), serverName);
+            return Signals.CANCEL;
         }
 
         ClientConnection oldConnection = this.player.getDownstreamConnection();

@@ -128,4 +128,8 @@ public class TransferCallback {
         this.connection.disconnect();
         this.player.getLogger().warning("Failed to transfer " + this.player.getName() + " to " + this.targetServer.getServerName() + ": Server was closed");
     }
+
+    public TransferPhase getPhase() {
+        return this.transferPhase;
+    }
 }
