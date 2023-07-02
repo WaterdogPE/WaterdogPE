@@ -93,7 +93,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
 
     @Override
     protected void onTick() {
-        if (!this.packetQueue.isEmpty()) {
+        if (!this.closed.get() && !this.packetQueue.isEmpty()) {
             BedrockBatchWrapper batch = BedrockBatchWrapper.newInstance();
 
             BedrockPacketWrapper packet;
