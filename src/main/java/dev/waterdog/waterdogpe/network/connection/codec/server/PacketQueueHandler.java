@@ -34,7 +34,6 @@ public class PacketQueueHandler extends ChannelDuplexHandler {
         }
         this.finished = true;
 
-        ctx.pipeline().remove(this);
         if (ctx.pipeline().get(NAME) == this) {
             ctx.pipeline().remove(this);
         }
