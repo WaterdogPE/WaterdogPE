@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Found a bug in WPDE? Something thats not behaving correctly? Report it here!
+about: Found a bug in Draco? Something thats not behaving correctly? Report it here!
 title: "[BUG] This is a bug!"
 labels: bug, unconfirmed
 assignees: ''
