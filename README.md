@@ -1,25 +1,6 @@
-# WaterdogPE
-[![Build Status](https://jenkins.waterdog.dev/buildStatus/icon?job=Waterdog%2FWaterdogPE%2Fmaster)](https://jenkins.waterdog.dev/job/Waterdog/job/WaterdogPE/job/master/)
-[![Discord Chat](https://img.shields.io/discord/767330242078834712.svg)](https://discord.gg/QcRRzXX)
+# Draco
 
-WaterdogPE is a brand new Minecraft: Bedrock Edition proxy software developed by the developers of the old Waterdog
-Proxy.  
-In this new proxy, we are working with Cloudbursts Protocol Library. It takes alot of maintaining effort from us and
-provides us with a nice api to work with.  
-If you want to discuss things without joining the discord server, please use the [Discussions Tab](https://github.com/WaterdogPE/WaterdogPE/discussions)
-
-## Links
-
-- [Website](https://waterdog.dev)
-- [Discord](https://discord.gg/sJ452xNugw)
-- [Official documentation](https://docs.waterdog.dev)
-- [Issue Tracker](https://github.com/WaterdogPE/WaterdogPE/issues)
-- [Public Plugins Page](https://plugins.waterdog.dev/)
-- [Branding: various brand assets for the WaterdogPE project](https://github.com/WaterdogPE/Branding)
-
-## Setup Guide
-If you haven't used WaterdogPE before, we recommend you to take a look at our [setup guide](https://docs.waterdog.dev/books/waterdogpe-setup) in the docs.   
-*Please note that the config from the old Waterdog (Bungee) is not compatible with WaterdogPE*
+Draco is a fork of the popular Minecraft proxy software, WaterdogPE, specifically tailored for Minecraft: Bedrock Edition servers. This fork aims to bolster the security features of WaterdogPE by incorporating advanced firewall capabilities
 
 ### Supported Software
 Our goal is to support all commonly used Minecraft: Bedrock server softwares. Spoons and unofficial forks will not be supported due to the lack
