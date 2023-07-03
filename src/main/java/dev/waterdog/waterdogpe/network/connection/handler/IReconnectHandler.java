@@ -29,5 +29,12 @@ public interface IReconnectHandler {
      * @param oldServer the ServerInfo of the downstream server who kicked the player
      * @return a ServerInfo if there was a valid server found for fallback, or null if no server was found. null will lead to the player getting kicked.
      */
-    ServerInfo getFallbackServer(ProxiedPlayer player, ServerInfo oldServer, String kickMessage);
+    default ServerInfo getFallbackServer(ProxiedPlayer player, ServerInfo oldServer, ReconnectReason reason, String kickMessage) {
+        return this.getFallbackServer(player, oldServer, kickMessage); // backward compatibility
+    }
+
+    @Deprecated
+    default ServerInfo getFallbackServer(ProxiedPlayer player, ServerInfo oldServer, String kickMessage) {
+        throw new UnsupportedOperationException("Use getFallbackServer(ProxiedPlayer player, ServerInfo oldServer, ReconnectReason reason, String kickMessage) instead");
+    }
 }

@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.connection.codec.client;
 
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import io.netty.channel.ChannelHandlerContext;
@@ -59,7 +60,7 @@ public class ClientEventHandler extends ChannelInboundHandlerAdapter {
         this.connection.disconnect();
 
         TranslationContainer msg = new TranslationContainer("waterdog.downstream.down", this.connection.getServerInfo().getServerName(), cause.getMessage());
-        if (this.player.sendToFallback(this.connection.getServerInfo(), cause.getMessage())) {
+        if (this.player.sendToFallback(this.connection.getServerInfo(), ReconnectReason.EXCEPTION, cause.getMessage())) {
             this.player.sendMessage(msg);
         } else {
             this.player.disconnect(msg);
