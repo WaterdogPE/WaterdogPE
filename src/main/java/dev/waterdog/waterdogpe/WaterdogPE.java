@@ -42,12 +42,12 @@ public class WaterdogPE {
     private static final VersionInfo versionInfo = loadVersion();
 
     public static void main(String[] args) {
-        Thread.currentThread().setName("WaterdogPE-main");
-        System.out.println("Starting WaterdogPE....");
+        Thread.currentThread().setName("NeptuneCraft");
+        System.out.println("Starting NeptuneCraft....");
         System.setProperty("log4j.skipJansi", "false");
 
         MainLogger logger = MainLogger.getLogger();
-        logger.info("§bStarting WaterDogPE proxy software!");
+        logger.info("§bStarting NeptuneCraft proxy software!");
         logger.info("§3Software Version: {}", versionInfo.baseVersion());
         logger.info("§3Build Version: {}", versionInfo.buildVersion());
         logger.info("§3Development Build: {}", versionInfo.debug());
