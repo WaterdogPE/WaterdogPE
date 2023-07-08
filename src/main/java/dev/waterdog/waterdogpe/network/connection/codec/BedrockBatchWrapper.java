@@ -75,9 +75,9 @@ public class BedrockBatchWrapper extends AbstractReferenceCounted {
 
     @Override
     protected void deallocate() {
-        this.packets.forEach(ReferenceCounted::release);
-        ReferenceCountUtil.release(this.uncompressed);
-        ReferenceCountUtil.release(this.compressed);
+        this.packets.forEach(ReferenceCountUtil::safeRelease);
+        ReferenceCountUtil.safeRelease(this.uncompressed);
+        ReferenceCountUtil.safeRelease(this.compressed);
         this.compressed = null;
         this.uncompressed = null;
         this.packets.clear();

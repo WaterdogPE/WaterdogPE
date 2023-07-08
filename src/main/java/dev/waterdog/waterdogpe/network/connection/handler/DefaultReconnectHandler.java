@@ -29,7 +29,7 @@ import java.util.List;
 public class DefaultReconnectHandler implements IReconnectHandler {
 
     @Override
-    public ServerInfo getFallbackServer(ProxiedPlayer player, ServerInfo oldServer, String message) {
+    public ServerInfo getFallbackServer(ProxiedPlayer player, ServerInfo oldServer, ReconnectReason reason, String kickMessage) {
         ProxyServer proxy = ProxyServer.getInstance();
         List<String> servers = proxy.getConfiguration().getPriorities();
         if (oldServer == null) {

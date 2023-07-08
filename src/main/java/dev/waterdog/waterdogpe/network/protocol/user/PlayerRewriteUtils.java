@@ -90,8 +90,10 @@ public class PlayerRewriteUtils {
             // writePalette(buffer, 0); AIR in palette
         }
         // buffer.writeZero(512); // map height - ??
-        for (int i = 0; i < biomeSections; i++) {
-            writePalette(buffer, 0); // paletted biomes - 1.18
+        // paletted biomes - 1.18
+        writePalette(buffer, 0);
+        for (int i = 1; i < biomeSections; i++) {
+            buffer.writeByte((127 << 1) | 1); // link to previous biome palette
         }
         buffer.writeByte(0); // Borders
         return buffer.asReadOnly();
