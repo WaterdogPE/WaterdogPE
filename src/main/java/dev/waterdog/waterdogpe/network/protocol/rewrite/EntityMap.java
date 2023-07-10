@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.protocol.rewrite;
 
+import it.unimi.dsi.fastutil.longs.LongListIterator;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataMap;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataType;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataTypes;
@@ -318,6 +319,17 @@ public class EntityMap implements BedrockPacketHandler {
     @Override
     public PacketSignal handle(ClientCheatAbilityPacket packet) {
         return rewriteId(packet.getUniqueEntityId(), packet::setUniqueEntityId);
+    }
+
+    @Override
+    public PacketSignal handle(AnimateEntityPacket packet) {
+        PacketSignal signal = PacketSignal.UNHANDLED;
+        LongListIterator iterator = packet.getRuntimeEntityIds().listIterator();
+        while (iterator.hasNext()) {
+            PacketSignal returnedSignal = rewriteId(iterator.nextLong(), iterator::set);
+            signal = mergeSignals(signal, returnedSignal);
+        }
+        return signal;
     }
 
     private PacketSignal rewriteMetadata(EntityDataMap metadata) {
