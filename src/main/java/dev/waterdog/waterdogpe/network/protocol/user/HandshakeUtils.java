@@ -19,6 +19,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -34,11 +36,11 @@ import org.cloudburstmc.protocol.common.util.Preconditions;
 import javax.crypto.SecretKey;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.Iterator;
@@ -61,8 +63,8 @@ public class HandshakeUtils {
             generator.initialize(Curve.P_384.toECParameterSpec());
             privateKeyPair = generator.generateKeyPair();
 
-            MOJANG_PUBLIC_KEY_OLD = EncryptionUtils.generateKey("MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE8ELkixyLcwlZryUQcu1TvPOmI2B7vX83ndnWRUaXm74wFfa5f/lwQNTfrLVHa2PmenpGI6JhIMUJaWZrjmMj90NoKNFSNBuKdm8rYiXsfaz3K36x/1U26HpG0ZxK/V1V");
-            MOJANG_PUBLIC_KEY = EncryptionUtils.generateKey("MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAECRXueJeTDqNRRgJi/vlRufByu/2G0i2Ebt6YMar5QX/R0DIIyrJMcUpruK4QveTfJSTp3Shlq4Gk34cD/4GUWwkv0DVuzeuB+tXija7HBxii03NHDbPAD0AKnLr2wdAp");
+            MOJANG_PUBLIC_KEY_OLD = generateKey("MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAE8ELkixyLcwlZryUQcu1TvPOmI2B7vX83ndnWRUaXm74wFfa5f/lwQNTfrLVHa2PmenpGI6JhIMUJaWZrjmMj90NoKNFSNBuKdm8rYiXsfaz3K36x/1U26HpG0ZxK/V1V");
+            MOJANG_PUBLIC_KEY = generateKey("MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAECRXueJeTDqNRRgJi/vlRufByu/2G0i2Ebt6YMar5QX/R0DIIyrJMcUpruK4QveTfJSTp3Shlq4Gk34cD/4GUWwkv0DVuzeuB+tXija7HBxii03NHDbPAD0AKnLr2wdAp");
         } catch (Exception e) {
             throw new RuntimeException("Unable to generate private keyPair!", e);
         }
@@ -72,7 +74,7 @@ public class HandshakeUtils {
         return privateKeyPair;
     }
 
-    public static boolean validateChain(List<SignedJWT> chainArray, boolean strict) throws Exception {
+    public static boolean validateChain(List<String> chainArray, boolean strict) throws Exception {
         if (strict && chainArray.size() > 3) {
             // We dont expect larger chain
             return false;
@@ -80,16 +82,16 @@ public class HandshakeUtils {
 
         ECPublicKey lastKey = null;
         boolean authed = false;
-        Iterator<SignedJWT> iterator = chainArray.iterator();
+        Iterator<String> iterator = chainArray.iterator();
         while(iterator.hasNext()){
-            SignedJWT jwt = iterator.next();
+            SignedJWT jwt = SignedJWT.parse(iterator.next());
 
             URI x5u = jwt.getHeader().getX509CertURL();
             if (x5u == null) {
                 throw new JOSEException("Key not found");
             }
 
-            ECPublicKey expectedKey = EncryptionUtils.generateKey(jwt.getHeader().getX509CertURL().toString());
+            ECPublicKey expectedKey = generateKey(jwt.getHeader().getX509CertURL().toString());
             if (lastKey == null) {
                 // First key is self signed
                 lastKey = expectedKey;
@@ -98,7 +100,7 @@ public class HandshakeUtils {
                 throw new IllegalArgumentException("Key does not match");
             }
 
-            if (!EncryptionUtils.verifyJwt(jwt, lastKey)) {
+            if (!verifyJwt(jwt, lastKey)) {
                 if (strict) {
                     throw new JOSEException("Login JWT was not valid");
                 }
@@ -114,7 +116,7 @@ public class HandshakeUtils {
             JsonObject payload = (JsonObject) JsonParser.parseString(jwt.getPayload().toString());
             Preconditions.checkArgument(payload.has("identityPublicKey"), "IdentityPublicKey node is missing in chain!");
             JsonElement ipkNode = payload.get("identityPublicKey");
-            lastKey = EncryptionUtils.generateKey(ipkNode.getAsString());
+            lastKey = generateKey(ipkNode.getAsString());
         }
         return authed;
     }
@@ -141,21 +143,33 @@ public class HandshakeUtils {
         JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.ES384).x509CertURL(x5u).build();
         try {
             SignedJWT jwt = new SignedJWT(header, JWTClaimsSet.parse(payload.toString()));
-            EncryptionUtils.signJwt(jwt, (ECPrivateKey) pair.getPrivate());
+            signJwt(jwt, (ECPrivateKey) pair.getPrivate());
             return jwt;
         } catch (JOSEException | ParseException e) {
             throw new RuntimeException(e);
         }
     }
 
+    public static ECPublicKey generateKey(String b64) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        return (ECPublicKey) KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(b64)));
+    }
+
+    public static void signJwt(JWSObject jws, ECPrivateKey key) throws JOSEException {
+        jws.sign(new ECDSASigner(key, Curve.P_384));
+    }
+
+    public static boolean verifyJwt(JWSObject jws, ECPublicKey key) throws JOSEException {
+        return jws.verify(new ECDSAVerifier(key));
+    }
+
     public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, ProtocolVersion protocol, boolean strict) throws Exception {
-        List<SignedJWT> chain = packet.getChain();
+        List<String> chain = packet.getChain();
         if (chain.size() < 1) {
             throw new IllegalArgumentException("Invalid chain data");
         }
 
         boolean xboxAuth = HandshakeUtils.validateChain(chain, strict);
-        JsonObject payload = (JsonObject) JsonParser.parseString(chain.get(chain.size() - 1).getPayload().toString());
+        JsonObject payload = (JsonObject) JsonParser.parseString(SignedJWT.parse(chain.get(chain.size() - 1)).getPayload().toString());
         JsonObject extraData = HandshakeUtils.parseExtraData(packet, payload);
 
         if (!payload.has("identityPublicKey")) {
@@ -163,11 +177,12 @@ public class HandshakeUtils {
         }
         String identityPublicKeyString = payload.get("identityPublicKey").getAsString();
 
-        ECPublicKey identityPublicKey = EncryptionUtils.generateKey(identityPublicKeyString);
-        if (!EncryptionUtils.verifyJwt(packet.getExtra(), identityPublicKey) && strict) {
+        ECPublicKey identityPublicKey = generateKey(identityPublicKeyString);
+        SignedJWT extraDataJwt = SignedJWT.parse(packet.getExtra());
+        if (!verifyJwt(extraDataJwt, identityPublicKey) && strict) {
             xboxAuth = false;
         }
-        JsonObject clientData = HandshakeUtils.parseClientData(packet.getExtra(), extraData, session);
+        JsonObject clientData = HandshakeUtils.parseClientData(extraDataJwt, extraData, session);
         return new HandshakeEntry(identityPublicKey, clientData, extraData, xboxAuth, protocol);
     }
 
@@ -201,7 +216,7 @@ public class HandshakeUtils {
         SecretKey encryptionKey = EncryptionUtils.getSecretKey(privateKeyPair.getPrivate(), key, token);
 
         ServerToClientHandshakePacket packet = new ServerToClientHandshakePacket();
-        packet.setJwt(EncryptionUtils.createHandshakeJwt(privateKeyPair, token).serialize());
+        packet.setJwt(EncryptionUtils.createHandshakeJwt(privateKeyPair, token));
 
         session.getPeer().getChannel().eventLoop().execute(() -> {
             session.sendPacketImmediately(packet);

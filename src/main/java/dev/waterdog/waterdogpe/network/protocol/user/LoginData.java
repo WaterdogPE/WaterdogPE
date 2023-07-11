@@ -70,8 +70,8 @@ public class LoginData {
         SignedJWT signedExtraData = HandshakeUtils.encodeJWT(this.keyPair, this.clientData);
 
         LoginPacket loginPacket = new LoginPacket();
-        loginPacket.getChain().add(signedClientData);
-        loginPacket.setExtra(signedExtraData);
+        loginPacket.getChain().add(signedClientData.serialize());
+        loginPacket.setExtra(signedExtraData.serialize());
         loginPacket.setProtocolVersion(this.protocol.getProtocol());
         return this.loginPacket = loginPacket;
     }

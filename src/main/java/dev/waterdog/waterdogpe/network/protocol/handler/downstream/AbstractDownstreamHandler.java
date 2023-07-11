@@ -94,6 +94,7 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
                     command.getFlags(),
                     command.getPermission(),
                     new CommandEnumData(command.getName() + "_aliases", aliases, false),
+                    Collections.emptyList(),
                     command.getOverloads()));
         }
         return PacketSignal.HANDLED;

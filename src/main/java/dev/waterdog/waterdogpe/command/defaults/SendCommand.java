@@ -21,6 +21,7 @@ import dev.waterdog.waterdogpe.command.CommandSettings;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.types.TextContainer;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandOverloadData;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandParam;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandParamData;
 
@@ -65,7 +66,7 @@ public class SendCommand extends Command {
     }
 
     @Override
-    protected CommandParamData[][] buildCommandOverloads() {
+    protected CommandOverloadData[] buildCommandOverloads() {
         CommandParamData destination = new CommandParamData();
         destination.setName("destination");
         destination.setOptional(false);
@@ -76,6 +77,6 @@ public class SendCommand extends Command {
         target.setOptional(false);
         target.setType(CommandParam.TEXT);
 
-        return new CommandParamData[][]{{ destination, target }};
+        return new CommandOverloadData[]{new CommandOverloadData(false, new CommandParamData[]{destination, target})};
     }
 }
