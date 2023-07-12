@@ -50,7 +50,7 @@
     <dependencies>
         <dependency>
             <groupId>com.bugsnag</groupId>
-            <version>[3.0,4.0]</version>
+            <version>[3.0,4.0)</version>
             <artifactId>bugsnag</artifactId>
         </dependency>
         <dependency>
@@ -162,12 +162,12 @@
         <dependency>
             <groupId>org.cloudburstmc.protocol</groupId>
             <artifactId>bedrock-codec</artifactId>
-            <version>${protocol.version}</version>
+            <version>3.0.0.Beta1-20230616.192131-96</version>
         </dependency>
         <dependency>
             <groupId>org.cloudburstmc.protocol</groupId>
             <artifactId>bedrock-connection</artifactId>
-            <version>${protocol.version}</version>
+            <version>3.0.0.Beta1-20230616.192131-95</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.cloudburstmc.netty</groupId>
@@ -193,16 +193,11 @@
             <version>${netty.version}</version>
             <classifier>osx-x86_64</classifier>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java
+        <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.30</version>
-        </dependency>-->
-        <dependency>
-            <groupId>com.nimbusds</groupId>
-            <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.31</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
