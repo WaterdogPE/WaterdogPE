@@ -25,6 +25,7 @@ import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
 import dev.waterdog.waterdogpe.network.protocol.user.Platform;
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.InitialHandler;
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.SwitchDownstreamHandler;
+import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandOriginData;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandOriginType;
@@ -79,6 +80,7 @@ public class ProxiedPlayer implements CommandSender {
     private ClientConnection clientConnection;
     private ClientConnection pendingConnection;
 
+    private Vector3f latestPosition;
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
@@ -903,6 +905,25 @@ public class ProxiedPlayer implements CommandSender {
         return this.pluginPacketHandlers;
     }
 
+    public Vector3f getLatestPosition()  {
+        return this.latestPosition;
+    }
+
+    public void setLatestPosition(Vector3f location) {
+        this.latestPosition = location;
+    }
+
+    public void playSound(String sound) {
+        this.playSound(sound, 1, 1);
+    }
+    public void playSound(String sound, float volume, float pitch) {
+        PlaySoundPacket packet = new PlaySoundPacket();
+        packet.setPosition(getLatestPosition());
+        packet.setSound(sound);
+        packet.setVolume(volume);
+        packet.setPitch(pitch);
+        this.sendPacket(packet);
+    }
     public String getDisconnectReason() {
         return this.disconnectReason;
     }

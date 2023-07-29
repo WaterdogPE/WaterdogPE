@@ -59,7 +59,11 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
         this.player.getLogger().warning("Received violation from " + this.player.getName() + ": " + packet.toString());
         return this.cancel();
     }
-
+    @Override
+    public PacketSignal handle(MovePlayerPacket packet) {
+        this.player.setLatestPosition(packet.getPosition());
+        return this.cancel();
+    }
     /**
      * If connection has bridge we cancel packet to prevent sending it to downstream.
      * @return true is we can't use CancelSignalException.
