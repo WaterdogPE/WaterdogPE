@@ -30,6 +30,7 @@ public class ProtocolCodecs {
     static {
         HANDLED_PACKETS.add(LoginPacket.class);
         HANDLED_PACKETS.add(PlayStatusPacket.class);
+        HANDLED_PACKETS.add(PlaySoundPacket.class);
         HANDLED_PACKETS.add(ServerToClientHandshakePacket.class);
         HANDLED_PACKETS.add(ClientToServerHandshakePacket.class);
         HANDLED_PACKETS.add(DisconnectPacket.class);
