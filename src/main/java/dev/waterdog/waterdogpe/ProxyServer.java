@@ -62,6 +62,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
+import org.cloudburstmc.protocol.bedrock.data.ExperimentData;
 import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import java.net.InetSocketAddress;
@@ -81,6 +82,7 @@ public class ProxyServer {
     private final TerminalConsole console;
 
     private final ConfigurationManager configurationManager;
+    private final Set<ExperimentData> experiments = new HashSet<>();
     private final WaterdogScheduler scheduler;
     private final PlayerManager playerManager;
     private final PluginManager pluginManager;
@@ -590,6 +592,14 @@ public class ProxyServer {
     public void setNetworkMetrics(NetworkMetrics metrics) {
         Preconditions.checkNotNull(metrics, "You cannot set the metricsHandler to null!");
         this.networkMetrics = metrics;
+    }
+
+    public void setExperiment(String experimentName, boolean enabled) {
+        this.experiments.add(new ExperimentData(experimentName, enabled));
+    }
+
+    public Set<ExperimentData> getExperiments() {
+        return experiments;
     }
 
     public void setReconnectHandler(IReconnectHandler reconnectHandler) {

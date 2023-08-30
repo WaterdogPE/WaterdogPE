@@ -23,6 +23,7 @@ import dev.waterdog.waterdogpe.network.protocol.user.HandshakeUtils;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
+import org.cloudburstmc.protocol.bedrock.data.ExperimentData;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.event.defaults.InitialServerConnectedEvent;
@@ -43,6 +44,7 @@ import javax.crypto.SecretKey;
 import java.net.URI;
 import java.security.interfaces.ECPublicKey;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class InitialHandler extends AbstractDownstreamHandler {
@@ -115,6 +117,15 @@ public class InitialHandler extends AbstractDownstreamHandler {
         packet.setRuntimeEntityId(rewriteData.getEntityId());
         packet.setUniqueEntityId(rewriteData.getEntityId());
         packet.setLevelName(rewriteData.getProxyName());
+
+        this.player.getProxy().getExperiments().forEach(experimentData -> {
+            Optional<ExperimentData> existingExperiment = packet.getExperiments().stream().filter(exp -> exp.getName().equals(experimentData.getName())).findFirst();
+            if (existingExperiment.isEmpty()) {
+                packet.getExperiments().add(experimentData);
+            } else if (existingExperiment.get().isEnabled() != experimentData.isEnabled()) {
+                this.player.getLogger().warning("Experiment settings are clashing with downstream server: Proxy wants {} to be {}, but downstream has it {}", experimentData.getName(), experimentData.isEnabled(), existingExperiment.get().isEnabled());
+            }
+        });
 
         // Starting with 419 server does not send vanilla blocks to client
         if (this.player.getProtocol().isBeforeOrEqual(ProtocolVersion.MINECRAFT_PE_1_16_20)) {
