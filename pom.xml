@@ -18,7 +18,7 @@
         <protocol.version>3.0.0.Beta1-SNAPSHOT</protocol.version>
         <log4j2.version>2.17.1</log4j2.version>
         <jline.version>3.23.0</jline.version>
-        <netty.version>4.1.84.Final</netty.version>
+        <netty.version>4.1.89.Final</netty.version>
     </properties>
 
     <repositories>
@@ -163,17 +163,17 @@
             <groupId>org.cloudburstmc.protocol</groupId>
             <artifactId>bedrock-codec</artifactId>
             <version>${protocol.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-buffer</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.cloudburstmc.protocol</groupId>
             <artifactId>bedrock-connection</artifactId>
             <version>${protocol.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.cloudburstmc.netty</groupId>
-                    <artifactId>netty-transport-raknet</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.cloudburstmc.netty</groupId>
