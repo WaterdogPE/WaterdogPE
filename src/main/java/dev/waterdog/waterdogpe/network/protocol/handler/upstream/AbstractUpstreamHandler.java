@@ -45,6 +45,9 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
         }
         BedrockPacketReceivedFromClientEvent event = new BedrockPacketReceivedFromClientEvent(player, packet);
         ProxyServer.getInstance().getEventManager().callEvent(event);
+        if(packet instanceof MovePlayerPacket movePlayerPacket) {
+            this.player.setLatestPosition(movePlayerPacket.getPosition());
+        }
         return signal;
     }
 
@@ -57,11 +60,6 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
     @Override
     public final PacketSignal handle(PacketViolationWarningPacket packet) {
         this.player.getLogger().warning("Received violation from " + this.player.getName() + ": " + packet.toString());
-        return this.cancel();
-    }
-    @Override
-    public PacketSignal handle(MovePlayerPacket packet) {
-        this.player.setLatestPosition(packet.getPosition());
         return this.cancel();
     }
     /**
