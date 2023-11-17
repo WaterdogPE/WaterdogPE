@@ -176,7 +176,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         }
         scoreboards.clear();
 
-        injectRemoveAllEffects(this.player.getConnection(), rewriteData.getEntityId());
+        injectRemoveAllEffects(this.player.getConnection(), rewriteData.getEntityId(), this.player.getProtocol());
         injectClearWeather(this.player.getConnection());
 
         injectGameMode(this.player.getConnection(), packet.getPlayerGameType());
