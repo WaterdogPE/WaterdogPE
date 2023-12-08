@@ -22,7 +22,7 @@ public class VersionInfo {
 
     public static final boolean DEFAULT_DEBUG = true;
 
-    private final String baseVersion = "2.0.1";
+    private final String baseVersion = "2.0.2";
     private final String buildVersion = "#build";
     private final String author = "Stop joking about me D:";
     private final int metricsId = 15678;

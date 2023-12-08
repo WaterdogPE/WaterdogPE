@@ -203,11 +203,13 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
-    public static void injectRemoveAllEffects(ProxiedConnection session, long runtimeId) {
+    public static void injectRemoveAllEffects(ProxiedConnection session, long runtimeId, ProtocolVersion version) {
         if (session == null || !session.isConnected()) {
             return;
         }
-        for (int i = 0; i < 28; i++) {
+
+        int effectsCount = version.isAfter(ProtocolVersion.MINECRAFT_PE_1_19_0) ? 30 : 28;
+        for (int i = 0; i < effectsCount; i++) {
             injectRemoveEntityEffect(session, runtimeId, i);
         }
         SetEntityDataPacket packet = new SetEntityDataPacket();
