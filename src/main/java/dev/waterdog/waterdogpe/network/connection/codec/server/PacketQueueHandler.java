@@ -22,11 +22,22 @@ public class PacketQueueHandler extends ChannelDuplexHandler {
     private int packetCounter = 0;
     private final Queue<BedrockBatchWrapper> queue = PlatformDependent.newMpscQueue(MAX_BATCHES);
 
+    private volatile boolean finished;
+
     public PacketQueueHandler(BedrockServerSession session) {
         this.session = session;
     }
 
     private void finish(ChannelHandlerContext ctx, boolean send) {
+        if (this.finished) {
+            return;
+        }
+        this.finished = true;
+
+        if (ctx.pipeline().get(NAME) == this) {
+            ctx.pipeline().remove(this);
+        }
+
         BedrockBatchWrapper batch;
         while ((batch = this.queue.poll()) != null) {
             if (send) {
@@ -54,7 +65,7 @@ public class PacketQueueHandler extends ChannelDuplexHandler {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         BedrockBatchWrapper batch;
-        if (!(msg instanceof BedrockBatchWrapper) || (batch = (BedrockBatchWrapper) msg).skipQueue()) {
+        if (this.finished || !(msg instanceof BedrockBatchWrapper) || (batch = (BedrockBatchWrapper) msg).skipQueue()) {
             ctx.write(msg, promise);
             return;
         }

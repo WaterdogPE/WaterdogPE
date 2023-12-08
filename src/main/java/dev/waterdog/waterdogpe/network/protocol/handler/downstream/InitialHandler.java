@@ -17,7 +17,9 @@ package dev.waterdog.waterdogpe.network.protocol.handler.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.protocol.registry.FakeDefinitionRegistry;
+import dev.waterdog.waterdogpe.network.protocol.user.HandshakeUtils;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
@@ -53,7 +55,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
     public PacketSignal handle(PlayStatusPacket packet) {
         return this.onPlayStatus(packet, message -> {
             ServerInfo serverInfo = this.player.getServerInfo();
-            if (!this.player.sendToFallback(serverInfo, message)) {
+            if (!this.player.sendToFallback(serverInfo, ReconnectReason.TRANSFER_FAILED, message)) {
                 this.player.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), message));
             }
         }, this.connection);
@@ -64,7 +66,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
         try {
             SignedJWT saltJwt = SignedJWT.parse(packet.getJwt());
             URI x5u = saltJwt.getHeader().getX509CertURL();
-            ECPublicKey serverKey = EncryptionUtils.generateKey(x5u.toASCIIString());
+            ECPublicKey serverKey = HandshakeUtils.generateKey(x5u.toASCIIString());
             SecretKey key = EncryptionUtils.getSecretKey(
                     this.player.getLoginData().getKeyPair().getPrivate(),
                     serverKey,

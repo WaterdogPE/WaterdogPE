@@ -90,8 +90,10 @@ public class PlayerRewriteUtils {
             // writePalette(buffer, 0); AIR in palette
         }
         // buffer.writeZero(512); // map height - ??
-        for (int i = 0; i < biomeSections; i++) {
-            writePalette(buffer, 0); // paletted biomes - 1.18
+        // paletted biomes - 1.18
+        writePalette(buffer, 0);
+        for (int i = 1; i < biomeSections; i++) {
+            buffer.writeByte((127 << 1) | 1); // link to previous biome palette
         }
         buffer.writeByte(0); // Borders
         return buffer.asReadOnly();
@@ -201,11 +203,13 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
-    public static void injectRemoveAllEffects(ProxiedConnection session, long runtimeId) {
+    public static void injectRemoveAllEffects(ProxiedConnection session, long runtimeId, ProtocolVersion version) {
         if (session == null || !session.isConnected()) {
             return;
         }
-        for (int i = 0; i < 28; i++) {
+
+        int effectsCount = version.isAfter(ProtocolVersion.MINECRAFT_PE_1_19_0) ? 30 : 28;
+        for (int i = 0; i < effectsCount; i++) {
             injectRemoveEntityEffect(session, runtimeId, i);
         }
         SetEntityDataPacket packet = new SetEntityDataPacket();

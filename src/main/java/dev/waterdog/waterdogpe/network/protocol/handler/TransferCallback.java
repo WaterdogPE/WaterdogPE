@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network.protocol.handler;
 
 import dev.waterdog.waterdogpe.event.defaults.TransferCompleteEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.ConnectedDownstreamHandler;
 import dev.waterdog.waterdogpe.network.protocol.handler.upstream.ConnectedUpstreamHandler;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
@@ -119,7 +120,7 @@ public class TransferCallback {
     }
 
     public void onTransferFailed() {
-        if (this.player.sendToFallback(this.targetServer, "Transfer failed")) {
+        if (this.player.sendToFallback(this.targetServer, ReconnectReason.TRANSFER_FAILED, "Disconnected")) {
             this.player.sendMessage(new TranslationContainer("waterdog.connected.fallback", this.targetServer.getServerName()));
         } else {
             this.player.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", targetServer.getServerName(), "Server was closed"));
@@ -127,5 +128,9 @@ public class TransferCallback {
 
         this.connection.disconnect();
         this.player.getLogger().warning("Failed to transfer " + this.player.getName() + " to " + this.targetServer.getServerName() + ": Server was closed");
+    }
+
+    public TransferPhase getPhase() {
+        return this.transferPhase;
     }
 }

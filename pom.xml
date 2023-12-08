@@ -8,7 +8,7 @@
     </description>
     <groupId>dev.waterdog.waterdogpe</groupId>
     <artifactId>waterdog</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -18,7 +18,7 @@
         <protocol.version>3.0.0.Beta1-SNAPSHOT</protocol.version>
         <log4j2.version>2.17.1</log4j2.version>
         <jline.version>3.23.0</jline.version>
-        <netty.version>4.1.84.Final</netty.version>
+        <netty.version>4.1.89.Final</netty.version>
     </properties>
 
     <repositories>
@@ -162,18 +162,18 @@
         <dependency>
             <groupId>org.cloudburstmc.protocol</groupId>
             <artifactId>bedrock-codec</artifactId>
-            <version>3.0.0.Beta1-20230616.192131-96</version>
+            <version>${protocol.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-buffer</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.cloudburstmc.protocol</groupId>
             <artifactId>bedrock-connection</artifactId>
-            <version>3.0.0.Beta1-20230616.192131-95</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.cloudburstmc.netty</groupId>
-                    <artifactId>netty-transport-raknet</artifactId>
-                </exclusion>
-            </exclusions>
+            <version>${protocol.version}</version>
         </dependency>
         <dependency>
             <groupId>org.cloudburstmc.netty</groupId>
@@ -192,6 +192,11 @@
             <artifactId>netty-transport-native-kqueue</artifactId>
             <version>${netty.version}</version>
             <classifier>osx-x86_64</classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>9.10.1</version>
         </dependency>
     </dependencies>
 

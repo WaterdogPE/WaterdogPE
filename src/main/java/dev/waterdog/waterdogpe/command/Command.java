@@ -92,21 +92,22 @@ public abstract class Command {
         }
 
         // Build command parameters
-        CommandParamData[][] overloads = this.buildCommandOverloads();
+        CommandOverloadData[] overloads = this.buildCommandOverloads();
 
         return new CommandData(this.name,
                 this.getDescription(),
                 Collections.emptySet(),
                 CommandPermission.ANY,
                 new CommandEnumData(this.name + "_aliases", aliases, false),
+                Collections.emptyList(),
                 overloads);
     }
 
-    protected CommandParamData[][] buildCommandOverloads() {
+    protected CommandOverloadData[] buildCommandOverloads() {
         CommandParamData simpleData = new CommandParamData();
         simpleData.setName(this.name);
         simpleData.setOptional(true);
         simpleData.setType(CommandParam.TEXT);
-        return new CommandParamData[][]{{ simpleData }};
+        return new CommandOverloadData[]{new CommandOverloadData(false, new CommandParamData[]{simpleData})};
     }
 }
