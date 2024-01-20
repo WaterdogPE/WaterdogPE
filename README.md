@@ -26,27 +26,6 @@ Our goal is to support all commonly used Minecraft: Bedrock server softwares. Sp
 of proper implementation.  
 You can find list of currently supported/unsupported software [here](https://docs.waterdog.dev/books/waterdogpe-setup/page/software-compatibility).
 
-## Benefits compared to Waterdog
-
-- Reduced memory usage
-- Much cleaner Plugin API
-- Much more configurable
-- Easy to modify / contribute
-- Active Support and quick updates for new MC:BE Versions
-- BE server pinging: Easily ping your downstream server using a plugin to check its status
-- Resource pack support
-- Maintained documentation
-
-## Known bugs fixed in WaterdogPE
-
-- [Bows are sometimes not shooting when primed](https://github.com/yesdog/Waterdog/issues/53)
-- [Scoreboards are flickering when updated](https://github.com/yesdog/Waterdog/issues/62)
-- [Disconnects are not always showing the disconnect reason](https://github.com/yesdog/Waterdog/issues/97)
-- [Waterdog is not working with PM4 due to appended custom data in the LoginPacket](https://github.com/yesdog/Waterdog/issues/161)
-- [Resource packs not working properly](https://github.com/yesdog/Waterdog/issues/110)
-- [Native ciphering sometimes fails](https://github.com/yesdog/Waterdog/issues/130)
-- [Food bar not always working on Nukkit](https://github.com/yesdog/Waterdog/issues/144)
-
 ## Compiling
 
 To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
