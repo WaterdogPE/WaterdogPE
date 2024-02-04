@@ -15,12 +15,10 @@
 
 package dev.waterdog.waterdogpe.network.connection.client;
 
-import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.FrameIdCodec;
-import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
-import dev.waterdog.waterdogpe.network.connection.codec.compression.NoopCompressionCodec;
-import dev.waterdog.waterdogpe.network.connection.codec.encryption.BedrockEncryptionDecoder;
-import dev.waterdog.waterdogpe.network.connection.codec.encryption.BedrockEncryptionEncoder;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.ProxiedCompressionCodec;
+import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedSessionInitializer;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyBatchBridge;
@@ -38,8 +36,13 @@ import org.cloudburstmc.netty.handler.codec.raknet.common.RakSessionCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.codec.v428.Bedrock_v428;
+import org.cloudburstmc.protocol.bedrock.data.CompressionAlgorithm;
+import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionCodec;
+import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionStrategy;
+import org.cloudburstmc.protocol.bedrock.netty.codec.encryption.BedrockEncryptionDecoder;
+import org.cloudburstmc.protocol.bedrock.netty.codec.encryption.BedrockEncryptionEncoder;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
@@ -49,7 +52,7 @@ import java.net.SocketAddress;
 import java.util.List;
 import java.util.Objects;
 
-import static dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedSessionInitializer.getCompressionCodec;
+import static dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedSessionInitializer.getCompressionStrategy;
 
 @Log4j2
 public class BedrockClientConnection extends SimpleChannelInboundHandler<BedrockBatchWrapper> implements ClientConnection {
@@ -60,14 +63,15 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
     private final List<Runnable> disconnectListeners = new ObjectArrayList<>();
 
     private BedrockPacketHandler packetHandler;
-    private CompressionAlgorithm compression;
+    private CompressionStrategy compressionStrategy;
 
     public BedrockClientConnection(ProxiedPlayer player, ServerInfo serverInfo, Channel channel) {
         this.player = player;
         this.serverInfo = serverInfo;
         this.channel = channel;
         if (player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_19_30)) {
-            this.compression = CompressionAlgorithm.ZLIB;
+            this.compressionStrategy = player.getConnection().getPeer().getRakVersion() < 10 ?
+                    ProxiedSessionInitializer.ZLIB_STRATEGY : ProxiedSessionInitializer.ZLIB_RAW_STRATEGY;
         }
     }
 
@@ -92,9 +96,11 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
 
     @Override
     public void sendPacket(BedrockBatchWrapper wrapper) {
-        if (!Objects.equals(wrapper.getAlgorithm(), this.compression)) {
-            wrapper.setCompressed(null);
+        if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) &&
+                !Objects.equals(wrapper.getAlgorithm(), this.compressionStrategy.getDefaultCompression().getAlgorithm())) {
+            wrapper.setCompressed(null); // Before 1.20.60 dynamic compression is not supported
         }
+        // Starting with 1.20.60 support all compression algorithms on server side.
         this.channel.writeAndFlush(wrapper);
     }
 
@@ -109,16 +115,27 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
     }
 
     @Override
-    public void setCompression(CompressionAlgorithm compression) {
-        ChannelHandler handler = this.channel.pipeline().get(CompressionCodec.NAME);
-        if (handler instanceof NoopCompressionCodec) {
-            this.channel.pipeline().remove(CompressionCodec.NAME);
-        } else if (handler != null) {
-            throw new IllegalArgumentException("Compression is already set");
+    public void setCompression(CompressionAlgorithm algorithm) {
+        CompressionStrategy strategy;
+        if (algorithm instanceof CompressionType type && type.getBedrockAlgorithm() != null) {
+            strategy = getCompressionStrategy(type.getBedrockAlgorithm(), this.player.getProtocol().getRaknetVersion(), false);
+        } else {
+            strategy = getCompressionStrategy(algorithm, this.player.getProtocol().getRaknetVersion(), false);
         }
-        this.channel.pipeline()
-                .addAfter(FrameIdCodec.NAME, CompressionCodec.NAME, getCompressionCodec(compression, this.player.getProtocol().getRaknetVersion(), false));
-        this.compression = compression;
+        this.setCompressionStrategy(strategy);
+    }
+
+    @Override
+    public void setCompressionStrategy(CompressionStrategy strategy) {
+        boolean needsPrefix = this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_20_60);
+
+        ChannelHandler handler = this.channel.pipeline().get(CompressionCodec.NAME);
+        if (handler == null) {
+            this.channel.pipeline().addAfter(FrameIdCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
+        } else {
+            this.channel.pipeline().replace(CompressionCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
+        }
+        this.compressionStrategy = strategy;
     }
 
     @Override

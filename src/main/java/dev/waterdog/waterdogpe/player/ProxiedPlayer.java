@@ -15,7 +15,7 @@
 
 package dev.waterdog.waterdogpe.player;
 
-import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
@@ -58,7 +58,7 @@ public class ProxiedPlayer implements CommandSender {
     private final ProxyServer proxy;
 
     private final BedrockServerSession connection;
-    private final CompressionAlgorithm compression;
+    private final CompressionType compression;
 
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
     private final AtomicBoolean loginCompleted = new AtomicBoolean(false);
@@ -104,15 +104,13 @@ public class ProxiedPlayer implements CommandSender {
      */
     private final Collection<PluginPacketHandler> pluginPacketHandlers = new ObjectArrayList<>();
 
-    public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, CompressionAlgorithm compression, LoginData loginData) {
+    public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, CompressionType compression, LoginData loginData) {
         this.proxy = proxy;
         this.connection = session;
         this.compression = compression;
         this.loginData = loginData;
         this.rewriteMaps = new RewriteMaps(this);
         this.proxy.getPlayerManager().subscribePermissions(this);
-
-        this.connection.getPeer().setCompressionLevel(this.getProxy().getConfiguration().getUpstreamCompression());
         this.connection.addDisconnectListener(this::disconnect);
         this.rewriteData.setCodecHelper(session.getPeer().getCodecHelper());
     }
@@ -895,7 +893,7 @@ public class ProxiedPlayer implements CommandSender {
         return this.acceptResourcePacks;
     }
 
-    public CompressionAlgorithm getCompression() {
+    public CompressionType getCompression() {
         return this.compression;
     }
 

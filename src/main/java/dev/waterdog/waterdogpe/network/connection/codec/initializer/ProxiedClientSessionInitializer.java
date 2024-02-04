@@ -24,7 +24,8 @@ import dev.waterdog.waterdogpe.network.connection.codec.batch.BedrockBatchEncode
 import dev.waterdog.waterdogpe.network.connection.codec.batch.FrameIdCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.client.ClientEventHandler;
 import dev.waterdog.waterdogpe.network.connection.codec.client.ClientPacketQueue;
-import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.ProxiedCompressionCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -52,7 +53,7 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
     @Override
     protected void initChannel(Channel channel) throws Exception {
         int rakVersion = this.player.getProtocol().getRaknetVersion();
-        CompressionAlgorithm compression = this.player.getProxy().getConfiguration().getCompression();
+        CompressionType compression = this.player.getProxy().getConfiguration().getCompression();
 
         channel.attr(PacketDirection.ATTRIBUTE).set(PacketDirection.FROM_SERVER);
 
@@ -67,7 +68,7 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
 
         channel.pipeline()
                 .addLast(FrameIdCodec.NAME, RAKNET_FRAME_CODEC)
-                .addLast(CompressionCodec.NAME, getCompressionCodec(compression, rakVersion, true))
+                .addLast(CompressionCodec.NAME, new ProxiedCompressionCodec(getCompressionStrategy(compression, rakVersion, true), false))
                 .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
                 .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
                 .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion))

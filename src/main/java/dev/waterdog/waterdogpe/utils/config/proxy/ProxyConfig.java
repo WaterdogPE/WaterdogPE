@@ -16,7 +16,7 @@
 package dev.waterdog.waterdogpe.utils.config.proxy;
 
 import dev.waterdog.waterdogpe.ProxyServer;
-import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
 import dev.waterdog.waterdogpe.utils.config.ServerList;
 import dev.waterdog.waterdogpe.utils.config.serializer.CompressionAlgorithmConverter;
 import dev.waterdog.waterdogpe.utils.config.serializer.InetSocketAddressConverter;
@@ -141,7 +141,7 @@ public class ProxyConfig extends YamlConfig {
             "Algorithm used for upstream compression. Currently supported: zlib, snappy",
             "This is only applicable on 1.19.30 and newer versions"
     })
-    private CompressionAlgorithm compression = CompressionAlgorithm.ZLIB;
+    private CompressionType compression = CompressionType.ZLIB;
 
     @Path("upstream_compression_level")
     @Comment("Upstream server compression ratio(proxy to client), higher = less bandwidth, more cpu, lower vice versa")

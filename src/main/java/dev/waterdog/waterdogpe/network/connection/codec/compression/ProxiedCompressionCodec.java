@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 WaterdogTEAM
+ * Copyright 2024 WaterdogTEAM
  * Licensed under the GNU General Public License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,58 +17,55 @@ package dev.waterdog.waterdogpe.network.connection.codec.compression;
 
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import dev.waterdog.waterdogpe.network.PacketDirection;
-import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.MessageToMessageCodec;
-import org.cloudburstmc.protocol.bedrock.data.PacketCompressionAlgorithm;
+import org.cloudburstmc.protocol.bedrock.data.CompressionAlgorithm;
+import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionCodec;
+import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionStrategy;
 
-import java.util.List;
+public class ProxiedCompressionCodec extends CompressionCodec {
 
-public abstract class ProxiedCompressionCodec extends MessageToMessageCodec<BedrockBatchWrapper, BedrockBatchWrapper> implements CompressionCodec {
-    public static final String NAME = "compression-codec";
+    public ProxiedCompressionCodec(CompressionStrategy strategy, boolean prefixed) {
+        super(strategy, prefixed);
+    }
 
     @Override
-    public void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
-        if (msg.getCompressed() == null && msg.getUncompressed() == null) {
-            throw new IllegalStateException("Batch was not encoded before");
-        }
-
+    protected void onPassedThrough(ChannelHandlerContext ctx, BedrockBatchWrapper msg) {
         NetworkMetrics metrics = ctx.channel().attr(NetworkMetrics.ATTRIBUTE).get();
         PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
-
-        if (msg.getCompressed() == null || msg.isModified()) {
-            msg.setCompressed(this.encode0(ctx, msg.getUncompressed()), this.getCompressionAlgorithm());
-            if (metrics != null) metrics.compressedBytes(msg.getCompressed().readableBytes(), direction);
-        } else if (metrics != null) {
+        if (metrics != null && direction != null) {
             metrics.passedThroughBytes(msg.getCompressed().readableBytes(), direction);
         }
-
-        out.add(msg.retain());
     }
 
     @Override
-    public void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
-        msg.setAlgorithm(this.getCompressionAlgorithm());
-        msg.setUncompressed(this.decode0(ctx, msg.getCompressed().slice()));
-
+    protected void onCompressed(ChannelHandlerContext ctx, BedrockBatchWrapper msg) {
         NetworkMetrics metrics = ctx.channel().attr(NetworkMetrics.ATTRIBUTE).get();
-        if (metrics != null) {
-            PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
+        PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
+        if (metrics != null && direction != null) {
+            metrics.compressedBytes(msg.getCompressed().readableBytes(), direction);
+        }
+    }
+
+    @Override
+    protected void onDecompressed(ChannelHandlerContext ctx, BedrockBatchWrapper msg) {
+        NetworkMetrics metrics = ctx.channel().attr(NetworkMetrics.ATTRIBUTE).get();
+        PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
+        if (metrics != null && direction != null) {
             metrics.decompressedBytes(msg.getUncompressed().readableBytes(), direction);
         }
-
-        out.add(msg.retain());
     }
 
-    protected abstract ByteBuf encode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception;
-    protected abstract ByteBuf decode0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception;
-
-    public abstract CompressionAlgorithm getCompressionAlgorithm();
+    @Override
+    protected byte getCompressionHeader0(CompressionAlgorithm algorithm) {
+        if (algorithm instanceof CompressionType type && type.getBedrockAlgorithm() == null) {
+            return type.getHeaderId();
+        }
+        return super.getCompressionHeader0(algorithm);
+    }
 
     @Override
-    public final PacketCompressionAlgorithm getAlgorithm() {
-        return this.getCompressionAlgorithm().getBedrockAlgorithm();
+    protected CompressionAlgorithm getCompressionAlgorithm0(byte header) {
+        return CompressionType.fromHeaderId(header);
     }
 }
