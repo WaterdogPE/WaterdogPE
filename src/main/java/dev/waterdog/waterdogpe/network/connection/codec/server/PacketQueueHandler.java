@@ -1,13 +1,14 @@
 package dev.waterdog.waterdogpe.network.connection.codec.server;
 
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
-import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
+import dev.waterdog.waterdogpe.network.connection.codec.batch.BatchFlags;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.util.internal.PlatformDependent;
 import lombok.extern.log4j.Log4j2;
+import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 
 import java.util.Queue;
 
@@ -64,8 +65,7 @@ public class PacketQueueHandler extends ChannelDuplexHandler {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-        BedrockBatchWrapper batch;
-        if (this.finished || !(msg instanceof BedrockBatchWrapper) || (batch = (BedrockBatchWrapper) msg).skipQueue()) {
+        if (this.finished || !(msg instanceof BedrockBatchWrapper batch) || batch.hasFlag(BatchFlags.SKIP_QUEUE)) {
             ctx.write(msg, promise);
             return;
         }

@@ -16,7 +16,7 @@
 package dev.waterdog.waterdogpe.network.connection.peer;
 
 import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
-import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
+import dev.waterdog.waterdogpe.network.connection.codec.batch.BatchFlags;
 import dev.waterdog.waterdogpe.network.connection.codec.server.PacketQueueHandler;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyBatchBridge;
@@ -26,6 +26,7 @@ import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.protocol.bedrock.BedrockDisconnectReasons;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
+import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
@@ -69,7 +70,9 @@ public class BedrockServerSession extends BedrockSession implements ProxiedConne
 
     @Override
     public void sendPacketImmediately(BedrockPacket packet) {
-        this.getPeer().sendPacket(BedrockBatchWrapper.create(this.subClientId, packet).skipQueue(true));
+        BedrockBatchWrapper batch = BedrockBatchWrapper.create(this.subClientId, packet);
+        batch.setFlag(BatchFlags.SKIP_QUEUE);
+        this.getPeer().sendPacket(batch);
     }
 
     @Override

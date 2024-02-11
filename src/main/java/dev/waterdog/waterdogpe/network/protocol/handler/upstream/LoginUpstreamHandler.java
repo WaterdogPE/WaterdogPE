@@ -18,7 +18,7 @@ package dev.waterdog.waterdogpe.network.protocol.handler.upstream;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.event.defaults.PlayerAuthenticatedEvent;
-import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
@@ -48,7 +48,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
     private boolean loginInitialized;
     // The compression used by this session
     // Defaults to ZLIB for older versions
-    private CompressionAlgorithm compression;
+    private CompressionType compression;
 
     public LoginUpstreamHandler(ProxyServer proxy, BedrockServerSession session) {
         this.proxy = proxy;
@@ -130,7 +130,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
         BedrockCodec codec = this.session.getCodec();
         if (codec == null || codec == BedrockCompat.CODEC) {
-            this.session.setCodec(protocol.getCodec());
+            this.session.getPeer().setProtocol(protocol);
         }
 
         if (protocol.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_30) && this.compression == null) {
@@ -138,7 +138,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             this.session.disconnect("Wrong login flow");
             return PacketSignal.HANDLED;
         } else if (this.compression == null) {
-            this.compression = CompressionAlgorithm.ZLIB;
+            this.compression = CompressionType.ZLIB;
         }
 
         HandshakeEntry handshakeEntry = null;
@@ -157,7 +157,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             if (protocol.equals(ProtocolVersion.MINECRAFT_PE_1_19_60) && handshakeEntry.getClientData().has("GameVersion") &&
                     ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(handshakeEntry.getClientData().get("GameVersion").getAsString())) {;
                 handshakeEntry.setProtocol(protocol = ProtocolVersion.MINECRAFT_PE_1_19_62);
-                this.session.getPeer().setCodec(protocol.getCodec());
+                this.session.getPeer().setProtocol(protocol);
             }
 
             this.proxy.getLogger().info("[{}|{}] <-> Upstream has connected (protocol={} version={})", this.session.getSocketAddress(), handshakeEntry.getDisplayName(),
@@ -172,7 +172,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
                 return PacketSignal.HANDLED;
             }
 
-            this.player = loginEvent.getBaseClass().getConstructor(ProxyServer.class, BedrockServerSession.class, CompressionAlgorithm.class, LoginData.class)
+            this.player = loginEvent.getBaseClass().getConstructor(ProxyServer.class, BedrockServerSession.class, CompressionType.class, LoginData.class)
                     .newInstance(this.proxy, this.session, this.compression, loginData);
             if (!this.proxy.getPlayerManager().registerPlayer(this.player)) {
                 return PacketSignal.HANDLED;

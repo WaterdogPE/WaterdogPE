@@ -15,14 +15,11 @@
 
 package dev.waterdog.waterdogpe.network.connection.peer;
 
-import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.FrameIdCodec;
-import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
-import dev.waterdog.waterdogpe.network.connection.codec.compression.NoopCompressionCodec;
-import dev.waterdog.waterdogpe.network.connection.codec.encryption.BedrockEncryptionDecoder;
-import dev.waterdog.waterdogpe.network.connection.codec.encryption.BedrockEncryptionEncoder;
-import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedSessionInitializer;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.ProxiedCompressionCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -37,9 +34,14 @@ import org.cloudburstmc.protocol.bedrock.BedrockSessionFactory;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.codec.v428.Bedrock_v428;
+import org.cloudburstmc.protocol.bedrock.data.CompressionAlgorithm;
 import org.cloudburstmc.protocol.bedrock.data.PacketCompressionAlgorithm;
+import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionCodec;
+import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionStrategy;
+import org.cloudburstmc.protocol.bedrock.netty.codec.encryption.BedrockEncryptionDecoder;
+import org.cloudburstmc.protocol.bedrock.netty.codec.encryption.BedrockEncryptionEncoder;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 
@@ -50,7 +52,8 @@ import java.util.concurrent.TimeUnit;
 @Log4j2
 public class ProxiedBedrockPeer extends BedrockPeer {
     private BedrockServerSession firstSession;
-    private CompressionAlgorithm compressionAlgorithm;
+    private CompressionStrategy compressionStrategy;
+    private ProtocolVersion version = ProtocolVersion.oldest();
 
     public ProxiedBedrockPeer(Channel channel, BedrockSessionFactory factory) {
         super(channel, factory);
@@ -113,9 +116,13 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     }
 
     private void sendPacket0(BedrockBatchWrapper wrapper) {
-        if (!Objects.equals(wrapper.getAlgorithm(), this.compressionAlgorithm)) {
-            wrapper.setCompressed(null);
+        if (!(wrapper.getAlgorithm() instanceof PacketCompressionAlgorithm)) {
+            wrapper.setCompressed(null); // Do not allow using unsupported algorithms when sending to client
+        } else if (this.version.isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) &&
+                !Objects.equals(wrapper.getAlgorithm(), this.compressionStrategy.getDefaultCompression().getAlgorithm())) {
+            wrapper.setCompressed(null); // Before 1.20.60 dynamic compression is not supported
         }
+
         this.onTick();
         this.getChannel().writeAndFlush(wrapper);
     }
@@ -140,10 +147,18 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         return this.getChannel().pipeline().get(BedrockPacketCodec.class).getHelper();
     }
 
+    @Deprecated
     @Override
     public void setCodec(BedrockCodec codec) {
         Objects.requireNonNull(codec, "codec");
         this.getChannel().pipeline().get(BedrockPacketCodec.class).setCodecHelper(codec, codec.createHelper());
+        this.version = ProtocolVersion.get(codec.getProtocolVersion());
+    }
+
+    public void setProtocol(ProtocolVersion protocol) {
+        Objects.requireNonNull(protocol, "protocol");
+        this.version = protocol;
+        this.getChannel().pipeline().get(BedrockPacketCodec.class).setCodecHelper(protocol.getCodec(), protocol.getCodec().createHelper());
     }
 
     @Override
@@ -169,22 +184,25 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         log.info("Encryption enabled for {}", getSocketAddress());
     }
 
-    @Override
-    public void setCompression(PacketCompressionAlgorithm algorithm) {
-        throw new UnsupportedOperationException("Use setCompression(BedrockCompressionAlgorithm algorithm) instead");
+    public void setCompression(CompressionAlgorithm algorithm) {
+        if (algorithm instanceof CompressionType type && type.getBedrockAlgorithm() != null) {
+            this.setCompression(type.getBedrockAlgorithm());
+            return;
+        }
+        throw new IllegalArgumentException("Unsupported compression algorithm: " + algorithm);
     }
 
-    public void setCompression(CompressionAlgorithm algorithm) {
-        Objects.requireNonNull(algorithm, "algorithm");
+    @Override
+    public void setCompression(CompressionStrategy strategy) {
+        boolean needsPrefix = this.getCodec().getProtocolVersion() >= ProtocolVersion.MINECRAFT_PE_1_20_60.getProtocol();
+
         ChannelHandler handler = this.channel.pipeline().get(CompressionCodec.NAME);
-        if (handler instanceof NoopCompressionCodec) {
-            this.channel.pipeline().remove(CompressionCodec.NAME);
-        } else if (handler != null) {
-            throw new IllegalArgumentException("Compression is already set");
+        if (handler == null) {
+            this.channel.pipeline().addAfter(FrameIdCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
+        } else {
+            this.channel.pipeline().replace(CompressionCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
         }
-        this.channel.pipeline()
-                .addAfter(FrameIdCodec.NAME, CompressionCodec.NAME, ProxiedSessionInitializer.getCompressionCodec(algorithm, this.getRakVersion(), false));
-        this.compressionAlgorithm = algorithm;
+        this.compressionStrategy = strategy;
     }
 
     public void disconnect(String reason) {
@@ -196,13 +214,8 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         return this.channel.config().getOption(RakChannelOption.RAK_PROTOCOL_VERSION);
     }
 
-    @Override
-    public PacketCompressionAlgorithm getCompression() {
-        return this.compressionAlgorithm.getBedrockAlgorithm();
-    }
-
-    public CompressionAlgorithm getCompressionAlgorithm() {
-        return this.compressionAlgorithm;
+    public CompressionStrategy getCompressionStrategy() {
+        return this.compressionStrategy;
     }
 
     public boolean isSplitScreen() {
