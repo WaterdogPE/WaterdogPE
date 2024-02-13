@@ -15,7 +15,7 @@
 
 package dev.waterdog.waterdogpe.utils.config.serializer;
 
-import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionAlgorithm;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
 import net.cubespace.Yamler.Config.Converter.Converter;
 import net.cubespace.Yamler.Config.InternalConverter;
 
@@ -31,10 +31,10 @@ public class CompressionAlgorithmConverter implements Converter {
 
     @Override
     public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
-        if (object instanceof CompressionAlgorithm algorithm) {
+        if (object instanceof CompressionType algorithm) {
             return algorithm.getIdentifier();
         } else {
-            throw new IllegalArgumentException("Can not serialize " + object.getClass().getSimpleName() + " as CompressionAlgorithm");
+            throw new IllegalArgumentException("Can not serialize " + object.getClass().getSimpleName() + " as CompressionType");
         }
     }
 
@@ -43,11 +43,11 @@ public class CompressionAlgorithmConverter implements Converter {
         if (object == null) {
             return null;
         }
-        return CompressionAlgorithm.fromString((String) object);
+        return CompressionType.fromString((String) object);
     }
 
     @Override
     public boolean supports(Class<?> type) {
-        return CompressionAlgorithm.class.isAssignableFrom(type);
+        return CompressionType.class.isAssignableFrom(type);
     }
 }

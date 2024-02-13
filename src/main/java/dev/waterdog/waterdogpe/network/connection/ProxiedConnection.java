@@ -15,8 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.connection;
 
-import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
-import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
+import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
 

@@ -19,7 +19,7 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.BedrockBatchDecoder;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.BedrockBatchEncoder;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.FrameIdCodec;
-import dev.waterdog.waterdogpe.network.connection.codec.compression.*;
+import dev.waterdog.waterdogpe.network.connection.codec.compression.ProxiedCompressionCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec_v1;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec_v2;
@@ -32,7 +32,9 @@ import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.netty.channel.raknet.packet.RakMessage;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
-import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionCodec;
+import org.cloudburstmc.protocol.bedrock.data.CompressionAlgorithm;
+import org.cloudburstmc.protocol.bedrock.data.PacketCompressionAlgorithm;
+import org.cloudburstmc.protocol.bedrock.netty.codec.compression.*;
 import org.cloudburstmc.protocol.common.util.Zlib;
 
 @Log4j2
@@ -40,6 +42,11 @@ import org.cloudburstmc.protocol.common.util.Zlib;
 public abstract class ProxiedSessionInitializer<T extends BedrockSession> extends ChannelInitializer<Channel> {
     public static final FrameIdCodec<RakMessage> RAKNET_FRAME_CODEC = FrameIdCodec.RAK_CODEC.apply(0xfe);
     public static final BedrockBatchDecoder BATCH_DECODER = new BedrockBatchDecoder();
+
+    public static final CompressionStrategy ZLIB_RAW_STRATEGY = new SimpleCompressionStrategy(new ZlibCompression(Zlib.RAW));
+    public static final CompressionStrategy ZLIB_STRATEGY = new SimpleCompressionStrategy(new ZlibCompression(Zlib.DEFAULT));
+    public static final CompressionStrategy SNAPPY_STRATEGY = new SimpleCompressionStrategy(new SnappyCompression());
+    public static final CompressionStrategy NOOP_STRATEGY = new SimpleCompressionStrategy(new NoopCompression());
 
     protected final ProxyServer proxy;
 
@@ -49,7 +56,7 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
 
         channel.pipeline()
                 .addLast(FrameIdCodec.NAME, RAKNET_FRAME_CODEC)
-                .addLast(CompressionCodec.NAME, getCompressionCodec(this.proxy.getConfiguration().getCompression(), rakVersion, true))
+                .addLast(CompressionCodec.NAME, new ProxiedCompressionCodec(getCompressionStrategy(this.proxy.getConfiguration().getCompression(), rakVersion, true), false))
                 .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
                 .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
                 .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion))
@@ -75,22 +82,24 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
         };
     }
 
-    public static ChannelHandler getCompressionCodec(CompressionAlgorithm algorithm, int rakVersion, boolean initial) {
+    public static CompressionStrategy getCompressionStrategy(CompressionAlgorithm algorithm, int rakVersion, boolean initial) {
         return switch (rakVersion) {
-            case 7, 8, 9 -> new ZlibCompressionCodec(Zlib.DEFAULT);
-            case 10 -> new ZlibCompressionCodec(Zlib.RAW);
-            case 11 -> initial ? new NoopCompressionCodec() : getCompressionCodec(algorithm);
+            case 7, 8, 9 -> ZLIB_STRATEGY;
+            case 10 -> ZLIB_RAW_STRATEGY;
+            case 11 -> initial ? NOOP_STRATEGY : getCompressionStrategy(algorithm);
             default -> throw new UnsupportedOperationException("Unsupported RakNet protocol version: " + rakVersion);
         };
     }
 
-    private static ChannelHandler getCompressionCodec(CompressionAlgorithm algorithm) {
-        if (algorithm == CompressionAlgorithm.ZLIB) {
-            return new ZlibCompressionCodec(Zlib.RAW);
-        } else if (algorithm == CompressionAlgorithm.SNAPPY) {
-            return new SnappyCompressionCodec();
+    private static CompressionStrategy getCompressionStrategy(CompressionAlgorithm algorithm) {
+        if (algorithm == PacketCompressionAlgorithm.ZLIB) {
+            return ZLIB_RAW_STRATEGY;
+        } else if (algorithm == PacketCompressionAlgorithm.SNAPPY) {
+            return SNAPPY_STRATEGY;
+        } if (algorithm == PacketCompressionAlgorithm.NONE) {
+            return NOOP_STRATEGY;
         } else {
-            throw new UnsupportedOperationException("Unsupported compression algorithm: " + algorithm);
+            throw new UnsupportedOperationException("Unsupported compression algorithm: " + algorithm + " Maybe you want to use CompressionStrategy instead?");
         }
     }
 }
