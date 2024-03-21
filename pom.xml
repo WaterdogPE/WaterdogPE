@@ -136,6 +136,11 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>r05</version>
+        </dependency>
+        <dependency>
             <groupId>net.minecrell</groupId>
             <artifactId>terminalconsoleappender</artifactId>
             <version>1.3.0</version>

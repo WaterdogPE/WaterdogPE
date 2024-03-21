@@ -98,7 +98,6 @@ public enum ProtocolVersion {
     MINECRAFT_PE_1_20_30(618, Bedrock_v618.CODEC),
     MINECRAFT_PE_1_20_40(622, Bedrock_v622.CODEC),
     MINECRAFT_PE_1_20_50(630, Bedrock_v630.CODEC);
-
     private static final ProtocolVersion[] VALUES = values();
     private static final Int2ObjectMap<ProtocolVersion> VERSIONS = new Int2ObjectOpenHashMap<>();
     static {
