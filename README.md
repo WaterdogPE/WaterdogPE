@@ -4,14 +4,14 @@ SyodogPE is a fork of WaterdogPE with additional featues and fixes.
 For example: You can receive all packets send by the users. You can use this to send sounds for example.
 SyodogPE also fixes some bugs WaterdogPE still has.
 
-WaterdogPE is a brand new Minecraft: Bedrock Edition proxy software developed by the developers of the old Waterdog
+WaterdogPE is a Minecraft: Bedrock Edition proxy software developed by the developers of the old Waterdog
 Proxy.  
 In this new proxy, we are working with Cloudbursts Protocol Library. It takes alot of maintaining effort from us and
 provides us with a nice api to work with.  
 If you want to discuss things without joining the discord server, please use the [Discussions Tab](https://github.com/WaterdogPE/WaterdogPE/discussions)
 
 ## Links
-
+Waterdog Links! Some stuff may be different to SyodogPE
 - [Website](https://waterdog.dev)
 - [Discord](https://discord.gg/sJ452xNugw)
 - [Official documentation](https://docs.waterdog.dev)
@@ -24,35 +24,29 @@ If you haven't used WaterdogPE before, we recommend you to take a look at our [s
 *Please note that the config from the old Waterdog (Bungee) is not compatible with WaterdogPE*
 
 ### Supported Software
-Our goal is to support all commonly used Minecraft: Bedrock server softwares. Spoons and unofficial forks will not be supported due to the lack
-of proper implementation.  
+Our focus lies on PowerNukkitX 2.0 since its the only server software that's worth using. (Besides Nukkit Mot maybe?)
+
 You can find list of currently supported/unsupported software [here](https://docs.waterdog.dev/books/waterdogpe-setup/page/software-compatibility).
 
 ## Compiling
 
-To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
+To compile SyodogPE please visit WaterdogPE's [COMPILING.md](COMPILING.md) guide.
 
 ## Maven usage
 
 ```xml
-<repositories>
-    <repository>
-        <id>waterdog-repo</id>
-        <url>https://repo.waterdog.dev/main</url>
-    </repository>
-</repositories>
+    <repositories>
+		<repository>
+		    <id>jitpack.io</id>
+		    <url>https://jitpack.io</url>
+		</repository>
+	</repositories>
 
 <dependencies>
-    <dependency>
-        <groupId>dev.waterdog.waterdogpe</groupId>
-        <artifactId>waterdog</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
-        <scope>provided</scope>
-    </dependency>
+	<dependency>
+	    <groupId>com.github.Syodo-Development</groupId>
+	    <artifactId>SyodogPE</artifactId>
+	    <version>-SNAPSHOT</version>
+	</dependency>
 </dependencies>
 ```
-
-## Included libraries
-
-- [Yamler: a forked yaml parsing library](https://github.com/WaterdogPE/Yamler)
-- [Protocol: A fork of Nukkits Protocol library with various changes for the WaterdogPE project](https://github.com/WaterdogPE/Protocol)
