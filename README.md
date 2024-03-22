@@ -1,6 +1,8 @@
-# WaterdogPE
-[![Build Status](https://jenkins.waterdog.dev/buildStatus/icon?job=Waterdog%2FWaterdogPE%2Fmaster)](https://jenkins.waterdog.dev/job/Waterdog/job/WaterdogPE/job/master/)
-[![Discord Chat](https://img.shields.io/discord/767330242078834712.svg)](https://discord.gg/QcRRzXX)
+# SyodogPE
+
+SyodogPE is a fork of WaterdogPE with additional featues and fixes.
+For example: You can receive all packets send by the users. You can use this to send sounds for example.
+SyodogPE also fixes some bugs WaterdogPE still has.
 
 WaterdogPE is a brand new Minecraft: Bedrock Edition proxy software developed by the developers of the old Waterdog
 Proxy.  
