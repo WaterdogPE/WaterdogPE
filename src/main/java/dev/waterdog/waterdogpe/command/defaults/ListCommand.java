@@ -39,6 +39,9 @@ public class ListCommand extends Command {
 
     @Override
     public boolean onExecute(CommandSender sender, String alias, String[] args) {
+
+        if(!sender.hasPermission("waterdog.command.list.permission")) return false;
+
         if (args.length >= 1) {
             ServerInfo serverInfo = sender.getProxy().getServerInfo(args[0]);
             sender.sendMessage(serverInfo == null ? "§cServer not found!" : this.buildServerList(serverInfo));

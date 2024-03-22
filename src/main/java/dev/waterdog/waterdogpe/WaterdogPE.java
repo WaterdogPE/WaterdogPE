@@ -47,7 +47,7 @@ public class WaterdogPE {
         System.setProperty("log4j.skipJansi", "false");
 
         MainLogger logger = MainLogger.getLogger();
-        logger.info("§bStarting WaterDogPE proxy software!");
+        logger.info("§bStarting WaterdogPE proxy software!");
         logger.info("§3Software Version: {}", versionInfo.baseVersion());
         logger.info("§3Build Version: {}", versionInfo.buildVersion());
         logger.info("§3Development Build: {}", versionInfo.debug());

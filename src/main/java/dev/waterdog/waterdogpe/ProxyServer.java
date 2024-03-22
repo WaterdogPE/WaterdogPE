@@ -372,7 +372,8 @@ public class ProxyServer {
             return false;
         }
 
-        String[] args = message.split(" ");
+        String[] args = message.split(" (?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+        for(int i = 0; i < args.length; i++) args[i] = args[i].replace("\"", "");
         if (args.length < 1) {
             return false;
         }
