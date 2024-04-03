@@ -79,6 +79,8 @@ public class ProxiedPlayer implements CommandSender {
     private ClientConnection clientConnection;
     private ClientConnection pendingConnection;
 
+    private Map<String, Object> data = new HashMap<String, Object>();
+
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
@@ -903,6 +905,18 @@ public class ProxiedPlayer implements CommandSender {
 
     public String getDisconnectReason() {
         return this.disconnectReason;
+    }
+
+    public Object getData(String key) {
+        return this.data.get(key);
+    }
+
+    public boolean hasData(String key) {
+        return this.data.containsKey(key);
+    }
+
+    public void setData(String key, Object value) {
+        this.data.put(key, value);
     }
 
     @Override
