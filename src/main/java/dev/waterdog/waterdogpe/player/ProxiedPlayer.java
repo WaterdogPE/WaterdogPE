@@ -910,6 +910,12 @@ public class ProxiedPlayer implements CommandSender {
     public Object getData(String key) {
         return this.data.get(key);
     }
+    public Object getData(String key, Object fallback) {
+        if(this.hasData(key)) {
+            return this.data.get(key);
+        } else return fallback;
+    }
+
 
     public boolean hasData(String key) {
         return this.data.containsKey(key);
