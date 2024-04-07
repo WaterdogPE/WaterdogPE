@@ -15,7 +15,6 @@
 
 package dev.waterdog.waterdogpe.network.connection.codec.batch;
 
-import dev.waterdog.waterdogpe.network.connection.codec.BedrockBatchWrapper;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -23,6 +22,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
 import org.cloudburstmc.netty.channel.raknet.RakReliability;
 import org.cloudburstmc.netty.channel.raknet.packet.RakMessage;
+import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 
 import java.util.List;
 import java.util.function.Function;
