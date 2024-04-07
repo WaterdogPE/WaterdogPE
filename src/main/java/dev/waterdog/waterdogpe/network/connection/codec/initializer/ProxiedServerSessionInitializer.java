@@ -24,8 +24,8 @@ import dev.waterdog.waterdogpe.network.protocol.handler.upstream.LoginUpstreamHa
 import io.netty.channel.Channel;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
 import org.cloudburstmc.netty.channel.raknet.RakDisconnectReason;
+import org.cloudburstmc.netty.channel.raknet.config.RakChannelMetrics;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
-import org.cloudburstmc.netty.channel.raknet.config.RakMetrics;
 import org.cloudburstmc.netty.handler.codec.raknet.common.RakSessionCodec;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 
@@ -49,7 +49,7 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
         if (metrics != null) {
             channel.attr(NetworkMetrics.ATTRIBUTE).set(metrics);
         }
-        if (metrics instanceof RakMetrics rakMetrics) {
+        if (metrics instanceof RakChannelMetrics rakMetrics) {
             channel.config().setOption(RakChannelOption.RAK_METRICS, rakMetrics);
         }
 
