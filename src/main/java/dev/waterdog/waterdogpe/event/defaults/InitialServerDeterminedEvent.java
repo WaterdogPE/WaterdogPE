@@ -18,7 +18,9 @@ package dev.waterdog.waterdogpe.event.defaults;
 import dev.waterdog.waterdogpe.event.AsyncEvent;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
 
+@Getter
 @AsyncEvent
 public class InitialServerDeterminedEvent extends PlayerEvent {
 
@@ -26,10 +28,8 @@ public class InitialServerDeterminedEvent extends PlayerEvent {
 
     public InitialServerDeterminedEvent(ProxiedPlayer player, ServerInfo initialServer) {
         super(player);
+
         this.initialServer = initialServer;
     }
 
-    public ServerInfo getInitialServer() {
-        return this.initialServer;
-    }
 }

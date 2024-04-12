@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.event;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import lombok.Getter;
 
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -30,6 +31,7 @@ import java.util.function.Consumer;
 public class EventManager {
 
     private final ProxyServer proxy;
+    @Getter
     private final ExecutorService threadedExecutor;
     private final Object2ObjectOpenHashMap<Class<? extends Event>, EventHandler> handlerMap = new Object2ObjectOpenHashMap<>();
 
@@ -73,9 +75,5 @@ public class EventManager {
     public <T extends Event> CompletableFuture<T> callEvent(T event) {
         EventHandler eventHandler = this.handlerMap.computeIfAbsent(event.getClass(), e -> new EventHandler(event.getClass(), this));
         return eventHandler.handle(event);
-    }
-
-    public ExecutorService getThreadedExecutor() {
-        return this.threadedExecutor;
     }
 }

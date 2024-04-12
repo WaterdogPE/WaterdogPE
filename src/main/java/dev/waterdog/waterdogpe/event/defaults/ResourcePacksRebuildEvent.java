@@ -17,25 +17,15 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.AsyncEvent;
 import dev.waterdog.waterdogpe.event.Event;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.packet.ResourcePackStackPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ResourcePacksInfoPacket;
 
+@Getter
+@AllArgsConstructor
 @AsyncEvent
 public class ResourcePacksRebuildEvent extends Event {
-
     private final ResourcePacksInfoPacket packsInfoPacket;
     private final ResourcePackStackPacket stackPacket;
-
-    public ResourcePacksRebuildEvent(ResourcePacksInfoPacket packsInfoPacket, ResourcePackStackPacket stackPacket) {
-        this.packsInfoPacket = packsInfoPacket;
-        this.stackPacket = stackPacket;
-    }
-
-    public ResourcePacksInfoPacket getPacksInfoPacket() {
-        return this.packsInfoPacket;
-    }
-
-    public ResourcePackStackPacket getStackPacket() {
-        return this.stackPacket;
-    }
 }

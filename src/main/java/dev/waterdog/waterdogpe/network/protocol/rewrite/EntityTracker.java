@@ -124,12 +124,12 @@ public class EntityTracker implements BedrockPacketHandler {
     public final PacketSignal handle(SetScorePacket packet) {
         switch(packet.getAction()) {
             case SET:
-                for(ScoreInfo info : packet.getInfos()) {
+                for (ScoreInfo info : packet.getInfos()) {
                     this.player.getScoreInfos().put(info.getScoreboardId(), info);
                 }
                 break;
             case REMOVE:
-                for(ScoreInfo info : packet.getInfos()) {
+                for (ScoreInfo info : packet.getInfos()) {
                     this.player.getScoreInfos().remove(info.getScoreboardId());
                 }
                 break;

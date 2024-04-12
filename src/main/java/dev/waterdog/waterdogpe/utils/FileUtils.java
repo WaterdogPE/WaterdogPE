@@ -74,7 +74,7 @@ public class FileUtils {
             StringBuilder stringBuilder = new StringBuilder();
             temp = br.readLine();
             while (temp != null) {
-                if (stringBuilder.length() != 0) {
+                if (!stringBuilder.isEmpty()) {
                     stringBuilder.append("\n");
                 }
                 stringBuilder.append(temp);
@@ -101,9 +101,7 @@ public class FileUtils {
             throw new IllegalArgumentException("Content must not be null!");
         }
 
-        if (!file.exists()) {
-            file.createNewFile();
-        }
+        file.createNewFile();
 
         FileOutputStream stream = new FileOutputStream(file);
 

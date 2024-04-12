@@ -18,33 +18,20 @@ package dev.waterdog.waterdogpe.event.defaults;
 import dev.waterdog.waterdogpe.command.CommandSender;
 import dev.waterdog.waterdogpe.event.CancellableEvent;
 import dev.waterdog.waterdogpe.event.Event;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Called whenever a command is called right before a player dispatches a proxy command.
  * Cancelling it will lead to it not executing the command.
  * Can be used to restrict access to command.
  */
+@Getter
+@Setter
+@AllArgsConstructor
 public class DispatchCommandEvent extends Event implements CancellableEvent {
-
     private final CommandSender sender;
     private final String command;
     private final String[] args;
-
-    public DispatchCommandEvent(CommandSender sender, String command, String[] args) {
-        this.sender = sender;
-        this.command = command;
-        this.args = args;
-    }
-
-    public CommandSender getSender() {
-        return this.sender;
-    }
-
-    public String getCommand() {
-        return this.command;
-    }
-
-    public String[] getArgs() {
-        return this.args;
-    }
 }

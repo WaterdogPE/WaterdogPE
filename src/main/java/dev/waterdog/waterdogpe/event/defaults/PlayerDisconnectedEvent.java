@@ -17,10 +17,12 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.AsyncEvent;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
 
 /**
  * Called whenever a player gets kicked from the Server (ProxiedPlayer#disconnect)
  */
+@Getter
 @AsyncEvent
 public class PlayerDisconnectedEvent extends PlayerEvent {
 
@@ -28,10 +30,7 @@ public class PlayerDisconnectedEvent extends PlayerEvent {
 
     public PlayerDisconnectedEvent(ProxiedPlayer player, String reason) {
         super(player);
-        this.reason = reason;
-    }
 
-    public String getReason() {
-        return this.reason;
+        this.reason = reason;
     }
 }

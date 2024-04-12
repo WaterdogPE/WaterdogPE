@@ -17,6 +17,9 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.Event;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -25,6 +28,8 @@ import java.util.Collection;
  * This event is called when the Proxy receives a ping packet from a client.
  * It can be used to modify data, for example to combine proxy player counts.
  */
+@Getter
+@Setter
 public class ProxyPingEvent extends Event {
 
     private final InetSocketAddress address;
@@ -34,6 +39,7 @@ public class ProxyPingEvent extends Event {
     private String edition;
     private String version;
     private Collection<ProxiedPlayer> players;
+    @Getter(AccessLevel.NONE)
     private int playerCount = -1;
     private int maximumPlayerCount;
 
@@ -48,71 +54,7 @@ public class ProxyPingEvent extends Event {
         this.address = address;
     }
 
-    public String getMotd() {
-        return this.motd;
-    }
-
-    public void setMotd(String motd) {
-        this.motd = motd;
-    }
-
-    public String getSubMotd() {
-        return this.subMotd;
-    }
-
-    public void setSubMotd(String subMotd) {
-        this.subMotd = subMotd;
-    }
-
-    public String getGameType() {
-        return this.gameType;
-    }
-
-    public void setGameType(String gameType) {
-        this.gameType = gameType;
-    }
-
-    public String getEdition() {
-        return this.edition;
-    }
-
-    public void setEdition(String edition) {
-        this.edition = edition;
-    }
-
-    public String getVersion() {
-        return this.version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public Collection<ProxiedPlayer> getPlayers() {
-        return this.players;
-    }
-
-    public void setPlayers(Collection<ProxiedPlayer> players) {
-        this.players = players;
-    }
-
     public int getPlayerCount() {
         return this.playerCount > 0 ? this.playerCount : this.players.size();
-    }
-
-    public void setPlayerCount(int playerCount) {
-        this.playerCount = playerCount;
-    }
-
-    public int getMaximumPlayerCount() {
-        return this.maximumPlayerCount;
-    }
-
-    public void setMaximumPlayerCount(int maximumPlayerCount) {
-        this.maximumPlayerCount = maximumPlayerCount;
-    }
-
-    public InetSocketAddress getAddress() {
-        return this.address;
     }
 }

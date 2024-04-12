@@ -77,15 +77,10 @@ public class PlayerManager {
             return null;
         }
 
-        for (ProxiedPlayer player : this.players.values()) {
-            if (!player.getName().toLowerCase().startsWith(playerName.toLowerCase())) {
-                continue;
-            }
-            if (player.getName().length() - playerName.length() == 0) {
-                return player;
-            }
-        }
-        return null;
+        return this.players.values().stream()
+                .filter(player -> player.getName().equalsIgnoreCase(playerName))
+                .findFirst()
+                .orElse(null);
     }
     
     public int getPlayerCount() {

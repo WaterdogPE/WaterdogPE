@@ -35,12 +35,12 @@ public class ClientEventHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx) {
         this.player.onDownstreamDisconnected(this.connection);
     }
 
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object event) throws Exception {
+    public void userEventTriggered(ChannelHandlerContext ctx, Object event) {
         if (!(event instanceof RakDisconnectReason reason)) {
             return;
         }
@@ -51,7 +51,7 @@ public class ClientEventHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (!ctx.channel().isActive()) {
             return;
         }

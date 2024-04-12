@@ -20,6 +20,8 @@ import dev.waterdog.waterdogpe.network.PacketDirection;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
@@ -34,12 +36,14 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 @Log4j2
+@Getter
 public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBatchWrapper, BedrockBatchWrapper> {
     public static final String NAME = "bedrock-packet-codec";
 
     private BedrockCodec codec = BedrockCompat.CODEC;
     private BedrockCodecHelper helper = codec.createHelper();
 
+    @Getter(AccessLevel.NONE)
     private boolean alwaysDecode;
 
     @Override
@@ -147,14 +151,6 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         this.codec = requireNonNull(codec, "Codec cannot be null");
         this.helper = requireNonNull(helper, "Helper can not be null");
         return this;
-    }
-
-    public BedrockCodec getCodec() {
-        return this.codec;
-    }
-
-    public BedrockCodecHelper getHelper() {
-        return this.helper;
     }
 
     public BedrockPacketCodec setAlwaysDecode(boolean alwaysDecode) {

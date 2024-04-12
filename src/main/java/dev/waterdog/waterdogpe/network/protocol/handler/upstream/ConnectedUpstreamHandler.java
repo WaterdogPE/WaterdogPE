@@ -74,19 +74,12 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler implements
         PlayerChatEvent event = new PlayerChatEvent(this.player, packet.getMessage());
         ProxyServer.getInstance().getEventManager().callEvent(event);
         packet.setMessage(event.getMessage());
-        if (event.isCancelled()) {
-            return Signals.CANCEL;
-        }
-        return PacketSignal.HANDLED;
+        return event.isCancelled() ? Signals.CANCEL : PacketSignal.HANDLED;
     }
 
     @Override
     public final PacketSignal handle(CommandRequestPacket packet) {
-        String message = packet.getCommand();
-        if (this.player.getProxy().handlePlayerCommand(this.player, message)) {
-            return Signals.CANCEL;
-        }
-        return PacketSignal.UNHANDLED;
+        return this.player.getProxy().handlePlayerCommand(this.player, packet.getCommand()) ? Signals.CANCEL : PacketSignal.UNHANDLED;
     }
 
     @Override

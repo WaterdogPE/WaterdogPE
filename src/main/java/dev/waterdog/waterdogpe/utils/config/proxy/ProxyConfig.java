@@ -39,11 +39,11 @@ public class ProxyConfig extends YamlConfig {
 
     @Path("listener.motd")
     @Comment("The Motd which will be displayed in the server tab of a player and returned during ping")
-    private String motd = "§bWaterdog§3PE";
+    private String motd = "§bSyodog§3PE";
 
     @Path("listener.name")
     @Comment("The name that is shown up in the player list (pause menu)")
-    private String name = "§bWaterdog§3PE";
+    private String name = "§bSyodog§3PE";
 
     @Path("listener.priorities")
     @Comment("The server priority list. If not changed by plugins, the proxy will connect the player to the first of those servers")

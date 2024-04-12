@@ -16,7 +16,9 @@
 package dev.waterdog.waterdogpe.utils.types;
 
 import dev.waterdog.waterdogpe.ProxyServer;
+import lombok.Getter;
 
+@Getter
 public class TranslationContainer extends TextContainer {
 
     private String[] params;
@@ -37,10 +39,6 @@ public class TranslationContainer extends TextContainer {
 
     public String getTranslated() {
         return ProxyServer.getInstance().translate(this);
-    }
-
-    public String[] getParams() {
-        return this.params;
     }
 
     @Override

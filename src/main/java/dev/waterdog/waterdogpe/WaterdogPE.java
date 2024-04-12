@@ -109,7 +109,7 @@ public class WaterdogPE {
 
         String branchName = properties.getProperty("git.branch", "unknown");
         String commitId = properties.getProperty("git.commit.id.abbrev", "unknown");
-        boolean debug = branchName.equals("release") ? false : VersionInfo.DEFAULT_DEBUG;
+        boolean debug = !branchName.equals("release") && VersionInfo.DEFAULT_DEBUG;
         return new VersionInfo(branchName, commitId, debug);
     }
 

@@ -18,12 +18,15 @@ package dev.waterdog.waterdogpe.event.defaults;
 import dev.waterdog.waterdogpe.event.AsyncEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Called when PlayStatusPacket with PLAYER_SPAWN from downstream server is received.
  * At this point player is really connected to downstream server. Some downstream servers have different handlers per login stage.
  * To signalize last stage of login, we can use this event. For example applies on PMMP4 downstream servers.
  */
+@Getter
 @AsyncEvent
 public class PostTransferCompleteEvent extends PlayerEvent {
 
@@ -31,11 +34,8 @@ public class PostTransferCompleteEvent extends PlayerEvent {
 
     public PostTransferCompleteEvent(ClientConnection connection, ProxiedPlayer player) {
         super(player);
-        this.connection = connection;
-    }
 
-    public ClientConnection getConnection() {
-        return this.connection;
+        this.connection = connection;
     }
 }
 

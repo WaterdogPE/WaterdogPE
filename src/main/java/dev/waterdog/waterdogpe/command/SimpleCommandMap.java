@@ -81,7 +81,7 @@ public class SimpleCommandMap implements CommandMap {
     public Command getCommand(String name) {
         Command result = this.commandsMap.get(name.toLowerCase());
 
-        if(result == null){
+        if (result == null) {
             result = this.aliasesMap.get(name.toLowerCase());
         }
 

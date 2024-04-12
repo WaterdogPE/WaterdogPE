@@ -17,37 +17,26 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Signalizing that player is being transferred to a new server.
  * This even is not cancellable. Use PreTransferEvent to cancel transfer.
  */
+@Getter
 public class ServerTransferEvent extends PlayerEvent {
 
     private final ServerInfo sourceServer;
     private final ServerInfo targetServer;
+    @Setter
     private boolean transferScreenAllowed = true;
 
     public ServerTransferEvent(ProxiedPlayer player, ServerInfo sourceServer, ServerInfo targetServer) {
         super(player);
+
         this.sourceServer = sourceServer;
         this.targetServer = targetServer;
-    }
-
-    public ServerInfo getSourceServer() {
-        return this.sourceServer;
-    }
-
-    public ServerInfo getTargetServer() {
-        return this.targetServer;
-    }
-
-    public void setTransferScreenAllowed(boolean transferScreenAllowed) {
-        this.transferScreenAllowed = transferScreenAllowed;
-    }
-
-    public boolean isTransferScreenAllowed() {
-        return this.transferScreenAllowed;
     }
 }
 

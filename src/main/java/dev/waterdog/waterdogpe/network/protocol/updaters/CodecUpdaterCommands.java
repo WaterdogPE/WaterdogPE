@@ -27,9 +27,4 @@ public class CodecUpdaterCommands implements ProtocolCodecUpdater {
         builder.registerPacket(AvailableCommandsPacket::new, definition.getSerializer(), definition.getId());
         return builder;
     }
-
-    @Override
-    public int getRequiredVersion() {
-        return -1;
-    }
 }

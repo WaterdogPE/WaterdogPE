@@ -30,7 +30,7 @@ public class InetSocketAddressConverter implements Converter {
     }
 
     @Override
-    public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
+    public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) {
         if (object == null) {
             return null;
         }
@@ -39,7 +39,7 @@ public class InetSocketAddressConverter implements Converter {
     }
 
     @Override
-    public Object fromConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
+    public Object fromConfig(Class<?> type, Object object, ParameterizedType parameterizedType) {
         if (object == null) {
             return null;
         }

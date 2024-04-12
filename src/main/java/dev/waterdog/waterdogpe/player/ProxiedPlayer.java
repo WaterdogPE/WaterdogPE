@@ -25,6 +25,8 @@ import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
 import dev.waterdog.waterdogpe.network.protocol.user.Platform;
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.InitialHandler;
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.SwitchDownstreamHandler;
+import lombok.AccessLevel;
+import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandOriginData;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandOriginType;
@@ -54,39 +56,51 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Base Player class.
  * Base Management of the Player System is done in here.
  */
+@Getter
 public class ProxiedPlayer implements CommandSender {
+    @Getter(AccessLevel.NONE)
     private final ProxyServer proxy;
 
     private final BedrockServerSession connection;
     private final CompressionType compression;
 
+    @Getter(AccessLevel.NONE)
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
+    @Getter(AccessLevel.NONE)
     private final AtomicBoolean loginCompleted = new AtomicBoolean(false);
     private volatile String disconnectReason;
-
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
     private final RewriteMaps rewriteMaps;
     private final LongSet entities = LongSets.synchronize(new LongOpenHashSet());
     private final LongSet bossbars = LongSets.synchronize(new LongOpenHashSet());
+    @Getter(AccessLevel.NONE)
     private final ObjectSet<UUID> players = ObjectSets.synchronize(new ObjectOpenHashSet<>());
     private final ObjectSet<String> scoreboards = ObjectSets.synchronize(new ObjectOpenHashSet<>());
     private final Long2ObjectMap<ScoreInfo> scoreInfos = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
     private final Long2LongMap entityLinks = Long2LongMaps.synchronize(new Long2LongOpenHashMap());
     private final LongSet chunkBlobs = LongSets.synchronize(new LongOpenHashSet());
+    @Getter(AccessLevel.NONE)
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
+    @Getter(AccessLevel.NONE)
     private final Collection<ServerInfo> pendingServers = ObjectCollections.synchronize(new ObjectArrayList<>());
+    @Getter(AccessLevel.NONE)
     private ClientConnection clientConnection;
+    @Getter(AccessLevel.NONE)
     private ClientConnection pendingConnection;
 
+    @Getter(AccessLevel.NONE)
     private Map<String, Object> data = new HashMap<String, Object>();
 
+    @Getter(AccessLevel.NONE)
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
      * Since first StarGamePacket was received we start with entity id and block rewrite.
      */
+    @Getter(AccessLevel.NONE)
     private volatile boolean canRewrite = false;
+    @Getter(AccessLevel.NONE)
     private volatile boolean hasUpstreamBridge = false;
     /**
      * Some downstream server software require strict packet sending policy (like PMMP4).
@@ -94,16 +108,19 @@ public class ProxiedPlayer implements CommandSender {
      * Using this bool allows tells us if we except post-complete phase operation.
      * See ConnectedDownstreamHandler and SwitchDownstreamHandler for exact usage.
      */
+    @Getter(AccessLevel.NONE)
     private volatile boolean acceptPlayStatus = false;
     /**
      * Used to determine if proxy can send resource packs packets to player.
      * This value is changed by PlayerResourcePackInfoSendEvent.
      */
+    @Getter(AccessLevel.NONE)
     private volatile boolean acceptResourcePacks = true;
     /**
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
      */
+    @Getter
     private final Collection<PluginPacketHandler> pluginPacketHandlers = new ObjectArrayList<>();
 
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, CompressionType compression, LoginData loginData) {
@@ -313,8 +330,8 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public void disconnect(TextContainer message) {
-        if (message instanceof TranslationContainer) {
-            this.disconnect(((TranslationContainer) message).getTranslated());
+        if (message instanceof TranslationContainer container) {
+            this.disconnect(container.getTranslated());
         } else {
             this.disconnect(message.getMessage());
         }
@@ -431,8 +448,8 @@ public class ProxiedPlayer implements CommandSender {
      */
     @Override
     public void sendMessage(TextContainer message) {
-        if (message instanceof TranslationContainer) {
-            this.sendTranslation((TranslationContainer) message);
+        if (message instanceof TranslationContainer container) {
+            this.sendTranslation(container);
         } else {
             this.sendMessage(message.getMessage());
         }
@@ -531,11 +548,8 @@ public class ProxiedPlayer implements CommandSender {
      * @param subtitle the subtitle to send as a string
      */
     public void setSubtitle(String subtitle) {
-        SetTitlePacket packet = new SetTitlePacket();
-        packet.setType(SetTitlePacket.Type.SUBTITLE);
+        SetTitlePacket packet = this.createSetTitlePacket(SetTitlePacket.Type.SUBTITLE);
         packet.setText(subtitle);
-        packet.setXuid(this.getXuid());
-        packet.setPlatformOnlineId("");
         this.sendPacket(packet);
     }
 
@@ -547,14 +561,11 @@ public class ProxiedPlayer implements CommandSender {
      * @param fadeout  the fade-out time of the title
      */
     public void setTitleAnimationTimes(int fadein, int duration, int fadeout) {
-        SetTitlePacket packet = new SetTitlePacket();
-        packet.setType(SetTitlePacket.Type.TIMES);
+        SetTitlePacket packet = this.createSetTitlePacket(SetTitlePacket.Type.TIMES);
         packet.setFadeInTime(fadein);
         packet.setStayTime(duration);
         packet.setFadeOutTime(fadeout);
-        packet.setXuid(this.getXuid());
         packet.setText("");
-        packet.setPlatformOnlineId("");
         this.sendPacket(packet);
     }
 
@@ -564,11 +575,8 @@ public class ProxiedPlayer implements CommandSender {
      * @param text the text to send
      */
     private void setTitle(String text) {
-        SetTitlePacket packet = new SetTitlePacket();
-        packet.setType(SetTitlePacket.Type.TITLE);
+        SetTitlePacket packet = this.createSetTitlePacket(SetTitlePacket.Type.TITLE);
         packet.setText(text);
-        packet.setXuid(this.getXuid());
-        packet.setPlatformOnlineId("");
         this.sendPacket(packet);
     }
 
@@ -576,11 +584,8 @@ public class ProxiedPlayer implements CommandSender {
      * Clears the title of the player
      */
     public void clearTitle() {
-        SetTitlePacket packet = new SetTitlePacket();
-        packet.setType(SetTitlePacket.Type.CLEAR);
+        SetTitlePacket packet = this.createSetTitlePacket(SetTitlePacket.Type.CLEAR);
         packet.setText("");
-        packet.setXuid(this.getXuid());
-        packet.setPlatformOnlineId("");
         this.sendPacket(packet);
     }
 
@@ -588,12 +593,17 @@ public class ProxiedPlayer implements CommandSender {
      * Resets all currently applied title settings
      */
     public void resetTitleSettings() {
-        SetTitlePacket packet = new SetTitlePacket();
-        packet.setType(SetTitlePacket.Type.RESET);
+        SetTitlePacket packet = this.createSetTitlePacket(SetTitlePacket.Type.RESET);
         packet.setText("");
+        this.sendPacket(packet);
+    }
+
+    private SetTitlePacket createSetTitlePacket(SetTitlePacket.Type type) {
+        SetTitlePacket packet = new SetTitlePacket();
+        packet.setType(type);
         packet.setXuid(this.getXuid());
         packet.setPlatformOnlineId("");
-        this.sendPacket(packet);
+        return packet;
     }
 
     public void sendTitle(String title) {
@@ -794,20 +804,8 @@ public class ProxiedPlayer implements CommandSender {
         return this.pendingConnection == null ? null : this.pendingConnection.getServerInfo();
     }
 
-    public BedrockServerSession getConnection() {
-        return this.connection;
-    }
-
     public boolean isConnected() {
         return !this.disconnected.get() && this.connection != null && this.connection.isConnected();
-    }
-
-    public RewriteMaps getRewriteMaps() {
-        return this.rewriteMaps;
-    }
-
-    public LoginData getLoginData() {
-        return this.loginData;
     }
 
     @Override
@@ -839,10 +837,6 @@ public class ProxiedPlayer implements CommandSender {
         return this.loginData.getProtocol();
     }
 
-    public RewriteData getRewriteData() {
-        return this.rewriteData;
-    }
-
     public void setCanRewrite(boolean canRewrite) {
         this.canRewrite = canRewrite;
     }
@@ -855,32 +849,8 @@ public class ProxiedPlayer implements CommandSender {
         return this.hasUpstreamBridge;
     }
 
-    public LongSet getEntities() {
-        return this.entities;
-    }
-
-    public LongSet getBossbars() {
-        return this.bossbars;
-    }
-
     public Collection<UUID> getPlayers() {
         return this.players;
-    }
-
-    public ObjectSet<String> getScoreboards() {
-        return this.scoreboards;
-    }
-
-    public Long2ObjectMap<ScoreInfo> getScoreInfos() {
-        return this.scoreInfos;
-    }
-
-    public Long2LongMap getEntityLinks() {
-        return this.entityLinks;
-    }
-
-    public LongSet getChunkBlobs() {
-        return this.chunkBlobs;
     }
 
     public void setAcceptPlayStatus(boolean acceptPlayStatus) {
@@ -893,18 +863,6 @@ public class ProxiedPlayer implements CommandSender {
 
     public boolean acceptResourcePacks() {
         return this.acceptResourcePacks;
-    }
-
-    public CompressionType getCompression() {
-        return this.compression;
-    }
-
-    public Collection<PluginPacketHandler> getPluginPacketHandlers() {
-        return this.pluginPacketHandlers;
-    }
-
-    public String getDisconnectReason() {
-        return this.disconnectReason;
     }
 
     public Object getData(String key) {

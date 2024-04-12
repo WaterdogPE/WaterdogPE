@@ -41,10 +41,8 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
         PackManager packManager = this.player.getProxy().getPackManager();
 
         switch (packet.getStatus()) {
-            case REFUSED:
-                this.player.disconnect("disconnectionScreen.noReason");
-                break;
-            case SEND_PACKS:
+            case REFUSED -> this.player.disconnect("disconnectionScreen.noReason");
+            case SEND_PACKS -> {
                 for (String packIdVer : packet.getPackIds()) {
                     ResourcePackDataInfoPacket response = packManager.packInfoFromIdVer(packIdVer);
                     if (response == null) {
@@ -54,17 +52,17 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
                     this.pendingPacks.offer(response);
                 }
                 this.sendNextPacket();
-                break;
-            case HAVE_ALL_PACKS:
+            }
+            case HAVE_ALL_PACKS -> {
                 PlayerResourcePackApplyEvent event = new PlayerResourcePackApplyEvent(this.player, packManager.getStackPacket());
                 this.player.getProxy().getEventManager().callEvent(event);
                 this.player.getConnection().sendPacket(event.getStackPacket());
-                break;
-            case COMPLETED:
+            }
+            case COMPLETED -> {
                 if (!this.player.hasUpstreamBridge()) {
                     this.player.initialConnect(); // First connection
                 }
-                break;
+            }
         }
 
         return this.cancel();

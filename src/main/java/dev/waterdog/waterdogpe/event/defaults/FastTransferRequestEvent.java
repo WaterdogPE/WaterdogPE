@@ -18,7 +18,11 @@ package dev.waterdog.waterdogpe.event.defaults;
 import dev.waterdog.waterdogpe.event.CancellableEvent;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class FastTransferRequestEvent extends PlayerEvent implements CancellableEvent {
 
     private ServerInfo serverInfo;
@@ -27,32 +31,9 @@ public class FastTransferRequestEvent extends PlayerEvent implements Cancellable
 
     public FastTransferRequestEvent(ServerInfo serverInfo, ProxiedPlayer player, String address, int port) {
         super(player);
+
         this.serverInfo = serverInfo;
         this.address = address;
-        this.port = port;
-    }
-
-    public ServerInfo getServerInfo() {
-        return this.serverInfo;
-    }
-
-    public void setServerInfo(ServerInfo serverInfo) {
-        this.serverInfo = serverInfo;
-    }
-
-    public String getAddress() {
-        return this.address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public int getPort() {
-        return this.port;
-    }
-
-    public void setPort(int port) {
         this.port = port;
     }
 }

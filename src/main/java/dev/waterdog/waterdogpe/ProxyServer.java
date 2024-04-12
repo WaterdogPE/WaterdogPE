@@ -60,6 +60,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.unix.UnixChannelOption;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
@@ -71,7 +74,9 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
 
+@Getter
 public class ProxyServer {
+    @Getter
     private static ProxyServer instance;
 
     private final Path dataPath;
@@ -79,6 +84,8 @@ public class ProxyServer {
     private final Path packsPath;
 
     private final MainLogger logger;
+
+    @Getter(AccessLevel.NONE)
     private final TerminalConsole console;
 
     private final ConfigurationManager configurationManager;
@@ -90,25 +97,35 @@ public class ProxyServer {
 
     private final ServerInfoMap serverInfoMap = new ServerInfoMap();
 
+    @Getter(AccessLevel.NONE)
     private final long serverId;
+    @Getter(AccessLevel.NONE)
     private final List<Channel> serverChannels = new ObjectArrayList<>();
 
     private QueryHandler queryHandler;
 
     private CommandMap commandMap;
-    private final ConsoleCommandSender commandSender;
+
+    private final ConsoleCommandSender consoleSender;
 
     private final SecurityManager securityManager;
     private final ErrorReporting errorReporting;
 
+    @Setter
     private IReconnectHandler reconnectHandler;
+    @Setter
     private IJoinHandler joinHandler;
+    @Setter
     private IForcedHostHandler forcedHostHandler;
+
     private NetworkMetrics networkMetrics;
     private final EventLoopGroup bossEventLoopGroup;
     private final EventLoopGroup workerEventLoopGroup;
+    @Getter(AccessLevel.NONE)
     private final ScheduledExecutorService tickExecutor;
+    @Getter(AccessLevel.NONE)
     private ScheduledFuture<?> tickFuture;
+    @Getter(AccessLevel.NONE)
     private volatile boolean shutdown = false;
     private int currentTick = 0;
 
@@ -186,7 +203,7 @@ public class ProxyServer {
         this.eventManager = new EventManager(this);
         this.packManager = new PackManager(this);
         this.securityManager = new SecurityManager(this);
-        this.commandSender = new ConsoleCommandSender(this);
+        this.consoleSender = new ConsoleCommandSender(this);
         this.commandMap = new DefaultCommandMap(this, SimpleCommandMap.DEFAULT_PREFIX);
         this.console = new TerminalConsole(this);
         this.serverId = ThreadLocalRandom.current().nextLong();
@@ -197,10 +214,6 @@ public class ProxyServer {
         this.joinHandler = this.configurationManager.loadServiceProvider(this.getConfiguration().getJoinHandler(), IJoinHandler.class, this.pluginManager);
 
         this.boot();
-    }
-
-    public static ProxyServer getInstance() {
-        return instance;
     }
 
     private void boot() {
@@ -324,9 +337,9 @@ public class ProxyServer {
     private void shutdown0() throws Exception {
         this.pluginManager.disableAllPlugins();
         String disconnectReason = new TranslationContainer("waterdog.server.shutdown").getTranslated();
-        for (Map.Entry<UUID, ProxiedPlayer> player : this.playerManager.getPlayers().entrySet()) {
-            this.logger.info("Disconnecting " + player.getValue().getName());
-            player.getValue().disconnect(disconnectReason);
+        for (ProxiedPlayer player : this.playerManager.getPlayers().values()) {
+            this.logger.info("Disconnecting " + player.getName());
+            player.disconnect(disconnectReason);
         }
         Thread.sleep(500); // Give small delay to send packet
 
@@ -394,23 +407,11 @@ public class ProxyServer {
 
         DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs);
         this.eventManager.callEvent(event);
-        return !event.isCancelled() && this.commandMap.handleCommand(sender, args[0], shiftedArgs);
+        return !event.isCancelled() && this.commandMap.handleCommand(event.getSender(), event.getCommand(), event.getArgs());
     }
 
     public boolean isRunning() {
         return !this.shutdown;
-    }
-
-    public MainLogger getLogger() {
-        return this.logger;
-    }
-
-    public Path getDataPath() {
-        return this.dataPath;
-    }
-
-    public ConfigurationManager getConfigurationManager() {
-        return this.configurationManager;
     }
 
     public ProxyConfig getConfiguration() {
@@ -423,14 +424,6 @@ public class ProxyServer {
 
     public LangConfig getLanguageConfig() {
         return this.configurationManager.getLangConfig();
-    }
-
-    public WaterdogScheduler getScheduler() {
-        return this.scheduler;
-    }
-
-    public PlayerManager getPlayerManager() {
-        return this.playerManager;
     }
 
     public ProxiedPlayer getPlayer(UUID uuid) {
@@ -528,69 +521,9 @@ public class ProxyServer {
         return this.serverInfoMap.values();
     }
 
-    public ServerInfoMap getServerInfoMap() {
-        return this.serverInfoMap;
-    }
-
-    public Path getPluginPath() {
-        return this.pluginPath;
-    }
-
-    public PluginManager getPluginManager() {
-        return this.pluginManager;
-    }
-
-    public int getCurrentTick() {
-        return this.currentTick;
-    }
-
-    public EventManager getEventManager() {
-        return this.eventManager;
-    }
-
-    public PackManager getPackManager() {
-        return this.packManager;
-    }
-
-    public QueryHandler getQueryHandler() {
-        return this.queryHandler;
-    }
-
-    public CommandMap getCommandMap() {
-        return this.commandMap;
-    }
-
     public void setCommandMap(CommandMap commandMap) {
         Preconditions.checkNotNull(commandMap, "Command map can not be null!");
         this.commandMap = commandMap;
-    }
-
-    public ConsoleCommandSender getConsoleSender() {
-        return this.commandSender;
-    }
-
-    public IJoinHandler getJoinHandler() {
-        return this.joinHandler;
-    }
-
-    public void setJoinHandler(IJoinHandler joinHandler) {
-        this.joinHandler = joinHandler;
-    }
-
-    public IReconnectHandler getReconnectHandler() {
-        return this.reconnectHandler;
-    }
-
-    public IForcedHostHandler getForcedHostHandler() {
-        return forcedHostHandler;
-    }
-
-    public void setForcedHostHandler(IForcedHostHandler forcedHostHandler) {
-        this.forcedHostHandler = forcedHostHandler;
-    }
-
-    public NetworkMetrics getNetworkMetrics() {
-        return this.networkMetrics;
     }
 
     public void setNetworkMetrics(NetworkMetrics metrics) {
@@ -598,24 +531,8 @@ public class ProxyServer {
         this.networkMetrics = metrics;
     }
 
-    public void setReconnectHandler(IReconnectHandler reconnectHandler) {
-        this.reconnectHandler = reconnectHandler;
-    }
-
     @Deprecated
     public boolean isDebug() {
         return WaterdogPE.version().debug();
-    }
-
-    public SecurityManager getSecurityManager() {
-        return this.securityManager;
-    }
-
-    public EventLoopGroup getWorkerEventLoopGroup() {
-        return this.workerEventLoopGroup;
-    }
-
-    public ErrorReporting getErrorReporting() {
-        return errorReporting;
     }
 }

@@ -27,6 +27,7 @@ import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
+import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
 import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ServerToClientHandshakePacket;
@@ -55,6 +56,7 @@ public class HandshakeUtils {
     private static final ECPublicKey MOJANG_PUBLIC_KEY_OLD;
     private static final ECPublicKey MOJANG_PUBLIC_KEY;
 
+    @Getter
     private static final KeyPair privateKeyPair;
 
     static {
@@ -68,10 +70,6 @@ public class HandshakeUtils {
         } catch (Exception e) {
             throw new RuntimeException("Unable to generate private keyPair!", e);
         }
-    }
-
-    public static KeyPair getPrivateKeyPair() {
-        return privateKeyPair;
     }
 
     public static boolean validateChain(List<String> chainArray, boolean strict) throws Exception {
@@ -164,7 +162,7 @@ public class HandshakeUtils {
 
     public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, ProtocolVersion protocol, boolean strict) throws Exception {
         List<String> chain = packet.getChain();
-        if (chain.size() < 1) {
+        if (chain.isEmpty()) {
             throw new IllegalArgumentException("Invalid chain data");
         }
 
@@ -186,7 +184,7 @@ public class HandshakeUtils {
         return new HandshakeEntry(identityPublicKey, clientData, extraData, xboxAuth, protocol);
     }
 
-    public static JsonObject parseClientData(JWSObject clientJwt, JsonObject extraData, BedrockSession session) throws Exception {
+    public static JsonObject parseClientData(JWSObject clientJwt, JsonObject extraData, BedrockSession session) {
         JsonObject clientData = (JsonObject) JsonParser.parseString(clientJwt.getPayload().toString());
         ProxyConfig config = ProxyServer.getInstance().getConfiguration();
         if (config.useLoginExtras()) {

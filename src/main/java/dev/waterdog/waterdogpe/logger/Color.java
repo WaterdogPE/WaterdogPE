@@ -46,7 +46,7 @@ public enum Color {
     ITALIC('o', 0x14, null, false, Ansi.Attribute.ITALIC),
     RESET('r', 0x15, null, false, Ansi.Attribute.RESET);
 
-    public static final char ESCAPE = '\u00A7';
+    public static final char ESCAPE = '§';
     private static final Pattern CLEAN_PATTERN = Pattern.compile("(?i)" + ESCAPE + "[0-9A-FK-OR]");
 
     private final char code;

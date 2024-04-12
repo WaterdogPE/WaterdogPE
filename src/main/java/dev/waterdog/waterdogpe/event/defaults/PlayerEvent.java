@@ -17,19 +17,14 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.Event;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
  * Base class for Events referencing player / with a player origin.
  */
+@Getter
+@AllArgsConstructor
 public abstract class PlayerEvent extends Event {
-
-    protected ProxiedPlayer player;
-
-    public PlayerEvent(ProxiedPlayer player) {
-        this.player = player;
-    }
-
-    public ProxiedPlayer getPlayer() {
-        return this.player;
-    }
+    protected final ProxiedPlayer player;
 }

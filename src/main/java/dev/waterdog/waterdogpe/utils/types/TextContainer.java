@@ -17,7 +17,9 @@ package dev.waterdog.waterdogpe.utils.types;
 
 import dev.waterdog.waterdogpe.logger.Color;
 import dev.waterdog.waterdogpe.logger.MainLogger;
+import lombok.Getter;
 
+@Getter
 public class TextContainer implements Cloneable {
 
     private String message;
@@ -38,10 +40,6 @@ public class TextContainer implements Cloneable {
             message = message.replace("{%" + i + "}", args[i]);
         }
         return message;
-    }
-
-    public String getMessage() {
-        return this.message;
     }
 
     public String clean() {

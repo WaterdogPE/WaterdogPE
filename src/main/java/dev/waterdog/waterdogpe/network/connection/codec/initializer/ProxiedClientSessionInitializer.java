@@ -94,7 +94,7 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
         private final Promise<ClientConnection> promise;
 
         @Override
-        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        public void channelActive(ChannelHandlerContext ctx) {
             this.promise.trySuccess(this.connection);
             ctx.channel().pipeline().remove(this);
         }

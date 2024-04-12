@@ -19,6 +19,8 @@ import com.google.gson.JsonObject;
 import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import org.cloudburstmc.protocol.bedrock.packet.ClientCacheStatusPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
 import org.cloudburstmc.protocol.bedrock.packet.RequestChunkRadiusPacket;
@@ -30,9 +32,9 @@ import java.util.UUID;
 /**
  * Holds relevant information passed to the proxy on the first connection (initial) in the LoginPacket.
  */
+@Getter
 @Builder
 public class LoginData {
-
     private final String displayName;
     private final UUID uuid;
     private final String xuid;
@@ -55,8 +57,10 @@ public class LoginData {
     private LoginPacket loginPacket;
 
     @Builder.Default
+    @Setter
     private RequestChunkRadiusPacket chunkRadius = PlayerRewriteUtils.defaultChunkRadius;
     @Builder.Default
+    @Setter
     private ClientCacheStatusPacket cachePacket = PlayerRewriteUtils.defaultCachePacket;
 
     /**
@@ -76,78 +80,10 @@ public class LoginData {
         return this.loginPacket = loginPacket;
     }
 
-    public String getDisplayName() {
-        return this.displayName;
-    }
-
-    public String getXuid() {
-        return this.xuid;
-    }
-
-    public boolean isXboxAuthed() {
-        return this.xboxAuthed;
-    }
-
-    public UUID getUuid() {
-        return this.uuid;
-    }
-
-    public SocketAddress getAddress() {
-        return this.address;
-    }
-
-    public ProtocolVersion getProtocol() {
-        return this.protocol;
-    }
-
-    public KeyPair getKeyPair() {
-        return this.keyPair;
-    }
-
-    public JsonObject getClientData() {
-        return this.clientData;
-    }
-
-    public JsonObject getExtraData() {
-        return this.extraData;
-    }
-
-    public String getJoinHostname() {
-        return this.joinHostname;
-    }
-
-    public Platform getDevicePlatform() {
-        return devicePlatform;
-    }
-
-    public String getDeviceId() {
-        return deviceId;
-    }
-
-    public String getDeviceModel() {
-        return deviceModel;
-    }
-
     public LoginPacket getLoginPacket() {
         if (this.loginPacket == null) {
             this.rebuildLoginPacket();
         }
         return this.loginPacket;
-    }
-
-    public RequestChunkRadiusPacket getChunkRadius() {
-        return this.chunkRadius;
-    }
-
-    public void setChunkRadius(RequestChunkRadiusPacket chunkRadius) {
-        this.chunkRadius = chunkRadius;
-    }
-
-    public ClientCacheStatusPacket getCachePacket() {
-        return this.cachePacket;
-    }
-
-    public void setCachePacket(ClientCacheStatusPacket cachePacket) {
-        this.cachePacket = cachePacket;
     }
 }

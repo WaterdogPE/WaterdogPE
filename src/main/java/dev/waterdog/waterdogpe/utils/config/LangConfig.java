@@ -21,12 +21,14 @@ import dev.waterdog.waterdogpe.utils.types.TextContainer;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import lombok.Getter;
 
 import java.io.File;
 import java.io.IOException;
 
 public class LangConfig {
 
+    @Getter
     protected final Object2ObjectMap<String, String> transactionMap = new Object2ObjectOpenHashMap<>();
     private final File file;
 
@@ -40,7 +42,7 @@ public class LangConfig {
             String content = FileUtils.readFile(this.file);
             for (String line : content.split("\n")) {
                 line = line.trim();
-                if (line.equals("") || line.charAt(0) == '#') {
+                if (line.isEmpty() || line.charAt(0) == '#') {
                     continue;
                 }
                 String[] t = line.split("=");
@@ -53,7 +55,7 @@ public class LangConfig {
                     value.append(t[i]).append("=");
                 }
                 value.append(t[t.length - 1]);
-                if (value.toString().equals("")) {
+                if (value.toString().isEmpty()) {
                     continue;
                 }
                 this.transactionMap.put(key, value.toString());
@@ -85,9 +87,5 @@ public class LangConfig {
 
     public String getTransaction(String key) {
         return this.transactionMap.get(key);
-    }
-
-    public Object2ObjectMap<String, String> getTransactionMap() {
-        return this.transactionMap;
     }
 }

@@ -20,6 +20,7 @@ import lombok.Getter;
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
 public enum Platform {
     UNKNOWN("Unknown", -1),
     ANDROID("Android", 1),
@@ -38,7 +39,7 @@ public enum Platform {
     WINDOWS_PHONE("Windows Phone", 14),
     LINUX("Linux", 15);
 
-    private static Map<Integer, Platform> PLATFORM_BY_ID = new HashMap<>();
+    private static final Map<Integer, Platform> PLATFORM_BY_ID = new HashMap<>();
 
     static {
         for (Platform platform : Platform.values()) {
@@ -54,18 +55,14 @@ public enum Platform {
         return Platform.UNKNOWN;
     }
 
-    public static Platform[] VALUES = values();
+    public static final Platform[] VALUES = values();
 
-    @Getter
     private final String name;
 
-    @Getter
     private final int id;
 
     Platform(String name, int id) {
         this.name = name;
         this.id = id;
     }
-
-
 }

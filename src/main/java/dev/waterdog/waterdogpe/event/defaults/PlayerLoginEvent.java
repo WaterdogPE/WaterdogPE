@@ -18,11 +18,15 @@ package dev.waterdog.waterdogpe.event.defaults;
 import dev.waterdog.waterdogpe.event.AsyncEvent;
 import dev.waterdog.waterdogpe.event.CancellableEvent;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Called right before the initial connect is made.
  * Cancelling it will close the connection with the cancelReason as the disconnectMessage.
  */
+@Getter
+@Setter
 @AsyncEvent
 public class PlayerLoginEvent extends PlayerEvent implements CancellableEvent {
 
@@ -30,13 +34,5 @@ public class PlayerLoginEvent extends PlayerEvent implements CancellableEvent {
 
     public PlayerLoginEvent(ProxiedPlayer player) {
         super(player);
-    }
-
-    public String getCancelReason() {
-        return this.cancelReason;
-    }
-
-    public void setCancelReason(String cancelReason) {
-        this.cancelReason = cancelReason;
     }
 }

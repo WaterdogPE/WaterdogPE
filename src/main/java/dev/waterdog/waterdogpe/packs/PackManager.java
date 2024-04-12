@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.packs;
 
 import io.netty.buffer.Unpooled;
+import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.data.ResourcePackType;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.ProxyServer;
@@ -33,6 +34,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+@Getter
 public class PackManager {
 
     private static final long CHUNK_SIZE = 102400;
@@ -161,7 +163,7 @@ public class PackManager {
 
         for (ResourcePack pack : this.packs.values()) {
             ResourcePacksInfoPacket.Entry infoEntry = new ResourcePacksInfoPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(),
-                    pack.getPackSize(), pack.getContentKey(), "", pack.getContentKey().equals("") ? "" : pack.getPackId().toString(), false, false);
+                    pack.getPackSize(), pack.getContentKey(), "", pack.getContentKey().isEmpty() ? "" : pack.getPackId().toString(), false, false);
             ResourcePackStackPacket.Entry stackEntry = new ResourcePackStackPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(), "");
             if (pack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
                 this.packsInfoPacket.getResourcePackInfos().add(infoEntry);
@@ -213,21 +215,5 @@ public class PackManager {
         packet.setData(Unpooled.wrappedBuffer(resourcePack.getChunk((int) CHUNK_SIZE * from.getChunkIndex(), (int) CHUNK_SIZE)));
         packet.setProgress(CHUNK_SIZE * from.getChunkIndex());
         return packet;
-    }
-
-    public ResourcePacksInfoPacket getPacksInfoPacket() {
-        return this.packsInfoPacket;
-    }
-
-    public ResourcePackStackPacket getStackPacket() {
-        return this.stackPacket;
-    }
-
-    public Map<UUID, ResourcePack> getPacks() {
-        return this.packs;
-    }
-
-    public Map<String, ResourcePack> getPacksByIdVer() {
-        return this.packsByIdVer;
     }
 }

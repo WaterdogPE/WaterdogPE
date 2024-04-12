@@ -21,6 +21,8 @@ import dev.waterdog.waterdogpe.utils.config.Configuration;
 import dev.waterdog.waterdogpe.utils.FileUtils;
 import dev.waterdog.waterdogpe.utils.config.YamlConfig;
 import dev.waterdog.waterdogpe.utils.exceptions.PluginChangeStateException;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -40,16 +42,20 @@ import java.util.jar.JarFile;
  * Base plugin class all plugins must extend
  */
 @Log4j2()
+@Getter
 public abstract class Plugin {
 
     protected boolean enabled = false;
     private PluginYAML description;
     private ProxyServer proxy;
+    @Getter(AccessLevel.NONE)
     private Logger logger;
     private File pluginFile;
     private File dataFolder;
     private File configFile;
+    @Getter(AccessLevel.NONE)
     private Configuration config;
+    @Getter(AccessLevel.NONE)
     private boolean initialized = false;
 
     public Plugin() {
@@ -199,10 +205,6 @@ public abstract class Plugin {
         return this.config;
     }
 
-    public boolean isEnabled() {
-        return this.enabled;
-    }
-
     /**
      * Changes the plugin's state
      *
@@ -225,23 +227,7 @@ public abstract class Plugin {
         }
     }
 
-    public PluginYAML getDescription() {
-        return this.description;
-    }
-
     public String getName() {
         return this.description.getName();
-    }
-
-    public ProxyServer getProxy() {
-        return this.proxy;
-    }
-
-    public Logger getLogger() {
-        return this.logger;
-    }
-
-    public File getDataFolder() {
-        return this.dataFolder;
     }
 }
