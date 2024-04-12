@@ -220,7 +220,7 @@
                             <Main-Class>dev.waterdog.waterdogpe.WaterdogPE</Main-Class>
                         </manifestEntries>
                     </archive>
-                    <finalName>Waterdog</finalName>
+                    <finalName>waterdogpe</finalName>
                 </configuration>
             </plugin>
             <plugin>
