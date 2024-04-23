@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
@@ -52,7 +53,7 @@ public class ProxyBatchBridge implements BedrockPacketHandler {
         while (iterator.hasNext()) {
             BedrockPacketWrapper wrapper = iterator.next();
             if (wrapper.getPacket() == null) {
-                this.decodePacket(wrapper);
+                this.decodePacket(wrapper, source.getPacketDirection());
             }
 
             PacketSignal signal = this.handlePacket(wrapper.getPacket());
@@ -84,11 +85,11 @@ public class ProxyBatchBridge implements BedrockPacketHandler {
         }
     }
 
-    private void decodePacket(BedrockPacketWrapper wrapper) {
+    private void decodePacket(BedrockPacketWrapper wrapper, PacketDirection direction) {
         ByteBuf msg = wrapper.getPacketBuffer().retainedSlice();
         try {
             msg.skipBytes(wrapper.getHeaderLength()); // skip header
-            wrapper.setPacket(this.codec.tryDecode(helper, msg, wrapper.getPacketId()));
+            wrapper.setPacket(this.codec.tryDecode(helper, msg, wrapper.getPacketId(), direction.getInbound()));
         } catch (Throwable t) {
             log.warn("Failed to decode packet", t);
             throw t;
