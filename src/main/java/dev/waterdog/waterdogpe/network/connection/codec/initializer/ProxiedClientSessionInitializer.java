@@ -33,8 +33,8 @@ import io.netty.channel.*;
 import io.netty.util.concurrent.Promise;
 import lombok.RequiredArgsConstructor;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
+import org.cloudburstmc.netty.channel.raknet.config.RakChannelMetrics;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
-import org.cloudburstmc.netty.channel.raknet.config.RakMetrics;
 import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionCodec;
 
 import static dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedSessionInitializer.*;
@@ -62,7 +62,7 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
             channel.attr(NetworkMetrics.ATTRIBUTE).set(metrics);
         }
 
-        if (metrics instanceof RakMetrics rakMetrics && channel instanceof RakChannel) {
+        if (metrics instanceof RakChannelMetrics rakMetrics && channel instanceof RakChannel) {
             channel.config().setOption(RakChannelOption.RAK_METRICS, rakMetrics);
         }
 
