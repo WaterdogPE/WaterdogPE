@@ -26,6 +26,7 @@ import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.protocol.bedrock.BedrockDisconnectReasons;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
@@ -143,5 +144,10 @@ public class BedrockServerSession extends BedrockSession implements ProxiedConne
     @Override
     public long getPing() {
         return this.getPeer().getPing();
+    }
+
+    @Override
+    public PacketDirection getPacketDirection() {
+        return PacketDirection.CLIENT_BOUND;
     }
 }

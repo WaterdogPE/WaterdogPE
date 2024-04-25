@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.network.connection.client;
 import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.data.CompressionAlgorithm;
@@ -45,4 +46,9 @@ public interface ClientConnection extends ProxiedConnection {
     void addDisconnectListener(Runnable listener);
 
     void disconnect();
+
+    @Override
+    default PacketDirection getPacketDirection() {
+        return PacketDirection.SERVER_BOUND;
+    }
 }

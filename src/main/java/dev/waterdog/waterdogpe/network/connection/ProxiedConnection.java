@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.connection;
 
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
@@ -44,4 +45,6 @@ public interface ProxiedConnection {
     }
 
     long getPing();
+
+    PacketDirection getPacketDirection();
 }
