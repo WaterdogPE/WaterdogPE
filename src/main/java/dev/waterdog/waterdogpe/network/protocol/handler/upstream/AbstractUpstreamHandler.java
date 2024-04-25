@@ -17,7 +17,6 @@ package dev.waterdog.waterdogpe.network.protocol.handler.upstream;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.BedrockPacketReceivedFromClientEvent;
-import dev.waterdog.waterdogpe.network.PacketDirection;
 import dev.waterdog.waterdogpe.network.protocol.handler.PluginPacketHandler;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
