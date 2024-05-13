@@ -313,7 +313,7 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        this.getLogger().error("[{}|{}] Unable to connect to downstream {}", this.getAddress(), this.getName(), targetServer.getServerName(), error);
+        this.getLogger().error("[{}|{}] Unable to connect to downstream {}", this.getHostAddress(), this.getName(), targetServer.getServerName(), error);
         String exceptionMessage = Objects.requireNonNullElse(error.getLocalizedMessage(), error.getClass().getSimpleName());
         if (this.sendToFallback(targetServer, ReconnectReason.EXCEPTION, exceptionMessage)) {
             this.sendMessage(new TranslationContainer("waterdog.connected.fallback", targetServer.getServerName()));
@@ -374,7 +374,7 @@ public class ProxiedPlayer implements CommandSender {
         }
 
         this.proxy.getPlayerManager().removePlayer(this);
-        this.getLogger().info("[{}|{}] -> Upstream has disconnected: {}", this.getAddress(), this.getName(), reason);
+        this.getLogger().info("[{}|{}] -> Upstream has disconnected: {}", this.getHostAddress(), this.getName(), reason);
     }
 
     public boolean sendToFallback(ServerInfo oldServer, String message) {
@@ -767,6 +767,11 @@ public class ProxiedPlayer implements CommandSender {
     public InetSocketAddress getAddress() {
         return this.connection == null ? null : (InetSocketAddress) this.connection.getSocketAddress();
     }
+    
+    public String getHostAddress() {
+        InetSocketAddress address = this.getAddress();
+        return address == null ? null : address.getAddress().getHostAddress();
+    }
 
     @Override
     public ProxyServer getProxy() {
@@ -888,7 +893,7 @@ public class ProxiedPlayer implements CommandSender {
         return "ProxiedPlayer(displayName=" + this.getName() +
                 ", protocol=" + this.getProtocol() +
                 ", connected=" + this.isConnected() +
-                ", address=" + this.getAddress() +
+                ", address=" + this.getHostAddress() +
                 ", serverInfo=" + this.getServerInfo() +
                 ")";
     }
