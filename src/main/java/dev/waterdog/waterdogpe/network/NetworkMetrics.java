@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network;
 
 import io.netty.util.AttributeKey;
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 
 /**
  * This interface can be used to record and display WaterdogPE-Internal metrics.
