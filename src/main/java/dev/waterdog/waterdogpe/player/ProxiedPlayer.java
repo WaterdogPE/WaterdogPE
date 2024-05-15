@@ -176,7 +176,7 @@ public class ProxiedPlayer implements CommandSender {
             this.initialConnect();
         } else {
             this.connection.setPacketHandler(new ResourcePacksHandler(this));
-            this.connection.sendPacket(event.getPacket());
+            this.sendPacket(event.getPacket());
         }
     }
 
@@ -427,6 +427,8 @@ public class ProxiedPlayer implements CommandSender {
     public void sendPacket(BedrockPacket packet) {
         if (this.connection != null && this.connection.isConnected()) {
             this.connection.sendPacket(packet);
+
+            this.proxy.getEventManager().callEvent(new BedrockPacketSentToClientEvent(this, packet));
         }
     }
 
@@ -438,6 +440,8 @@ public class ProxiedPlayer implements CommandSender {
     public void sendPacketImmediately(BedrockPacket packet) {
         if (this.connection != null && this.connection.isConnected()) {
             this.connection.sendPacketImmediately(packet);
+
+            this.proxy.getEventManager().callEvent(new BedrockPacketSentToClientEvent(this, packet));
         }
     }
 
