@@ -92,6 +92,13 @@ public class ProxiedPlayer implements CommandSender {
     @Getter(AccessLevel.NONE)
     private Map<String, Object> data = new HashMap<String, Object>();
 
+    /**
+     * -- GETTER --
+     *
+     * @return true if the player has administrator status, false if not
+     */
+    @lombok.Setter
+    @Getter
     @Getter(AccessLevel.NONE)
     private boolean admin = false;
     /**
@@ -477,7 +484,7 @@ public class ProxiedPlayer implements CommandSender {
     @Override
     public void sendMessage(String message) {
         if (message.trim().isEmpty()) {
-            return; // Client wont accept empty string
+            return; // Client won't accept empty string
         }
 
         TextPacket packet = new TextPacket();
@@ -494,7 +501,7 @@ public class ProxiedPlayer implements CommandSender {
      */
     public void chat(String message) {
         if (message.trim().isEmpty()) {
-            return; // Client wont accept empty string
+            return; // Client won't accept empty string
         }
 
         ClientConnection connection = this.getDownstreamConnection();
@@ -730,24 +737,6 @@ public class ProxiedPlayer implements CommandSender {
     public Collection<Permission> getPermissions() {
         return Collections.unmodifiableCollection(this.permissions.values());
     }
-
-    /**
-     * @return true if the player has administrator status, false if not
-     */
-    public boolean isAdmin() {
-        return this.admin;
-    }
-
-    /**
-     * Sets whether this player should have Administrator Status.
-     * Players with administrator status are granted every permissions, even if not specificly applied
-     *
-     * @param admin Whether the player is admin or not
-     */
-    public void setAdmin(boolean admin) {
-        this.admin = admin;
-    }
-
 
     @Override
     public boolean isPlayer() {
