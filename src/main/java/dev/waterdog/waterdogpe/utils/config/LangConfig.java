@@ -62,7 +62,7 @@ public class LangConfig {
             }
 
         } catch (IOException e) {
-            MainLogger.getLogger().error("Unable to load Config " + this.file.toString());
+            MainLogger.getLogger().error("Unable to load Config " + this.file);
         }
     }
 

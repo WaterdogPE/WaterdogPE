@@ -271,8 +271,6 @@ public abstract class Configuration {
     }
 
     @AllArgsConstructor
-    private static class LastMap {
-        public final String key;
-        public final Map<String, Object> map;
+    private record LastMap(String key, Map<String, Object> map) {
     }
 }
