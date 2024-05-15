@@ -23,27 +23,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Permission container for assigning permissions to players.
  */
+@Getter
 @ToString
 public class Permission {
 
-    @Getter
     private final String name;
-    private final AtomicBoolean value = new AtomicBoolean(false);
+    private final AtomicBoolean atomicValue = new AtomicBoolean(false);
 
     public Permission(String name, boolean value) {
         this.name = name.toLowerCase();
-        this.value.set(value);
+        this.atomicValue.set(value);
     }
 
     public boolean getValue() {
-        return this.value.get();
+        return this.atomicValue.get();
     }
 
     public void setValue(boolean value) {
-        this.value.set(value);
-    }
-
-    public AtomicBoolean getAtomicValue() {
-        return this.value;
+        this.atomicValue.set(value);
     }
 }
