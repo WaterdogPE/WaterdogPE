@@ -297,7 +297,7 @@ public class ProxyServer {
             if (future.isSuccess()) {
                 this.serverChannels.add(future.channel());
             } else {
-                throw new IllegalStateException("Can not start server on " + address, future.cause());
+                throw new IllegalStateException("Could not start server on " + address, future.cause());
             }
         }
 
@@ -451,7 +451,7 @@ public class ProxyServer {
      * @return if server was registered
      */
     public boolean registerServerInfo(ServerInfo serverInfo) {
-        Preconditions.checkNotNull(serverInfo, "ServerInfo can not be null!");
+        Preconditions.checkNotNull(serverInfo, "ServerInfo cannot be null!");
         return this.serverInfoMap.putIfAbsent(serverInfo.getServerName(), serverInfo) == null;
     }
 
@@ -461,18 +461,18 @@ public class ProxyServer {
      * @return removed ServerInfo or null
      */
     public ServerInfo removeServerInfo(String serverName) {
-        Preconditions.checkNotNull(serverName, "ServerName can not be null!");
+        Preconditions.checkNotNull(serverName, "ServerName cannot be null!");
         return this.serverInfoMap.remove(serverName);
     }
 
     public ServerInfo getServerInfo(String serverName) {
-        Preconditions.checkNotNull(serverName, "ServerName can not be null!");
+        Preconditions.checkNotNull(serverName, "ServerName cannot be null!");
         return this.serverInfoMap.get(serverName);
     }
 
     public <T extends ServerInfo> T getServerInfo(String serverName, Class<T> implementation) {
-        Preconditions.checkNotNull(serverName, "ServerName can not be null!");
-        Preconditions.checkNotNull(implementation, "Implementation class can not be null!");
+        Preconditions.checkNotNull(serverName, "ServerName cannot be null!");
+        Preconditions.checkNotNull(implementation, "Implementation class cannot be null!");
 
         ServerInfo serverInfo = this.serverInfoMap.get(serverName);
         if (serverInfo != null && !implementation.isAssignableFrom(serverInfo.getClass())) {
@@ -487,7 +487,7 @@ public class ProxyServer {
      * @return ServerInfo instance of matched server
      */
     public ServerInfo getServerInfo(String address, int port) {
-        Preconditions.checkNotNull(address, "Address can not be null!");
+        Preconditions.checkNotNull(address, "Address cannot be null!");
         for (ServerInfo serverInfo : this.getServers()) {
             if (serverInfo.matchAddress(address, port)) {
                 return serverInfo;
@@ -502,7 +502,7 @@ public class ProxyServer {
      * @return ServerInfo assigned to forced host
      */
     public ServerInfo getForcedHost(String serverHostname) {
-        Preconditions.checkNotNull(serverHostname, "ServerHostname can not be null!");
+        Preconditions.checkNotNull(serverHostname, "ServerHostname cannot be null!");
         String serverName = null;
 
         for (String forcedHost : this.getConfiguration().getForcedHosts().keySet()) {
@@ -524,7 +524,7 @@ public class ProxyServer {
     }
 
     public void setCommandMap(CommandMap commandMap) {
-        Preconditions.checkNotNull(commandMap, "Command map can not be null!");
+        Preconditions.checkNotNull(commandMap, "Command map cannot be null!");
         this.commandMap = commandMap;
     }
 
