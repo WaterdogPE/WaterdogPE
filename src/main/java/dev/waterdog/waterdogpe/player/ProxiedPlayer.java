@@ -27,6 +27,7 @@ import dev.waterdog.waterdogpe.network.protocol.handler.downstream.InitialHandle
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.SwitchDownstreamHandler;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandOriginData;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandOriginType;
@@ -92,14 +93,7 @@ public class ProxiedPlayer implements CommandSender {
     @Getter(AccessLevel.NONE)
     private Map<String, Object> data = new HashMap<String, Object>();
 
-    /**
-     * -- GETTER --
-     *
-     * @return true if the player has administrator status, false if not
-     */
-    @lombok.Setter
-    @Getter
-    @Getter(AccessLevel.NONE)
+    @Setter
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
