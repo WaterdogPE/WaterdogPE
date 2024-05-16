@@ -16,7 +16,6 @@
 package dev.waterdog.waterdogpe.network.connection.codec.initializer;
 
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
-import dev.waterdog.waterdogpe.network.PacketDirection;
 import dev.waterdog.waterdogpe.network.connection.client.BedrockClientConnection;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.BedrockBatchDecoder;
@@ -35,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelMetrics;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionCodec;
 
 import static dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedSessionInitializer.*;
@@ -55,7 +55,7 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
         int rakVersion = this.player.getProtocol().getRaknetVersion();
         CompressionType compression = this.player.getProxy().getConfiguration().getCompression();
 
-        channel.attr(PacketDirection.ATTRIBUTE).set(PacketDirection.FROM_SERVER);
+        channel.attr(PacketDirection.ATTRIBUTE).set(PacketDirection.SERVER_BOUND);
 
         NetworkMetrics metrics = this.player.getProxy().getNetworkMetrics();
         if (metrics != null) {
@@ -77,6 +77,10 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
         ClientConnection connection = this.createConnection(channel);
         if (connection instanceof ChannelHandler handler) {
             channel.pipeline().addLast(ClientConnection.NAME, handler);
+        }
+
+        if (connection.getPacketDirection() != PacketDirection.SERVER_BOUND) {
+            throw new IllegalStateException("Client connection must have a server-bound packet direction");
         }
 
         channel.pipeline()

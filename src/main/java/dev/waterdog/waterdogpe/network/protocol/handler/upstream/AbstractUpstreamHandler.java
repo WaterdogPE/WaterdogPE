@@ -15,10 +15,10 @@
 
 package dev.waterdog.waterdogpe.network.protocol.handler.upstream;
 
-import dev.waterdog.waterdogpe.network.PacketDirection;
 import dev.waterdog.waterdogpe.network.protocol.handler.PluginPacketHandler;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.cloudburstmc.protocol.common.PacketSignal;
@@ -38,7 +38,7 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
         PacketSignal signal = BedrockPacketHandler.super.handlePacket(packet);
         if (player.getPluginPacketHandlers().size() > 0) {
             for (PluginPacketHandler handler : this.player.getPluginPacketHandlers()) {
-                signal = mergeSignals(signal, handler.handlePacket(packet, PacketDirection.FROM_USER));
+                signal = mergeSignals(signal, handler.handlePacket(packet, PacketDirection.SERVER_BOUND));
             }
         }
         return signal;

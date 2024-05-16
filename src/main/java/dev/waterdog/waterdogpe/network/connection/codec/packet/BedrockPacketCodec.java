@@ -16,14 +16,16 @@
 package dev.waterdog.waterdogpe.network.connection.codec.packet;
 
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
-import dev.waterdog.waterdogpe.network.PacketDirection;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
 import lombok.extern.log4j.Log4j2;
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.codec.compat.BedrockCompat;
+import org.cloudburstmc.protocol.bedrock.data.EncodingSettings;
+import org.cloudburstmc.protocol.bedrock.data.PacketRecipient;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
@@ -41,12 +43,15 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
     private BedrockCodecHelper helper = codec.createHelper();
 
     private boolean alwaysDecode;
+    private PacketRecipient inboundRecipient;
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        if (ctx.channel().attr(PacketDirection.ATTRIBUTE).get() == PacketDirection.FROM_USER) {
-            this.alwaysDecode = true; // packets from user can be always decoded
+        PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
+        if (direction == PacketDirection.CLIENT_BOUND) {
+            this.alwaysDecode = true; // packets from client can be always decoded
         }
+        this.inboundRecipient = direction.getInbound();
     }
 
     @Override
@@ -106,7 +111,7 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
             this.decodeHeader(msg, wrapper);
             wrapper.setHeaderLength(msg.readerIndex() - index);
             if (this.alwaysDecode) { // Otherwise, we are decoding at other place
-                wrapper.setPacket(this.codec.tryDecode(helper, msg, wrapper.getPacketId()));
+                wrapper.setPacket(this.codec.tryDecode(helper, msg, wrapper.getPacketId(), this.inboundRecipient));
             }
         } catch (Throwable t) {
             log.error("Failed to decode packet", t);
@@ -146,6 +151,11 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
     public final BedrockPacketCodec setCodecHelper(BedrockCodec codec, BedrockCodecHelper helper) {
         this.codec = requireNonNull(codec, "Codec cannot be null");
         this.helper = requireNonNull(helper, "Helper can not be null");
+
+        switch (this.inboundRecipient) {
+            case CLIENT -> this.helper.setEncodingSettings(EncodingSettings.CLIENT);
+            case SERVER -> this.helper.setEncodingSettings(EncodingSettings.SERVER);
+        }
         return this;
     }
 

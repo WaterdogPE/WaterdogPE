@@ -247,6 +247,7 @@ public class ProxyServer {
         this.logger.debug("Upstream <-> Proxy compression level " + this.getConfiguration().getUpstreamCompression());
         this.logger.debug("Downstream <-> Proxy compression level " + this.getConfiguration().getDownstreamCompression());
         this.logger.debug("MTU Settings: max_user=" + this.getNetworkSettings().getMaximumMtu() + " max_server=" + this.getNetworkSettings().getMaximumDownstreamMtu());
+        this.logger.debug("RakNet Cookies: enabled=" + this.getNetworkSettings().enableCookies());
 
         ProxiedSessionInitializer.ZLIB_RAW_STRATEGY.getDefaultCompression().setLevel(this.getConfiguration().getUpstreamCompression());
         ProxiedSessionInitializer.ZLIB_STRATEGY.getDefaultCompression().setLevel(this.getConfiguration().getUpstreamCompression());
@@ -269,6 +270,7 @@ public class ProxyServer {
                     .option(RakChannelOption.RAK_GUID, this.serverId)
                     .option(RakChannelOption.RAK_HANDLE_PING, true)
                     .option(RakChannelOption.RAK_MAX_MTU, this.getNetworkSettings().getMaximumMtu())
+                    .option(RakChannelOption.RAK_SEND_COOKIE, this.getNetworkSettings().enableCookies())
                     .childOption(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)
                     .childOption(RakChannelOption.RAK_ORDERING_CHANNELS, 1)
                     .handler(new OfflineServerChannelInitializer(this))
