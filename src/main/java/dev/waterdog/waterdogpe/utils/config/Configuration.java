@@ -270,7 +270,6 @@ public abstract class Configuration {
         return (List<String>) this.get(key, defaultValue);
     }
 
-    @AllArgsConstructor
     private record LastMap(String key, Map<String, Object> map) {
     }
 }
