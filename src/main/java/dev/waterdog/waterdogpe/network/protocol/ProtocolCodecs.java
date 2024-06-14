@@ -116,6 +116,7 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(PlayerAuthInputPacket.class);
         HANDLED_PACKETS.add(ModalFormRequestPacket.class);
         HANDLED_PACKETS.add(ModalFormResponsePacket.class);
+        HANDLED_PACKETS.add(BlockEntityDataPacket.class);
 
     }
 
