@@ -153,7 +153,7 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         this.helper = requireNonNull(helper, "Helper can not be null");
 
         switch (this.inboundRecipient) {
-            case CLIENT -> this.helper.setEncodingSettings(EncodingSettings.CLIENT);
+            case CLIENT -> this.helper.setEncodingSettings(EncodingSettings.UNLIMITED); // we trust downstream
             case SERVER -> this.helper.setEncodingSettings(EncodingSettings.SERVER);
         }
         return this;
