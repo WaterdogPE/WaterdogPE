@@ -39,7 +39,7 @@ public class BedrockBatchDecoder extends MessageToMessageDecoder<BedrockBatchWra
         while (buffer.isReadable()) {
             int packetLength = VarInts.readUnsignedInt(buffer);
 
-            BedrockPacketWrapper wrapper = new BedrockPacketWrapper();
+            BedrockPacketWrapper wrapper = BedrockPacketWrapper.create();
             wrapper.setPacketBuffer(buffer.readRetainedSlice(packetLength));
             msg.getPackets().add(wrapper);
         }

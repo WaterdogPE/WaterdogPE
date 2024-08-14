@@ -15,8 +15,8 @@
 
 package dev.waterdog.waterdogpe.network.connection.codec.batch;
 
-import org.cloudburstmc.protocol.bedrock.util.BatchFlag;
+import org.cloudburstmc.protocol.bedrock.util.PacketFlag;
 
-public enum BatchFlags implements BatchFlag {
+public enum BatchFlags implements PacketFlag {
     SKIP_QUEUE
 }
