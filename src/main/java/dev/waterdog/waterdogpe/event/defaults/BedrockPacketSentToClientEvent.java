@@ -20,7 +20,7 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 
 public class BedrockPacketSentToClientEvent extends PlayerEvent implements CancellableEvent {
-
+    
     private final BedrockPacket packet;
 
     public BedrockPacketSentToClientEvent(ProxiedPlayer player, BedrockPacket packet) {
