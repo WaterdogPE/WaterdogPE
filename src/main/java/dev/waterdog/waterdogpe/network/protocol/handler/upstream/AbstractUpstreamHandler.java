@@ -45,6 +45,7 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
         }
         BedrockPacketReceivedFromClientEvent event = new BedrockPacketReceivedFromClientEvent(player, packet);
         ProxyServer.getInstance().getEventManager().callEvent(event);
+        if(event.isCancelled()) return this.cancel();
         return signal;
     }
 
