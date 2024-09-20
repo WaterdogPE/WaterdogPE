@@ -67,7 +67,7 @@ public class ProxiedPlayer implements CommandSender {
 
     @Getter(AccessLevel.NONE)
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
-    @Getter(AccessLevel.NONE)
+    private final AtomicBoolean loginCalled = new AtomicBoolean(false);
     private final AtomicBoolean loginCompleted = new AtomicBoolean(false);
     private volatile String disconnectReason;
     private final RewriteData rewriteData = new RewriteData();
@@ -139,6 +139,10 @@ public class ProxiedPlayer implements CommandSender {
      * Called after sending LOGIN_SUCCESS in PlayStatusPacket.
      */
     public void initPlayer() {
+        if (!this.loginCalled.compareAndSet(false, true)) {
+            return;
+        }
+
         PlayerLoginEvent event = new PlayerLoginEvent(this);
         this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, error) -> {
             this.loginCompleted.set(true);
@@ -345,7 +349,7 @@ public class ProxiedPlayer implements CommandSender {
      * @param reason The disconnect reason the player will see on his disconnect screen (Supports Color Codes)
      */
     public void disconnect(String reason) {
-        if (!this.loginCompleted.get()) {
+        if (this.loginCalled.get() && !this.loginCompleted.get()) {
             // Wait until PlayerLoginEvent completes
             this.disconnectReason = reason;
             return;
