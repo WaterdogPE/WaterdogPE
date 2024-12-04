@@ -113,8 +113,6 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(ClientCheatAbilityPacket.class);
         HANDLED_PACKETS.add(ToastRequestPacket.class);
         HANDLED_PACKETS.add(MovementEffectPacket.class);
-        HANDLED_PACKETS.add(CameraAimAssistPacket.class);
-        HANDLED_PACKETS.add(CameraAimAssistPresetsPacket.class);
     }
 
     private static final List<ProtocolCodecUpdater> UPDATERS = new ObjectArrayList<>();
