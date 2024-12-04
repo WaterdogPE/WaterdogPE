@@ -17,17 +17,17 @@ package dev.waterdog.waterdogpe.network.connection.codec.initializer;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
-import dev.waterdog.waterdogpe.network.PacketDirection;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockPeer;
 import dev.waterdog.waterdogpe.network.protocol.handler.upstream.LoginUpstreamHandler;
 import io.netty.channel.Channel;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
 import org.cloudburstmc.netty.channel.raknet.RakDisconnectReason;
+import org.cloudburstmc.netty.channel.raknet.config.RakChannelMetrics;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
-import org.cloudburstmc.netty.channel.raknet.config.RakMetrics;
 import org.cloudburstmc.netty.handler.codec.raknet.common.RakSessionCodec;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 
 public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<BedrockServerSession> {
 
@@ -43,13 +43,13 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
             return;
         }
 
-        channel.attr(PacketDirection.ATTRIBUTE).set(PacketDirection.FROM_USER);
+        channel.attr(PacketDirection.ATTRIBUTE).set(PacketDirection.CLIENT_BOUND);
 
         NetworkMetrics metrics = this.proxy.getNetworkMetrics();
         if (metrics != null) {
             channel.attr(NetworkMetrics.ATTRIBUTE).set(metrics);
         }
-        if (metrics instanceof RakMetrics rakMetrics) {
+        if (metrics instanceof RakChannelMetrics rakMetrics) {
             channel.config().setOption(RakChannelOption.RAK_METRICS, rakMetrics);
         }
 

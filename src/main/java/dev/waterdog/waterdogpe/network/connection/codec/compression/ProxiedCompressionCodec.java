@@ -16,8 +16,8 @@
 package dev.waterdog.waterdogpe.network.connection.codec.compression;
 
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
-import dev.waterdog.waterdogpe.network.PacketDirection;
 import io.netty.channel.ChannelHandlerContext;
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.data.CompressionAlgorithm;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionCodec;

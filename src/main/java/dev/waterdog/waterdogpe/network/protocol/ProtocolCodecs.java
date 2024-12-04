@@ -112,6 +112,7 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(LevelChunkPacket.class);
         HANDLED_PACKETS.add(ClientCheatAbilityPacket.class);
         HANDLED_PACKETS.add(ToastRequestPacket.class);
+        HANDLED_PACKETS.add(MovementEffectPacket.class);
     }
 
     private static final List<ProtocolCodecUpdater> UPDATERS = new ObjectArrayList<>();

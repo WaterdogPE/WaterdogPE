@@ -53,4 +53,9 @@ public class NetworkSettings extends YamlConfig {
     @Comment("Number of login requests that can be made in \"connection_throttle_time\" interval. To disable set value to -1")
     @Path("login_throttle")
     private int loginThrottle = 2;
+
+    @Path("enable_cookies")
+    @Accessors(fluent = true)
+    @Comment("Enable RakNet cookies for additional security. Do NOT disable this unless you know what you are doing.")
+    private boolean enableCookies = true;
 }

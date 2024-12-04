@@ -8,17 +8,17 @@
     </description>
     <groupId>dev.waterdog.waterdogpe</groupId>
     <artifactId>waterdog</artifactId>
-    <version>2.0.2</version>
+    <version>2.0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>17</maven.compiler.release>
-        <raklib.version>1.0.0.CR1-SNAPSHOT</raklib.version>
-        <protocol.version>3.0.0.Beta1-SNAPSHOT</protocol.version>
+        <raklib.version>1.0.0.CR3-SNAPSHOT</raklib.version>
+        <protocol.version>3.0.0.Beta5-SNAPSHOT</protocol.version>
         <log4j2.version>2.17.1</log4j2.version>
         <jline.version>3.23.0</jline.version>
-        <netty.version>4.1.89.Final</netty.version>
+        <netty.version>4.1.101.Final</netty.version>
     </properties>
 
     <repositories>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>net.cubespace</groupId>
             <artifactId>Yamler-Core</artifactId>
-            <version>2.4.0-SNAPSHOT</version>
+            <version>2.4.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -196,7 +196,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.10.1</version>
+            <version>9.37.2</version>
         </dependency>
     </dependencies>
 

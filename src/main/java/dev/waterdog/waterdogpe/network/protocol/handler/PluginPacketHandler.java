@@ -15,7 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.protocol.handler;
 
-import dev.waterdog.waterdogpe.network.PacketDirection;
+import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
 import org.cloudburstmc.protocol.common.PacketSignal;
