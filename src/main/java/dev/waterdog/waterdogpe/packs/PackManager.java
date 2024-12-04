@@ -149,6 +149,8 @@ public class PackManager {
 
     public void rebuildPackets() {
         this.packsInfoPacket.setForcedToAccept(this.proxy.getConfiguration().isForceServerPacks());
+        this.packsInfoPacket.setWorldTemplateId(UUID.randomUUID());
+        this.packsInfoPacket.setWorldTemplateVersion("");
         this.stackPacket.setForcedToAccept(this.proxy.getConfiguration().isOverwriteClientPacks());
 
         this.packsInfoPacket.getBehaviorPackInfos().clear();
