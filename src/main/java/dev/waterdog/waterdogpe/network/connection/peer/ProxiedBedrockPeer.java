@@ -118,8 +118,8 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     private void sendPacket0(BedrockBatchWrapper wrapper) {
         if (!(wrapper.getAlgorithm() instanceof PacketCompressionAlgorithm)) {
             wrapper.setCompressed(null); // Do not allow using unsupported algorithms when sending to client
-        } else if (this.version.isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) &&
-                !Objects.equals(wrapper.getAlgorithm(), this.compressionStrategy.getDefaultCompression().getAlgorithm())) {
+        } else if (this.version.isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) && (this.compressionStrategy == null || 
+                !Objects.equals(wrapper.getAlgorithm(), this.compressionStrategy.getDefaultCompression().getAlgorithm()))) {
             wrapper.setCompressed(null); // Before 1.20.60 dynamic compression is not supported
         }
 
