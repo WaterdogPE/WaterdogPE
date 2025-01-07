@@ -24,9 +24,7 @@ If you haven't used WaterdogPE before, we recommend you to take a look at our [s
 *Please note that the config from the old Waterdog (Bungee) is not compatible with WaterdogPE*
 
 ### Supported Software
-Our focus lies on PowerNukkitX 2.0 since its the only server software that's worth using. (Besides Nukkit Mot maybe?)
-
-You can find list of currently supported/unsupported software [here](https://docs.waterdog.dev/books/waterdogpe-setup/page/software-compatibility).
+Our focus lies on PowerNukkitX since its the only server software that's worth using.
 
 ## Compiling
 
