@@ -28,6 +28,7 @@ import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
+import org.cloudburstmc.protocol.bedrock.packet.DisconnectPacket;
 import org.cloudburstmc.protocol.common.PacketSignal;
 import org.cloudburstmc.protocol.common.util.Preconditions;
 
@@ -53,7 +54,11 @@ public class ProxyBatchBridge implements BedrockPacketHandler {
         while (iterator.hasNext()) {
             BedrockPacketWrapper wrapper = iterator.next();
             if (wrapper.getPacket() == null) {
-                this.decodePacket(wrapper, source.getPacketDirection());
+                try {
+                    this.decodePacket(wrapper, source.getPacketDirection());
+                } catch (Exception e) {
+                    source.sendPacket(new DisconnectPacket());
+                }
             }
 
             PacketSignal signal = this.handlePacket(wrapper.getPacket());

@@ -118,6 +118,7 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(ModalFormRequestPacket.class);
         HANDLED_PACKETS.add(ModalFormResponsePacket.class);
         HANDLED_PACKETS.add(BlockEntityDataPacket.class);
+        HANDLED_PACKETS.add(InventoryTransactionPacket.class);
         HANDLED_PACKETS.add(ClientboundCloseFormPacket.class);
     }
 
