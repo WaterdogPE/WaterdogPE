@@ -100,6 +100,11 @@ public class ProxiedPlayer implements CommandSender {
      */
     private volatile boolean acceptResourcePacks = true;
     /**
+     * Used to determine if proxy can send ItemComponentPacket to player.
+     * Client will crash if ItemComponentPacket is sent twice.
+     */
+    private volatile boolean acceptItemComponentPacket = true;
+    /**
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
      */
@@ -896,6 +901,14 @@ public class ProxiedPlayer implements CommandSender {
 
     public boolean acceptResourcePacks() {
         return this.acceptResourcePacks;
+    }
+
+    public boolean acceptItemComponentPacket() {
+        return acceptItemComponentPacket;
+    }
+
+    public void setAcceptItemComponentPacket(boolean acceptItemComponentPacket) {
+        this.acceptItemComponentPacket = acceptItemComponentPacket;
     }
 
     public CompressionType getCompression() {
