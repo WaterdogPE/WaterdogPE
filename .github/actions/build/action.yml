@@ -56,10 +56,11 @@ runs:
       shell: bash
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: waterdog
         path: target/Waterdog.jar
+        pattern: waterdog-*
+        merge-multiple: true
 
     - name: Create pre-release
       if: ${{ inputs.create_prerelease == 'true' }}
