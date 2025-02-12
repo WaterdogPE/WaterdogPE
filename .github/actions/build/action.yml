@@ -35,7 +35,7 @@ runs:
         distribution: adopt-hotspot
 
     - name: Setup maven repo
-      uses: s4u/maven-settings-action@v2.6.0
+      uses: s4u/maven-settings-action@v3.1.0
       if: ${{ inputs.perform_deploy == 'true' }}
       with:
         servers: |
@@ -58,9 +58,8 @@ runs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
+        name: waterdog
         path: target/Waterdog.jar
-        pattern: waterdog-*
-        merge-multiple: true
 
     - name: Create pre-release
       if: ${{ inputs.create_prerelease == 'true' }}
