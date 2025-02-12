@@ -48,7 +48,7 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
         if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_60)) {
             setItemDefinitions(packet.getItems());
         }
-        return super.handle(packet);
+        return PacketSignal.UNHANDLED;
     }
 
     @Override
