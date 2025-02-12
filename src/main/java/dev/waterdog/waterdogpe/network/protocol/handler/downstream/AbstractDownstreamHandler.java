@@ -22,12 +22,17 @@ import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.RewriteMaps;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandData;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumConstraint;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumData;
+import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.cloudburstmc.protocol.common.PacketSignal;
+import org.cloudburstmc.protocol.common.SimpleDefinitionRegistry;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -148,5 +153,21 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
     @Override
     public ClientConnection getConnection() {
         return connection;
+    }
+
+    protected void setItemDefinitions(Collection<ItemDefinition> definitions) {
+        BedrockCodecHelper codecHelper = this.player.getConnection()
+                .getPeer()
+                .getCodecHelper();
+        SimpleDefinitionRegistry.Builder<ItemDefinition> itemRegistry = SimpleDefinitionRegistry.builder();
+        IntSet runtimeIds = new IntOpenHashSet();
+        for (ItemDefinition definition : definitions) {
+            if (runtimeIds.add(definition.getRuntimeId())) {
+                itemRegistry.add(definition);
+            } else {
+                player.getLogger().warning("[{}|{}] has duplicate item definition: {}", this.player.getName(), this.connection.getServerInfo().getServerName(), definition);
+            }
+        }
+        codecHelper.setItemDefinitions(itemRegistry.build());
     }
 }

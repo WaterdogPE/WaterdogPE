@@ -130,17 +130,10 @@ public class InitialHandler extends AbstractDownstreamHandler {
         BedrockCodecHelper codecHelper = this.player.getConnection()
                 .getPeer()
                 .getCodecHelper();
-        // Setup item registry
-        SimpleDefinitionRegistry.Builder<ItemDefinition> itemRegistry = SimpleDefinitionRegistry.builder();
-        IntSet runtimeIds = new IntOpenHashSet();
-        for (ItemDefinition definition : packet.getItemDefinitions()) {
-            if (runtimeIds.add(definition.getRuntimeId())) {
-                itemRegistry.add(definition);
-            } else {
-                this.player.getLogger().warning("[{}|{}] has duplicate item definition: {}", this.player.getName(), this.connection.getServerInfo().getServerName(), definition);
-            }
+        // Setup item registry. After 1.21.60 these are sent with ItemComponentPacket instead.
+        if (this.player.getProtocol().isBeforeOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_50)) {
+            setItemDefinitions(packet.getItemDefinitions());
         }
-        codecHelper.setItemDefinitions(itemRegistry.build());
         // Setup block registry
         codecHelper.setBlockDefinitions(FakeDefinitionRegistry.createBlockRegistry());
         // Enable runtimeId rewrite

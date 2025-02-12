@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network.protocol.handler.downstream;
 
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.handler.PluginPacketHandler;
 import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.packet.*;
@@ -36,6 +37,18 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
     public ConnectedDownstreamHandler(ProxiedPlayer player, ClientConnection connection) {
         super(player, connection);
+    }
+
+    @Override
+    public PacketSignal handle(ItemComponentPacket packet) {
+        if (!this.player.acceptItemComponentPacket()) {
+            return Signals.CANCEL;
+        }
+        player.setAcceptItemComponentPacket(false);
+        if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_60)) {
+            setItemDefinitions(packet.getItems());
+        }
+        return super.handle(packet);
     }
 
     @Override
