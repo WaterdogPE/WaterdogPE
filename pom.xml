@@ -85,7 +85,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.26</version>
+            <version>1.18.34</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -214,7 +214,7 @@
                             <Main-Class>dev.waterdog.waterdogpe.WaterdogPE</Main-Class>
                         </manifestEntries>
                     </archive>
-                    <finalName>Waterdog</finalName>
+                    <finalName>waterdogpe</finalName>
                 </configuration>
             </plugin>
             <plugin>
