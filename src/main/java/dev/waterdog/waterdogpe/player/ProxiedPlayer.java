@@ -70,6 +70,7 @@ public class ProxiedPlayer implements CommandSender {
     private final AtomicBoolean loginCalled = new AtomicBoolean(false);
     private final AtomicBoolean loginCompleted = new AtomicBoolean(false);
     private volatile String disconnectReason;
+
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
     private final RewriteMaps rewriteMaps;
@@ -117,6 +118,11 @@ public class ProxiedPlayer implements CommandSender {
      */
     @Getter(AccessLevel.NONE)
     private volatile boolean acceptResourcePacks = true;
+    /**
+     * Used to determine if proxy can send ItemComponentPacket to player.
+     * Client will crash if ItemComponentPacket is sent twice.
+     */
+    private volatile boolean acceptItemComponentPacket = true;
     /**
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
@@ -738,6 +744,24 @@ public class ProxiedPlayer implements CommandSender {
         return Collections.unmodifiableCollection(this.permissions.values());
     }
 
+    /**
+     * @return true if the player has administrator status, false if not
+     */
+    public boolean isAdmin() {
+        return this.admin;
+    }
+
+    /**
+     * Sets whether this player should have Administrator Status.
+     * Players with administrator status are granted every permissions, even if not specificly applied
+     *
+     * @param admin Whether the player is admin or not
+     */
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
+    }
+
+
     @Override
     public boolean isPlayer() {
         return true;
@@ -760,7 +784,7 @@ public class ProxiedPlayer implements CommandSender {
     public InetSocketAddress getAddress() {
         return this.connection == null ? null : (InetSocketAddress) this.connection.getSocketAddress();
     }
-    
+
     public String getHostAddress() {
         InetSocketAddress address = this.getAddress();
         return address == null ? null : address.getAddress().getHostAddress();
@@ -802,8 +826,20 @@ public class ProxiedPlayer implements CommandSender {
         return this.pendingConnection == null ? null : this.pendingConnection.getServerInfo();
     }
 
+    public BedrockServerSession getConnection() {
+        return this.connection;
+    }
+
     public boolean isConnected() {
         return !this.disconnected.get() && this.connection != null && this.connection.isConnected();
+    }
+
+    public RewriteMaps getRewriteMaps() {
+        return this.rewriteMaps;
+    }
+
+    public LoginData getLoginData() {
+        return this.loginData;
     }
 
     @Override
@@ -835,6 +871,10 @@ public class ProxiedPlayer implements CommandSender {
         return this.loginData.getProtocol();
     }
 
+    public RewriteData getRewriteData() {
+        return this.rewriteData;
+    }
+
     public void setCanRewrite(boolean canRewrite) {
         this.canRewrite = canRewrite;
     }
@@ -847,8 +887,32 @@ public class ProxiedPlayer implements CommandSender {
         return this.hasUpstreamBridge;
     }
 
+    public LongSet getEntities() {
+        return this.entities;
+    }
+
+    public LongSet getBossbars() {
+        return this.bossbars;
+    }
+
     public Collection<UUID> getPlayers() {
         return this.players;
+    }
+
+    public ObjectSet<String> getScoreboards() {
+        return this.scoreboards;
+    }
+
+    public Long2ObjectMap<ScoreInfo> getScoreInfos() {
+        return this.scoreInfos;
+    }
+
+    public Long2LongMap getEntityLinks() {
+        return this.entityLinks;
+    }
+
+    public LongSet getChunkBlobs() {
+        return this.chunkBlobs;
     }
 
     public void setAcceptPlayStatus(boolean acceptPlayStatus) {
@@ -881,12 +945,32 @@ public class ProxiedPlayer implements CommandSender {
         this.data.put(key, value);
     }
 
+    public boolean acceptItemComponentPacket() {
+        return acceptItemComponentPacket;
+    }
+
+    public void setAcceptItemComponentPacket(boolean acceptItemComponentPacket) {
+        this.acceptItemComponentPacket = acceptItemComponentPacket;
+    }
+
+    public CompressionType getCompression() {
+        return this.compression;
+    }
+
+    public Collection<PluginPacketHandler> getPluginPacketHandlers() {
+        return this.pluginPacketHandlers;
+    }
+
+    public String getDisconnectReason() {
+        return this.disconnectReason;
+    }
+
     @Override
     public String toString() {
         return "ProxiedPlayer(displayName=" + this.getName() +
                 ", protocol=" + this.getProtocol() +
                 ", connected=" + this.isConnected() +
-                ", address=" + this.getHostAddress() +
+                ", address=" + this.getAddress() +
                 ", serverInfo=" + this.getServerInfo() +
                 ")";
     }
