@@ -322,6 +322,16 @@ public class EntityMap implements BedrockPacketHandler {
     }
 
     @Override
+    public PacketSignal handle(PlayerUpdateEntityOverridesPacket packet) {
+        return rewriteId(packet.getEntityUniqueId(), packet::setEntityUniqueId);
+    }
+
+    @Override
+    public PacketSignal handle(LevelSoundEventPacket packet) {
+        return rewriteId(packet.getEntityUniqueId(), packet::setEntityUniqueId);
+    }
+
+    @Override
     public PacketSignal handle(AnimateEntityPacket packet) {
         PacketSignal signal = PacketSignal.UNHANDLED;
         LongListIterator iterator = packet.getRuntimeEntityIds().listIterator();
