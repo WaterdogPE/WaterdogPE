@@ -221,6 +221,11 @@ public class EntityMap implements BedrockPacketHandler {
     }
 
     @Override
+    public PacketSignal handle(PlayerLocationPacket packet) {
+        return rewriteId(packet.getTargetEntityId(), packet::setTargetEntityId);
+    }
+
+    @Override
     public PacketSignal handle(SetEntityLinkPacket packet) {
         EntityLinkData entityLink = packet.getEntityLink();
         long from = PlayerRewriteUtils.rewriteId(entityLink.getFrom(), this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
@@ -319,6 +324,16 @@ public class EntityMap implements BedrockPacketHandler {
     @Override
     public PacketSignal handle(ClientCheatAbilityPacket packet) {
         return rewriteId(packet.getUniqueEntityId(), packet::setUniqueEntityId);
+    }
+
+    @Override
+    public PacketSignal handle(PlayerUpdateEntityOverridesPacket packet) {
+        return rewriteId(packet.getEntityUniqueId(), packet::setEntityUniqueId);
+    }
+
+    @Override
+    public PacketSignal handle(LevelSoundEventPacket packet) {
+        return rewriteId(packet.getEntityUniqueId(), packet::setEntityUniqueId);
     }
 
     @Override

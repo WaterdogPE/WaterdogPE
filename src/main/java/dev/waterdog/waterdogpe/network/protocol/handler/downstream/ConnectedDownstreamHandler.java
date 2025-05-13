@@ -40,18 +40,6 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
     }
 
     @Override
-    public PacketSignal handle(ItemComponentPacket packet) {
-        if (!this.player.acceptItemComponentPacket()) {
-            return Signals.CANCEL;
-        }
-        player.setAcceptItemComponentPacket(false);
-        if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_60)) {
-            setItemDefinitions(packet.getItems());
-        }
-        return PacketSignal.UNHANDLED;
-    }
-
-    @Override
     public PacketSignal handlePacket(BedrockPacket packet) {
         PacketSignal signal = super.handlePacket(packet);
         if (player.getPluginPacketHandlers().size() > 0) {

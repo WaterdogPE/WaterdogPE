@@ -50,6 +50,18 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
     }
 
     @Override
+    public PacketSignal handle(ItemComponentPacket packet) {
+        if (!this.player.acceptItemComponentPacket()) {
+            return Signals.CANCEL;
+        }
+        player.setAcceptItemComponentPacket(false);
+        if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_60)) {
+            setItemDefinitions(packet.getItems());
+        }
+        return PacketSignal.UNHANDLED;
+    }
+
+    @Override
     public void sendProxiedBatch(BedrockBatchWrapper batch) {
         if (this.player.getConnection().isConnected()) {
             this.player.getConnection().sendPacket(batch.retain());
