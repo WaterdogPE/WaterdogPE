@@ -18,8 +18,8 @@ package dev.waterdog.waterdogpe.event;
 /**
  * Represents the Priority of an event.
  * Default event priority, if not specific otherwise, is NORMAL.
- * HIGHEST is called first,
- * LOWEST is called last.
+ * LOWEST is called first,
+ * HIGHEST is called last.
  */
 public enum EventPriority {
     LOWEST,
