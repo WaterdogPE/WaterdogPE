@@ -58,4 +58,9 @@ public class NetworkSettings extends YamlConfig {
     @Accessors(fluent = true)
     @Comment("Enable RakNet cookies for additional security. Do NOT disable this unless you know what you are doing.")
     private boolean enableCookies = true;
+
+    @Path("packet_limit")
+    @Accessors(fluent = true)
+    @Comment("The maximum number per section of packet.")
+    private int packetLimit = 240;
 }

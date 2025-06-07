@@ -110,6 +110,8 @@ public class ProxiedPlayer implements CommandSender {
      */
     private final Collection<PluginPacketHandler> pluginPacketHandlers = new ObjectArrayList<>();
 
+    private Map<String, Object> sessionData = new HashMap<String, Object>();
+
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, CompressionType compression, LoginData loginData) {
         this.proxy = proxy;
         this.connection = session;
@@ -417,6 +419,10 @@ public class ProxiedPlayer implements CommandSender {
      */
     public void sendPacket(BedrockPacket packet) {
         if (this.connection != null && this.connection.isConnected()) {
+            UpstreamPacketSentEvent event = new UpstreamPacketSentEvent(this, packet);
+            this.proxy.getEventManager().callEvent(event);
+            if(event.isCancelled()) return;
+
             this.connection.sendPacket(packet);
         }
     }
@@ -428,6 +434,10 @@ public class ProxiedPlayer implements CommandSender {
      */
     public void sendPacketImmediately(BedrockPacket packet) {
         if (this.connection != null && this.connection.isConnected()) {
+            UpstreamPacketSentEvent event = new UpstreamPacketSentEvent(this, packet, true);
+            this.proxy.getEventManager().callEvent(event);
+            if(event.isCancelled()) return;
+
             this.connection.sendPacketImmediately(packet);
         }
     }
@@ -923,6 +933,35 @@ public class ProxiedPlayer implements CommandSender {
         return this.disconnectReason;
     }
 
+    public void setSessionData(Map<String, Object> sessionData) {
+        this.sessionData = sessionData;
+    }
+
+    public Map<String, Object> getSessionData() {
+        return Collections.unmodifiableMap(this.sessionData);
+    }
+
+    public void addSessionData(String key, Object value) {
+        Preconditions.checkNotNull(key, "Key can not be null!");
+        Preconditions.checkNotNull(value, "Value can not be null!");
+        this.sessionData.put(key, value);
+    }
+
+    public Object getSessionData(String key) {
+        Preconditions.checkNotNull(key, "Key can not be null!");
+        return this.sessionData.get(key);
+    }
+
+    public Object getSessionData(String key, Object defaultValue) {
+        Preconditions.checkNotNull(key, "Key can not be null!");
+        return this.sessionData.getOrDefault(key, defaultValue);
+    }
+
+    public void removeSessionData(String key) {
+        Preconditions.checkNotNull(key, "Key can not be null!");
+        this.sessionData.remove(key);
+    }
+
     @Override
     public String toString() {
         return "ProxiedPlayer(displayName=" + this.getName() +
@@ -930,6 +969,7 @@ public class ProxiedPlayer implements CommandSender {
                 ", connected=" + this.isConnected() +
                 ", address=" + this.getAddress() +
                 ", serverInfo=" + this.getServerInfo() +
+                ", sessionData=" + this.sessionData +
                 ")";
     }
 }

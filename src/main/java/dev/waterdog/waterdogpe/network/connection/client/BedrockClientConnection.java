@@ -15,6 +15,8 @@
 
 package dev.waterdog.waterdogpe.network.connection.client;
 
+import dev.waterdog.waterdogpe.event.defaults.DownstreamPacketSentEvent;
+import dev.waterdog.waterdogpe.event.defaults.UpstreamPacketSentEvent;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.FrameIdCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.ProxiedCompressionCodec;
@@ -106,11 +108,19 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
 
     @Override
     public void sendPacket(BedrockPacket packet) {
+        DownstreamPacketSentEvent event = new DownstreamPacketSentEvent(this.player, packet);
+        this.player.getProxy().getEventManager().callEvent(event);
+        if(event.isCancelled()) return;
+
         this.channel.writeAndFlush(packet);
     }
 
     @Override
     public void sendPacketImmediately(BedrockPacket packet) {
+        DownstreamPacketSentEvent event = new DownstreamPacketSentEvent(this.player, packet, true);
+        this.player.getProxy().getEventManager().callEvent(event);
+        if(event.isCancelled()) return;
+
         this.channel.writeAndFlush(BedrockBatchWrapper.create(this.getSubClientId(), packet));
     }
 

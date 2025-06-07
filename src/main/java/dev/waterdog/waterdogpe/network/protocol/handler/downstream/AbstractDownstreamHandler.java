@@ -15,13 +15,17 @@
 
 package dev.waterdog.waterdogpe.network.protocol.handler.downstream;
 
+import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.command.Command;
+import dev.waterdog.waterdogpe.event.defaults.DownstreamPacketReceivedEvent;
+import dev.waterdog.waterdogpe.event.defaults.DownstreamPacketSentEvent;
+import dev.waterdog.waterdogpe.event.defaults.UpstreamPacketSentEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
+import dev.waterdog.waterdogpe.network.protocol.Signals;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.RewriteMaps;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
-import dev.waterdog.waterdogpe.network.protocol.Signals;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
@@ -30,11 +34,23 @@ import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumConstraint;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumData;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
-import org.cloudburstmc.protocol.bedrock.packet.*;
+import org.cloudburstmc.protocol.bedrock.packet.AvailableCommandsPacket;
+import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
+import org.cloudburstmc.protocol.bedrock.packet.ChangeDimensionPacket;
+import org.cloudburstmc.protocol.bedrock.packet.ChunkRadiusUpdatedPacket;
+import org.cloudburstmc.protocol.bedrock.packet.ClientCacheMissResponsePacket;
+import org.cloudburstmc.protocol.bedrock.packet.ItemComponentPacket;
+import org.cloudburstmc.protocol.bedrock.packet.PlayStatusPacket;
 import org.cloudburstmc.protocol.common.PacketSignal;
 import org.cloudburstmc.protocol.common.SimpleDefinitionRegistry;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static dev.waterdog.waterdogpe.network.protocol.Signals.mergeSignals;
@@ -47,6 +63,15 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
     public AbstractDownstreamHandler(ProxiedPlayer player, ClientConnection connection) {
         this.player = player;
         this.connection = connection;
+    }
+
+    @Override
+    public PacketSignal handlePacket(BedrockPacket packet) {
+        DownstreamPacketReceivedEvent event = new DownstreamPacketReceivedEvent(player, packet);
+        ProxyServer.getInstance().getEventManager().callEvent(event);
+        if(event.isCancelled()) return PacketSignal.HANDLED;
+
+        return packet.handle(this);
     }
 
     @Override

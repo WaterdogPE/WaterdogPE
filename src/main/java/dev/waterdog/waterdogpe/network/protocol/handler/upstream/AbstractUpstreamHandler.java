@@ -15,12 +15,17 @@
 
 package dev.waterdog.waterdogpe.network.protocol.handler.upstream;
 
+import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.event.defaults.UpstreamPacketReceivedEvent;
+import dev.waterdog.waterdogpe.event.defaults.UpstreamPacketSentEvent;
+import dev.waterdog.waterdogpe.network.protocol.Signals;
 import dev.waterdog.waterdogpe.network.protocol.handler.PluginPacketHandler;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
-import dev.waterdog.waterdogpe.network.protocol.Signals;
 import org.cloudburstmc.protocol.bedrock.PacketDirection;
+import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
-import org.cloudburstmc.protocol.bedrock.packet.*;
+import org.cloudburstmc.protocol.bedrock.packet.ClientCacheStatusPacket;
+import org.cloudburstmc.protocol.bedrock.packet.PacketViolationWarningPacket;
 import org.cloudburstmc.protocol.common.PacketSignal;
 
 import static dev.waterdog.waterdogpe.network.protocol.Signals.mergeSignals;
@@ -41,6 +46,10 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
                 signal = mergeSignals(signal, handler.handlePacket(packet, PacketDirection.SERVER_BOUND));
             }
         }
+
+        UpstreamPacketReceivedEvent event = new UpstreamPacketReceivedEvent(player, packet);
+        ProxyServer.getInstance().getEventManager().callEvent(event);
+        if(event.isCancelled()) return this.cancel();
         return signal;
     }
 

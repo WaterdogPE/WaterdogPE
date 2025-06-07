@@ -113,6 +113,13 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(ClientCheatAbilityPacket.class);
         HANDLED_PACKETS.add(ToastRequestPacket.class);
         HANDLED_PACKETS.add(MovementEffectPacket.class);
+        HANDLED_PACKETS.add(PlaySoundPacket.class);
+        HANDLED_PACKETS.add(PlayerAuthInputPacket.class);
+        HANDLED_PACKETS.add(ModalFormRequestPacket.class);
+        HANDLED_PACKETS.add(ModalFormResponsePacket.class);
+        HANDLED_PACKETS.add(BlockEntityDataPacket.class);
+        HANDLED_PACKETS.add(InventoryTransactionPacket.class);
+        HANDLED_PACKETS.add(ClientboundCloseFormPacket.class);
     }
 
     private static final List<ProtocolCodecUpdater> UPDATERS = new ObjectArrayList<>();

@@ -23,7 +23,7 @@ import dev.waterdog.waterdogpe.command.CommandSettings;
 public class EndCommand extends Command {
 
     public EndCommand() {
-        super("end", CommandSettings.builder()
+        super("wdend", CommandSettings.builder()
                 .setDescription("waterdog.command.end.description")
                 .setPermission("waterdog.command.end.permission")
                 .setUsageMessage("waterdog.command.end.usage").build());

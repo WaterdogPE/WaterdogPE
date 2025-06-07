@@ -219,11 +219,6 @@ public class ProxyServer {
             }
         }
 
-        if (this.getConfiguration().isEnableAnonymousStatistics()) {
-            this.getLogger().info("Enabling anonymous statistics.");
-            Metrics.startMetrics(this, this.getConfiguration());
-        }
-
         if (this.getConfiguration().enableResourcePacks()) {
             this.packManager.loadPacks(this.packsPath);
         }
@@ -271,6 +266,8 @@ public class ProxyServer {
                     .option(RakChannelOption.RAK_HANDLE_PING, true)
                     .option(RakChannelOption.RAK_MAX_MTU, this.getNetworkSettings().getMaximumMtu())
                     .option(RakChannelOption.RAK_SEND_COOKIE, this.getNetworkSettings().enableCookies())
+                    .option(RakChannelOption.RAK_PACKET_LIMIT, this.getNetworkSettings().packetLimit())
+                    .childOption(RakChannelOption.RAK_PACKET_LIMIT, this.getNetworkSettings().packetLimit())
                     .childOption(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)
                     .childOption(RakChannelOption.RAK_ORDERING_CHANNELS, 1)
                     .handler(new OfflineServerChannelInitializer(this))
@@ -394,8 +391,9 @@ public class ProxyServer {
         }
 
         DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs);
+        event.setCancelled(args[0].equalsIgnoreCase("wdend") && sender instanceof ProxiedPlayer);
         this.eventManager.callEvent(event);
-        return !event.isCancelled() && this.commandMap.handleCommand(sender, args[0], shiftedArgs);
+        return event.isCancelled() || this.commandMap.handleCommand(sender, args[0], shiftedArgs);
     }
 
     public boolean isRunning() {
