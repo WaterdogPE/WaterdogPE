@@ -48,7 +48,6 @@ public abstract class Plugin {
     protected boolean enabled = false;
     private PluginYAML description;
     private ProxyServer proxy;
-    @Getter(AccessLevel.NONE)
     private Logger logger;
     private File pluginFile;
     private File dataFolder;
