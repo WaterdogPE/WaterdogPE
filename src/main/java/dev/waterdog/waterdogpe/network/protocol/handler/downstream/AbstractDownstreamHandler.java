@@ -25,9 +25,7 @@ import dev.waterdog.waterdogpe.network.protocol.Signals;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
-import org.cloudburstmc.protocol.bedrock.data.command.CommandData;
-import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumConstraint;
-import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumData;
+import org.cloudburstmc.protocol.bedrock.data.command.*;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.*;
@@ -87,6 +85,7 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
 
         for (Command command : this.player.getProxy().getCommandMap().getCommands().values()) {
             if (command.getPermission() == null || this.player.hasPermission(command.getPermission())) {
+                packet.getCommands().stream().filter(commandData -> commandData.getName().equalsIgnoreCase(command.getName())).findFirst().ifPresent(commandData -> packet.getCommands().remove(commandData));
                 packet.getCommands().add(command.getCommandData());
             }
         }
@@ -113,6 +112,16 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
                     new CommandEnumData(command.getName() + "_aliases", aliases, false),
                     Collections.emptyList(),
                     command.getOverloads()));
+        }
+
+        for(CommandData command : packet.getCommands()) {
+            for(CommandOverloadData overload : command.getOverloads()) {
+                for(CommandParamData param : overload.getOverloads()) {
+                    if(param.getType() == null) {
+                        param.setType(CommandParam.UNKNOWN);
+                    }
+                }
+            }
         }
         return PacketSignal.HANDLED;
     }
