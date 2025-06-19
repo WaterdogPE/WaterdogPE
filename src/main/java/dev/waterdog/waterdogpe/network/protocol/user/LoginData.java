@@ -53,6 +53,7 @@ public class LoginData {
 
     private final KeyPair keyPair;
     private final JsonObject clientData;
+    @Deprecated
     private final JsonObject extraData;
 
     private LoginPacket loginPacket;
@@ -73,6 +74,7 @@ public class LoginData {
         SignedJWT signedExtraData = HandshakeUtils.encodeJWT(this.keyPair, this.clientData);
 
         LoginPacket loginPacket = new LoginPacket();
+        // Even if upstream sent TokenPayload, we use the CertificateChainPayload for compatability
         loginPacket.setAuthPayload(new CertificateChainPayload(Collections.singletonList(signedClientData.serialize()), AuthType.SELF_SIGNED));
         loginPacket.setClientJwt(signedExtraData.serialize());
         loginPacket.setProtocolVersion(this.protocol.getProtocol());
@@ -111,6 +113,7 @@ public class LoginData {
         return this.clientData;
     }
 
+    @Deprecated
     public JsonObject getExtraData() {
         return this.extraData;
     }
