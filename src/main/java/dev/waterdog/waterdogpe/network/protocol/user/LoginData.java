@@ -19,12 +19,15 @@ import com.google.gson.JsonObject;
 import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import lombok.Builder;
+import org.cloudburstmc.protocol.bedrock.data.auth.AuthType;
+import org.cloudburstmc.protocol.bedrock.data.auth.CertificateChainPayload;
 import org.cloudburstmc.protocol.bedrock.packet.ClientCacheStatusPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
 import org.cloudburstmc.protocol.bedrock.packet.RequestChunkRadiusPacket;
 
 import java.net.SocketAddress;
 import java.security.KeyPair;
+import java.util.Collections;
 import java.util.UUID;
 
 /**
@@ -50,6 +53,7 @@ public class LoginData {
 
     private final KeyPair keyPair;
     private final JsonObject clientData;
+    @Deprecated
     private final JsonObject extraData;
 
     private LoginPacket loginPacket;
@@ -70,8 +74,9 @@ public class LoginData {
         SignedJWT signedExtraData = HandshakeUtils.encodeJWT(this.keyPair, this.clientData);
 
         LoginPacket loginPacket = new LoginPacket();
-        loginPacket.getChain().add(signedClientData.serialize());
-        loginPacket.setExtra(signedExtraData.serialize());
+        // Even if upstream sent TokenPayload, we use the CertificateChainPayload for compatability
+        loginPacket.setAuthPayload(new CertificateChainPayload(Collections.singletonList(signedClientData.serialize()), AuthType.SELF_SIGNED));
+        loginPacket.setClientJwt(signedExtraData.serialize());
         loginPacket.setProtocolVersion(this.protocol.getProtocol());
         return this.loginPacket = loginPacket;
     }
@@ -108,6 +113,7 @@ public class LoginData {
         return this.clientData;
     }
 
+    @Deprecated
     public JsonObject getExtraData() {
         return this.extraData;
     }

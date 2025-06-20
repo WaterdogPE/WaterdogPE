@@ -68,6 +68,7 @@ import org.cloudburstmc.protocol.bedrock.codec.v766.Bedrock_v766;
 import org.cloudburstmc.protocol.bedrock.codec.v776.Bedrock_v776;
 import org.cloudburstmc.protocol.bedrock.codec.v786.Bedrock_v786;
 import org.cloudburstmc.protocol.bedrock.codec.v800.Bedrock_v800;
+import org.cloudburstmc.protocol.bedrock.codec.v818.Bedrock_v818;
 
 @ToString(exclude = {"defaultCodec", "bedrockCodec"})
 public enum ProtocolVersion {
@@ -123,6 +124,7 @@ public enum ProtocolVersion {
     MINECRAFT_PE_1_21_60(776, Bedrock_v776.CODEC),
     MINECRAFT_PE_1_21_70(786, Bedrock_v786.CODEC),
     MINECRAFT_PE_1_21_80(800, Bedrock_v800.CODEC),
+    MINECRAFT_PE_1_21_90(818, Bedrock_v818.CODEC),
     ;
 
     private static final ProtocolVersion[] VALUES = values();
