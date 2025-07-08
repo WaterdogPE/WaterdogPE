@@ -29,6 +29,10 @@ public class HandshakeEntry {
 
     private final ECPublicKey identityPublicKey;
     private final JsonObject clientData;
+    /**
+     * @deprecated Extra data will be replaced with displayName, identity and xuid fields instead.
+     */
+    @Deprecated
     private final JsonObject extraData;
     private final boolean xboxAuthed;
     private ProtocolVersion protocol;
@@ -94,6 +98,7 @@ public class HandshakeEntry {
         return this.clientData;
     }
 
+    @Deprecated
     public JsonObject getExtraData() {
         return this.extraData;
     }
