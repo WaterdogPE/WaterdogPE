@@ -36,7 +36,7 @@ To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
 <repositories>
     <repository>
         <id>waterdog-repo</id>
-        <url>https://repo.waterdog.dev/main</url>
+        <url>https://repo.waterdog.dev/releases</url>
     </repository>
 </repositories>
 
