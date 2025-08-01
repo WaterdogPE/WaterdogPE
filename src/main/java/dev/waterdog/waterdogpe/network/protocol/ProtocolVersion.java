@@ -125,6 +125,7 @@ public enum ProtocolVersion {
     MINECRAFT_PE_1_21_70(786, Bedrock_v786.CODEC),
     MINECRAFT_PE_1_21_80(800, Bedrock_v800.CODEC),
     MINECRAFT_PE_1_21_90(818, Bedrock_v818.CODEC),
+    MINECRAFT_PE_1_21_93(819, Bedrock_v818.CODEC),
     ;
 
     private static final ProtocolVersion[] VALUES = values();

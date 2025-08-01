@@ -50,7 +50,6 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(MovePlayerPacket.class);
         HANDLED_PACKETS.add(UpdateBlockPacket.class);
         HANDLED_PACKETS.add(AddPaintingPacket.class);
-        HANDLED_PACKETS.add(LevelSoundEvent1Packet.class);
         HANDLED_PACKETS.add(LevelEventPacket.class);
         HANDLED_PACKETS.add(EntityEventPacket.class);
         HANDLED_PACKETS.add(MobEffectPacket.class);
@@ -65,7 +64,6 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(SetEntityLinkPacket.class);
         HANDLED_PACKETS.add(AnimatePacket.class);
         HANDLED_PACKETS.add(RespawnPacket.class);
-        HANDLED_PACKETS.add(AdventureSettingsPacket.class);
         HANDLED_PACKETS.add(SetDifficultyPacket.class);
         HANDLED_PACKETS.add(ChangeDimensionPacket.class);
         HANDLED_PACKETS.add(SetPlayerGameTypePacket.class);
@@ -89,7 +87,6 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(NetworkStackLatencyPacket.class);
         HANDLED_PACKETS.add(SpawnParticleEffectPacket.class);
         HANDLED_PACKETS.add(AvailableEntityIdentifiersPacket.class);
-        HANDLED_PACKETS.add(LevelSoundEvent2Packet.class);
         HANDLED_PACKETS.add(NetworkChunkPublisherUpdatePacket.class);
         HANDLED_PACKETS.add(LevelSoundEventPacket.class);
         HANDLED_PACKETS.add(ClientCacheStatusPacket.class);
@@ -109,8 +106,6 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(RequestNetworkSettingsPacket.class);
         HANDLED_PACKETS.add(UpdatePlayerGameTypePacket.class);
         HANDLED_PACKETS.add(SubClientLoginPacket.class);
-        HANDLED_PACKETS.add(LevelChunkPacket.class);
-        HANDLED_PACKETS.add(ClientCheatAbilityPacket.class);
         HANDLED_PACKETS.add(ToastRequestPacket.class);
         HANDLED_PACKETS.add(MovementEffectPacket.class);
         HANDLED_PACKETS.add(PlaySoundPacket.class);

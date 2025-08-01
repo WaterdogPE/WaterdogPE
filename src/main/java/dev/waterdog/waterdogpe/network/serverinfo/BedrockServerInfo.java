@@ -28,6 +28,7 @@ import io.netty.channel.*;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
+import org.cloudburstmc.netty.channel.raknet.RakConstants;
 import org.cloudburstmc.netty.channel.raknet.RakPing;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.protocol.bedrock.BedrockPong;
@@ -63,6 +64,9 @@ public class BedrockServerInfo extends ServerInfo {
                 .option(RakChannelOption.RAK_CONNECT_TIMEOUT, networkSettings.getConnectTimeout() * 1000L)
                 .option(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)
                 .option(RakChannelOption.RAK_MTU, networkSettings.getMaximumDownstreamMtu())
+                .option(RakChannelOption.RAK_MAX_QUEUED_BYTES, Integer.MAX_VALUE)
+                .option(RakChannelOption.RAK_GLOBAL_PACKET_LIMIT, Integer.MAX_VALUE)
+                .option(RakChannelOption.RAK_PACKET_LIMIT, Integer.MAX_VALUE)
                 .handler(new ProxiedClientSessionInitializer(player, this, promise))
                 .connect(this.getAddress()).addListener((ChannelFuture future) -> {
                     if (!future.isSuccess()) {
