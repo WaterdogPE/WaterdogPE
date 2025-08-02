@@ -16,6 +16,8 @@
 package dev.waterdog.waterdogpe.network.protocol.handler.upstream;
 
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.event.defaults.PlayerPacketViolationEvent;
+import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
 import dev.waterdog.waterdogpe.event.defaults.UpstreamPacketReceivedEvent;
 import dev.waterdog.waterdogpe.event.defaults.UpstreamPacketSentEvent;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
@@ -62,6 +64,11 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
     @Override
     public final PacketSignal handle(PacketViolationWarningPacket packet) {
         this.player.getLogger().warning("Received violation from " + this.player.getName() + ": " + packet.toString());
+
+        this.player.getProxy().getEventManager().callEvent(
+                new PlayerPacketViolationEvent(this.player, packet)
+        );
+        
         return this.cancel();
     }
 

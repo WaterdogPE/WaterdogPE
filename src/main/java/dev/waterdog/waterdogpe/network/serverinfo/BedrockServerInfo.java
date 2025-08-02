@@ -63,7 +63,7 @@ public class BedrockServerInfo extends ServerInfo {
                 .option(RakChannelOption.RAK_ORDERING_CHANNELS, 1)
                 .option(RakChannelOption.RAK_CONNECT_TIMEOUT, networkSettings.getConnectTimeout() * 1000L)
                 .option(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)
-                .option(RakChannelOption.RAK_MTU, networkSettings.getMaximumDownstreamMtu())
+                .option(RakChannelOption.RAK_MTU, Integer.MAX_VALUE)
                 .option(RakChannelOption.RAK_MAX_QUEUED_BYTES, 0)
                 .option(RakChannelOption.RAK_GLOBAL_PACKET_LIMIT, Integer.MAX_VALUE)
                 .option(RakChannelOption.RAK_PACKET_LIMIT, Integer.MAX_VALUE)
