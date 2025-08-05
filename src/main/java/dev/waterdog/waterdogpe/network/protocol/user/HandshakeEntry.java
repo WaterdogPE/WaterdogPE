@@ -43,14 +43,6 @@ public class HandshakeEntry {
     @Setter
     private ProtocolVersion protocol;
 
-    public HandshakeEntry(ECPublicKey identityPublicKey, JsonObject clientData, JsonObject extraData, boolean xboxAuthed, ProtocolVersion protocol) {
-        this.identityPublicKey = identityPublicKey;
-        this.clientData = clientData;
-        this.extraData = extraData;
-        this.xboxAuthed = xboxAuthed;
-        this.protocol = protocol;
-    }
-
     public LoginData buildData(BedrockServerSession session, ProxyServer proxy) throws Exception {
         // This is first event which exposes new player connecting to proxy.
         // The purpose is to change player's client data or set encryption keypair before joining first downstream.

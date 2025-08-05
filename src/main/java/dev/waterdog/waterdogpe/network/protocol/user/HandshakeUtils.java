@@ -25,7 +25,6 @@ import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
-import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
 import org.cloudburstmc.protocol.bedrock.data.auth.CertificateChainPayload;
 import org.cloudburstmc.protocol.bedrock.data.auth.TokenPayload;
@@ -33,7 +32,6 @@ import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import org.cloudburstmc.protocol.bedrock.util.ChainValidationResult;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
-import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import javax.crypto.SecretKey;
 import java.net.InetSocketAddress;
@@ -46,7 +44,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.util.Base64;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -186,7 +183,7 @@ public class HandshakeUtils {
         return clientData;
     }
 
-    public static JsonObject parseExtraData(LoginPacket packet, JsonObject payload) {
+    public static JsonObject parseExtraData(JsonObject payload) {
         JsonElement extraDataElement = payload.get("extraData");
         if (!extraDataElement.isJsonObject()) {
             throw new IllegalStateException("Invalid 'extraData'");
