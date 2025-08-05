@@ -68,7 +68,7 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
         this.player.getProxy().getEventManager().callEvent(
                 new PlayerPacketViolationEvent(this.player, packet)
         );
-        
+
         return this.cancel();
     }
 

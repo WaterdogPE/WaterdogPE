@@ -267,6 +267,7 @@ public class ProxyServer {
                     .option(RakChannelOption.RAK_MAX_MTU, this.getNetworkSettings().getMaximumMtu())
                     .option(RakChannelOption.RAK_SEND_COOKIE, this.getNetworkSettings().enableCookies())
                     .option(RakChannelOption.RAK_PACKET_LIMIT, Integer.MAX_VALUE)
+                    .option(RakChannelOption.RAK_MAX_QUEUED_BYTES, 0)
                     .childOption(RakChannelOption.RAK_MAX_QUEUED_BYTES, 0)
                     .childOption(RakChannelOption.RAK_PACKET_LIMIT, Integer.MAX_VALUE)
                     .childOption(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)
