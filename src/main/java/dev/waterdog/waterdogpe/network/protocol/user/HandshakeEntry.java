@@ -34,12 +34,24 @@ public class HandshakeEntry {
 
     private final ECPublicKey identityPublicKey;
     private final JsonObject clientData;
+    /**
+     * @deprecated Extra data will be replaced with displayName, identity and xuid fields instead.
+     */
+    @Deprecated
     private final JsonObject extraData;
     private final boolean xboxAuthed;
     @Setter
     private ProtocolVersion protocol;
 
-    public LoginData buildData(BedrockServerSession session, ProxyServer proxy) {
+    public HandshakeEntry(ECPublicKey identityPublicKey, JsonObject clientData, JsonObject extraData, boolean xboxAuthed, ProtocolVersion protocol) {
+        this.identityPublicKey = identityPublicKey;
+        this.clientData = clientData;
+        this.extraData = extraData;
+        this.xboxAuthed = xboxAuthed;
+        this.protocol = protocol;
+    }
+
+    public LoginData buildData(BedrockServerSession session, ProxyServer proxy) throws Exception {
         // This is first event which exposes new player connecting to proxy.
         // The purpose is to change player's client data or set encryption keypair before joining first downstream.
         PreClientDataSetEvent event = new PreClientDataSetEvent(this.clientData, this.extraData, EncryptionUtils.createKeyPair(), session);
@@ -68,7 +80,32 @@ public class HandshakeEntry {
         return builder.build();
     }
 
+    public ECPublicKey getIdentityPublicKey() {
+        return this.identityPublicKey;
+    }
+
+    public boolean isXboxAuthed() {
+        return this.xboxAuthed;
+    }
+
     public String getDisplayName() {
         return this.extraData.get("displayName").getAsString();
+    }
+
+    public void setProtocol(ProtocolVersion protocol) {
+        this.protocol = protocol;
+    }
+
+    public ProtocolVersion getProtocol() {
+        return this.protocol;
+    }
+
+    public JsonObject getClientData() {
+        return this.clientData;
+    }
+
+    @Deprecated
+    public JsonObject getExtraData() {
+        return this.extraData;
     }
 }
