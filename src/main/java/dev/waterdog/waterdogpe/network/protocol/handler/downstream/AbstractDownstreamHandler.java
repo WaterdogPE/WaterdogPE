@@ -185,8 +185,6 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
         for (ItemDefinition definition : definitions) {
             if (runtimeIds.add(definition.getRuntimeId())) {
                 itemRegistry.add(definition);
-            } else {
-                player.getLogger().warning("[{}|{}] has duplicate item definition: {}", this.player.getName(), this.connection.getServerInfo().getServerName(), definition);
             }
         }
         codecHelper.setItemDefinitions(itemRegistry.build());
