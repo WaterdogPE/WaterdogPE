@@ -23,11 +23,15 @@ import org.cloudburstmc.protocol.common.PacketSignal;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Upstream handler handling proxy manager resource packs.
  */
 public class ResourcePacksHandler extends AbstractUpstreamHandler {
+    private static final int PACKET_SEND_DELAY = 4; // DELAY THE SEND OF PACKETS TO AVOID BURSTING SLOWER AND/OR HIGHER PING CLIENTS
+    private final Queue<ResourcePackChunkRequestPacket> chunkRequestQueue = new ConcurrentLinkedQueue<>();
+    private boolean sendingChunks = false;
 
     private final Queue<ResourcePackDataInfoPacket> pendingPacks = new LinkedList<>();
     private ResourcePackDataInfoPacket sendingPack;
@@ -72,24 +76,47 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
 
     @Override
     public PacketSignal handle(ResourcePackChunkRequestPacket packet) {
+        chunkRequestQueue.add(packet);
+        if (!sendingChunks) {
+            sendingChunks = true;
+            processNextChunk();
+        }
+
+        return this.cancel();
+    }
+
+    private void processNextChunk() {
+        ResourcePackChunkRequestPacket packet = chunkRequestQueue.poll();
+        if (packet == null) {
+            sendingChunks = false;
+            return;
+        }
+
         PackManager packManager = this.player.getProxy().getPackManager();
         ResourcePackChunkDataPacket response = packManager.packChunkDataPacket(packet.getPackId() + "_" + packet.getPackVersion(), packet);
         if (response == null) {
+            sendingChunks = false;
             this.player.disconnect("Unknown resource pack!");
         } else {
-            this.player.sendPacket(response);
+            this.player.getConnection().sendPacketImmediately(response);
             if (this.sendingPack != null && (packet.getChunkIndex() + 1) >= this.sendingPack.getChunkCount()) {
+                sendingChunks = false;
                 this.sendNextPacket();
+            } else {
+                // DELAY THE SEND OF PACKETS TO AVOID BURSTING SLOWER AND/OR HIGHER PINGS CLIENTS
+                this.player.getProxy().getScheduler().scheduleDelayed(() -> {
+                    processNextChunk();
+                }, PACKET_SEND_DELAY);
             }
         }
-        return this.cancel();
     }
 
     private void sendNextPacket() {
         ResourcePackDataInfoPacket infoPacket = this.pendingPacks.poll();
         if (infoPacket != null && this.player.isConnected()) {
             this.sendingPack = infoPacket;
-            this.player.sendPacket(infoPacket);
+            this.player.getConnection().sendPacket(infoPacket);
+            this.player.getConnection().getPeer().getChannel().flush();
         }
     }
 }
