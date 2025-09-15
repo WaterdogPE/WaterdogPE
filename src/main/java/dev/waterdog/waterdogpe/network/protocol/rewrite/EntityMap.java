@@ -357,6 +357,11 @@ public class EntityMap implements BedrockPacketHandler {
         return rewriteId(packet.getRuntimeEntityId(), packet::setRuntimeEntityId);
     }
 
+    @Override
+    public PacketSignal handle(UpdateEquipPacket packet) {
+        return rewriteId(packet.getUniqueEntityId(), packet::setUniqueEntityId);
+    }
+
     private PacketSignal rewriteMetadata(EntityDataMap metadata) {
         PacketSignal signal = PacketSignal.UNHANDLED;
         for (EntityDataType<Long> data : ENTITY_DATA_FIELDS) {
