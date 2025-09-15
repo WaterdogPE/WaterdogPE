@@ -19,6 +19,8 @@ import dev.waterdog.waterdogpe.network.protocol.handler.PluginPacketHandler;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
 import org.cloudburstmc.protocol.bedrock.PacketDirection;
+import org.cloudburstmc.protocol.bedrock.data.PacketViolationSeverity;
+import org.cloudburstmc.protocol.bedrock.data.PacketViolationType;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.cloudburstmc.protocol.common.PacketSignal;
@@ -52,6 +54,11 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
 
     @Override
     public final PacketSignal handle(PacketViolationWarningPacket packet) {
+        if(packet.getType().equals(PacketViolationType.UNKNOWN) && packet.getSeverity().equals(PacketViolationSeverity.WARNING) && packet.getPacketCauseId() == 156) {
+            // This is sent because InvMenuu needs it, we can safely ignore it
+            return PacketSignal.HANDLED;
+        }
+
         this.player.getLogger().warning("Received violation from " + this.player.getName() + ": " + packet.toString());
         return this.cancel();
     }
