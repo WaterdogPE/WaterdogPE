@@ -19,8 +19,12 @@ import com.google.gson.JsonObject;
 import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.cloudburstmc.protocol.bedrock.data.auth.AuthType;
 import org.cloudburstmc.protocol.bedrock.data.auth.CertificateChainPayload;
+import org.cloudburstmc.protocol.bedrock.data.auth.TokenPayload;
 import org.cloudburstmc.protocol.bedrock.packet.ClientCacheStatusPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
 import org.cloudburstmc.protocol.bedrock.packet.RequestChunkRadiusPacket;
@@ -33,7 +37,9 @@ import java.util.UUID;
 /**
  * Holds relevant information passed to the proxy on the first connection (initial) in the LoginPacket.
  */
+@Slf4j
 @Builder
+@Getter
 public class LoginData {
 
     private final String displayName;
@@ -53,15 +59,16 @@ public class LoginData {
 
     private final KeyPair keyPair;
     private final JsonObject clientData;
-    @Deprecated
-    private final JsonObject extraData;
-
     private LoginPacket loginPacket;
 
+    @Setter
     @Builder.Default
     private RequestChunkRadiusPacket chunkRadius = PlayerRewriteUtils.defaultChunkRadius;
+    @Setter
     @Builder.Default
     private ClientCacheStatusPacket cachePacket = PlayerRewriteUtils.defaultCachePacket;
+
+    private final boolean isChainPayload;
 
     /**
      * Used to construct new login packet using this.clientData and this.extraData signed by this.keyPair.
@@ -70,68 +77,20 @@ public class LoginData {
      * @return new LoginPacket.
      */
     public LoginPacket rebuildLoginPacket() {
-        SignedJWT signedClientData = HandshakeUtils.createExtraData(this.keyPair, this.extraData);
-        SignedJWT signedExtraData = HandshakeUtils.encodeJWT(this.keyPair, this.clientData);
-
         LoginPacket loginPacket = new LoginPacket();
-        // Even if upstream sent TokenPayload, we use the CertificateChainPayload for compatability
-        loginPacket.setAuthPayload(new CertificateChainPayload(Collections.singletonList(signedClientData.serialize()), AuthType.SELF_SIGNED));
-        loginPacket.setClientJwt(signedExtraData.serialize());
+        SignedJWT signedClientData = HandshakeUtils.encodeJWT(this.keyPair, this.clientData);
+        loginPacket.setClientJwt(signedClientData.serialize());
         loginPacket.setProtocolVersion(this.protocol.getProtocol());
-        return this.loginPacket = loginPacket;
-    }
-
-    public String getDisplayName() {
-        return this.displayName;
-    }
-
-    public String getXuid() {
-        return this.xuid;
-    }
-
-    public boolean isXboxAuthed() {
-        return this.xboxAuthed;
-    }
-
-    public UUID getUuid() {
-        return this.uuid;
-    }
-
-    public SocketAddress getAddress() {
-        return this.address;
-    }
-
-    public ProtocolVersion getProtocol() {
-        return this.protocol;
-    }
-
-    public KeyPair getKeyPair() {
-        return this.keyPair;
-    }
-
-    public JsonObject getClientData() {
-        return this.clientData;
-    }
-
-    @Deprecated
-    public JsonObject getExtraData() {
-        return this.extraData;
-    }
-
-    public String getJoinHostname() {
-        return this.joinHostname;
-    }
-
-    public Platform getDevicePlatform() {
-        return devicePlatform;
-    }
-
-    public String getDeviceId() {
-        return deviceId;
-    }
-
-    public String getDeviceModel() {
-        return deviceModel;
+        if (isChainPayload) {
+            JsonObject extraData = HandshakeUtils.createChainExtraData(displayName, xuid, uuid);
+            SignedJWT signedPayload = HandshakeUtils.createClientDataChain(this.keyPair, extraData);
+            loginPacket.setAuthPayload(new CertificateChainPayload(Collections.singletonList(signedPayload.serialize()), AuthType.SELF_SIGNED));
+        } else {
+            SignedJWT signedPayload = HandshakeUtils.createClientDataToken(this.keyPair, displayName, xuid);
+            loginPacket.setAuthPayload(new TokenPayload(signedPayload.serialize(), AuthType.SELF_SIGNED));
+        }
+        this.loginPacket = loginPacket;
+        return loginPacket;
     }
 
     public LoginPacket getLoginPacket() {
@@ -141,19 +100,4 @@ public class LoginData {
         return this.loginPacket;
     }
 
-    public RequestChunkRadiusPacket getChunkRadius() {
-        return this.chunkRadius;
-    }
-
-    public void setChunkRadius(RequestChunkRadiusPacket chunkRadius) {
-        this.chunkRadius = chunkRadius;
-    }
-
-    public ClientCacheStatusPacket getCachePacket() {
-        return this.cachePacket;
-    }
-
-    public void setCachePacket(ClientCacheStatusPacket cachePacket) {
-        this.cachePacket = cachePacket;
-    }
 }

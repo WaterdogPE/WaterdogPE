@@ -77,7 +77,7 @@ public class BedrockServerSession extends BedrockSession implements ProxiedConne
     }
 
     @Override
-    public void disconnect(String reason, boolean hideReason) {
+    public void disconnect(CharSequence reason, boolean hideReason) {
         this.checkForClosed();
 
         DisconnectPacket packet = new DisconnectPacket();
@@ -128,8 +128,10 @@ public class BedrockServerSession extends BedrockSession implements ProxiedConne
         return this.packetHandler;
     }
 
-    public void addDisconnectListener(Consumer<String> listener) {
-        this.getPeer().getChannel().closeFuture().addListener(future -> listener.accept(this.getDisconnectReason()));
+    public void addDisconnectListener(Consumer<CharSequence> listener) {
+        this.getPeer().getChannel().closeFuture().addListener(future -> {
+            listener.accept(this.getDisconnectReason());
+        });
     }
 
     public int getSubClientId() {
