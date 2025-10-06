@@ -20,7 +20,6 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.PreClientDataSetEvent;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
@@ -29,7 +28,6 @@ import java.security.interfaces.ECPublicKey;
 import java.util.UUID;
 
 @Getter
-@AllArgsConstructor
 public class HandshakeEntry {
 
     private final ECPublicKey identityPublicKey;
