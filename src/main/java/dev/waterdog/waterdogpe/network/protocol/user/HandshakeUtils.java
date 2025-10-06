@@ -25,9 +25,10 @@ import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
+import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
 import org.cloudburstmc.protocol.bedrock.data.auth.CertificateChainPayload;
-import org.cloudburstmc.protocol.bedrock.data.auth.TokenPayload;
 import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ServerToClientHandshakePacket;
 import org.cloudburstmc.protocol.bedrock.util.ChainValidationResult;
@@ -36,25 +37,21 @@ import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 import javax.crypto.SecretKey;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.util.Base64;
-import java.util.List;
 import java.util.UUID;
 
 /**
  * Various utilities for parsing Handshake data
  */
+@Log4j2
 public class HandshakeUtils {
 
+    @Getter
     private static final KeyPair privateKeyPair;
-
-    private static final Gson GSON = new GsonBuilder().create();
 
     static {
         try {
@@ -66,11 +63,7 @@ public class HandshakeUtils {
         }
     }
 
-    public static KeyPair getPrivateKeyPair() {
-        return privateKeyPair;
-    }
-
-    public static SignedJWT createExtraData(KeyPair pair, JsonObject extraData) {
+    public static SignedJWT createClientDataChain(KeyPair pair, JsonObject extraData) {
         String publicKeyBase64 = Base64.getEncoder().encodeToString(pair.getPublic().getEncoded());
         long timestamp = System.currentTimeMillis() / 1000;
 
@@ -83,6 +76,20 @@ public class HandshakeUtils {
         dataChain.add("extraData", extraData);
         dataChain.addProperty("randomNonce", UUID.randomUUID().getLeastSignificantBits());
         dataChain.addProperty("identityPublicKey", publicKeyBase64);
+        return encodeJWT(pair, dataChain);
+    }
+
+    public static SignedJWT createClientDataToken(KeyPair pair, String displayName, String xuid) {
+        String publicKeyBase64 = Base64.getEncoder().encodeToString(pair.getPublic().getEncoded());
+        long timestamp = System.currentTimeMillis() / 1000;
+
+        JsonObject dataChain = new JsonObject();
+        dataChain.addProperty("iat", timestamp);
+        dataChain.addProperty("exp", timestamp + 24 * 3600);
+        dataChain.addProperty("iss", "self");
+        dataChain.addProperty("cpk", publicKeyBase64);
+        dataChain.addProperty("xid", xuid);
+        dataChain.addProperty("xname", displayName);
         return encodeJWT(pair, dataChain);
     }
 
@@ -99,10 +106,6 @@ public class HandshakeUtils {
         }
     }
 
-    public static ECPublicKey generateKey(String b64) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        return (ECPublicKey) KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(b64)));
-    }
-
     public static void signJwt(JWSObject jws, ECPrivateKey key) throws JOSEException {
         jws.sign(new ECDSASigner(key, Curve.P_384));
     }
@@ -112,89 +115,47 @@ public class HandshakeUtils {
     }
 
     public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, ProtocolVersion protocol, boolean strict) throws Exception {
-        if (packet.getAuthPayload() instanceof TokenPayload) {
-            ChainValidationResult result = EncryptionUtils.validatePayload(packet.getAuthPayload());
-            boolean xboxAuth = result.signed();
-            JsonObject payload = GSON.toJsonTree(result.rawIdentityClaims()).getAsJsonObject();
-            SignedJWT clientDataJwt = SignedJWT.parse(packet.getClientJwt());
-            // Currently, we are still sending the legacy Certificate to downstream
-            // For this, we need to build the extraData manually
+        ChainValidationResult result = EncryptionUtils.validatePayload(packet.getAuthPayload());
+        boolean xboxAuth = result.signed();
+        ChainValidationResult.IdentityClaims identityClaims = result.identityClaims();
+        ChainValidationResult.IdentityData identityData = identityClaims.extraData;
+        ECPublicKey identityPublicKey = (ECPublicKey) identityClaims.parsedIdentityPublicKey();
+        String xuid = identityData.xuid;
+        //UUID uuid = UUID.nameUUIDFromBytes(("pocket-auth-1-xuid:" + xuid).getBytes(StandardCharsets.UTF_8));
+        UUID uuid = identityData.identity;
 
-            // xname is the old displayName field
-            // xid is the old XUID field
-            // identity field is removed, we derive that information from xuid instead
-
-            // titleId and sandboxId are missing now, not sure if there is a way to derive those.
-
-            JsonObject extraData = new JsonObject();
-            String playerName = payload.get("xname").getAsString();
-            if (ProxyServer.getInstance().getConfiguration().isReplaceUsernameSpaces()) {
-                extraData.addProperty("displayName", playerName.replaceAll(" ", "_"));
-            } else {
-                extraData.addProperty("displayName", playerName);
-            }
-            String xuid = payload.get("xid").getAsString();
-            extraData.addProperty("XUID", xuid);
-            extraData.addProperty("identity", UUID.nameUUIDFromBytes(xuid.getBytes(StandardCharsets.UTF_8)).toString());
-            ECPublicKey identityPublicKey = EncryptionUtils.parseKey(result.identityClaims().identityPublicKey);
-            JsonObject clientData = HandshakeUtils.parseClientData(clientDataJwt, extraData, session);
-            SignedJWT clientJwt = SignedJWT.parse(packet.getClientJwt());
-            if (!verifyJwt(clientJwt, identityPublicKey) && strict) {
-                xboxAuth = false;
-            }
-            return new HandshakeEntry(identityPublicKey, clientData, extraData, xboxAuth, protocol);
-        } else if (packet.getAuthPayload() instanceof CertificateChainPayload chainPayload) {
-            List<String> chain = chainPayload.getChain();
-            if (chain.isEmpty()) {
-                throw new IllegalArgumentException("Invalid chain data");
-            }
-
-            ChainValidationResult result = EncryptionUtils.validatePayload(packet.getAuthPayload());
-            boolean xboxAuth = result.signed();
-            JsonObject payload = GSON.toJsonTree(result.rawIdentityClaims()).getAsJsonObject();
-            JsonObject extraData = HandshakeUtils.parseExtraData(payload);
-
-            if (!payload.has("identityPublicKey")) {
-                throw new RuntimeException("Identity Public Key was not found!");
-            }
-            String identityPublicKeyString = payload.get("identityPublicKey").getAsString();
-
-            ECPublicKey identityPublicKey = generateKey(identityPublicKeyString);
-            SignedJWT clientJwt = SignedJWT.parse(packet.getClientJwt());
-            if (!verifyJwt(clientJwt, identityPublicKey) && strict) {
-                xboxAuth = false;
-            }
-            JsonObject clientData = HandshakeUtils.parseClientData(clientJwt, extraData, session);
-
-            return new HandshakeEntry(identityPublicKey, clientData, extraData, xboxAuth, protocol);
-        } else {
-            throw new IllegalArgumentException("Invalid auth payload");
+        SignedJWT clientDataJwt = SignedJWT.parse(packet.getClientJwt());
+        JsonObject clientData = HandshakeUtils.parseClientData(clientDataJwt, xuid, session);
+        if (!verifyJwt(clientDataJwt, identityPublicKey) && strict) {
+            xboxAuth = false;
         }
+        String displayName;
+        if (ProxyServer.getInstance().getConfiguration().isReplaceUsernameSpaces()) {
+            displayName = identityData.displayName
+                    .replaceAll(" ", "_");
+        } else {
+            displayName = identityData.displayName;
+        }
+
+        if (xboxAuth) {
+            ProxyConfig config = ProxyServer.getInstance().getConfiguration();
+            if (config.useLoginExtras()) {
+                clientData.addProperty("Waterdog_Auth", true);
+            }
+        }
+        return new HandshakeEntry(identityPublicKey, clientData, xuid, uuid, displayName, xboxAuth, protocol,
+                packet.getAuthPayload() instanceof CertificateChainPayload);
     }
 
-    public static JsonObject parseClientData(JWSObject clientJwt, JsonObject extraData, BedrockSession session) throws Exception {
+    public static JsonObject parseClientData(JWSObject clientJwt, String xuid, BedrockSession session) throws Exception {
         JsonObject clientData = (JsonObject) JsonParser.parseString(clientJwt.getPayload().toString());
         ProxyConfig config = ProxyServer.getInstance().getConfiguration();
         if (config.useLoginExtras()) {
             // Add waterdog attributes
-            clientData.addProperty("Waterdog_XUID", extraData.get("XUID").getAsString());
+            clientData.addProperty("Waterdog_XUID", xuid);
             clientData.addProperty("Waterdog_IP", ((InetSocketAddress) session.getSocketAddress()).getAddress().getHostAddress());
         }
         return clientData;
-    }
-
-    public static JsonObject parseExtraData(JsonObject payload) {
-        JsonElement extraDataElement = payload.get("extraData");
-        if (!extraDataElement.isJsonObject()) {
-            throw new IllegalStateException("Invalid 'extraData'");
-        }
-
-        JsonObject extraData = extraDataElement.getAsJsonObject();
-        if (ProxyServer.getInstance().getConfiguration().isReplaceUsernameSpaces()) {
-            String playerName = extraData.get("displayName").getAsString();
-            extraData.addProperty("displayName", playerName.replaceAll(" ", "_"));
-        }
-        return extraData;
     }
 
     public static void processEncryption(BedrockSession session, PublicKey key) throws Exception {
@@ -208,5 +169,13 @@ public class HandshakeUtils {
             session.sendPacketImmediately(packet);
             session.enableEncryption(encryptionKey);
         });
+    }
+
+    public static JsonObject createChainExtraData(String displayName, String xuid, UUID uuid) {
+        JsonObject extraData = new JsonObject();
+        extraData.addProperty("displayName", displayName);
+        extraData.addProperty("XUID", xuid);
+        extraData.addProperty("identity", uuid.toString());
+        return extraData;
     }
 }

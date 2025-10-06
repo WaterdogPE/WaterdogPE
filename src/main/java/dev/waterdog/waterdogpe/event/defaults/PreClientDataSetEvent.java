@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.security.KeyPair;
+import java.util.UUID;
 
 /**
  * Called right when we decoded the player's LoginPacket data in the handshake(HandshakeUpstreamHandler).
@@ -32,13 +33,20 @@ public class PreClientDataSetEvent extends Event {
 
     private final ProxiedConnection connection;
     private final JsonObject clientData;
-    private final JsonObject extraData;
+    @Getter
+    private final String xuid;
+    @Getter
+    private final UUID uuid;
+    @Getter
+    private final String displayName;
     @Setter
     private KeyPair keyPair;
 
-    public PreClientDataSetEvent(JsonObject clientData, JsonObject extraData, KeyPair keyPair, ProxiedConnection playerSession) {
+    public PreClientDataSetEvent(JsonObject clientData, String xuid, UUID uuid, String displayName, KeyPair keyPair, ProxiedConnection playerSession) {
         this.clientData = clientData;
-        this.extraData = extraData;
+        this.xuid = xuid;
+        this.uuid = uuid;
+        this.displayName = displayName;
         this.connection = playerSession;
         this.keyPair = keyPair;
     }

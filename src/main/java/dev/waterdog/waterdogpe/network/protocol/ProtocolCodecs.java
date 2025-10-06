@@ -120,6 +120,7 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(BlockEntityDataPacket.class);
         HANDLED_PACKETS.add(InventoryTransactionPacket.class);
         HANDLED_PACKETS.add(ClientboundCloseFormPacket.class);
+        HANDLED_PACKETS.add(UpdateEquipPacket.class);
     }
 
     private static final List<ProtocolCodecUpdater> UPDATERS = new ObjectArrayList<>();

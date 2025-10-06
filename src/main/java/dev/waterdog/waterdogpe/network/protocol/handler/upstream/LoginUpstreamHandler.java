@@ -146,6 +146,9 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
         this.session.setLogging(WaterdogPE.version().debug());
         try {
+            this.proxy.getLogger().debug("[{}] <-> Received login with authType: {} and payloadType: {}.", this.session.getSocketAddress(),
+                    packet.getAuthPayload().getClass().getSimpleName(), packet.getAuthPayload().getAuthType());
+
             handshakeEntry = HandshakeUtils.processHandshake(this.session, packet, protocol, strictAuth);
             if (!handshakeEntry.isXboxAuthed() && strictAuth) {
                 this.onLoginFailed(handshakeEntry, null, "disconnectionScreen.notAuthenticated");
@@ -155,7 +158,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
             // Thank you Mojang: this version includes protocol changes, but protocol version was not increased.
             if (protocol.equals(ProtocolVersion.MINECRAFT_PE_1_19_60) && handshakeEntry.getClientData().has("GameVersion") &&
-                    ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(handshakeEntry.getClientData().get("GameVersion").getAsString())) {;
+                    ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(handshakeEntry.getClientData().get("GameVersion").getAsString())) {
                 handshakeEntry.setProtocol(protocol = ProtocolVersion.MINECRAFT_PE_1_19_62);
                 this.session.getPeer().setProtocol(protocol);
             }
