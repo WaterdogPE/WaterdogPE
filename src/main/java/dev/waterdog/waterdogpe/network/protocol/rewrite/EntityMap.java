@@ -378,7 +378,7 @@ public class EntityMap implements BedrockPacketHandler {
         PacketSignal signal = PacketSignal.UNHANDLED;
         for (EntityDataType<Long> data : ENTITY_DATA_FIELDS) {
             Long id = metadata.get(data);
-            if (id != null && id > 0L) { // IDs start at 1, so this is safe
+            if (id != null) {
                 long rewriteId = PlayerRewriteUtils.rewriteId(id, this.rewrite.getEntityId(), this.rewrite.getOriginalEntityId());
                 if (rewriteId != id) {
                     metadata.put(data, rewriteId);
