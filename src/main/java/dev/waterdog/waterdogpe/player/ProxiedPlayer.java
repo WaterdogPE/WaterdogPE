@@ -230,6 +230,7 @@ public class ProxiedPlayer implements CommandSender {
         ClientConnection connectingServer = this.getPendingConnection();
         if (connectingServer != null) {
             if (connectingServer.getServerInfo() == targetServer) {
+                this.pendingServers.remove(targetServer);
                 this.sendMessage(new TranslationContainer("waterdog.downstream.connecting", targetServer.getServerName()));
                 return;
             } else {
