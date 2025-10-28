@@ -114,6 +114,10 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(ToastRequestPacket.class);
         HANDLED_PACKETS.add(MovementEffectPacket.class);
         HANDLED_PACKETS.add(UpdateEquipPacket.class);
+        HANDLED_PACKETS.add(CameraInstructionPacket.class);
+        HANDLED_PACKETS.add(MovementPredictionSyncPacket.class);
+        HANDLED_PACKETS.add(PlayerUpdateEntityOverridesPacket.class);
+        HANDLED_PACKETS.add(PlayerLocationPacket.class);
     }
 
     private static final List<ProtocolCodecUpdater> UPDATERS = new ObjectArrayList<>();
