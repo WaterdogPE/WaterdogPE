@@ -118,6 +118,7 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(MovementPredictionSyncPacket.class);
         HANDLED_PACKETS.add(PlayerUpdateEntityOverridesPacket.class);
         HANDLED_PACKETS.add(PlayerLocationPacket.class);
+        HANDLED_PACKETS.add(CameraPresetsPacket.class);
     }
 
     private static final List<ProtocolCodecUpdater> UPDATERS = new ObjectArrayList<>();
