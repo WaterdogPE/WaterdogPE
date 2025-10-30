@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network.protocol.user;
 
 import com.google.gson.JsonObject;
 import com.nimbusds.jwt.SignedJWT;
+import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import lombok.Builder;
 import lombok.Getter;
@@ -81,7 +82,7 @@ public class LoginData {
         SignedJWT signedClientData = HandshakeUtils.encodeJWT(this.keyPair, this.clientData);
         loginPacket.setClientJwt(signedClientData.serialize());
         loginPacket.setProtocolVersion(this.protocol.getProtocol());
-        if (isChainPayload) {
+        if (isChainPayload || ProxyServer.getInstance().getConfiguration().useCertificatePayload()) {
             JsonObject extraData = HandshakeUtils.createChainExtraData(displayName, xuid, uuid);
             SignedJWT signedPayload = HandshakeUtils.createClientDataChain(this.keyPair, extraData);
             loginPacket.setAuthPayload(new CertificateChainPayload(Collections.singletonList(signedPayload.serialize()), AuthType.SELF_SIGNED));
