@@ -25,10 +25,16 @@ import dev.waterdog.waterdogpe.network.protocol.Signals;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
+import org.cloudburstmc.protocol.bedrock.data.camera.CameraPreset;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandData;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumConstraint;
+import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumData;
 import org.cloudburstmc.protocol.bedrock.data.command.*;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
+import org.cloudburstmc.protocol.bedrock.data.definitions.SimpleNamedDefinition;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.*;
+import org.cloudburstmc.protocol.common.NamedDefinition;
 import org.cloudburstmc.protocol.common.PacketSignal;
 import org.cloudburstmc.protocol.common.SimpleDefinitionRegistry;
 
@@ -146,6 +152,12 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
         return PacketSignal.UNHANDLED;
     }
 
+    @Override
+    public PacketSignal handle(CameraPresetsPacket packet) {
+        setCameraPresetDefinitions(packet.getPresets());
+        return PacketSignal.UNHANDLED;
+    }
+
     protected PacketSignal onPlayStatus(PlayStatusPacket packet, Consumer<String> failedTask, ClientConnection connection) {
         String message;
         switch (packet.getStatus()) {
@@ -185,8 +197,22 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
         for (ItemDefinition definition : definitions) {
             if (runtimeIds.add(definition.getRuntimeId())) {
                 itemRegistry.add(definition);
+            } else {
+                player.getLogger().warning("[{}|{}] has duplicate item definition: {}", this.player.getName(), this.connection.getServerInfo().getServerName(), definition);
             }
         }
         codecHelper.setItemDefinitions(itemRegistry.build());
+    }
+
+    protected void setCameraPresetDefinitions(Collection<CameraPreset> presets) {
+        BedrockCodecHelper codecHelper = this.player.getConnection()
+                .getPeer()
+                .getCodecHelper();
+        SimpleDefinitionRegistry.Builder<NamedDefinition> registry = SimpleDefinitionRegistry.builder();
+        int id = 0;
+        for (CameraPreset preset : presets) {
+            registry.add(new SimpleNamedDefinition(preset.getIdentifier(), id++));
+        }
+        codecHelper.setCameraPresetDefinitions(registry.build());
     }
 }

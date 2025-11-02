@@ -117,6 +117,11 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, the proxy will pass information like XUID or IP to the downstream server using custom fields in the LoginPacket")
     private boolean useLoginExtras = false;
 
+    @Path("use_certificate_payload")
+    @Accessors(fluent = true)
+    @Comment("If enabled, the proxy will always send Certificate payload in the LoginPacket")
+    private boolean useCertificatePayload = true;
+
     @Path("replace_username_spaces")
     @Comment("Replaces username spaces with underscores if enabled")
     private boolean replaceUsernameSpaces = false;
