@@ -362,6 +362,6 @@ public class PlayerRewriteUtils {
     }
 
     public static boolean checkForImmobileFlag(EntityDataMap dataMap) {
-        return dataMap != null && dataMap.getFlags() != null && dataMap.getFlags().containsKey(EntityFlag.NO_AI);
+        return dataMap != null && dataMap.getFlags() != null && Boolean.TRUE.equals(dataMap.getFlags().get(EntityFlag.NO_AI));
     }
 }
