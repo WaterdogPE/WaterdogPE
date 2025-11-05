@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-jammy
 
 EXPOSE 19132/tcp
 EXPOSE 19132/udp
