@@ -6,21 +6,21 @@ body:
     id: description
     attributes:
       label: Bug description
-      description: Please describe the bug you are reporting. What symptoms does it cause?
+      description: A clear and concise description of what the bug is.
     validations:
       required: true
   - type: textarea
     id: reproducing
     attributes:
       label: Reproducing instructions
-      description: How can you reproduce this behaviour? Insert code or ingame instructions here if applicable.
+      description: How can you reproduce this behaviour? Step by step instructions here if applicable.
     validations:
       required: true
   - type: textarea
     id: expectations
     attributes:
       label: Expected behaviour
-      description: What did you expect to happen instead?
+      description: A clear and concise description of what you expected to happen.
     validations:
       required: false
   - type: textarea
@@ -39,7 +39,7 @@ body:
     id: additional
     attributes:
       label: Additional context
-      description: Add any other context about your bug report here if necessary. Attach screenshots if relevant.
+      description: Add any other context about your bug report here if necessary. If applicable, add screenshots to help explain your problem.
     validations:
       required: false
   - type: checkboxes
