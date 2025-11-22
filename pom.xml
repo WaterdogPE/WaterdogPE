@@ -246,6 +246,14 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <filters>
+                        <filter>
+                            <artifact>org.jline:jline</artifact>
+                            <excludes>
+                                <exclude>org/jline/terminal/impl/ffm/**</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
                     <relocations>
                         <relocation>
                             <pattern>org.bstats</pattern>
