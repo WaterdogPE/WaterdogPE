@@ -58,4 +58,9 @@ public class NetworkSettings extends YamlConfig {
     @Accessors(fluent = true)
     @Comment("Enable RakNet cookies for additional security. Do NOT disable this unless you know what you are doing.")
     private boolean enableCookies = true;
+
+    @Path("max_decompressed_bytes")
+    @Accessors(fluent = true)
+    @Comment("The maximum number of compressed bytes.")
+    private int maxDecompressedBytes = 1024 * 1024 * 100;
 }

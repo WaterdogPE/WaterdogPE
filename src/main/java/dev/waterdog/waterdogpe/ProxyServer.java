@@ -169,6 +169,8 @@ public class ProxyServer {
             this.logger.error("Bedrock compression supports only ZLIB or Snappy! Currently provided " + compression + ", defaulting to ZLIB!");
             this.getConfiguration().setCompression(CompressionType.ZLIB);
         }
+        
+        System.setProperty("bedrock.maxDecompressedBytes", String.valueOf(ProxyServer.getInstance().getConfiguration().getNetworkSettings().maxDecompressedBytes()));
 
         ThreadFactoryBuilder builder = ThreadFactoryBuilder
                 .builder()
