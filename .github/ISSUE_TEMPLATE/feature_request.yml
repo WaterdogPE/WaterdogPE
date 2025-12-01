@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an idea or feature for WDPE
+labels: enhancement
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature idea
+      description: Provide a clear and concise description/explanation of your feature suggestion.
+    validations:
+      required: true
+  - type: textarea
+    id: solutions
+    attributes:
+      label: Possible solutions/implementations
+      description: Talk about possible solutions/implementations here.
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What alternative solutions or features have considered?
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add any other context about your feature request here if necessary.
+    validations:
+      required: false
+  - type: checkboxes
+    id: title
+    attributes:
+      label: Appropiate and concise title
+      options:
+        - label: I have made sure to give this issue an appropiate and concise title.
+          required: true

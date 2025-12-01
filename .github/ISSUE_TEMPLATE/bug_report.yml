@@ -1,0 +1,51 @@
+name: Bug report
+description: Found a bug in WPDE? Something that's not behaving correctly? Report it here
+labels: bug, unconfirmed
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproducing
+    attributes:
+      label: Reproducing instructions
+      description: How can you reproduce this behaviour? Step by step instructions here if applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: expectations
+    attributes:
+      label: Expected behaviour
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: false
+  - type: textarea
+    id: platform
+    attributes:
+      label: Platform information
+      description: |
+        - Game Platform: [e.g. iOS]
+        - Game (Client) Version [e.g. v1.19.30]
+        - Server OS [e.g. Windows]
+        - Java Version [e.g. Java 18]
+        - Server Deployment Method [e.g. Pterodactyl, Docker]
+    validations:
+      required: false
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Add any other context about your bug report here if necessary. If applicable, add screenshots to help explain your problem.
+    validations:
+      required: false
+  - type: checkboxes
+    id: title
+    attributes:
+      label: Appropiate and concise title
+      options:
+        - label: I have made sure to give this issue an appropiate and concise title.
+          required: true
