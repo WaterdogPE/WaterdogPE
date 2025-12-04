@@ -15,7 +15,7 @@
 
 package dev.waterdog.waterdogpe.logger;
 
-import org.fusesource.jansi.Ansi;
+import org.jline.jansi.Ansi;
 
 import java.util.regex.Pattern;
 
