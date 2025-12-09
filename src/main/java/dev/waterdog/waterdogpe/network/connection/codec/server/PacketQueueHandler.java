@@ -1,5 +1,6 @@
 package dev.waterdog.waterdogpe.network.connection.codec.server;
 
+import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.BatchFlags;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
@@ -15,13 +16,11 @@ import java.util.Queue;
 @Log4j2
 public class PacketQueueHandler extends ChannelDuplexHandler {
     public static final String NAME = "packet-queue-handler";
-    private static final int MAX_BATCHES = 256;
-    private static final int MAX_PACKETS = 8000;
 
     private final BedrockServerSession session;
 
     private int packetCounter = 0;
-    private final Queue<BedrockBatchWrapper> queue = PlatformDependent.newMpscQueue(MAX_BATCHES);
+    private final Queue<BedrockBatchWrapper> queue = PlatformDependent.newMpscQueue(ProxyServer.getInstance().getNetworkSettings().maxQueuedTransferBatches());
 
     private volatile boolean finished;
 
@@ -70,7 +69,7 @@ public class PacketQueueHandler extends ChannelDuplexHandler {
             return;
         }
 
-        if (this.queue.offer(batch) && this.packetCounter < MAX_PACKETS) {
+        if (this.queue.offer(batch) && this.packetCounter < ProxyServer.getInstance().getNetworkSettings().maxQueuedTransferPackets()) {
             this.packetCounter += batch.getPackets().size();
         } else {
             log.warn("[{}] has reached maximum transfer queue capacity: batches={} packets={}", this.session.getSocketAddress(), this.queue.size(), this.packetCounter);

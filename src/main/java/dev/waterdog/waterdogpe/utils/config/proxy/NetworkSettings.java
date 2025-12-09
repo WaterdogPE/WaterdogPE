@@ -63,4 +63,14 @@ public class NetworkSettings extends YamlConfig {
     @Accessors(fluent = true)
     @Comment("The maximum number of compressed bytes.")
     private int maxDecompressedBytes = 1024 * 1024 * 100;
+
+    @Path("max_queued_transfer_batches")
+    @Accessors(fluent = true)
+    @Comment("The maximum number of batches that can be queued during a transfer.")
+    private int maxQueuedTransferBatches = 256;
+
+    @Path("max_queued_transfer_packets")
+    @Accessors(fluent = true)
+    @Comment("The maximum number of packets that can be queued during a transfer.")
+    private int maxQueuedTransferPackets = 8000;
 }
