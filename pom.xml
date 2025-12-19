@@ -16,7 +16,7 @@
         <maven.compiler.release>17</maven.compiler.release>
         <raklib.version>1.0.0.CR3-SNAPSHOT</raklib.version>
         <protocol.version>3.0.0.Beta11-SNAPSHOT</protocol.version>
-        <log4j2.version>2.25.2</log4j2.version>
+        <log4j2.version>2.25.3</log4j2.version>
         <jline.version>3.30.6</jline.version>
         <netty.version>4.1.101.Final</netty.version>
     </properties>
