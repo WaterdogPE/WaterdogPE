@@ -237,7 +237,7 @@ public class ProxyServer {
 
         this.bindChannels(bindAddress);
         for (Integer port : this.getConfiguration().getAdditionalPorts()) {
-            InetSocketAddress additionalBind = new InetSocketAddress(bindAddress.getAddress(), port);
+            InetSocketAddress additionalBind = new InetSocketAddress(bindAddress.getHostString(), port);
             this.bindChannels(additionalBind);
         }
 
