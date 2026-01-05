@@ -38,9 +38,9 @@ public class ServerEntryConverter implements Converter {
     public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) {
         Map<String, String> map = new HashMap<>();
         ServerEntry serverEntry = (ServerEntry) object;
-        map.put("address", serverEntry.getAddress().getAddress().getHostAddress() + ":" + serverEntry.getAddress().getPort());
+        map.put("address", serverEntry.getAddress().getHostString() + ":" + serverEntry.getAddress().getPort());
         if (serverEntry.getPublicAddress() != null && serverEntry.getPublicAddress() != serverEntry.getAddress()) {
-            map.put("public_address", serverEntry.getAddress().getAddress().getHostAddress() + ":" + serverEntry.getAddress().getPort());
+            map.put("public_address", serverEntry.getAddress().getHostString() + ":" + serverEntry.getAddress().getPort());
         }
         if (serverEntry.getServerType() != null) {
             map.put("server_type", serverEntry.getServerType().toString());

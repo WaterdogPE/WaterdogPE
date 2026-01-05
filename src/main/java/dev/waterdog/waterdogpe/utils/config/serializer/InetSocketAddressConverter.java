@@ -35,7 +35,7 @@ public class InetSocketAddressConverter implements Converter {
             return null;
         }
         InetSocketAddress address = (InetSocketAddress) object;
-        return address.getHostName() + ":" + address.getPort();
+        return address.getHostString() + ":" + address.getPort();
     }
 
     @Override
