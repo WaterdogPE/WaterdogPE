@@ -46,7 +46,7 @@ public class InetSocketAddressConverter implements Converter {
         String string = (String) object;
         String address = string.substring(0, string.lastIndexOf(":"));
         int port = Integer.parseInt(string.substring(string.lastIndexOf(":") + 1));
-        return new InetSocketAddress(address, port);
+        return InetSocketAddress.createUnresolved(address, port);
     }
 
     @Override
