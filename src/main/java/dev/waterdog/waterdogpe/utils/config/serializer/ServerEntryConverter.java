@@ -40,7 +40,7 @@ public class ServerEntryConverter implements Converter {
         ServerEntry serverEntry = (ServerEntry) object;
         map.put("address", serverEntry.getAddress().getHostString() + ":" + serverEntry.getAddress().getPort());
         if (serverEntry.getPublicAddress() != null && serverEntry.getPublicAddress() != serverEntry.getAddress()) {
-            map.put("public_address", serverEntry.getAddress().getHostString() + ":" + serverEntry.getAddress().getPort());
+            map.put("public_address", serverEntry.getPublicAddress().getHostString() + ":" + serverEntry.getPublicAddress().getPort());
         }
         if (serverEntry.getServerType() != null) {
             map.put("server_type", serverEntry.getServerType().toString());
