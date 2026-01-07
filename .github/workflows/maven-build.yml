@@ -12,7 +12,6 @@ jobs:
   build:
     env:
       DOCKER_DEPLOY: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/waterdog-2' }}
-      SHOULD_CREATE_LATEST: ${{ github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -20,15 +19,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Delete old latest release
-        if: ${{ env.SHOULD_CREATE_LATEST == 'true' }}
-        continue-on-error: true
-        run: |
-          gh release delete latest --yes
-          git push --delete origin latest || true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         uses: ./.github/actions/build
@@ -38,7 +28,7 @@ jobs:
           deploy_repository: "waterdog-snapshots"
           deploy_username: ${{ secrets.DEPLOY_USERNAME }}
           deploy_password: ${{ secrets.DEPLOY_PASSWORD }}
-          create_prerelease: false
+          create_prerelease: ${{ github.ref == 'refs/heads/master' }}
           prerelease_name: "latest"
 
       - name: Docker Login
