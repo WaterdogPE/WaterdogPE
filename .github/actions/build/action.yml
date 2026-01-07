@@ -67,7 +67,7 @@ runs:
       with:
         repo_token: "${{ inputs.repo_token }}"
         automatic_release_tag: "${{ inputs.prerelease_name }}"
-        prerelease: true
+        prerelease: false
         title: "Snapshot Build"
         files: |
           target/Waterdog.jar
