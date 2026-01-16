@@ -16,8 +16,8 @@
         <maven.compiler.release>17</maven.compiler.release>
         <raklib.version>1.0.0.CR3-SNAPSHOT</raklib.version>
         <protocol.version>3.0.0.Beta11-SNAPSHOT</protocol.version>
-        <log4j2.version>2.17.1</log4j2.version>
-        <jline.version>3.23.0</jline.version>
+        <log4j2.version>2.25.3</log4j2.version>
+        <jline.version>3.30.6</jline.version>
         <netty.version>4.1.101.Final</netty.version>
     </properties>
 
@@ -91,7 +91,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.12.0</version>
+            <version>3.18.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -112,9 +112,9 @@
             <version>3.4.4</version>
         </dependency>
         <dependency>
-            <groupId>jline</groupId>
+            <groupId>org.jline</groupId>
             <artifactId>jline</artifactId>
-            <version>2.14.6</version>
+            <version>${jline.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -196,7 +196,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.37.2</version>
+            <version>9.37.4</version>
         </dependency>
     </dependencies>
 
@@ -246,6 +246,14 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <filters>
+                        <filter>
+                            <artifact>org.jline:jline</artifact>
+                            <excludes>
+                                <exclude>org/jline/terminal/impl/ffm/**</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
                     <relocations>
                         <relocation>
                             <pattern>org.bstats</pattern>
