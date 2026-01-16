@@ -674,7 +674,7 @@ public class ProxiedPlayer implements CommandSender {
     public void redirectServer(ServerInfo serverInfo) {
         Preconditions.checkNotNull(serverInfo, "Server info can not be null!");
         TransferPacket packet = new TransferPacket();
-        packet.setAddress(serverInfo.getPublicAddress().getHostString());
+        packet.setAddress(serverInfo.getPublicAddress().getAddress().getHostAddress());
         packet.setPort(serverInfo.getPublicAddress().getPort());
         this.sendPacket(packet);
     }

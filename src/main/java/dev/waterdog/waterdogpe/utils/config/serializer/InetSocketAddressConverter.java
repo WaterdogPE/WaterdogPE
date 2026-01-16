@@ -35,7 +35,7 @@ public class InetSocketAddressConverter implements Converter {
             return null;
         }
         InetSocketAddress address = (InetSocketAddress) object;
-        return address.getHostString() + ":" + address.getPort();
+        return address.getHostName() + ":" + address.getPort();
     }
 
     @Override
@@ -46,7 +46,7 @@ public class InetSocketAddressConverter implements Converter {
         String string = (String) object;
         String address = string.substring(0, string.lastIndexOf(":"));
         int port = Integer.parseInt(string.substring(string.lastIndexOf(":") + 1));
-        return InetSocketAddress.createUnresolved(address, port);
+        return new InetSocketAddress(address, port);
     }
 
     @Override

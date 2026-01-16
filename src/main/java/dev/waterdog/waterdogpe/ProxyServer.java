@@ -244,7 +244,6 @@ public class ProxyServer {
         }
 
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
-        bindAddress = new InetSocketAddress(bindAddress.getHostString(), bindAddress.getPort());
         this.logger.info("Binding to {}", bindAddress);
 
         if (this.getConfiguration().enableQuery()) {
@@ -253,7 +252,7 @@ public class ProxyServer {
 
         this.bindChannels(bindAddress);
         for (Integer port : this.getConfiguration().getAdditionalPorts()) {
-            InetSocketAddress additionalBind = new InetSocketAddress(bindAddress.getHostString(), port);
+            InetSocketAddress additionalBind = new InetSocketAddress(bindAddress.getAddress(), port);
             this.bindChannels(additionalBind);
         }
 
