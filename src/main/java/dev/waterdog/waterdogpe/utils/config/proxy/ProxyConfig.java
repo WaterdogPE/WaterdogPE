@@ -41,6 +41,10 @@ public class ProxyConfig extends YamlConfig {
     @Comment("The Motd which will be displayed in the server tab of a player and returned during ping")
     private String motd = "§bWaterdog§3PE";
 
+    @Path("listener.sub_motd")
+    @Comment("The secondary MOTD shown in the server list and returned during ping")
+    private String subMotd = "WaterdogPE Proxy";
+
     @Path("listener.name")
     @Comment("The name that is shown up in the player list (pause menu)")
     private String name = "§bWaterdog§3PE";

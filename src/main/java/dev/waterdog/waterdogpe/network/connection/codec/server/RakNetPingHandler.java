@@ -45,7 +45,7 @@ public class RakNetPingHandler extends SimpleChannelInboundHandler<RakPing> {
 
         ProxyPingEvent event = new ProxyPingEvent(
                 config.getMotd(),
-                "WaterdogPE Proxy",
+                config.getSubMotd(),
                 "Survival",
                 "MCPE",
                 ProtocolVersion.latest().getMinecraftVersion(),
