@@ -1,6 +1,29 @@
 # WaterdogPE
+
 [![Build Status](https://github.com/WaterdogPE/WaterdogPE/actions/workflows/maven-build.yml/badge.svg)](https://github.com/WaterdogPE/WaterdogPE/actions?query=branch%3Amaster+is%3Acompleted+event%3Apush)
 [![Discord Chat](https://img.shields.io/discord/767330242078834712.svg)](https://discord.gg/QcRRzXX)
+
+This is [AllayMC](https://github.com/AllayMC/Allay)'s fork of WaterdogPE with added support for **NetEase (China) Minecraft Bedrock Edition clients**.
+
+## NetEase Client Support
+
+This fork adds the ability for the proxy to handle connections from NetEase Minecraft clients. To enable NetEase client support, add the following to your `config.yml`:
+
+```yaml
+netease_client_support: true
+# Optional: only allow NetEase clients to connect
+only_allow_netease_client: false
+```
+
+### Supported NetEase Protocol Versions
+
+| Protocol Version | Game Version |
+|------------------|--------------|
+| 766              | 1.21.50      |
+
+> **Note:** When `netease_client_support` is enabled, all RakNet v8 clients will be treated as NetEase clients.
+
+---
 
 WaterdogPE is a brand new Minecraft: Bedrock Edition proxy software developed by the developers of the old Waterdog
 Proxy.  

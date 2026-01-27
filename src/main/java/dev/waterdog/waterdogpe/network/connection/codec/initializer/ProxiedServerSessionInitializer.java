@@ -35,6 +35,14 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
         super(proxy);
     }
 
+    private static void disconnect(Channel channel, RakDisconnectReason reason) {
+        if (channel instanceof RakChannel) {
+            ((RakChannel) channel).rakPipeline().get(RakSessionCodec.class).disconnect(reason);
+        } else {
+            channel.disconnect();
+        }
+    }
+
     @Override
     protected void initChannel(Channel channel) {
         if (!this.proxy.getSecurityManager().onConnectionCreated(channel.remoteAddress())) {
@@ -53,7 +61,9 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
             channel.config().setOption(RakChannelOption.RAK_METRICS, rakMetrics);
         }
 
-        super.initChannel(channel);
+        boolean netEaseSupport = this.proxy.getConfiguration().isNeteaseClientSupport();
+        int rakVersion = channel.config().getOption(RakChannelOption.RAK_PROTOCOL_VERSION);
+        super.initChannel(channel, netEaseSupport && rakVersion == 8);
     }
 
     @Override
@@ -65,13 +75,5 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
     @Override
     protected void initSession(BedrockServerSession session) {
         session.setPacketHandler(new LoginUpstreamHandler(this.proxy, session));
-    }
-
-    private static void disconnect(Channel channel, RakDisconnectReason reason) {
-        if (channel instanceof RakChannel) {
-            ((RakChannel) channel).rakPipeline().get(RakSessionCodec.class).disconnect(reason);
-        } else {
-            channel.disconnect();
-        }
     }
 }

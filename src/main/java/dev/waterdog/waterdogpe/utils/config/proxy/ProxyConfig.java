@@ -26,14 +26,14 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import net.cubespace.Yamler.Config.YamlConfig;
 import net.cubespace.Yamler.Config.*;
 
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.*;
 
-@Getter @Setter
+@Getter
+@Setter
 @SerializeOptions(skipFailedObjects = true)
 public class ProxyConfig extends YamlConfig {
 
@@ -193,6 +193,21 @@ public class ProxyConfig extends YamlConfig {
     @Path("enable_error_reporting")
     @Comment("Enables anonymous error reporting using bugsnag. This allows the WaterdogPE team to automatically collect issues occurring on WaterdogPE instances.")
     private boolean enableAnonymousErrorReporting = true;
+
+    @Path("netease_client_support")
+    @Comments({
+            "Enable support for NetEase (China) Minecraft clients. Only protocol v766 (1.21.50) is supported.",
+            "Warning: Enabling this will treat all RakNet v8 clients as NetEase clients"
+    })
+    private boolean neteaseClientSupport = false;
+
+    @Path("only_allow_netease_client")
+    @Comment("If enabled, only NetEase clients can join. Requires netease_client_support to be enabled.")
+    private boolean onlyAllowNeteaseClient = false;
+
+    @Path("max_decompressed_bytes")
+    @Comment("Maximum size in bytes for decompressed packet data. Default is 50MB (52428800). Increase if you encounter decompression errors with large packets.")
+    private int maxDecompressedBytes = 52428800;
 
     public ProxyConfig(File file) {
         this.CONFIG_HEADER = new String[]{"Waterdog Main Configuration file", "Configure your desired network settings here."};

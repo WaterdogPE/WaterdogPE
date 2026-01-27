@@ -60,16 +60,16 @@ public class LoginData {
 
     private final KeyPair keyPair;
     private final JsonObject clientData;
+    private final NetEaseData netEaseData;
+    private final boolean netEaseClient;
+    private final boolean isChainPayload;
     private LoginPacket loginPacket;
-
     @Setter
     @Builder.Default
     private RequestChunkRadiusPacket chunkRadius = PlayerRewriteUtils.defaultChunkRadius;
     @Setter
     @Builder.Default
     private ClientCacheStatusPacket cachePacket = PlayerRewriteUtils.defaultCachePacket;
-
-    private final boolean isChainPayload;
 
     /**
      * Used to construct new login packet using this.clientData and this.extraData signed by this.keyPair.
@@ -84,6 +84,17 @@ public class LoginData {
         loginPacket.setProtocolVersion(this.protocol.getProtocol());
         if (isChainPayload || ProxyServer.getInstance().getConfiguration().useCertificatePayload()) {
             JsonObject extraData = HandshakeUtils.createChainExtraData(displayName, xuid, uuid);
+            // Add NetEase-specific fields if this is a NetEase client
+            if (this.netEaseData != null) {
+                extraData.addProperty("uid", this.netEaseData.uid());
+                extraData.addProperty("netease_sid", this.netEaseData.sessionId());
+                extraData.addProperty("platform", this.netEaseData.platform());
+                extraData.addProperty("os_name", this.netEaseData.osName());
+                extraData.addProperty("env", this.netEaseData.env());
+                extraData.addProperty("engineVersion", this.netEaseData.engineVersion());
+                extraData.addProperty("patchVersion", this.netEaseData.patchVersion());
+                extraData.addProperty("bit", this.netEaseData.bit());
+            }
             SignedJWT signedPayload = HandshakeUtils.createClientDataChain(this.keyPair, extraData);
             loginPacket.setAuthPayload(new CertificateChainPayload(Collections.singletonList(signedPayload.serialize()), AuthType.SELF_SIGNED));
         } else {
@@ -99,6 +110,29 @@ public class LoginData {
             this.rebuildLoginPacket();
         }
         return this.loginPacket;
+    }
+
+    public boolean isNetEaseClient() {
+        return this.netEaseClient;
+    }
+
+    /**
+     * Contains NetEase-specific player data extracted from the login chain.
+     * This data is only available when the player is connecting from the
+     * NetEase version of Minecraft.
+     *
+     * @param uid           the NetEase user ID (UID)
+     * @param sessionId     the NetEase session ID
+     * @param platform      the platform information
+     * @param osName        the operating system name
+     * @param env           the environment information
+     * @param engineVersion the engine version
+     * @param patchVersion  the patch version
+     * @param bit           the bit architecture (e.g., "32" or "64")
+     */
+    public record NetEaseData(
+            long uid, String sessionId, String platform, String osName,
+            String env, String engineVersion, String patchVersion, String bit) {
     }
 
 }

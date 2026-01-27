@@ -19,16 +19,16 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.event.defaults.PlayerAuthenticatedEvent;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
+import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedSessionInitializer;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
-import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeEntry;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeUtils;
+import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.security.SecurityManager;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.compat.BedrockCompat;
-import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.cloudburstmc.protocol.common.PacketSignal;
 
@@ -49,6 +49,8 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
     // The compression used by this session
     // Defaults to ZLIB for older versions
     private CompressionType compression;
+    // Whether this is a NetEase client
+    private boolean netEaseClient;
 
     public LoginUpstreamHandler(ProxyServer proxy, BedrockServerSession session) {
         this.proxy = proxy;
@@ -100,7 +102,40 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             return PacketSignal.HANDLED;
         }
 
-        this.session.setCodec(protocol.getCodec());
+        int rakVersion = this.session.getPeer().getRakVersion();
+        boolean neteaseSupport = this.proxy.getConfiguration().isNeteaseClientSupport();
+        boolean isNetEaseClient = rakVersion == 8;
+
+        // Detect NetEase client by RakNet version 8
+        if (isNetEaseClient) {
+            if (!neteaseSupport) {
+                // NetEase client detected but support is disabled
+                this.proxy.getLogger().debug("[{}] <-> Rejected NetEase client connection - NetEase support is disabled", this.session.getSocketAddress());
+                this.session.disconnect("NetEase client support is disabled");
+                return PacketSignal.HANDLED;
+            }
+
+            this.netEaseClient = true;
+            this.session.getPeer().setNetEaseClient(true);
+
+            // Find NetEase codec for the protocol version
+            BedrockCodec netEaseCodec = ProtocolVersion.findNetEaseCodec(packet.getProtocolVersion());
+            if (netEaseCodec == null) {
+                this.session.disconnect("Unsupported NetEase client version");
+                return PacketSignal.HANDLED;
+            }
+
+            // Use NetEase codec
+            this.session.setCodec(netEaseCodec);
+        } else {
+            this.session.setCodec(protocol.getCodec());
+        }
+
+        // Check only-netease restriction
+        if (this.proxy.getConfiguration().isOnlyAllowNeteaseClient() && !this.netEaseClient) {
+            this.session.disconnect("Only NetEase clients are allowed");
+            return PacketSignal.HANDLED;
+        }
 
         if (protocol.isBefore(ProtocolVersion.MINECRAFT_PE_1_19_30)) {
             this.session.disconnect("Illegal packet");
@@ -116,7 +151,11 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
         this.session.sendPacketImmediately(settingsPacket);
 
         if (!this.session.isSubClient()) {
-            this.session.getPeer().setCompression(this.compression);
+            if (this.netEaseClient) {
+                this.session.getPeer().setCompression(ProxiedSessionInitializer.NET_EASE_STRATEGY);
+            } else {
+                this.session.getPeer().setCompression(this.compression);
+            }
         }
         return PacketSignal.HANDLED;
     }
@@ -149,7 +188,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             this.proxy.getLogger().debug("[{}] <-> Received login with authType: {} and payloadType: {}.", this.session.getSocketAddress(),
                     packet.getAuthPayload().getClass().getSimpleName(), packet.getAuthPayload().getAuthType());
 
-            handshakeEntry = HandshakeUtils.processHandshake(this.session, packet, protocol, strictAuth);
+            handshakeEntry = HandshakeUtils.processHandshake(this.session, packet, protocol, strictAuth, this.netEaseClient);
             if (!handshakeEntry.isXboxAuthed() && strictAuth) {
                 this.onLoginFailed(handshakeEntry, null, "disconnectionScreen.notAuthenticated");
                 this.proxy.getLogger().info("[{}|{}] <-> Upstream has disconnected due to failed XBOX authentication!", this.session.getSocketAddress(), handshakeEntry.getDisplayName());
@@ -158,7 +197,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
 
             // Thank you Mojang: this version includes protocol changes, but protocol version was not increased.
             if (protocol.equals(ProtocolVersion.MINECRAFT_PE_1_19_60) && handshakeEntry.getClientData().has("GameVersion") &&
-                    ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(handshakeEntry.getClientData().get("GameVersion").getAsString())) {
+                ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(handshakeEntry.getClientData().get("GameVersion").getAsString())) {
                 handshakeEntry.setProtocol(protocol = ProtocolVersion.MINECRAFT_PE_1_19_62);
                 this.session.getPeer().setProtocol(protocol);
             }

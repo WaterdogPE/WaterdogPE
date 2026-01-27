@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.network.protocol;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.ToString;
+import org.allaymc.protocol.extension.v766.Bedrock_v766_NetEase;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.v313.Bedrock_v313;
 import org.cloudburstmc.protocol.bedrock.codec.v332.Bedrock_v332;
@@ -142,10 +143,14 @@ public enum ProtocolVersion {
 
     private static final ProtocolVersion[] VALUES = values();
     private static final Int2ObjectMap<ProtocolVersion> VERSIONS = new Int2ObjectOpenHashMap<>();
+    private static final Int2ObjectMap<BedrockCodec> NETEASE_CODECS = new Int2ObjectOpenHashMap<>();
+
     static {
         for (ProtocolVersion version : values()) {
             VERSIONS.putIfAbsent(version.getProtocol(), version);
         }
+        // Register NetEase-specific codecs
+        NETEASE_CODECS.put(Bedrock_v766_NetEase.CODEC.getProtocolVersion(), Bedrock_v766_NetEase.CODEC);
     }
 
     private final int protocol;
@@ -162,6 +167,28 @@ public enum ProtocolVersion {
         this.protocol = protocol;
         this.protocolInternal = protocolInternal;
         this.defaultCodec = codec;
+    }
+
+    public static ProtocolVersion latest() {
+        return VALUES[VALUES.length - 1];
+    }
+
+    public static ProtocolVersion oldest() {
+        return VALUES[0];
+    }
+
+    public static ProtocolVersion get(int protocol) {
+        return VERSIONS.get(protocol);
+    }
+
+    /**
+     * Find the appropriate NetEase-specific codec for the given protocol version.
+     *
+     * @param protocolVersion the protocol version
+     * @return the NetEase codec, or {@code null} if not found
+     */
+    public static BedrockCodec findNetEaseCodec(int protocolVersion) {
+        return NETEASE_CODECS.get(protocolVersion);
     }
 
     public boolean isBefore(ProtocolVersion version) {
@@ -206,17 +233,5 @@ public enum ProtocolVersion {
 
     public String getMinecraftVersion() {
         return this.getCodec().getMinecraftVersion();
-    }
-
-    public static ProtocolVersion latest() {
-        return VALUES[VALUES.length - 1];
-    }
-
-    public static ProtocolVersion oldest() {
-        return VALUES[0];
-    }
-
-    public static ProtocolVersion get(int protocol) {
-        return VERSIONS.get(protocol);
     }
 }

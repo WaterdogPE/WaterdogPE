@@ -143,6 +143,9 @@ public class ProxyServer {
             System.setProperty("java.net.preferIPv4Stack", "true");
         }
 
+        // Set maximum decompressed bytes for packet decompression
+        System.setProperty("bedrock.maxDecompressedBytes", String.valueOf(this.getConfiguration().getMaxDecompressedBytes()));
+
         if (this.getConfiguration().isDebug()) {
             WaterdogPE.version().debug(true);
         }

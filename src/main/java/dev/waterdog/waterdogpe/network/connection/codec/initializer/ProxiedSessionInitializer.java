@@ -25,9 +25,11 @@ import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCode
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec_v2;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec_v3;
 import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockPeer;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.allaymc.protocol.extension.NetEaseCompression;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.netty.channel.raknet.packet.RakMessage;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
@@ -47,33 +49,19 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
     public static final CompressionStrategy ZLIB_STRATEGY = new SimpleCompressionStrategy(new ZlibCompression(Zlib.DEFAULT));
     public static final CompressionStrategy SNAPPY_STRATEGY = new SimpleCompressionStrategy(new SnappyCompression());
     public static final CompressionStrategy NOOP_STRATEGY = new SimpleCompressionStrategy(new NoopCompression());
+    public static final CompressionStrategy NET_EASE_STRATEGY = new SimpleCompressionStrategy(new NetEaseCompression());
 
     protected final ProxyServer proxy;
 
-    @Override
-    protected void initChannel(Channel channel) {
-        int rakVersion = channel.config().getOption(RakChannelOption.RAK_PROTOCOL_VERSION);
-
-        channel.pipeline()
-                .addLast(FrameIdCodec.NAME, RAKNET_FRAME_CODEC)
-                .addLast(CompressionCodec.NAME, new ProxiedCompressionCodec(getCompressionStrategy(this.proxy.getConfiguration().getCompression(), rakVersion, true), false))
-                .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
-                .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
-                .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion))
-                .addLast(BedrockPeer.NAME, new ProxiedBedrockPeer(channel, this::createSession));
-    }
-
-    protected final T createSession(BedrockPeer peer, int subClientId) {
-        T session = this.createSession0(peer, subClientId);
-        this.initSession(session);
-        return session;
-    }
-
-    protected abstract T createSession0(BedrockPeer peer, int subClientId);
-
-    protected abstract void initSession(T session);
-
     public static BedrockPacketCodec getPacketCodec(int rakVersion) {
+        return getPacketCodec(rakVersion, false);
+    }
+
+    public static BedrockPacketCodec getPacketCodec(int rakVersion, boolean neteaseSupport) {
+        if (neteaseSupport && rakVersion == 8) {
+            // NetEase uses v3 format despite RakNet version is 8
+            return new BedrockPacketCodec_v3();
+        }
         return switch (rakVersion) {
             case 7 -> new BedrockPacketCodec_v1();
             case 8 -> new BedrockPacketCodec_v2();
@@ -83,6 +71,14 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
     }
 
     public static CompressionStrategy getCompressionStrategy(CompressionAlgorithm algorithm, int rakVersion, boolean initial) {
+        return getCompressionStrategy(algorithm, rakVersion, initial, false);
+    }
+
+    public static CompressionStrategy getCompressionStrategy(CompressionAlgorithm algorithm, int rakVersion, boolean initial, boolean neteaseSupport) {
+        if (neteaseSupport && rakVersion == 8 && initial) {
+            // NetEase's first packet is uncompressed
+            return NOOP_STRATEGY;
+        }
         return switch (rakVersion) {
             case 7, 8, 9 -> ZLIB_STRATEGY;
             case 10 -> ZLIB_RAW_STRATEGY;
@@ -96,10 +92,38 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
             return ZLIB_RAW_STRATEGY;
         } else if (algorithm == PacketCompressionAlgorithm.SNAPPY) {
             return SNAPPY_STRATEGY;
-        } if (algorithm == PacketCompressionAlgorithm.NONE) {
+        }
+        if (algorithm == PacketCompressionAlgorithm.NONE) {
             return NOOP_STRATEGY;
         } else {
             throw new UnsupportedOperationException("Unsupported compression algorithm: " + algorithm + " Maybe you want to use CompressionStrategy instead?");
         }
     }
+
+    @Override
+    protected void initChannel(Channel channel) {
+        this.initChannel(channel, false);
+    }
+
+    protected void initChannel(Channel channel, boolean neteaseSupport) {
+        int rakVersion = channel.config().getOption(RakChannelOption.RAK_PROTOCOL_VERSION);
+
+        channel.pipeline()
+                .addLast(FrameIdCodec.NAME, RAKNET_FRAME_CODEC)
+                .addLast(CompressionCodec.NAME, new ProxiedCompressionCodec(getCompressionStrategy(this.proxy.getConfiguration().getCompression(), rakVersion, true, neteaseSupport), false))
+                .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
+                .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
+                .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion, neteaseSupport))
+                .addLast(BedrockPeer.NAME, new ProxiedBedrockPeer(channel, this::createSession));
+    }
+
+    protected final T createSession(BedrockPeer peer, int subClientId) {
+        T session = this.createSession0(peer, subClientId);
+        this.initSession(session);
+        return session;
+    }
+
+    protected abstract T createSession0(BedrockPeer peer, int subClientId);
+
+    protected abstract void initSession(T session);
 }

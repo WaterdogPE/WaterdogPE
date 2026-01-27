@@ -52,7 +52,10 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
 
     @Override
     protected void initChannel(Channel channel) throws Exception {
-        int rakVersion = this.player.getProtocol().getRaknetVersion();
+        boolean netEaseClient = this.player.isNetEaseClient();
+        int rakVersion = netEaseClient
+                ? this.player.getConnection().getPeer().getRakVersion()
+                : this.player.getProtocol().getRaknetVersion();
         CompressionType compression = this.player.getProxy().getConfiguration().getCompression();
 
         channel.attr(PacketDirection.ATTRIBUTE).set(PacketDirection.SERVER_BOUND);
@@ -68,10 +71,10 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
 
         channel.pipeline()
                 .addLast(FrameIdCodec.NAME, RAKNET_FRAME_CODEC)
-                .addLast(CompressionCodec.NAME, new ProxiedCompressionCodec(getCompressionStrategy(compression, rakVersion, true), false))
+                .addLast(CompressionCodec.NAME, new ProxiedCompressionCodec(getCompressionStrategy(compression, rakVersion, true, netEaseClient), false))
                 .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
                 .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
-                .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion))
+                .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion, netEaseClient))
                 .addLast(ClientPacketQueue.NAME, new ClientPacketQueue());
 
         ClientConnection connection = this.createConnection(channel);
