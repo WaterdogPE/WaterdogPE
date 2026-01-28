@@ -2,7 +2,7 @@
 
 ## Requirements
 
-To compile WaterdogPE you need JDK 21.
+To compile WaterdogPE you need JDK 17.
 
 ### Recommended libraries and versions
 
