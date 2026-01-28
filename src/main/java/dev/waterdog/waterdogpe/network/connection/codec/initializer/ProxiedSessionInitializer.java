@@ -53,6 +53,33 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
 
     protected final ProxyServer proxy;
 
+    @Override
+    protected void initChannel(Channel channel) {
+        this.initChannel(channel, false);
+    }
+
+    protected void initChannel(Channel channel, boolean neteaseSupport) {
+        int rakVersion = channel.config().getOption(RakChannelOption.RAK_PROTOCOL_VERSION);
+
+        channel.pipeline()
+                .addLast(FrameIdCodec.NAME, RAKNET_FRAME_CODEC)
+                .addLast(CompressionCodec.NAME, new ProxiedCompressionCodec(getCompressionStrategy(this.proxy.getConfiguration().getCompression(), rakVersion, true, neteaseSupport), false))
+                .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
+                .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
+                .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion, neteaseSupport))
+                .addLast(BedrockPeer.NAME, new ProxiedBedrockPeer(channel, this::createSession));
+    }
+
+    protected final T createSession(BedrockPeer peer, int subClientId) {
+        T session = this.createSession0(peer, subClientId);
+        this.initSession(session);
+        return session;
+    }
+
+    protected abstract T createSession0(BedrockPeer peer, int subClientId);
+
+    protected abstract void initSession(T session);
+
     public static BedrockPacketCodec getPacketCodec(int rakVersion) {
         return getPacketCodec(rakVersion, false);
     }
@@ -99,31 +126,4 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
             throw new UnsupportedOperationException("Unsupported compression algorithm: " + algorithm + " Maybe you want to use CompressionStrategy instead?");
         }
     }
-
-    @Override
-    protected void initChannel(Channel channel) {
-        this.initChannel(channel, false);
-    }
-
-    protected void initChannel(Channel channel, boolean neteaseSupport) {
-        int rakVersion = channel.config().getOption(RakChannelOption.RAK_PROTOCOL_VERSION);
-
-        channel.pipeline()
-                .addLast(FrameIdCodec.NAME, RAKNET_FRAME_CODEC)
-                .addLast(CompressionCodec.NAME, new ProxiedCompressionCodec(getCompressionStrategy(this.proxy.getConfiguration().getCompression(), rakVersion, true, neteaseSupport), false))
-                .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
-                .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
-                .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion, neteaseSupport))
-                .addLast(BedrockPeer.NAME, new ProxiedBedrockPeer(channel, this::createSession));
-    }
-
-    protected final T createSession(BedrockPeer peer, int subClientId) {
-        T session = this.createSession0(peer, subClientId);
-        this.initSession(session);
-        return session;
-    }
-
-    protected abstract T createSession0(BedrockPeer peer, int subClientId);
-
-    protected abstract void initSession(T session);
 }

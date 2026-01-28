@@ -169,28 +169,6 @@ public enum ProtocolVersion {
         this.defaultCodec = codec;
     }
 
-    public static ProtocolVersion latest() {
-        return VALUES[VALUES.length - 1];
-    }
-
-    public static ProtocolVersion oldest() {
-        return VALUES[0];
-    }
-
-    public static ProtocolVersion get(int protocol) {
-        return VERSIONS.get(protocol);
-    }
-
-    /**
-     * Find the appropriate NetEase-specific codec for the given protocol version.
-     *
-     * @param protocolVersion the protocol version
-     * @return the NetEase codec, or {@code null} if not found
-     */
-    public static BedrockCodec findNetEaseCodec(int protocolVersion) {
-        return NETEASE_CODECS.get(protocolVersion);
-    }
-
     public boolean isBefore(ProtocolVersion version) {
         return this.protocolInternal < version.protocolInternal;
     }
@@ -233,5 +211,21 @@ public enum ProtocolVersion {
 
     public String getMinecraftVersion() {
         return this.getCodec().getMinecraftVersion();
+    }
+
+    public static ProtocolVersion latest() {
+        return VALUES[VALUES.length - 1];
+    }
+
+    public static ProtocolVersion oldest() {
+        return VALUES[0];
+    }
+
+    public static ProtocolVersion get(int protocol) {
+        return VERSIONS.get(protocol);
+    }
+
+    public static BedrockCodec findNetEaseCodec(int protocolVersion) {
+        return NETEASE_CODECS.get(protocolVersion);
     }
 }

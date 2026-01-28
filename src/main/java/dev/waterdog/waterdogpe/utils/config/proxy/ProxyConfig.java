@@ -32,8 +32,7 @@ import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.*;
 
-@Getter
-@Setter
+@Getter @Setter
 @SerializeOptions(skipFailedObjects = true)
 public class ProxyConfig extends YamlConfig {
 

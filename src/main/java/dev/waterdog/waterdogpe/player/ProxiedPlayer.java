@@ -66,6 +66,7 @@ public class ProxiedPlayer implements CommandSender {
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
     private final AtomicBoolean loginCalled = new AtomicBoolean(false);
     private final AtomicBoolean loginCompleted = new AtomicBoolean(false);
+    private volatile CharSequence disconnectReason;
     private final RewriteData rewriteData = new RewriteData();
     private final LoginData loginData;
     private final RewriteMaps rewriteMaps;
@@ -78,14 +79,9 @@ public class ProxiedPlayer implements CommandSender {
     private final LongSet chunkBlobs = LongSets.synchronize(new LongOpenHashSet());
     private final Object2ObjectMap<String, Permission> permissions = new Object2ObjectOpenHashMap<>();
     private final Collection<ServerInfo> pendingServers = ObjectCollections.synchronize(new ObjectArrayList<>());
-    /**
-     * Additional downstream and upstream handlers can be set by plugin.
-     * Do not set directly BedrockPacketHandler to sessions!
-     */
-    private final Collection<PluginPacketHandler> pluginPacketHandlers = new ObjectArrayList<>();
-    private volatile CharSequence disconnectReason;
     private ClientConnection clientConnection;
     private ClientConnection pendingConnection;
+
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
@@ -110,6 +106,11 @@ public class ProxiedPlayer implements CommandSender {
      * Client will crash if ItemComponentPacket is sent twice.
      */
     private volatile boolean acceptItemComponentPacket = true;
+    /**
+     * Additional downstream and upstream handlers can be set by plugin.
+     * Do not set directly BedrockPacketHandler to sessions!
+     */
+    private final Collection<PluginPacketHandler> pluginPacketHandlers = new ObjectArrayList<>();
 
     public ProxiedPlayer(ProxyServer proxy, BedrockServerSession session, CompressionType compression, LoginData loginData) {
         this.proxy = proxy;
@@ -406,7 +407,7 @@ public class ProxiedPlayer implements CommandSender {
 
     public final void onDownstreamDisconnected(ClientConnection connection) {
         this.getLogger().info("[" + connection.getSocketAddress() + "|" + this.getName() + "] -> Downstream [" +
-                              connection.getServerInfo().getServerName() + "] has disconnected");
+                connection.getServerInfo().getServerName() + "] has disconnected");
         if (this.getPendingConnection() == connection) {
             this.setPendingConnection(null);
         }
@@ -777,15 +778,15 @@ public class ProxiedPlayer implements CommandSender {
         return this.proxy.getLogger();
     }
 
-    public ClientConnection getDownstreamConnection() {
-        return this.clientConnection;
-    }
-
     public void setDownstreamConnection(ClientConnection connection) {
         this.clientConnection = connection;
         if (this.getPendingConnection() == connection) {
             this.setPendingConnection(null);
         }
+    }
+
+    public ClientConnection getDownstreamConnection() {
+        return this.clientConnection;
     }
 
     private synchronized ClientConnection getPendingConnection() {

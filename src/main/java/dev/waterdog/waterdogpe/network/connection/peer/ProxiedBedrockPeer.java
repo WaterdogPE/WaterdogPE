@@ -123,8 +123,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     private void sendPacket0(BedrockBatchWrapper wrapper) {
         if (!(wrapper.getAlgorithm() instanceof PacketCompressionAlgorithm)) {
             wrapper.setCompressed(null); // Do not allow using unsupported algorithms when sending to client
-        } else if (this.version.isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) && (this.compressionStrategy == null ||
-                                                                                   !Objects.equals(wrapper.getAlgorithm(), this.compressionStrategy.getDefaultCompression().getAlgorithm()))) {
+        } else if (this.version.isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) && (this.compressionStrategy == null || !Objects.equals(wrapper.getAlgorithm(), this.compressionStrategy.getDefaultCompression().getAlgorithm()))) {
             wrapper.setCompressed(null); // Before 1.20.60 dynamic compression is not supported
         }
 
@@ -147,17 +146,17 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         return this.getChannel().pipeline().get(BedrockPacketCodec.class).getCodec();
     }
 
+    @Override
+    public BedrockCodecHelper getCodecHelper() {
+        return this.getChannel().pipeline().get(BedrockPacketCodec.class).getHelper();
+    }
+
     @Deprecated
     @Override
     public void setCodec(BedrockCodec codec) {
         Objects.requireNonNull(codec, "codec");
         this.getChannel().pipeline().get(BedrockPacketCodec.class).setCodecHelper(codec, codec.createHelper());
         this.version = ProtocolVersion.get(codec.getProtocolVersion());
-    }
-
-    @Override
-    public BedrockCodecHelper getCodecHelper() {
-        return this.getChannel().pipeline().get(BedrockPacketCodec.class).getHelper();
     }
 
     public void setProtocol(ProtocolVersion protocol) {
@@ -174,7 +173,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         }
         // Check if the codecs exist in the pipeline
         if (this.channel.pipeline().get(BedrockEncryptionEncoder.class) != null ||
-            this.channel.pipeline().get(BedrockEncryptionDecoder.class) != null) {
+                this.channel.pipeline().get(BedrockEncryptionDecoder.class) != null) {
             throw new IllegalStateException("Encryption is already enabled");
         }
 
