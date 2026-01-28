@@ -119,7 +119,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             this.session.getPeer().setNetEaseClient(true);
 
             // Find NetEase codec for the protocol version
-            BedrockCodec netEaseCodec = ProtocolVersion.findNetEaseCodec(packet.getProtocolVersion());
+            BedrockCodec netEaseCodec = protocol.getNetEaseCodec();
             if (netEaseCodec == null) {
                 this.session.disconnect("Unsupported NetEase client version");
                 return PacketSignal.HANDLED;
