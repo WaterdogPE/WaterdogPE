@@ -53,20 +53,13 @@ public class BedrockServerInfo extends ServerInfo {
         ProtocolVersion version = player.getProtocol();
         NetworkSettings networkSettings = player.getProxy().getNetworkSettings();
 
-        int rakVersion = version.getRaknetVersion();
-        // NetEase: use the actual RakNet version from the client connection
-        // so downstream servers can correctly identify NetEase clients
-        if (player.isNetEaseClient()) {
-            rakVersion = player.getConnection().getPeer().getRakVersion();
-        }
-
         // Just pick EventLoop here, and we can use it for our promise too
         EventLoop eventLoop = player.getProxy().getWorkerEventLoopGroup().next();
         Promise<ClientConnection> promise = eventLoop.newPromise();
         new Bootstrap()
                 .channelFactory(RakChannelFactory.client(EventLoops.getChannelType().getDatagramChannel()))
                 .group(eventLoop)
-                .option(RakChannelOption.RAK_PROTOCOL_VERSION, rakVersion)
+                .option(RakChannelOption.RAK_PROTOCOL_VERSION, player.isNetEaseClient() ? version.getNetEaseRaknetVersion() : version.getRaknetVersion())
                 .option(RakChannelOption.RAK_ORDERING_CHANNELS, 1)
                 .option(RakChannelOption.RAK_CONNECT_TIMEOUT, networkSettings.getConnectTimeout() * 1000L)
                 .option(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)

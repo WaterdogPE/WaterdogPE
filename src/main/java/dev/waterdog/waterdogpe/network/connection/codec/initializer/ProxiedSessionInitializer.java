@@ -85,7 +85,7 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
     }
 
     public static BedrockPacketCodec getPacketCodec(int rakVersion, boolean neteaseSupport) {
-        if (neteaseSupport && rakVersion == 8) {
+        if (neteaseSupport) {
             // NetEase uses v3 format despite RakNet version is 8
             return new BedrockPacketCodec_v3();
         }
@@ -102,7 +102,7 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
     }
 
     public static CompressionStrategy getCompressionStrategy(CompressionAlgorithm algorithm, int rakVersion, boolean initial, boolean neteaseSupport) {
-        if (neteaseSupport && rakVersion == 8 && initial) {
+        if (neteaseSupport && initial) {
             // NetEase's first packet is uncompressed
             return NOOP_STRATEGY;
         }

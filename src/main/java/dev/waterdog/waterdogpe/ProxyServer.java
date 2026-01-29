@@ -219,7 +219,9 @@ public class ProxyServer {
 
             for (ProtocolVersion version : ProtocolVersion.values()) {
                 version.setBedrockCodec(ProtocolCodecs.buildCodec(version.getDefaultCodec()));
-                version.setNetEaseCodec(ProtocolCodecs.buildCodec(version.getDefaultNetEaseCodec()));
+                if (version.getDefaultNetEaseCodec() != null) {
+                    version.setNetEaseCodec(ProtocolCodecs.buildCodec(version.getDefaultNetEaseCodec()));
+                }
             }
         }
 

@@ -205,6 +205,10 @@ public enum ProtocolVersion {
         return this.getCodec().getRaknetProtocolVersion();
     }
 
+    public int getNetEaseRaknetVersion() {
+        return this.getNetEaseCodec().getRaknetProtocolVersion();
+    }
+
     public BedrockCodec getDefaultCodec() {
         return this.defaultCodec;
     }
