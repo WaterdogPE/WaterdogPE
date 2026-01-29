@@ -143,6 +143,9 @@ public class ProxyServer {
             System.setProperty("java.net.preferIPv4Stack", "true");
         }
 
+        // Set maximum decompressed bytes for packet decompression
+        System.setProperty("bedrock.maxDecompressedBytes", String.valueOf(this.getConfiguration().getMaxDecompressedBytes()));
+
         if (this.getConfiguration().isDebug()) {
             WaterdogPE.version().debug(true);
         }
@@ -216,6 +219,9 @@ public class ProxyServer {
 
             for (ProtocolVersion version : ProtocolVersion.values()) {
                 version.setBedrockCodec(ProtocolCodecs.buildCodec(version.getDefaultCodec()));
+                if (version.getDefaultNetEaseCodec() != null) {
+                    version.setNetEaseCodec(ProtocolCodecs.buildCodec(version.getDefaultNetEaseCodec()));
+                }
             }
         }
 

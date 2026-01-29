@@ -15,8 +15,12 @@
 
 package dev.waterdog.waterdogpe.network.protocol.user;
 
-import com.google.gson.*;
-import com.nimbusds.jose.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.jwk.Curve;
@@ -27,6 +31,7 @@ import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
+import org.allaymc.protocol.extension.NetEaseEncryptionUtils;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
 import org.cloudburstmc.protocol.bedrock.data.auth.CertificateChainPayload;
 import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
@@ -37,11 +42,14 @@ import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 import javax.crypto.SecretKey;
 import java.net.InetSocketAddress;
 import java.net.URI;
-import java.security.*;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.text.ParseException;
 import java.util.Base64;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -115,7 +123,16 @@ public class HandshakeUtils {
     }
 
     public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, ProtocolVersion protocol, boolean strict) throws Exception {
-        ChainValidationResult result = EncryptionUtils.validatePayload(packet.getAuthPayload());
+        return processHandshake(session, packet, protocol, strict, false);
+    }
+
+    public static HandshakeEntry processHandshake(BedrockSession session, LoginPacket packet, ProtocolVersion protocol, boolean strict, boolean neteaseClient) throws Exception {
+        ChainValidationResult result;
+        if (neteaseClient && packet.getAuthPayload() instanceof CertificateChainPayload chainPayload) {
+            result = NetEaseEncryptionUtils.validateChain(chainPayload);
+        } else {
+            result = EncryptionUtils.validatePayload(packet.getAuthPayload());
+        }
         boolean xboxAuth = result.signed();
         ChainValidationResult.IdentityClaims identityClaims = result.identityClaims();
         ChainValidationResult.IdentityData identityData = identityClaims.extraData;
@@ -143,8 +160,38 @@ public class HandshakeUtils {
                 clientData.addProperty("Waterdog_Auth", true);
             }
         }
+
+        LoginData.NetEaseData netEaseData = null;
+        if (neteaseClient) {
+            netEaseData = extractNetEaseData(result.rawIdentityClaims());
+        }
+
         return new HandshakeEntry(identityPublicKey, clientData, xuid, uuid, displayName, xboxAuth, protocol,
-                packet.getAuthPayload() instanceof CertificateChainPayload);
+                packet.getAuthPayload() instanceof CertificateChainPayload, neteaseClient, netEaseData);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static LoginData.NetEaseData extractNetEaseData(Map<String, Object> rawClaims) {
+        try {
+            Map<String, Object> extraData = (Map<String, Object>) rawClaims.get("extraData");
+            if (extraData == null) {
+                return null;
+            }
+
+            long uid = extraData.containsKey("uid") ? ((Number) extraData.get("uid")).longValue() : 0L;
+            String sessionId = (String) extraData.get("netease_sid");
+            String platform = (String) extraData.get("platform");
+            String osName = (String) extraData.get("os_name");
+            String env = (String) extraData.get("env");
+            String engineVersion = (String) extraData.get("engineVersion");
+            String patchVersion = (String) extraData.get("patchVersion");
+            String bit = (String) extraData.get("bit");
+
+            return new LoginData.NetEaseData(uid, sessionId, platform, osName, env, engineVersion, patchVersion, bit);
+        } catch (Exception e) {
+            log.warn("Failed to extract NetEase data from login chain", e);
+            return null;
+        }
     }
 
     public static JsonObject parseClientData(JWSObject clientJwt, String xuid, BedrockSession session) throws Exception {

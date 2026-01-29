@@ -86,7 +86,7 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.26</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -176,6 +176,11 @@
             <version>${protocol.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.allaymc</groupId>
+            <artifactId>protocol-extension</artifactId>
+            <version>0.1.2</version>
+        </dependency>
+        <dependency>
             <groupId>org.cloudburstmc.netty</groupId>
             <artifactId>netty-transport-raknet</artifactId>
             <version>${raklib.version}</version>
@@ -224,6 +229,13 @@
                 <configuration>
                     <source>17</source>
                     <target>17</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.30</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
