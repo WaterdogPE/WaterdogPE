@@ -162,7 +162,8 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     public void setProtocol(ProtocolVersion protocol) {
         Objects.requireNonNull(protocol, "protocol");
         this.version = protocol;
-        this.getChannel().pipeline().get(BedrockPacketCodec.class).setCodecHelper(protocol.getCodec(), protocol.getCodec().createHelper());
+        var codec = this.netEaseClient ? protocol.getNetEaseCodec() : protocol.getCodec();
+        this.getChannel().pipeline().get(BedrockPacketCodec.class).setCodecHelper(codec, codec.createHelper());
     }
 
     @Override

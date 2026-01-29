@@ -54,8 +54,8 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
     protected void initChannel(Channel channel) throws Exception {
         boolean netEaseClient = this.player.isNetEaseClient();
         int rakVersion = netEaseClient
-                ? this.player.getProtocol().getRaknetVersion()
-                : this.player.getProtocol().getNetEaseRaknetVersion();
+                ? this.player.getProtocol().getNetEaseRaknetVersion()
+                : this.player.getProtocol().getRaknetVersion();
         CompressionType compression = this.player.getProxy().getConfiguration().getCompression();
 
         channel.attr(PacketDirection.ATTRIBUTE).set(PacketDirection.SERVER_BOUND);
