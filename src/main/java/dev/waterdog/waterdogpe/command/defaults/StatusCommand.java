@@ -24,22 +24,17 @@ public class StatusCommand extends Command {
         ProxyServer proxy = sender.getProxy();
         StringBuilder sb = new StringBuilder();
 
-        // Title
         sb.append("§b--- §3WaterdogPE Status §b---\n");
 
-        // Uptime
         long uptimeMs = ManagementFactory.getRuntimeMXBean().getUptime();
         sb.append("§3Uptime: §b").append(formatUptime(uptimeMs)).append("\n");
 
-        // Players
         int onlinePlayers = proxy.getPlayers().size();
         int maxPlayers = proxy.getConfiguration().getMaxPlayerCount();
         sb.append("§3Players: §b").append(onlinePlayers).append(" / ").append(maxPlayers).append("\n");
 
-        // Servers
         sb.append("§3Servers: §b").append(proxy.getServers().size()).append("\n");
 
-        // Memory
         Runtime runtime = Runtime.getRuntime();
         long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / 1048576;
         long totalMemory = runtime.totalMemory() / 1048576;
@@ -47,19 +42,15 @@ public class StatusCommand extends Command {
         long usagePercent = totalMemory > 0 ? (usedMemory * 100 / totalMemory) : 0;
         sb.append("§3Memory: §b").append(usedMemory).append(" MB / ").append(totalMemory).append(" MB (Max: ").append(maxMemory).append(" MB) §e").append(usagePercent).append("%\n");
 
-        // CPU
         sb.append("§3CPU Usage: §b").append(getProcessCpuLoad()).append("\n");
 
-        // Threads
         ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
         sb.append("§3Threads: §b").append(threadMXBean.getThreadCount()).append("\n");
 
-        // OS info
         sb.append("§3OS: §b").append(System.getProperty("os.name"))
                 .append(" ").append(System.getProperty("os.version"))
                 .append(" (").append(System.getProperty("os.arch")).append(")\n");
 
-        // JVM info
         RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
         sb.append("§3JVM: §b").append(runtimeMXBean.getVmName())
                 .append(" ").append(runtimeMXBean.getVmVersion());
