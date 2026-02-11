@@ -32,7 +32,7 @@ public class ServerDatagramHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof DatagramPacket packet && this.manager.isAddressBlocked(packet.sender().getAddress())) {
             NetworkMetrics metrics = ProxyServer.getInstance().getNetworkMetrics();
             if (metrics != null) {

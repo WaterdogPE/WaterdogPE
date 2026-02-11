@@ -16,34 +16,26 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
 
 /**
  * Called when the Proxy receives an MCPEQuery. Returns, in addition to the ProxyPingEvent, a map and whether a whitelist is present.
- * Can be modified to change the returned values.
+ * It can be modified to change the returned values.
  */
+@Setter
 public class ProxyQueryEvent extends ProxyPingEvent {
 
+    @Getter
     private String map;
     private boolean hasWhitelist = false;
 
     public ProxyQueryEvent(String motd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, String map, InetSocketAddress address) {
         super(motd, "", gameType, edition, version, players, maximumPlayerCount, address);
         this.map = map;
-    }
-
-    public String getMap() {
-        return this.map;
-    }
-
-    public void setMap(String map) {
-        this.map = map;
-    }
-
-    public void setHasWhitelist(boolean hasWhitelist) {
-        this.hasWhitelist = hasWhitelist;
     }
 
     public boolean hasWhitelist() {

@@ -35,7 +35,7 @@ public class TransferCallback {
     public enum TransferPhase {
         RESET,
         PHASE_1,
-        PHASE_2;
+        PHASE_2
     }
 
     private final ProxiedPlayer player;

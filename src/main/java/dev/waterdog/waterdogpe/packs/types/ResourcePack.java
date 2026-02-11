@@ -15,12 +15,16 @@
 
 package dev.waterdog.waterdogpe.packs.types;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.UUID;
 
+@Getter
 public abstract class ResourcePack {
 
     public static final String TYPE_RESOURCES = "resources";
@@ -28,6 +32,7 @@ public abstract class ResourcePack {
 
     protected final Path packPath;
     protected PackManifest packManifest;
+    @Setter
     protected String contentKey;
 
     public ResourcePack(Path packPath) {
@@ -56,10 +61,6 @@ public abstract class ResourcePack {
         return false;
     }
 
-    public PackManifest getPackManifest() {
-        return this.packManifest;
-    }
-
     public String getPackName() {
         return this.packManifest.getHeader().getName();
     }
@@ -76,15 +77,4 @@ public abstract class ResourcePack {
         return this.packManifest.getModules().get(0).getType();
     }
 
-    public Path getPackPath() {
-        return this.packPath;
-    }
-
-    public String getContentKey() {
-        return contentKey;
-    }
-
-    public void setContentKey(String contentKey) {
-        this.contentKey = contentKey;
-    }
 }

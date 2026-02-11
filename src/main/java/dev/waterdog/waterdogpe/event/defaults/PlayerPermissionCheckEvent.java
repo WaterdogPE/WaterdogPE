@@ -16,6 +16,8 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Called when checking player permission.
@@ -23,20 +25,14 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
  */
 public class PlayerPermissionCheckEvent extends PlayerEvent {
 
+    @Getter
     private final String permission;
+    @Setter
     private boolean hasPermission;
 
     public PlayerPermissionCheckEvent(ProxiedPlayer player, String permission, boolean hasPermission) {
         super(player);
         this.permission = permission;
-        this.hasPermission = hasPermission;
-    }
-
-    public String getPermission() {
-        return this.permission;
-    }
-
-    public void setHasPermission(boolean hasPermission) {
         this.hasPermission = hasPermission;
     }
 

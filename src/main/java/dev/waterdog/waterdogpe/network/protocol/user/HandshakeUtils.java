@@ -147,7 +147,7 @@ public class HandshakeUtils {
                 packet.getAuthPayload() instanceof CertificateChainPayload);
     }
 
-    public static JsonObject parseClientData(JWSObject clientJwt, String xuid, BedrockSession session) throws Exception {
+    public static JsonObject parseClientData(JWSObject clientJwt, String xuid, BedrockSession session) {
         JsonObject clientData = (JsonObject) JsonParser.parseString(clientJwt.getPayload().toString());
         ProxyConfig config = ProxyServer.getInstance().getConfiguration();
         if (config.useLoginExtras()) {

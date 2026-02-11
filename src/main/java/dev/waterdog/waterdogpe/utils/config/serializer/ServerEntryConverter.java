@@ -43,7 +43,7 @@ public class ServerEntryConverter implements Converter {
             map.put("public_address", serverEntry.getPublicAddress().getHostString() + ":" + serverEntry.getPublicAddress().getPort());
         }
         if (serverEntry.getServerType() != null) {
-            map.put("server_type", serverEntry.getServerType().toString());
+            map.put("server_type", serverEntry.getServerType());
         }
         return map;
     }
@@ -58,8 +58,7 @@ public class ServerEntryConverter implements Converter {
         InetSocketAddress publicAddress;
         String serverType;
 
-        if (object instanceof ConfigSection) {
-            ConfigSection section = (ConfigSection) object;
+        if (object instanceof ConfigSection section) {
             address = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, section.get("address"), null);
             publicAddress = (InetSocketAddress) inetConverter.fromConfig(InetSocketAddress.class, section.get("public_address"), null);
             serverType = (String) inetConverter.fromConfig(String.class, section.get("server_type"), null);

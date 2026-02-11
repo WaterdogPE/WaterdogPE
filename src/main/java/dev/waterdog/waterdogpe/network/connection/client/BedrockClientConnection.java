@@ -90,7 +90,7 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
                 this.packetHandler.handlePacket(packet.getPacket());
             }
         } else {
-            log.warn("Received unhandled packets for " + this.getSocketAddress());
+            log.warn("Received unhandled packets for {}", this.getSocketAddress());
         }
     }
 

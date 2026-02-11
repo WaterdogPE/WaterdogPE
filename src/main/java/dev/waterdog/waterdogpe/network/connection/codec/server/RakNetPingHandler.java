@@ -40,7 +40,7 @@ public class RakNetPingHandler extends SimpleChannelInboundHandler<RakPing> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, RakPing rakPing) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, RakPing rakPing) {
         ProxyConfig config = this.proxy.getConfiguration();
 
         ProxyPingEvent event = new ProxyPingEvent(

@@ -20,6 +20,7 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.util.concurrent.Future;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
+import lombok.Getter;
 import lombok.ToString;
 
 import java.net.InetAddress;
@@ -35,8 +36,11 @@ import java.util.Set;
 @ToString(exclude = {"players"})
 public abstract class ServerInfo {
 
+    @Getter
     private final String serverName;
+    @Getter
     private final InetSocketAddress address;
+    @Getter
     private final InetSocketAddress publicAddress;
 
     private final Set<ClientConnection> connections = ObjectSets.synchronize(new ObjectOpenHashSet<>());
@@ -87,15 +91,4 @@ public abstract class ServerInfo {
         return Collections.unmodifiableSet(this.connections);
     }
 
-    public String getServerName() {
-        return this.serverName;
-    }
-
-    public InetSocketAddress getAddress() {
-        return this.address;
-    }
-
-    public InetSocketAddress getPublicAddress() {
-        return this.publicAddress;
-    }
 }

@@ -17,9 +17,11 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.AsyncEvent;
 import dev.waterdog.waterdogpe.event.Event;
+import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.packet.ResourcePackStackPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ResourcePacksInfoPacket;
 
+@Getter
 @AsyncEvent
 public class ResourcePacksRebuildEvent extends Event {
 
@@ -31,11 +33,4 @@ public class ResourcePacksRebuildEvent extends Event {
         this.stackPacket = stackPacket;
     }
 
-    public ResourcePacksInfoPacket getPacksInfoPacket() {
-        return this.packsInfoPacket;
-    }
-
-    public ResourcePackStackPacket getStackPacket() {
-        return this.stackPacket;
-    }
 }

@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.ServiceLoader.Provider;
 import java.util.*;
 
+@Getter
 public class ConfigurationManager {
 
     private final ProxyServer proxy;
@@ -47,14 +48,11 @@ public class ConfigurationManager {
 
     @Deprecated
     public static Configuration newConfig(String file, Type type) {
-        switch (type) {
-            case YAML:
-                return new YamlConfig(file);
-            case JSON:
-                return new JsonConfig(file);
-            default:
-                return null;
-        }
+        return switch (type) {
+            case YAML -> new YamlConfig(file);
+            case JSON -> new JsonConfig(file);
+            default -> null;
+        };
     }
 
     public void loadProxyConfig() throws InvalidConfigurationException {
@@ -107,18 +105,6 @@ public class ConfigurationManager {
             }
         }
         return null;
-    }
-
-    public ProxyServer getProxy() {
-        return this.proxy;
-    }
-
-    public ProxyConfig getProxyConfig() {
-        return this.proxyConfig;
-    }
-
-    public LangConfig getLangConfig() {
-        return this.langConfig;
     }
 
     @AllArgsConstructor

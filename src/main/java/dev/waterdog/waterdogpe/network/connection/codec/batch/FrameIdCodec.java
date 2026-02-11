@@ -38,7 +38,7 @@ public abstract class FrameIdCodec<T> extends MessageToMessageCodec<T, BedrockBa
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) {
         if (msg.getCompressed() == null) {
             throw new IllegalStateException("Bedrock batch was not compressed");
         }
@@ -54,7 +54,7 @@ public abstract class FrameIdCodec<T> extends MessageToMessageCodec<T, BedrockBa
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, T msg, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, T msg, List<Object> out) {
         ByteBuf byteBuf = this.decode0(ctx, msg);
         if (byteBuf == null || !byteBuf.isReadable()) {
             return;

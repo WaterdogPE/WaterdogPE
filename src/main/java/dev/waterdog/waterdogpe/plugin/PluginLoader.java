@@ -72,7 +72,7 @@ public class PluginLoader {
             }
 
             if (configEntry == null) {
-                log.warn("Jar file " + file.getName() + " doesnt contain a waterdog.yml or plugin.yml!");
+                log.warn("Jar file {} doesnt contain a waterdog.yml or plugin.yml!", file.getName());
                 return null;
             }
 
@@ -83,9 +83,9 @@ public class PluginLoader {
                     return pluginConfig;
                 }
             }
-            log.warn("Invalid plugin.yml for " + file.getName() + ": main and/or name property missing");
+            log.warn("Invalid plugin.yml for {}: main and/or name property missing", file.getName());
         } catch (Exception e) {
-            log.error("Can not load plugin files in " + file.getPath(), e);
+            log.error("Can not load plugin files in {}", file.getPath(), e);
         }
         return null;
     }

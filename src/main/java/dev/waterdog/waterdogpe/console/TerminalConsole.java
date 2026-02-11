@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.console;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.command.CommandSender;
+import lombok.Getter;
 import net.minecrell.terminalconsole.SimpleTerminalConsole;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -24,6 +25,7 @@ import org.jline.reader.LineReaderBuilder;
 public class TerminalConsole extends SimpleTerminalConsole {
 
     private final ProxyServer proxy;
+    @Getter
     private final ConsoleThread consoleThread;
 
     public TerminalConsole(ProxyServer proxy) {
@@ -57,7 +59,4 @@ public class TerminalConsole extends SimpleTerminalConsole {
         return this.proxy.isRunning();
     }
 
-    public ConsoleThread getConsoleThread() {
-        return this.consoleThread;
-    }
 }

@@ -19,6 +19,8 @@ import dev.waterdog.waterdogpe.event.CancellableEvent;
 import dev.waterdog.waterdogpe.event.Event;
 import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.net.InetSocketAddress;
 
@@ -28,12 +30,15 @@ import java.net.InetSocketAddress;
  * Can be used to create custom Player classes to override or extend the original class. (No Support)
  * Cancelling this event will lead to the player being kicked for the set cancelReason
  */
+@Getter
 public class PlayerAuthenticatedEvent extends Event implements CancellableEvent {
 
     private final LoginData loginData;
     private final InetSocketAddress address;
 
+    @Setter
     private Class<? extends ProxiedPlayer> baseClass;
+    @Setter
     private String cancelReason = "Login was cancelled";
 
     public PlayerAuthenticatedEvent(Class<? extends ProxiedPlayer> baseClass, LoginData loginData, InetSocketAddress address) {
@@ -42,27 +47,4 @@ public class PlayerAuthenticatedEvent extends Event implements CancellableEvent 
         this.address = address;
     }
 
-    public LoginData getLoginData() {
-        return this.loginData;
-    }
-
-    public InetSocketAddress getAddress() {
-        return this.address;
-    }
-
-    public Class<? extends ProxiedPlayer> getBaseClass() {
-        return this.baseClass;
-    }
-
-    public void setBaseClass(Class<? extends ProxiedPlayer> baseClass) {
-        this.baseClass = baseClass;
-    }
-
-    public String getCancelReason() {
-        return this.cancelReason;
-    }
-
-    public void setCancelReason(String cancelReason) {
-        this.cancelReason = cancelReason;
-    }
 }

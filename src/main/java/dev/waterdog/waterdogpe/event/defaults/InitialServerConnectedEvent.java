@@ -19,12 +19,14 @@ import dev.waterdog.waterdogpe.event.AsyncEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
 
 /**
  * Called when a player successfully logged in to the initial server. This event is not called when the transfer from
  * one server to another completed successfully, use {@link TransferCompleteEvent} for that purpose instead. At this
  * point the player associated with the event is already logged in and registered to the initial downstream.
  */
+@Getter
 @AsyncEvent
 public class InitialServerConnectedEvent extends PlayerEvent {
 
@@ -33,10 +35,6 @@ public class InitialServerConnectedEvent extends PlayerEvent {
     public InitialServerConnectedEvent(ProxiedPlayer player, ClientConnection connection) {
         super(player);
         this.connection = connection;
-    }
-
-    public ClientConnection getConnection() {
-        return this.connection;
     }
 
     public ServerInfo getServerInfo() {

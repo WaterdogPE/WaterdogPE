@@ -23,7 +23,7 @@ import java.util.List;
 
 /**
  * This is a default reconnect handler.
- * The fallback server will always be the next one from priorities list.
+ * The fallback server will always be the next one from the priority list.
  * If the old server is not defined in priorities, the fallback server will be the first server from the same list.
  */
 public class DefaultReconnectHandler implements IReconnectHandler {

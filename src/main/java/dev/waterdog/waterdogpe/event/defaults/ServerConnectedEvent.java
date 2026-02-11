@@ -19,7 +19,9 @@ import dev.waterdog.waterdogpe.event.CancellableEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
 
+@Getter
 public class ServerConnectedEvent extends PlayerEvent implements CancellableEvent {
 
     private final ClientConnection connection;
@@ -27,10 +29,6 @@ public class ServerConnectedEvent extends PlayerEvent implements CancellableEven
     public ServerConnectedEvent(ProxiedPlayer player, ClientConnection connection) {
         super(player);
         this.connection = connection;
-    }
-
-    public ClientConnection getConnection() {
-        return this.connection;
     }
 
     public ServerInfo getTargetServer() {

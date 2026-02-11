@@ -19,6 +19,7 @@ import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
@@ -39,14 +40,16 @@ import static java.util.Objects.requireNonNull;
 public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBatchWrapper, BedrockBatchWrapper> {
     public static final String NAME = "bedrock-packet-codec";
 
+    @Getter
     private BedrockCodec codec = BedrockCompat.CODEC;
+    @Getter
     private BedrockCodecHelper helper = codec.createHelper();
 
     private boolean alwaysDecode;
     private PacketRecipient inboundRecipient;
 
     @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+    public void handlerAdded(ChannelHandlerContext ctx) {
         PacketDirection direction = ctx.channel().attr(PacketDirection.ATTRIBUTE).get();
         if (direction == PacketDirection.CLIENT_BOUND) {
             this.alwaysDecode = true; // packets from client can be always decoded
@@ -55,7 +58,7 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) {
         if (msg.isModified() || msg.getUncompressed() == null) {
             int passedThrough = 0;
             int encodedPackets = 0;
@@ -72,14 +75,14 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) {
         for (BedrockPacketWrapper packet : msg.getPackets()) {
             this.decode(ctx, packet);
         }
         out.add(msg.retain());
     }
 
-    protected final boolean encode(ChannelHandlerContext ctx, BedrockPacketWrapper wrapper) throws Exception {
+    protected final boolean encode(ChannelHandlerContext ctx, BedrockPacketWrapper wrapper) {
         if (wrapper.getPacketBuffer() != null) {
             // We have a pre-encoded packet buffer, just use that.
             return true;
@@ -100,7 +103,7 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         return false;
     }
 
-    protected final void decode(ChannelHandlerContext ctx, BedrockPacketWrapper wrapper) throws Exception {
+    protected final void decode(ChannelHandlerContext ctx, BedrockPacketWrapper wrapper) {
         if (wrapper.getPacketBuffer() == null) {
             throw new IllegalStateException("Packet has no encoded buffer");
         }
@@ -157,14 +160,6 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
             case SERVER -> this.helper.setEncodingSettings(EncodingSettings.SERVER);
         }
         return this;
-    }
-
-    public BedrockCodec getCodec() {
-        return this.codec;
-    }
-
-    public BedrockCodecHelper getHelper() {
-        return this.helper;
     }
 
     public BedrockPacketCodec setAlwaysDecode(boolean alwaysDecode) {

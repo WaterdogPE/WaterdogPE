@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.packs;
 
 import io.netty.buffer.Unpooled;
+import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.data.ResourcePackType;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.ProxyServer;
@@ -41,10 +42,14 @@ public class PackManager {
     private static final ResourcePackStackPacket.Entry EDU_PACK = new ResourcePackStackPacket.Entry("0fba4063-dba1-4281-9b89-ff9390653530", "1.0.0", "");
 
     private final ProxyServer proxy;
+    @Getter
     private final Map<UUID, ResourcePack> packs = new HashMap<>();
+    @Getter
     private final Map<String, ResourcePack> packsByIdVer = new HashMap<>();
 
+    @Getter
     private final ResourcePacksInfoPacket packsInfoPacket = new ResourcePacksInfoPacket();
+    @Getter
     private final ResourcePackStackPacket stackPacket = new ResourcePackStackPacket();
 
     public PackManager(ProxyServer proxy) {
@@ -163,7 +168,7 @@ public class PackManager {
 
         for (ResourcePack pack : this.packs.values()) {
             ResourcePacksInfoPacket.Entry infoEntry = new ResourcePacksInfoPacket.Entry(pack.getPackId(), pack.getVersion().toString(),
-                    pack.getPackSize(), pack.getContentKey(), "", pack.getContentKey().equals("") ? "" : pack.getPackId().toString(), false, false, false, null);
+                    pack.getPackSize(), pack.getContentKey(), "", pack.getContentKey().isEmpty() ? "" : pack.getPackId().toString(), false, false, false, null);
             ResourcePackStackPacket.Entry stackEntry = new ResourcePackStackPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(), "");
             if (pack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
                 this.packsInfoPacket.getResourcePackInfos().add(infoEntry);
@@ -217,19 +222,4 @@ public class PackManager {
         return packet;
     }
 
-    public ResourcePacksInfoPacket getPacksInfoPacket() {
-        return this.packsInfoPacket;
-    }
-
-    public ResourcePackStackPacket getStackPacket() {
-        return this.stackPacket;
-    }
-
-    public Map<UUID, ResourcePack> getPacks() {
-        return this.packs;
-    }
-
-    public Map<String, ResourcePack> getPacksByIdVer() {
-        return this.packsByIdVer;
-    }
 }

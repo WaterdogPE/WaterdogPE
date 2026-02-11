@@ -15,10 +15,12 @@
 
 package dev.waterdog.waterdogpe.plugin;
 
+import lombok.Getter;
 import lombok.ToString;
 
 import java.util.List;
 
+@Getter
 @ToString
 public class PluginYAML {
 
@@ -28,23 +30,4 @@ public class PluginYAML {
     public String main;
     public List<String> depends;
 
-    public String getAuthor() {
-        return this.author;
-    }
-
-    public String getMain() {
-        return this.main;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public String getVersion() {
-        return this.version;
-    }
-
-    public List<String> getDepends() {
-        return this.depends;
-    }
 }

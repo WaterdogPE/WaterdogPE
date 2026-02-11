@@ -20,11 +20,11 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 public interface ReconnectReason {
-    static ReconnectReason UNKNOWN = new ReconnectReasonImpl("unknown");
-    static ReconnectReason TIMEOUT = new ReconnectReasonImpl("timeout");
-    static ReconnectReason EXCEPTION = new ReconnectReasonImpl("exception");
-    static ReconnectReason SERVER_KICK = new ReconnectReasonImpl("server_kick");
-    static ReconnectReason TRANSFER_FAILED = new ReconnectReasonImpl("transfer_failed");
+    ReconnectReason UNKNOWN = new ReconnectReasonImpl("unknown");
+    ReconnectReason TIMEOUT = new ReconnectReasonImpl("timeout");
+    ReconnectReason EXCEPTION = new ReconnectReasonImpl("exception");
+    ReconnectReason SERVER_KICK = new ReconnectReasonImpl("server_kick");
+    ReconnectReason TRANSFER_FAILED = new ReconnectReasonImpl("transfer_failed");
 
     String getName();
 

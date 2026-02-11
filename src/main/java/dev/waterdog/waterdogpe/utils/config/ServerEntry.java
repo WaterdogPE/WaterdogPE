@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.utils.config;
 
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfoType;
+import lombok.Getter;
 import lombok.ToString;
 import org.cloudburstmc.protocol.common.util.Preconditions;
 
@@ -24,6 +25,7 @@ import java.net.InetSocketAddress;
 /**
  * This is data class used for Configuration which holds basic information of the ServerInfo
  */
+@Getter
 @ToString
 public class ServerEntry {
 
@@ -40,22 +42,6 @@ public class ServerEntry {
         this.address = address;
         this.publicAddress = publicAddress;
         this.serverType = serverType;
-    }
-
-    public String getServerName() {
-        return this.serverName;
-    }
-
-    public InetSocketAddress getAddress() {
-        return this.address;
-    }
-
-    public InetSocketAddress getPublicAddress() {
-        return this.publicAddress;
-    }
-
-    public String getServerType() {
-        return this.serverType;
     }
 
     public ServerInfoType getServerInfoType() {
