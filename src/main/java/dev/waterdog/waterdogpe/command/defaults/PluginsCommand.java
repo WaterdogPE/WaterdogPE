@@ -15,15 +15,12 @@
 
 package dev.waterdog.waterdogpe.command.defaults;
 
-import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.command.Command;
 import dev.waterdog.waterdogpe.command.CommandSender;
 import dev.waterdog.waterdogpe.command.CommandSettings;
 import dev.waterdog.waterdogpe.plugin.Plugin;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 
 public class PluginsCommand extends Command {
