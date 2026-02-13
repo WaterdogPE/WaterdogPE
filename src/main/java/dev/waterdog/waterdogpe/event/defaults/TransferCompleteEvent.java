@@ -19,12 +19,14 @@ import dev.waterdog.waterdogpe.event.AsyncEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
 
 /**
  * Called when the transfer from one server to the next is completed.
  * At this point, the player is already logged in and registered to the new downstream target and the old downstream is already
  * disconnected.
  */
+@Getter
 @AsyncEvent
 public class TransferCompleteEvent extends PlayerEvent {
 
@@ -37,16 +39,9 @@ public class TransferCompleteEvent extends PlayerEvent {
         this.connection = connection;
     }
 
-    public ServerInfo getSourceServer() {
-        return this.sourceServer;
-    }
-
     public ServerInfo getTargetServer() {
         return this.connection.getServerInfo();
     }
 
-    public ClientConnection getConnection() {
-        return this.connection;
-    }
 }
 

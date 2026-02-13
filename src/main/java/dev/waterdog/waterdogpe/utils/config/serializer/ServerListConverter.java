@@ -48,7 +48,7 @@ public class ServerListConverter implements Converter {
                     map.put("public_address", converter.toConfig(InetSocketAddress.class, serverEntry.getPublicAddress(), null));
                 }
                 if (serverEntry.getServerType() != null) {
-                    map.put("server_type", serverEntry.getServerType().toString());
+                    map.put("server_type", serverEntry.getServerType());
                 }
             } catch (Exception e) {
                 throw new RuntimeException("ServerListConverter#toConfig converter.toConfig threw exception", e);

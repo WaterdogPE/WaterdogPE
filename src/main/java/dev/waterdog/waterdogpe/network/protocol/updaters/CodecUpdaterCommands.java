@@ -28,8 +28,4 @@ public class CodecUpdaterCommands implements ProtocolCodecUpdater {
         return builder;
     }
 
-    @Override
-    public int getRequiredVersion() {
-        return -1;
-    }
 }

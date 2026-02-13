@@ -185,7 +185,7 @@ public class QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
         buf.writeByte(0);
         buf.writeBytes(LONG_RESPONSE_PADDING_BOTTOM);
 
-        if (event.getPlayers().size() >= 1) {
+        if (!event.getPlayers().isEmpty()) {
             for (ProxiedPlayer player : event.getPlayers()) {
                 this.writeString(buf, player.getName());
             }
@@ -193,14 +193,5 @@ public class QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
         buf.writeByte(0);
     }
 
-    private static class QuerySession {
-
-        public final int token;
-        public final long time;
-
-        public QuerySession(int token, long time) {
-            this.token = token;
-            this.time = time;
-        }
-    }
+    private record QuerySession(int token, long time) {}
 }

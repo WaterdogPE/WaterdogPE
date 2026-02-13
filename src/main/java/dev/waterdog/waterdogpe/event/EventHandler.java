@@ -103,7 +103,7 @@ public class EventHandler {
 
     public void subscribe(Consumer<Event> handler, EventPriority priority) {
         List<Consumer<Event>> handlerList = this.priority2handlers.computeIfAbsent(priority, priority1 -> new ArrayList<>());
-        // Check if event is already registered
+        // Check if the event is already registered
         if (!handlerList.contains(handler)) {
             // Handler is not registered yet
             handlerList.add(handler);

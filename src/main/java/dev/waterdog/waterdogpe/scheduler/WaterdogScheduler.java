@@ -19,6 +19,7 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.utils.exceptions.SchedulerException;
 import io.netty.util.internal.PlatformDependent;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -26,9 +27,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class WaterdogScheduler {
 
+    @Getter
     private static WaterdogScheduler instance;
     private final ProxyServer proxy;
 
+    @Getter
     private final ExecutorService threadedExecutor;
 
     private final Map<Integer, TaskHandler<?>> taskHandlerMap = new ConcurrentHashMap<>();
@@ -49,10 +52,6 @@ public class WaterdogScheduler {
                 .build();
         int idleThreads = this.proxy.getConfiguration().getIdleThreads();
         this.threadedExecutor = new ThreadPoolExecutor(idleThreads, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<>(), builder);
-    }
-
-    public static WaterdogScheduler getInstance() {
-        return instance;
     }
 
     public <T extends Runnable> TaskHandler<T> scheduleAsync(T task) {
@@ -154,10 +153,6 @@ public class WaterdogScheduler {
                 // Ignore
             }
         }
-    }
-
-    public ExecutorService getThreadedExecutor() {
-        return this.threadedExecutor;
     }
 
     public int getCurrentTick() {

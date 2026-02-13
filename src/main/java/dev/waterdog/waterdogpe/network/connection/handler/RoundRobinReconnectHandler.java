@@ -24,7 +24,7 @@ import java.util.Iterator;
 
 /**
  * This is a default reconnect handler.
- * The fallback server is chosen from the priorities list using a round-robin algorithm.
+ * The fallback server is chosen from the priority list using a round-robin algorithm.
  */
 public class RoundRobinReconnectHandler implements IReconnectHandler {
 

@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.utils.types;
 
+import lombok.Getter;
 import lombok.ToString;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,16 +26,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @ToString
 public class Permission {
 
+    @Getter
     private final String name;
     private final AtomicBoolean value = new AtomicBoolean(false);
 
     public Permission(String name, boolean value) {
         this.name = name.toLowerCase();
         this.value.set(value);
-    }
-
-    public String getName() {
-        return this.name;
     }
 
     public boolean getValue() {

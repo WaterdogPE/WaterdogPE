@@ -16,7 +16,9 @@
 package dev.waterdog.waterdogpe.scheduler;
 
 import dev.waterdog.waterdogpe.logger.MainLogger;
+import lombok.Getter;
 
+@Getter
 public abstract class Task implements Runnable {
 
     private TaskHandler<Task> handler;
@@ -40,10 +42,6 @@ public abstract class Task implements Runnable {
 
     public void cancel() {
         this.handler.cancel();
-    }
-
-    public TaskHandler<Task> getHandler() {
-        return this.handler;
     }
 
     public void setHandler(TaskHandler<Task> handler) {

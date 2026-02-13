@@ -16,7 +16,10 @@
 package dev.waterdog.waterdogpe.scheduler;
 
 import dev.waterdog.waterdogpe.logger.MainLogger;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
 public class TaskHandler<T extends Runnable> {
 
     private final int taskId;
@@ -24,10 +27,13 @@ public class TaskHandler<T extends Runnable> {
 
     private final T task;
 
+    @Setter
     private int delay;
+    @Setter
     private int period;
 
     private int lastRunTick;
+    @Setter
     private int nextRunTick;
 
     private boolean cancelled;
@@ -73,55 +79,12 @@ public class TaskHandler<T extends Runnable> {
         return true;
     }
 
-    public int getTaskId() {
-        return this.taskId;
-    }
-
-    public boolean isAsync() {
-        return this.async;
-    }
-
-    public T getTask() {
-        return this.task;
-    }
-
-    public boolean isCancelled() {
-        return this.cancelled;
-    }
-
-    public int getDelay() {
-        return this.delay;
-    }
-
-    public void setDelay(int delay) {
-        this.delay = delay;
-    }
-
     public boolean isDelayed() {
         return this.delay > 0;
-    }
-
-    public int getPeriod() {
-        return this.period;
-    }
-
-    public void setPeriod(int period) {
-        this.period = period;
     }
 
     public boolean isRepeating() {
         return this.period > 0;
     }
 
-    public int getLastRunTick() {
-        return this.lastRunTick;
-    }
-
-    public int getNextRunTick() {
-        return this.nextRunTick;
-    }
-
-    public void setNextRunTick(int nextRunTick) {
-        this.nextRunTick = nextRunTick;
-    }
 }

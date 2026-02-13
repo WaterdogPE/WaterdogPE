@@ -31,7 +31,6 @@ public class PlayerDisconnectedEvent extends PlayerEvent {
         this.reason = reason;
     }
 
-
     public String getReason() {
         return this.getReason(String.class);
     }

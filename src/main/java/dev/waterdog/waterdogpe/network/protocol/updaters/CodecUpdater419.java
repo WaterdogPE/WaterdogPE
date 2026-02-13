@@ -23,7 +23,7 @@ public class CodecUpdater419 implements ProtocolCodecUpdater {
     @Override
     public BedrockCodec.Builder updateCodec(BedrockCodec.Builder builder, BedrockCodec baseCodec) {
         // Since this version block palettes are client authoritative,
-        // which means we don't need to handle this anymore
+        // which means we don't need to handle this anymore.
         // However, we cannot deregister LevelChunkPacket as we are sending it,
         // We might consider implementing different upstream and downstream codecs in the future
         // builder.deregisterPacket(LevelChunkPacket.class);

@@ -30,7 +30,7 @@ public class CompressionAlgorithmConverter implements Converter {
     }
 
     @Override
-    public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
+    public Object toConfig(Class<?> type, Object object, ParameterizedType parameterizedType) {
         if (object instanceof CompressionType algorithm) {
             return algorithm.getIdentifier();
         } else {
@@ -39,7 +39,7 @@ public class CompressionAlgorithmConverter implements Converter {
     }
 
     @Override
-    public Object fromConfig(Class<?> type, Object object, ParameterizedType parameterizedType) throws Exception {
+    public Object fromConfig(Class<?> type, Object object, ParameterizedType parameterizedType) {
         if (object == null) {
             return null;
         }

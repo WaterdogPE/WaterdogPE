@@ -129,9 +129,7 @@ public class BedrockServerSession extends BedrockSession implements ProxiedConne
     }
 
     public void addDisconnectListener(Consumer<CharSequence> listener) {
-        this.getPeer().getChannel().closeFuture().addListener(future -> {
-            listener.accept(this.getDisconnectReason());
-        });
+        this.getPeer().getChannel().closeFuture().addListener(future -> listener.accept(this.getDisconnectReason()));
     }
 
     public int getSubClientId() {

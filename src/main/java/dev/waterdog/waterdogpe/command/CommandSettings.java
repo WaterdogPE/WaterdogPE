@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.command;
 
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
+import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,8 +24,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A container holding base information of each command
+ * A container holding base the information of each command
  */
+@Getter
 public class CommandSettings {
 
     private static final CommandSettings EMPTY_SETTINGS = CommandSettings.builder().build();
@@ -55,30 +57,7 @@ public class CommandSettings {
         return new Builder();
     }
 
-    public String getUsageMessage() {
-        return this.usageMessage;
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public String getPermission() {
-        return this.permission;
-    }
-
-    public String getPermissionMessage() {
-        return this.permissionMessage;
-    }
-
-    public Set<String> getAliases() {
-        return this.aliases;
-    }
-
-    public boolean isQuoteAware() {
-        return quoteAware;
-    }
-
+    @Getter
     public static class Builder {
         private String usageMessage = "";
         private String description = null;
@@ -98,17 +77,9 @@ public class CommandSettings {
             );
         }
 
-        public String getUsageMessage() {
-            return this.usageMessage;
-        }
-
         public Builder setUsageMessage(String usageMessage) {
             this.usageMessage = usageMessage;
             return this;
-        }
-
-        public boolean isQuoteAware() {
-            return quoteAware;
         }
 
         public Builder setQuoteAware(boolean quoteAware) {
@@ -117,17 +88,9 @@ public class CommandSettings {
             return this;
         }
 
-        public String getDescription() {
-            return this.description;
-        }
-
         public Builder setDescription(String description) {
             this.description = description;
             return this;
-        }
-
-        public String getPermission() {
-            return this.permission;
         }
 
         public Builder setPermission(String permission) {
@@ -135,17 +98,9 @@ public class CommandSettings {
             return this;
         }
 
-        public String getPermissionMessage() {
-            return this.permissionMessage;
-        }
-
         public Builder setPermissionMessage(String permissionMessage) {
             this.permissionMessage = permissionMessage;
             return this;
-        }
-
-        public String[] getAliases() {
-            return this.aliases;
         }
 
         public Builder setAliases(String... aliases) {

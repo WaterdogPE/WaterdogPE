@@ -51,7 +51,7 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
     }
 
     @Override
-    protected void initChannel(Channel channel) throws Exception {
+    protected void initChannel(Channel channel) {
         int rakVersion = this.player.getProtocol().getRaknetVersion();
         CompressionType compression = this.player.getProxy().getConfiguration().getCompression();
 

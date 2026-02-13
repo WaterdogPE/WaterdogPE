@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.command;
 
+import lombok.Getter;
 import org.cloudburstmc.protocol.bedrock.data.command.*;
 
 import java.util.*;
@@ -27,11 +28,13 @@ public abstract class Command {
     /**
      * The name of the command
      */
+    @Getter
     private final String name;
 
     /**
      * The command settings assigned to it
      */
+    @Getter
     private final CommandSettings settings;
 
     private CommandData commandData;
@@ -46,14 +49,6 @@ public abstract class Command {
     }
 
     public abstract boolean onExecute(CommandSender sender, String alias, String[] args);
-
-    public CommandSettings getSettings() {
-        return this.settings;
-    }
-
-    public String getName() {
-        return this.name;
-    }
 
     public String getDescription() {
         return this.settings.getDescription();

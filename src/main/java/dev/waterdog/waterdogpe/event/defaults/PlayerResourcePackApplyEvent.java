@@ -16,8 +16,12 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 import org.cloudburstmc.protocol.bedrock.packet.ResourcePackStackPacket;
 
+@Setter
+@Getter
 public class PlayerResourcePackApplyEvent extends PlayerEvent {
 
     private ResourcePackStackPacket stackPacket;
@@ -27,11 +31,4 @@ public class PlayerResourcePackApplyEvent extends PlayerEvent {
         this.stackPacket = stackPacket;
     }
 
-    public ResourcePackStackPacket getStackPacket() {
-        return this.stackPacket;
-    }
-
-    public void setStackPacket(ResourcePackStackPacket stackPacket) {
-        this.stackPacket = stackPacket;
-    }
 }

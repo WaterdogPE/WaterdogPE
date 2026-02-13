@@ -18,6 +18,8 @@ package dev.waterdog.waterdogpe.security;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeEntry;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetworkSettings;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -29,11 +31,15 @@ import java.util.concurrent.TimeUnit;
 
 public class SecurityManager {
     private final ProxyServer proxy;
+    @Getter
     private final ConnectionThrottle connectionThrottle;
+    @Getter
     private final ConnectionThrottle loginThrottle;
 
     private final Map<InetAddress, Long> blockedConnections = new ConcurrentHashMap<>();
 
+    @Getter
+    @Setter
     private SecurityListener listener;
 
     public SecurityManager(ProxyServer proxy) {
@@ -117,19 +123,4 @@ public class SecurityManager {
         return reason;
     }
 
-    public void setListener(SecurityListener listener) {
-        this.listener = listener;
-    }
-
-    public SecurityListener getListener() {
-        return this.listener;
-    }
-
-    public ConnectionThrottle getConnectionThrottle() {
-        return this.connectionThrottle;
-    }
-
-    public ConnectionThrottle getLoginThrottle() {
-        return this.loginThrottle;
-    }
 }

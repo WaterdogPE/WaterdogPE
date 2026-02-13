@@ -17,6 +17,8 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.CancellableEvent;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 import org.cloudburstmc.protocol.bedrock.packet.ResourcePacksInfoPacket;
 
 /**
@@ -24,6 +26,8 @@ import org.cloudburstmc.protocol.bedrock.packet.ResourcePacksInfoPacket;
  * It is possible to cancel sending this packet or use custom instance of this packet.
  * WARNING: Modifying packet passed from construction will modify the packet for all other players!
  */
+@Setter
+@Getter
 public class PlayerResourcePackInfoSendEvent extends PlayerEvent implements CancellableEvent {
 
     private ResourcePacksInfoPacket packet;
@@ -33,11 +37,4 @@ public class PlayerResourcePackInfoSendEvent extends PlayerEvent implements Canc
         this.packet = packet;
     }
 
-    public ResourcePacksInfoPacket getPacket() {
-        return this.packet;
-    }
-
-    public void setPacket(ResourcePacksInfoPacket packet) {
-        this.packet = packet;
-    }
 }

@@ -41,7 +41,7 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
     @Override
     public PacketSignal handlePacket(BedrockPacket packet) {
         PacketSignal signal = super.handlePacket(packet);
-        if (player.getPluginPacketHandlers().size() > 0) {
+        if (!player.getPluginPacketHandlers().isEmpty()) {
             for (PluginPacketHandler handler : this.player.getPluginPacketHandlers()) {
                 signal = mergeSignals(signal, handler.handlePacket(packet, PacketDirection.CLIENT_BOUND));
             }

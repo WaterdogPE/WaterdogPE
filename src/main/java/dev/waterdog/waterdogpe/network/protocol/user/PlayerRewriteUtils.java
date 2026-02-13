@@ -310,7 +310,7 @@ public class PlayerRewriteUtils {
         }
 
         BedrockBatchWrapper wrapper = BedrockBatchWrapper.create(session.getSubClientId(), packets.toArray(new BedrockPacket[0]));
-        wrapper.setFlag(BatchFlags.SKIP_QUEUE);;
+        wrapper.setFlag(BatchFlags.SKIP_QUEUE);
         session.sendPacket(wrapper);
     }
 

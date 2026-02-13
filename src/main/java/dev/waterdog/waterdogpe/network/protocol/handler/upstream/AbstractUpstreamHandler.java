@@ -36,7 +36,7 @@ public abstract class AbstractUpstreamHandler implements BedrockPacketHandler {
     @Override
     public PacketSignal handlePacket(BedrockPacket packet) {
         PacketSignal signal = BedrockPacketHandler.super.handlePacket(packet);
-        if (player.getPluginPacketHandlers().size() > 0) {
+        if (!player.getPluginPacketHandlers().isEmpty()) {
             for (PluginPacketHandler handler : this.player.getPluginPacketHandlers()) {
                 signal = mergeSignals(signal, handler.handlePacket(packet, PacketDirection.SERVER_BOUND));
             }

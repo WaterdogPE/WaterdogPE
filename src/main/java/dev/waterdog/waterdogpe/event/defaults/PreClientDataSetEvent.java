@@ -40,8 +40,8 @@ public class PreClientDataSetEvent extends Event {
     private final UUID uuid;
     @Getter
     private final String displayName;
-    @Setter
     @Getter
+    @Setter
     private KeyPair keyPair;
 
     public PreClientDataSetEvent(JsonObject clientData, String xuid, UUID uuid, String displayName, KeyPair keyPair, ProxiedConnection playerSession) {

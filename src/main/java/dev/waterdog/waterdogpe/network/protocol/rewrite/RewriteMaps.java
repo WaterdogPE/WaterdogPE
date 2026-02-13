@@ -16,11 +16,15 @@
 package dev.waterdog.waterdogpe.network.protocol.rewrite;
 
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
 public class RewriteMaps {
 
     private final EntityTracker entityTracker;
     private final EntityMap entityMap;
+    @Setter
     private BlockMap blockMap;
 
     public RewriteMaps(ProxiedPlayer player) {
@@ -28,19 +32,4 @@ public class RewriteMaps {
         this.entityMap = new EntityMap(player);
     }
 
-    public EntityTracker getEntityTracker() {
-        return this.entityTracker;
-    }
-
-    public EntityMap getEntityMap() {
-        return this.entityMap;
-    }
-
-    public BlockMap getBlockMap() {
-        return this.blockMap;
-    }
-
-    public void setBlockMap(BlockMap blockMap) {
-        this.blockMap = blockMap;
-    }
 }

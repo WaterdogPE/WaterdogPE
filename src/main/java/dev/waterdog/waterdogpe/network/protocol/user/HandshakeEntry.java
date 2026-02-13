@@ -51,7 +51,7 @@ public class HandshakeEntry {
         this.isChainPayload = isChainPayload;
     }
 
-    public LoginData buildData(BedrockServerSession session, ProxyServer proxy) throws Exception {
+    public LoginData buildData(BedrockServerSession session, ProxyServer proxy) {
         // This is first event which exposes new player connecting to proxy.
         // The purpose is to change player's client data or set encryption keypair before joining first downstream.
         PreClientDataSetEvent event = new PreClientDataSetEvent(this.clientData, this.xuid, this.uuid, this.displayName, EncryptionUtils.createKeyPair(), session);

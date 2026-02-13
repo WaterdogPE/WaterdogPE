@@ -17,6 +17,8 @@ package dev.waterdog.waterdogpe.network.protocol;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.v313.Bedrock_v313;
@@ -150,10 +152,14 @@ public enum ProtocolVersion {
         }
     }
 
+    @Getter
     private final int protocol;
+    @Getter
     private final int protocolInternal;
 
+    @Getter
     private final BedrockCodec defaultCodec;
+    @Setter
     private BedrockCodec bedrockCodec;
 
     ProtocolVersion(int protocol, BedrockCodec codec) {
@@ -182,28 +188,12 @@ public enum ProtocolVersion {
         return this.protocolInternal >= version.protocolInternal;
     }
 
-    public int getProtocol() {
-        return this.protocol;
-    }
-
-    public int getProtocolInternal() {
-        return this.protocolInternal;
-    }
-
     public int getRaknetVersion() {
         return this.getCodec().getRaknetProtocolVersion();
     }
 
-    public BedrockCodec getDefaultCodec() {
-        return this.defaultCodec;
-    }
-
     public BedrockCodec getCodec() {
         return this.bedrockCodec == null ? this.defaultCodec : this.bedrockCodec;
-    }
-
-    public void setBedrockCodec(BedrockCodec bedrockCodec) {
-        this.bedrockCodec = bedrockCodec;
     }
 
     public String getMinecraftVersion() {

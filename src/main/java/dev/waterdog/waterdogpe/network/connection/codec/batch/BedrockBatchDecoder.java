@@ -30,7 +30,7 @@ public class BedrockBatchDecoder extends MessageToMessageDecoder<BedrockBatchWra
     public static final String NAME = "bedrock-batch-decoder";
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, BedrockBatchWrapper msg, List<Object> out) {
         if (msg.getUncompressed() == null) {
             throw new IllegalStateException("Batch packet was not decompressed");
         }

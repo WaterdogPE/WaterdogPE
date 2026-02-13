@@ -17,24 +17,42 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.Event;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
 
 /**
  * This event is called when the Proxy receives a ping packet from a client.
- * It can be used to modify data, for example to combine proxy player counts.
+ * It can be used to modify data, for example, to combine proxy player counts.
  */
 public class ProxyPingEvent extends Event {
 
+    @Getter
     private final InetSocketAddress address;
+    @Getter
+    @Setter
     private String motd;
+    @Getter
+    @Setter
     private String subMotd;
+    @Getter
+    @Setter
     private String gameType;
+    @Getter
+    @Setter
     private String edition;
+    @Getter
+    @Setter
     private String version;
+    @Getter
+    @Setter
     private Collection<ProxiedPlayer> players;
+    @Setter
     private int playerCount = -1;
+    @Setter
+    @Getter
     private int maximumPlayerCount;
 
     public ProxyPingEvent(String motd, String subMotd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, InetSocketAddress address) {
@@ -48,71 +66,8 @@ public class ProxyPingEvent extends Event {
         this.address = address;
     }
 
-    public String getMotd() {
-        return this.motd;
-    }
-
-    public void setMotd(String motd) {
-        this.motd = motd;
-    }
-
-    public String getSubMotd() {
-        return this.subMotd;
-    }
-
-    public void setSubMotd(String subMotd) {
-        this.subMotd = subMotd;
-    }
-
-    public String getGameType() {
-        return this.gameType;
-    }
-
-    public void setGameType(String gameType) {
-        this.gameType = gameType;
-    }
-
-    public String getEdition() {
-        return this.edition;
-    }
-
-    public void setEdition(String edition) {
-        this.edition = edition;
-    }
-
-    public String getVersion() {
-        return this.version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public Collection<ProxiedPlayer> getPlayers() {
-        return this.players;
-    }
-
-    public void setPlayers(Collection<ProxiedPlayer> players) {
-        this.players = players;
-    }
-
     public int getPlayerCount() {
         return this.playerCount > 0 ? this.playerCount : this.players.size();
     }
 
-    public void setPlayerCount(int playerCount) {
-        this.playerCount = playerCount;
-    }
-
-    public int getMaximumPlayerCount() {
-        return this.maximumPlayerCount;
-    }
-
-    public void setMaximumPlayerCount(int maximumPlayerCount) {
-        this.maximumPlayerCount = maximumPlayerCount;
-    }
-
-    public InetSocketAddress getAddress() {
-        return this.address;
-    }
 }
