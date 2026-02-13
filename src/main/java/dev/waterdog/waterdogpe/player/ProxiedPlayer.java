@@ -98,9 +98,12 @@ public class ProxiedPlayer implements CommandSender {
      * -- GETTER --
      * </p>
      * Returns true if the player has administrator status, false if not
+     * -- SETTER --
+     *  Sets whether this player should have Administrator Status.
+     *  Players with administrator status are granted every permission, even if not specifically applied
      */
-    @Getter
     @Setter
+    @Getter
     private boolean admin = false;
     /**
      * Signalizes if connection bridges can do entity and block rewrite.
