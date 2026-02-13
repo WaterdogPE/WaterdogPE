@@ -93,6 +93,12 @@ public class ProxiedPlayer implements CommandSender {
     private ClientConnection clientConnection;
     private ClientConnection pendingConnection;
 
+
+    /**
+     * -- GETTER --
+     * </p>
+     * Returns true if the player has administrator status, false if not
+     */
     @Getter
     @Setter
     private boolean admin = false;
@@ -104,9 +110,9 @@ public class ProxiedPlayer implements CommandSender {
     private volatile boolean canRewrite = false;
     private volatile boolean hasUpstreamBridge = false;
     /**
-     * Some downstream server software require strict packet sending policy (like PMMP4).
+     * Some downstream server software requires strict packet sending policy (like PMMP4).
      * To pass packet handler dedicated to SetLocalPlayerAsInitializedPacket only, proxy has to post-complete server transfer.
-     * Using this bool allows tells us if we except post-complete phase operation.
+     * Using this bool allows telling us if we except post-complete phase operation.
      * See ConnectedDownstreamHandler and SwitchDownstreamHandler for exact usage.
      */
     @Setter
