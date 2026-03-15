@@ -17,6 +17,11 @@ package dev.waterdog.waterdogpe.network.protocol.user;
 
 import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.BatchFlags;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.cloudburstmc.math.vector.Vector2f;
 import org.cloudburstmc.math.vector.Vector3f;
@@ -28,11 +33,6 @@ import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityLinkData;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.*;
-import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.LongSet;
 import org.cloudburstmc.protocol.common.util.VarInts;
 
 import java.util.ArrayList;
@@ -191,7 +191,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectRemoveAllPlayers(ProxiedConnection session, Collection<UUID> playerList) {
-        if (session == null || !session.isConnected()) {
+        if (session == null || !session.isConnected() || playerList == null || playerList.isEmpty()) {
             return;
         }
         PlayerListPacket packet = new PlayerListPacket();
@@ -239,7 +239,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectRemoveScoreInfos(ProxiedConnection session, Long2ObjectMap<ScoreInfo> scoreInfos) {
-        if (session == null || !session.isConnected()) {
+        if (session == null || !session.isConnected() || scoreInfos == null || scoreInfos.isEmpty()) {
             return;
         }
         SetScorePacket packet = new SetScorePacket();

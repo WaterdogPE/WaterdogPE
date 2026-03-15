@@ -29,6 +29,9 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.ScheduledFuture;
+import io.netty.util.internal.PlatformDependent;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
@@ -37,6 +40,7 @@ import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.codec.v428.Bedrock_v428;
 import org.cloudburstmc.protocol.bedrock.data.CompressionAlgorithm;
+import org.cloudburstmc.protocol.bedrock.data.PacketCompressionAlgorithm;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.codec.compression.CompressionCodec;
@@ -51,19 +55,26 @@ import javax.crypto.SecretKey;
 import java.net.SocketAddress;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.TimeUnit;
 
 import static dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedSessionInitializer.getCompressionStrategy;
 
 @Log4j2
 public class BedrockClientConnection extends SimpleChannelInboundHandler<BedrockBatchWrapper> implements ClientConnection {
+    private static final long PACKET_FLUSH_INTERVAL_MS = 50L;
+
     private final ProxiedPlayer player;
     private final ServerInfo serverInfo;
     private final Channel channel;
 
     private final List<Runnable> disconnectListeners = new ObjectArrayList<>();
+    private final Queue<BedrockPacketWrapper> packetQueue = PlatformDependent.newMpscQueue();
 
     private BedrockPacketHandler packetHandler;
     private CompressionStrategy compressionStrategy;
+    private ScheduledFuture<?> tickFuture;
+    private volatile boolean closed;
 
     public BedrockClientConnection(ProxiedPlayer player, ServerInfo serverInfo, Channel channel) {
         this.player = player;
@@ -76,7 +87,21 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
     }
 
     @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        this.closed = false;
+        this.tickFuture = ctx.channel().eventLoop().scheduleAtFixedRate(this::onTick, PACKET_FLUSH_INTERVAL_MS,
+                PACKET_FLUSH_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        super.channelActive(ctx);
+    }
+
+    @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        this.closed = true;
+        if (this.tickFuture != null) {
+            this.tickFuture.cancel(false);
+            this.tickFuture = null;
+        }
+        this.releaseQueuedPackets();
         this.disconnectListeners.forEach(Runnable::run);
         super.channelInactive(ctx);
     }
@@ -96,22 +121,38 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
 
     @Override
     public void sendPacket(BedrockBatchWrapper wrapper) {
-        if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) &&
-                !Objects.equals(wrapper.getAlgorithm(), this.compressionStrategy.getDefaultCompression().getAlgorithm())) {
-            wrapper.setCompressed(null); // Before 1.20.60 dynamic compression is not supported
-        }
-        // Starting with 1.20.60 support all compression algorithms on server side.
-        this.channel.writeAndFlush(wrapper);
+        Objects.requireNonNull(wrapper, "wrapper");
+        this.executeOnEventLoop(() -> {
+            if (!this.canSend()) {
+                wrapper.release();
+                return;
+            }
+            this.sendBatch0(wrapper);
+        });
     }
 
     @Override
     public void sendPacket(BedrockPacket packet) {
-        this.channel.writeAndFlush(packet);
+        Objects.requireNonNull(packet, "packet");
+        this.executeOnEventLoop(() -> {
+            if (!this.canSend()) {
+                return;
+            }
+            this.packetQueue.add(BedrockPacketWrapper.create(0, 0, 0,
+                    ReferenceCountUtil.retain(packet), null));
+        });
     }
 
     @Override
     public void sendPacketImmediately(BedrockPacket packet) {
-        this.channel.writeAndFlush(BedrockBatchWrapper.create(this.getSubClientId(), packet));
+        Objects.requireNonNull(packet, "packet");
+        this.executeOnEventLoop(() -> {
+            if (!this.canSend()) {
+                return;
+            }
+            this.onTick();
+            this.channel.writeAndFlush(BedrockBatchWrapper.create(this.getSubClientId(), packet));
+        });
     }
 
     @Override
@@ -127,44 +168,50 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
 
     @Override
     public void setCompressionStrategy(CompressionStrategy strategy) {
-        boolean needsPrefix = this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_20_60);
+        Objects.requireNonNull(strategy, "strategy");
+        this.executeOnEventLoop(() -> {
+            boolean needsPrefix = this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_20_60);
 
-        ChannelHandler handler = this.channel.pipeline().get(CompressionCodec.NAME);
-        if (handler == null) {
-            this.channel.pipeline().addAfter(FrameIdCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
-        } else {
-            this.channel.pipeline().replace(CompressionCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
-        }
-        this.compressionStrategy = strategy;
+            ChannelHandler handler = this.channel.pipeline().get(CompressionCodec.NAME);
+            if (handler == null) {
+                this.channel.pipeline().addAfter(FrameIdCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
+            } else {
+                this.channel.pipeline().replace(CompressionCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
+            }
+            this.compressionStrategy = strategy;
+        });
     }
 
     @Override
     public void enableEncryption(SecretKey secretKey) {
+        Objects.requireNonNull(secretKey, "secretKey");
         if (!secretKey.getAlgorithm().equals("AES")) {
             throw new IllegalArgumentException("Invalid key algorithm");
         }
-        // Check if the codecs exist in the pipeline
-        if (this.channel.pipeline().get(BedrockEncryptionEncoder.class) != null ||
-                this.channel.pipeline().get(BedrockEncryptionDecoder.class) != null) {
-            throw new IllegalStateException("Encryption is already enabled");
-        }
+        this.executeOnEventLoop(() -> {
+            if (this.channel.pipeline().get(BedrockEncryptionEncoder.class) != null ||
+                    this.channel.pipeline().get(BedrockEncryptionDecoder.class) != null) {
+                log.warn("Encryption is already enabled for {}", this.getSocketAddress());
+                return;
+            }
 
-        int protocolVersion = this.getCodec().getProtocolVersion();
-        boolean useCtr = protocolVersion >= Bedrock_v428.CODEC.getProtocolVersion();
+            int protocolVersion = this.getCodec().getProtocolVersion();
+            boolean useCtr = protocolVersion >= Bedrock_v428.CODEC.getProtocolVersion();
 
-        this.channel.pipeline().addAfter(FrameIdCodec.NAME, BedrockEncryptionEncoder.NAME,
-                new BedrockEncryptionEncoder(secretKey, EncryptionUtils.createCipher(useCtr, true, secretKey)));
-        this.channel.pipeline().addAfter(FrameIdCodec.NAME, BedrockEncryptionDecoder.NAME,
-                new BedrockEncryptionDecoder(secretKey, EncryptionUtils.createCipher(useCtr, false, secretKey)));
+            this.channel.pipeline().addAfter(FrameIdCodec.NAME, BedrockEncryptionEncoder.NAME,
+                    new BedrockEncryptionEncoder(secretKey, EncryptionUtils.createCipher(useCtr, true, secretKey)));
+            this.channel.pipeline().addAfter(FrameIdCodec.NAME, BedrockEncryptionDecoder.NAME,
+                    new BedrockEncryptionDecoder(secretKey, EncryptionUtils.createCipher(useCtr, false, secretKey)));
 
-        log.info("Encryption enabled for {}", this.getSocketAddress());
+            log.info("Encryption enabled for {}", this.getSocketAddress());
+        });
     }
 
     @Override
     public void setCodecHelper(BedrockCodec codec, BedrockCodecHelper helper) {
         Objects.requireNonNull(codec, "codec");
         Objects.requireNonNull(helper, "helper");
-        this.channel.pipeline().get(BedrockPacketCodec.class).setCodecHelper(codec, helper);
+        this.executeOnEventLoop(() -> this.channel.pipeline().get(BedrockPacketCodec.class).setCodecHelper(codec, helper));
     }
 
     private BedrockCodec getCodec() {
@@ -177,7 +224,7 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
 
     @Override
     public void disconnect() {
-        this.channel.disconnect();
+        this.executeOnEventLoop(this.channel::disconnect);
     }
 
     @Override
@@ -215,20 +262,70 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
 
     @Override
     public void setPacketHandler(BedrockPacketHandler handler) {
-        if (handler instanceof ProxyPacketHandler packetHandler) {
-            if (this.getPacketHandler() instanceof ProxyBatchBridge bridge) {
-                bridge.setHandler(packetHandler);
+        this.executeOnEventLoop(() -> {
+            if (handler instanceof ProxyPacketHandler packetHandler) {
+                if (this.getPacketHandler() instanceof ProxyBatchBridge bridge) {
+                    bridge.setHandler(packetHandler);
+                } else {
+                    this.packetHandler = new ProxyBatchBridge(this.getCodec(), this.getCodecHelper(), packetHandler);
+                }
             } else {
-                this.packetHandler = new ProxyBatchBridge(this.getCodec(), this.getCodecHelper(), packetHandler);
+                this.packetHandler = handler;
             }
-        } else {
-            this.packetHandler = handler;
-        }
+        });
     }
 
     @Override
     public void addDisconnectListener(Runnable listener) {
         this.disconnectListeners.add(listener);
+    }
+
+    private void executeOnEventLoop(Runnable task) {
+        if (this.channel.eventLoop().inEventLoop()) {
+            task.run();
+        } else {
+            this.channel.eventLoop().execute(task);
+        }
+    }
+
+    private boolean canSend() {
+        return !this.closed && this.channel.isActive();
+    }
+
+    private void onTick() {
+        if (!this.canSend() || this.packetQueue.isEmpty()) {
+            return;
+        }
+
+        BedrockBatchWrapper batch = BedrockBatchWrapper.newInstance();
+
+        BedrockPacketWrapper packet;
+        while ((packet = this.packetQueue.poll()) != null) {
+            batch.getPackets().add(packet);
+        }
+        this.channel.writeAndFlush(batch);
+    }
+
+    private void sendBatch0(BedrockBatchWrapper wrapper) {
+        // Non-standard compression (e.g. Snappy) — must re-compress with downstream's algorithm
+        if (!(wrapper.getAlgorithm() instanceof PacketCompressionAlgorithm)) {
+            wrapper.setCompressed(null);
+        } else if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) &&
+                (this.compressionStrategy == null ||
+                        !Objects.equals(wrapper.getAlgorithm(), this.compressionStrategy.getDefaultCompression().getAlgorithm()))) {
+            // Before 1.20.60, compression header is absent — must re-compress if algorithm differs
+            wrapper.setCompressed(null);
+        }
+
+        this.onTick();
+        this.channel.writeAndFlush(wrapper);
+    }
+
+    private void releaseQueuedPackets() {
+        BedrockPacketWrapper packet;
+        while ((packet = this.packetQueue.poll()) != null) {
+            packet.release();
+        }
     }
 
     @Override

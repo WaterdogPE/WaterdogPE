@@ -22,7 +22,6 @@ import dev.waterdog.waterdogpe.network.connection.codec.batch.BedrockBatchDecode
 import dev.waterdog.waterdogpe.network.connection.codec.batch.BedrockBatchEncoder;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.FrameIdCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.client.ClientEventHandler;
-import dev.waterdog.waterdogpe.network.connection.codec.client.ClientPacketQueue;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.ProxiedCompressionCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec;
@@ -71,8 +70,7 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
                 .addLast(CompressionCodec.NAME, new ProxiedCompressionCodec(getCompressionStrategy(compression, rakVersion, true), false))
                 .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
                 .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
-                .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion))
-                .addLast(ClientPacketQueue.NAME, new ClientPacketQueue());
+                .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion));
 
         ClientConnection connection = this.createConnection(channel);
         if (connection instanceof ChannelHandler handler) {

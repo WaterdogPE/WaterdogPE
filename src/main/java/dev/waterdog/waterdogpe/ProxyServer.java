@@ -65,6 +65,7 @@ import lombok.Setter;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
+import org.cloudburstmc.netty.channel.raknet.config.RakServerCookieMode;
 import org.cloudburstmc.protocol.common.util.Preconditions;
 
 import java.net.InetSocketAddress;
@@ -293,7 +294,7 @@ public class ProxyServer {
                     .option(RakChannelOption.RAK_GUID, this.serverId)
                     .option(RakChannelOption.RAK_HANDLE_PING, true)
                     .option(RakChannelOption.RAK_MAX_MTU, this.getNetworkSettings().getMaximumMtu())
-                    .option(RakChannelOption.RAK_SEND_COOKIE, this.getNetworkSettings().enableCookies())
+                    .option(RakChannelOption.RAK_SERVER_COOKIE_MODE, this.getNetworkSettings().enableCookies() ? RakServerCookieMode.ACTIVE : RakServerCookieMode.OFF)
                     .childOption(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)
                     .childOption(RakChannelOption.RAK_ORDERING_CHANNELS, 1)
                     .handler(new OfflineServerChannelInitializer(this))

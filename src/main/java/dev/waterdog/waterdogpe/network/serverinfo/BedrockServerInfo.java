@@ -24,7 +24,8 @@ import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetworkSettings;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.EventLoop;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
@@ -52,8 +53,8 @@ public class BedrockServerInfo extends ServerInfo {
         ProtocolVersion version = player.getProtocol();
         NetworkSettings networkSettings = player.getProxy().getNetworkSettings();
 
-        // Just pick EventLoop here, and we can use it for our promise too
-        EventLoop eventLoop = player.getProxy().getWorkerEventLoopGroup().next();
+        // Bind downstream connection to the same EventLoop as upstream to avoid cross-thread dispatching
+        EventLoop eventLoop = player.getConnection().getPeer().getChannel().eventLoop();
         Promise<ClientConnection> promise = eventLoop.newPromise();
         new Bootstrap()
                 .channelFactory(RakChannelFactory.client(EventLoops.getChannelType().getDatagramChannel()))
