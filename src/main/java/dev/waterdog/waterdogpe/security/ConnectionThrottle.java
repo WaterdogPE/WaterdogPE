@@ -37,6 +37,7 @@ public class ConnectionThrottle {
         this.map = ExpiringMap.builder()
                 .expiration(throttleTime, TimeUnit.MILLISECONDS)
                 .expirationPolicy(ExpirationPolicy.ACCESSED)
+                .maxSize(5000)
                 .variableExpiration()
                 .build();
     }

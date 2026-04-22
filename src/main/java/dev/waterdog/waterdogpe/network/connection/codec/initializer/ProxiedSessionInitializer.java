@@ -60,7 +60,7 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
                 .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
                 .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
                 .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion))
-                .addLast(BedrockPeer.NAME, new ProxiedBedrockPeer(channel, this::createSession));
+                .addLast(BedrockPeer.NAME, new ProxiedBedrockPeer(channel, this::createSession, proxy));
     }
 
     protected final T createSession(BedrockPeer peer, int subClientId) {

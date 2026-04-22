@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.connection.peer;
 
+import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.FrameIdCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.ProxiedCompressionCodec;
@@ -57,8 +58,11 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     private CompressionStrategy compressionStrategy;
     private ProtocolVersion version = ProtocolVersion.oldest();
 
-    public ProxiedBedrockPeer(Channel channel, BedrockSessionFactory factory) {
+    private final ProxyServer proxy;
+
+    public ProxiedBedrockPeer(Channel channel, BedrockSessionFactory factory, ProxyServer proxy) {
         super(channel, factory);
+        this.proxy = proxy;
     }
 
     private void onBedrockBatch(BedrockBatchWrapper batch) {
@@ -236,8 +240,8 @@ public class ProxiedBedrockPeer extends BedrockPeer {
                 super.channelRead(ctx, ReferenceCountUtil.retain(msg));
             }
         } catch (Exception e) {
-            log.error("{} Exception caught in bedrock connection", ctx.channel().remoteAddress(), e);
             this.disconnect("Internal error");
+            this.proxy.getSecurityManager().onConnectionError(ctx.channel().remoteAddress(), e);
         } finally {
             ReferenceCountUtil.release(msg);
         }
@@ -245,7 +249,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.error("{} Exception caught in bedrock connection", ctx.channel().remoteAddress(), cause);
         this.disconnect("Internal error");
+        this.proxy.getSecurityManager().onConnectionError(ctx.channel().remoteAddress(), cause);
     }
 }

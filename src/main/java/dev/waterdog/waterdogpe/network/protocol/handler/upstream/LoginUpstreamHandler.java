@@ -203,6 +203,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
         if (this.player == null) {
             this.proxy.getLogger().warning("[{}] <-> Upstream has not sent LoginPacket", this.session.getSocketAddress());
             this.session.disconnect("Wrong login flow");
+            this.proxy.getSecurityManager().onConnectionError(this.session.getSocketAddress(), null);
             return;
         }
 

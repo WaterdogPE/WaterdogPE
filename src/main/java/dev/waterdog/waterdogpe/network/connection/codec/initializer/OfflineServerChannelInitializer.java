@@ -19,6 +19,7 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.connection.codec.query.QueryHandler;
 import dev.waterdog.waterdogpe.network.connection.codec.server.RakNetPingHandler;
 import dev.waterdog.waterdogpe.network.connection.codec.server.ServerDatagramHandler;
+import dev.waterdog.waterdogpe.network.connection.codec.server.ServerErrorHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import org.cloudburstmc.netty.handler.codec.raknet.common.UnconnectedPongEncoder;
@@ -39,5 +40,7 @@ public class OfflineServerChannelInitializer extends ChannelInitializer<Channel>
         if (this.proxy.getQueryHandler() != null) {
             channel.pipeline().addAfter(UnconnectedPongEncoder.NAME, QueryHandler.NAME, this.proxy.getQueryHandler());
         }
+
+        channel.pipeline().addLast(ServerErrorHandler.NAME, new ServerErrorHandler.Parent(proxy));
     }
 }
