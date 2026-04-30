@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network.protocol.rewrite;
 
 import it.unimi.dsi.fastutil.longs.LongListIterator;
 import org.cloudburstmc.protocol.bedrock.data.camera.CameraAttachToEntityInstruction;
+import org.cloudburstmc.protocol.bedrock.data.debugshape.DebugShape;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataMap;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataType;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataTypes;
@@ -370,6 +371,19 @@ public class EntityMap implements BedrockPacketHandler {
         if (attachInstruction != null) {
             PacketSignal returnedSignal = rewriteId(attachInstruction.getUniqueEntityId(), attachInstruction::setUniqueEntityId);
             signal = mergeSignals(signal, returnedSignal);
+        }
+        return signal;
+    }
+
+    @Override
+    public PacketSignal handle(DebugDrawerPacket packet) {
+        PacketSignal signal = PacketSignal.UNHANDLED;
+        for (DebugShape shape : packet.getShapes()) {
+            Long attachedEntityId = shape.getAttachedToEntityId();
+            if (attachedEntityId != null) {
+                PacketSignal returnedSignal = rewriteId(attachedEntityId, shape::setAttachedToEntityId);
+                signal = mergeSignals(signal, returnedSignal);
+            }
         }
         return signal;
     }
