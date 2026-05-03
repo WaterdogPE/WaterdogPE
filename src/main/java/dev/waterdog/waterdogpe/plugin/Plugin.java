@@ -225,6 +225,7 @@ public abstract class Plugin {
         } catch (Exception e) {
             if (enabled) {
                 this.onDisable();
+                this.enabled =false;
             }
             throw new PluginChangeStateException("Can not " + (enabled ? "enable" : "disable") + " plugin " + this.description.getName() + "!", e);
         }
