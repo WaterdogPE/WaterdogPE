@@ -205,6 +205,11 @@ public class PluginManager {
             plugin.setEnabled(true);
         } catch (PluginChangeStateException e) {
             this.proxy.getLogger().error(e.getMessage(), e.getCause());
+            try {
+                plugin.setEnabled(false);
+            } catch (PluginChangeStateException disableException) {
+                this.proxy.getLogger().error(disableException.getMessage(), disableException.getCause());
+            }
             return false;
         }
         return true;
