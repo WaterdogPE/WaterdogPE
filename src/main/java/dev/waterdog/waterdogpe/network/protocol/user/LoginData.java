@@ -17,7 +17,6 @@ package dev.waterdog.waterdogpe.network.protocol.user;
 
 import com.google.gson.JsonObject;
 import com.nimbusds.jwt.SignedJWT;
-import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import lombok.Builder;
 import lombok.Getter;
@@ -46,6 +45,7 @@ public class LoginData {
     private final String displayName;
     private final UUID uuid;
     private final String xuid;
+    private final String minecraftId;
     private final boolean xboxAuthed;
     private final SocketAddress address;
     private final ProtocolVersion protocol;
@@ -69,7 +69,7 @@ public class LoginData {
     @Builder.Default
     private ClientCacheStatusPacket cachePacket = PlayerRewriteUtils.defaultCachePacket;
 
-    private final boolean isChainPayload;
+    private final boolean shouldSendCertificateChain;
 
     /**
      * Used to construct new login packet using this.clientData and this.extraData signed by this.keyPair.
@@ -82,12 +82,12 @@ public class LoginData {
         SignedJWT signedClientData = HandshakeUtils.encodeJWT(this.keyPair, this.clientData);
         loginPacket.setClientJwt(signedClientData.serialize());
         loginPacket.setProtocolVersion(this.protocol.getProtocol());
-        if (isChainPayload || ProxyServer.getInstance().getConfiguration().useCertificatePayload()) {
+        if (shouldSendCertificateChain) {
             JsonObject extraData = HandshakeUtils.createChainExtraData(displayName, xuid, uuid);
             SignedJWT signedPayload = HandshakeUtils.createClientDataChain(this.keyPair, extraData);
             loginPacket.setAuthPayload(new CertificateChainPayload(Collections.singletonList(signedPayload.serialize()), AuthType.SELF_SIGNED));
         } else {
-            SignedJWT signedPayload = HandshakeUtils.createClientDataToken(this.keyPair, displayName, xuid);
+            SignedJWT signedPayload = HandshakeUtils.createClientDataToken(this.keyPair, displayName, xuid, uuid, minecraftId);
             loginPacket.setAuthPayload(new TokenPayload(signedPayload.serialize(), AuthType.SELF_SIGNED));
         }
         this.loginPacket = loginPacket;
