@@ -35,20 +35,22 @@ public class HandshakeEntry {
     private final String xuid;
     private final UUID uuid;
     private final String displayName;
+    private final String minecraftId;
     private final boolean xboxAuthed;
     @Setter
     private ProtocolVersion protocol;
-    private final boolean isChainPayload;
+    private final boolean shouldSendCertificateChain;
 
-    public HandshakeEntry(ECPublicKey identityPublicKey, JsonObject clientData, String xuid, UUID uuid, String displayName, boolean xboxAuthed, ProtocolVersion protocol, boolean isChainPayload) {
+    public HandshakeEntry(ECPublicKey identityPublicKey, JsonObject clientData, String xuid, UUID uuid, String displayName, String minecraftId, boolean xboxAuthed, ProtocolVersion protocol, boolean shouldSendCertificateChain) {
         this.identityPublicKey = identityPublicKey;
         this.clientData = clientData;
         this.xuid = xuid;
         this.uuid = uuid;
         this.displayName = displayName;
+        this.minecraftId = minecraftId;
         this.xboxAuthed = xboxAuthed;
         this.protocol = protocol;
-        this.isChainPayload = isChainPayload;
+        this.shouldSendCertificateChain = shouldSendCertificateChain;
     }
 
     public LoginData buildData(BedrockServerSession session, ProxyServer proxy) {
@@ -61,13 +63,14 @@ public class HandshakeEntry {
         builder.displayName(this.displayName);
         builder.uuid(this.uuid);
         builder.xuid(this.xuid);
+        builder.minecraftId(this.minecraftId);
         builder.xboxAuthed(this.xboxAuthed);
         builder.protocol(this.protocol);
         builder.joinHostname(this.clientData.get("ServerAddress").getAsString().split(":")[0]);
         builder.address(session.getSocketAddress());
         builder.keyPair(event.getKeyPair());
         builder.clientData(this.clientData);
-        builder.isChainPayload(this.isChainPayload);
+        builder.shouldSendCertificateChain(this.shouldSendCertificateChain);
         if (this.clientData.has("DeviceModel")) {
             builder.deviceModel(this.clientData.get("DeviceModel").getAsString());
         }
