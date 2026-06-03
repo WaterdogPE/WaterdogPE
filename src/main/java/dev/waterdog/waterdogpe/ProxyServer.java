@@ -305,13 +305,9 @@ public class ProxyServer {
     }
 
     /**
-     * Registers a network interface to the server.
-     * The server does not start the interface automatically — the caller is
-     * responsible for calling {@link NetworkInterface#start(InetSocketAddress)}
-     * after registration.
+     * Registers a network interface.
      * <p>
-     * The recommended place to register custom interfaces is within a
-     * {@link dev.waterdog.waterdogpe.event.defaults.ProxyStartEvent} handler.
+     * Interfaces registered after boot (e.g., in a ProxyStartEvent handler) must be started manually by calling {@link NetworkInterface#start(InetSocketAddress)}.
      */
     public void registerInterface(NetworkInterface interfaze) {
         if (shutdown) {
