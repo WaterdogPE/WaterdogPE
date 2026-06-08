@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.serverinfo;
 
+import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.util.concurrent.Future;
@@ -25,8 +26,13 @@ import lombok.ToString;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Base informative class for servers.
@@ -36,12 +42,36 @@ import java.util.Set;
 @ToString(exclude = {"players"})
 public abstract class ServerInfo {
 
+    /**
+     * How long a resolved downstream address is reused before a background re-resolve is triggered.
+     * A miss only schedules an async refresh; callers always get the last-known-good address immediately.
+     */
+    private static final long DNS_CACHE_TTL_MS = TimeUnit.SECONDS.toMillis(30);
+
+    /**
+     * Single daemon thread that performs the (blocking) JDK name resolution OFF the Netty event loops.
+     * Historically {@code connect()} was handed an unresolved InetSocketAddress, so Netty resolved it
+     * inline on a worker event loop via blocking InetAddress.getByName, a slow/hung DNS lookup there
+     * froze every player sharing that loop. All resolution now happens on this thread instead.
+     */
+    private static final ExecutorService DNS_RESOLVER = Executors.newSingleThreadExecutor(task -> {
+        Thread thread = new Thread(task, "ServerInfo DNS Resolver");
+        thread.setDaemon(true);
+        return thread;
+    });
+
     @Getter
     private final String serverName;
     @Getter
     private final InetSocketAddress address;
     @Getter
     private final InetSocketAddress publicAddress;
+
+    // Last successfully resolved connect target. Never null: seeded with the configured address so behavior
+    // never regresses below the old "resolve inline" path even if DNS is down at startup.
+    private volatile InetSocketAddress resolvedAddress;
+    private volatile long resolvedAt;
+    private final AtomicBoolean resolving = new AtomicBoolean(false);
 
     private final Set<ClientConnection> connections = ObjectSets.synchronize(new ObjectOpenHashSet<>());
     private final Set<ProxiedPlayer> players = ObjectSets.synchronize(new ObjectOpenHashSet<>());
@@ -53,6 +83,48 @@ public abstract class ServerInfo {
             publicAddress = address;
         }
         this.publicAddress = publicAddress;
+
+        // Seed the cache. Done synchronously here (constructed at startup/config-load, never on an event loop)
+        // so the very first connect already has a resolved address and Netty never resolves inline.
+        this.resolvedAddress = address;
+        this.refreshResolvedAddress();
+    }
+
+    /**
+     * Returns a resolved (non-blocking to use) connect target for this server. Always returns immediately
+     * with the last-known-good address; if the cache is older than {@link #DNS_CACHE_TTL_MS} a re-resolve is
+     * scheduled on the {@link #DNS_RESOLVER} thread so the event loop never performs DNS itself.
+     */
+    public InetSocketAddress getResolvedAddress() {
+        if (System.currentTimeMillis() - this.resolvedAt > DNS_CACHE_TTL_MS && this.resolving.compareAndSet(false, true)) {
+            DNS_RESOLVER.execute(() -> {
+                try {
+                    this.refreshResolvedAddress();
+                } finally {
+                    this.resolving.set(false);
+                }
+            });
+        }
+        return this.resolvedAddress;
+    }
+
+    protected void refreshResolvedAddress() {
+        InetSocketAddress configured = this.address;
+        try {
+            // getByName on an IP literal is purely local (no network), so IP-configured servers resolve cheaply
+            // and still short-circuit Netty's resolver because the result is a resolved InetSocketAddress.
+            InetAddress resolved = InetAddress.getByName(configured.getHostString());
+            this.resolvedAddress = new InetSocketAddress(resolved, configured.getPort());
+        } catch (UnknownHostException e) {
+            // Keep the last-known-good (or the raw configured) address; a transient DNS failure must not break
+            // connects. The next access past the TTL will retry.
+            if (ProxyServer.getInstance() != null) {
+                ProxyServer.getInstance().getLogger().debug("Failed to resolve address for server {} ({}): {}",
+                        this.serverName, configured.getHostString(), e.getMessage());
+            }
+        } finally {
+            this.resolvedAt = System.currentTimeMillis();
+        }
     }
 
     public abstract ServerInfoType getServerType();

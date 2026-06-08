@@ -64,7 +64,7 @@ public class BedrockServerInfo extends ServerInfo {
                 .option(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)
                 .option(RakChannelOption.RAK_MTU, networkSettings.getMaximumDownstreamMtu())
                 .handler(new ProxiedClientSessionInitializer(player, this, promise))
-                .connect(this.getAddress()).addListener((ChannelFuture future) -> {
+                .connect(this.getResolvedAddress()).addListener((ChannelFuture future) -> {
                     if (!future.isSuccess()) {
                         promise.tryFailure(future.cause());
                         future.channel().close();
@@ -88,7 +88,7 @@ public class BedrockServerInfo extends ServerInfo {
                         promise.tryFailure(future.cause());
                         future.channel().close();
                     } else {
-                        RakPing ping = new RakPing(System.currentTimeMillis(), this.getAddress());
+                        RakPing ping = new RakPing(System.currentTimeMillis(), this.getResolvedAddress());
                         future.channel().writeAndFlush(ping).addListener(future1 -> {
                             if (future1.cause() != null) {
                                 promise.tryFailure(future1.cause());
