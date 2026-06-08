@@ -119,6 +119,14 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(PlayerUpdateEntityOverridesPacket.class);
         HANDLED_PACKETS.add(PlayerLocationPacket.class);
         HANDLED_PACKETS.add(CameraPresetsPacket.class);
+        HANDLED_PACKETS.add(AddVolumeEntityPacket.class);
+        HANDLED_PACKETS.add(RemoveVolumeEntityPacket.class);
+        HANDLED_PACKETS.add(PlayerFogPacket.class);
+        HANDLED_PACKETS.add(UpdateClientInputLocksPacket.class);
+        HANDLED_PACKETS.add(SetHudPacket.class);
+        HANDLED_PACKETS.add(ContainerOpenPacket.class);
+        HANDLED_PACKETS.add(ContainerClosePacket.class);
+        HANDLED_PACKETS.add(SetTimePacket.class);
     }
 
     private static final List<ProtocolCodecUpdater> UPDATERS = new ObjectArrayList<>();
