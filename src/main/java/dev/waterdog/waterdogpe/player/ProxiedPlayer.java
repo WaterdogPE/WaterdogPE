@@ -178,11 +178,19 @@ public class ProxiedPlayer implements CommandSender {
         }
 
         PlayerLoginEvent event = new PlayerLoginEvent(this);
-        this.proxy.getEventManager().callEvent(event).whenComplete((futureEvent, error) -> {
+        this.proxy.getEventManager().callEvent(event)
+                // Never let a misbehaving (hung) async login handler strand the player forever.
+                .orTimeout(LOGIN_EVENT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .whenComplete((futureEvent, error) -> {
             this.loginCompleted.set(true);
 
             if (error != null) {
-                this.getLogger().throwing(error);
+                if (error instanceof TimeoutException) {
+                    this.getLogger().warning("[{}|{}] PlayerLoginEvent did not complete within {}s - forcing disconnect",
+                            this.getAddress(), this.getName(), LOGIN_EVENT_TIMEOUT_SECONDS);
+                } else {
+                    this.getLogger().throwing(error);
+                }
                 this.disconnect(new TranslationContainer("waterdog.downstream.initial.connect"));
                 return;
             }
@@ -456,6 +464,18 @@ public class ProxiedPlayer implements CommandSender {
                 connection.getServerInfo().getServerName() + "] has disconnected");
         if (this.getPendingConnection() == connection) {
             this.setPendingConnection(null);
+            return;
+        }
+
+        // Active downstream closed with no DisconnectPacket/timeout (those are handled in
+        // ConnectedDownstreamHandler/onDownstreamTimeout). Fail over instead of leaving the player frozen on
+        // a dead connection. Guards skip this when a transfer/disconnect is already in flight.
+        if (connection == this.clientConnection
+                && this.getPendingConnection() == null
+                && this.pendingServers.isEmpty()
+                && !this.disconnected.get()
+                && !this.sendToFallback(connection.getServerInfo(), ReconnectReason.UNKNOWN, "Downstream disconnected")) {
+            this.disconnect(new TranslationContainer("waterdog.downstream.down", connection.getServerInfo().getServerName(), "disconnected"));
         }
     }
 
