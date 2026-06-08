@@ -33,6 +33,7 @@ public class ClientPacketQueue extends ChannelDuplexHandler {
 
     private final Queue<BedrockPacketWrapper> packetQueue = PlatformDependent.newMpscQueue();
     private ScheduledFuture<?> tickFuture;
+    private boolean closed;
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -42,8 +43,16 @@ public class ClientPacketQueue extends ChannelDuplexHandler {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        this.tickFuture.cancel(false);
-        this.tickFuture = null;
+        this.closed = true;
+        if (this.tickFuture != null) { // null if the channel closed before ever going active
+            this.tickFuture.cancel(false);
+            this.tickFuture = null;
+        }
+        // Release queued wrappers (retained in write) so they don't leak on close.
+        BedrockPacketWrapper packet;
+        while ((packet = this.packetQueue.poll()) != null) {
+            ReferenceCountUtil.safeRelease(packet);
+        }
         super.channelInactive(ctx);
     }
 
@@ -61,6 +70,11 @@ public class ClientPacketQueue extends ChannelDuplexHandler {
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
+        if (this.closed) {
+            // Queue won't drain again; let Netty fail+release rather than enqueue (would leak).
+            ctx.write(msg, promise);
+            return;
+        }
         if (msg instanceof BedrockPacket packet) {
             this.packetQueue.add(BedrockPacketWrapper.create(0, 0, 0, ReferenceCountUtil.retain(packet), null));
         } else if (msg instanceof BedrockPacketWrapper packet) {
