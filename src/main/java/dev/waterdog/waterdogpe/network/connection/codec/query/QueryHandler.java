@@ -47,11 +47,14 @@ public class QueryHandler extends SimpleChannelInboundHandler<DatagramPacket> {
     public static final short PACKET_STATISTICS = 0x00;
     private static final String GAME_ID = "MINECRAFTPE";
 
+    private static final int MAX_PENDING_QUERY_SESSIONS = 2000;
+
     private final ProxyServer proxy;
 
     private final ExpiringMap<InetAddress, QuerySession> querySessions = ExpiringMap.builder()
             .expirationListener(this::onQueryExpired)
             .expiration(60, TimeUnit.SECONDS)
+            .maxSize(MAX_PENDING_QUERY_SESSIONS)
             .build();
 
     public QueryHandler(ProxyServer proxy) {
