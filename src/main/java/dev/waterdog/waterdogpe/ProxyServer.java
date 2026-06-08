@@ -248,7 +248,7 @@ public class ProxyServer {
         }
 
         if (this.getConfiguration().isEnableAnonymousStatistics()) {
-            this.getLogger().info("Enabling anonymous statistics.");
+            this.logger.info("Enabling anonymous statistics.");
             Metrics.startMetrics(this, this.getConfiguration());
         }
 
@@ -278,7 +278,7 @@ public class ProxyServer {
             try {
                 this.bootNetworks(additionalBind);
             } catch (NetworkStartupException e) {
-                this.getLogger().error("Unable to bind to additional port {}, skipping", additionalBind, e);
+                this.logger.error("Unable to bind to additional port {}, skipping", additionalBind, e);
             }
         }
 
@@ -383,7 +383,7 @@ public class ProxyServer {
                 interfaze.shutdown();
             }
         } catch (Exception e) {
-            this.getLogger().error("Error while shutting down ProxyServer", e);
+            this.logger.error("Error while shutting down ProxyServer", e);
         }
 
         if (this.tickFuture != null && !this.tickFuture.isCancelled()) {
