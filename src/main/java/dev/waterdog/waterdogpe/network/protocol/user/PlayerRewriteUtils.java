@@ -26,6 +26,7 @@ import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataMap;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataTypes;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityLinkData;
+import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
@@ -38,6 +39,7 @@ import org.cloudburstmc.protocol.common.util.VarInts;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -52,6 +54,10 @@ public class PlayerRewriteUtils {
     public static final int DIMENSION_OVERWORLD = 0;
     public static final int DIMENSION_NETHER = 1;
     public static final int DIMENSION_END = 2;
+
+    private static final int INPUT_LOCK_CAMERA = 1 << 1;
+    private static final int INPUT_LOCK_MOVEMENT = 1 << 2;
+    public static final int INPUT_LOCK_FREEZE = INPUT_LOCK_CAMERA | INPUT_LOCK_MOVEMENT;
 
     // Current format for 1.18+ versions
     private static final ByteBuf fakeChunkDataBlameMojang;
@@ -172,6 +178,15 @@ public class PlayerRewriteUtils {
         session.sendPacket(packet);
     }
 
+    public static void injectTime(ProxiedConnection session, int time) {
+        if (session == null || !session.isConnected()) {
+            return;
+        }
+        SetTimePacket packet = new SetTimePacket();
+        packet.setTime(time);
+        session.sendPacket(packet);
+    }
+
     public static void injectRemoveEntityLink(ProxiedConnection session, long vehicleId, long riderId) {
         if (session == null || !session.isConnected()) {
             return;
@@ -187,6 +202,54 @@ public class PlayerRewriteUtils {
         }
         RemoveEntityPacket packet = new RemoveEntityPacket();
         packet.setUniqueEntityId(runtimeId);
+        session.sendPacket(packet);
+    }
+
+    public static void injectRemoveVolumeEntity(ProxiedConnection session, int id, int dimension) {
+        if (session == null || !session.isConnected()) {
+            return;
+        }
+        RemoveVolumeEntityPacket packet = new RemoveVolumeEntityPacket();
+        packet.setId(id);
+        packet.setDimension(dimension);
+        session.sendPacket(packet);
+    }
+
+    public static void injectClearFog(ProxiedConnection session) {
+        if (session == null || !session.isConnected()) {
+            return;
+        }
+        session.sendPacket(new PlayerFogPacket()); // empty fog stack clears all fog
+    }
+
+    public static void injectInputLocks(ProxiedConnection session, int lockData, Vector3f position) {
+        if (session == null || !session.isConnected()) {
+            return;
+        }
+        UpdateClientInputLocksPacket packet = new UpdateClientInputLocksPacket();
+        packet.setLockComponentData(lockData); // 0 unlocks; position only anchors a movement lock
+        packet.setServerPosition(position);
+        session.sendPacket(packet);
+    }
+
+    public static void injectResetHud(ProxiedConnection session, Set<HudElement> elements) {
+        if (session == null || !session.isConnected()) {
+            return;
+        }
+        SetHudPacket packet = new SetHudPacket();
+        packet.getElements().addAll(elements);
+        packet.setVisibility(HudVisibility.RESET);
+        session.sendPacket(packet);
+    }
+
+    public static void injectCloseContainer(ProxiedConnection session, byte id, ContainerType type) {
+        if (session == null || !session.isConnected()) {
+            return;
+        }
+        ContainerClosePacket packet = new ContainerClosePacket();
+        packet.setId(id);
+        packet.setType(type);
+        packet.setServerInitiated(true);
         session.sendPacket(packet);
     }
 

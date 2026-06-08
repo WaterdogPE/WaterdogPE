@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.network.protocol.handler;
 import dev.waterdog.waterdogpe.event.defaults.TransferCompleteEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.ConnectedDownstreamHandler;
 import dev.waterdog.waterdogpe.network.protocol.handler.upstream.ConnectedUpstreamHandler;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
@@ -76,12 +77,16 @@ public class TransferCallback {
     private void onTransferPhase1Completed() {
         RewriteData rewriteData = this.player.getRewriteData();
         injectEntityImmobile(this.player.getConnection(), rewriteData.getEntityId(), true);
+
+        Vector3f fakePosition = rewriteData.getSpawnPosition().add(-2000, 0, -2000);
+        if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_50)) {
+            injectInputLocks(this.player.getConnection(), INPUT_LOCK_FREEZE, fakePosition);
+        }
         if (rewriteData.getDimension() == this.targetDimension) {
             return;
         }
 
         // Send second dim-change to correct dimension
-        Vector3f fakePosition = rewriteData.getSpawnPosition().add(-2000, 0, -2000);
         injectPosition(this.player.getConnection(), fakePosition, rewriteData.getRotation(), rewriteData.getEntityId());
 
         rewriteData.setDimension(determineDimensionId(rewriteData.getDimension(), this.targetDimension));

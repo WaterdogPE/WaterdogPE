@@ -98,6 +98,18 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler implements
     }
 
     @Override
+    public PacketSignal handle(ContainerClosePacket packet) {
+        if (packet.getId() == -1) {
+            // I am not sure if -1 means close all or close the top one
+            // Might require validation
+            this.player.getOpenContainers().clear();
+        } else {
+            this.player.getOpenContainers().remove(packet.getId());
+        }
+        return PacketSignal.UNHANDLED;
+    }
+
+    @Override
     public boolean isForceEncode() {
         return false;
     }
