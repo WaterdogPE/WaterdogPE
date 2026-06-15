@@ -27,6 +27,7 @@ import org.cloudburstmc.protocol.bedrock.BedrockDisconnectReasons;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
 import org.cloudburstmc.protocol.bedrock.PacketDirection;
+import org.cloudburstmc.protocol.bedrock.data.DisconnectFailReason;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
@@ -86,6 +87,7 @@ public class BedrockServerSession extends BedrockSession implements ProxiedConne
             reason = BedrockDisconnectReasons.DISCONNECTED;
         }
         packet.setKickMessage(reason);
+        packet.setReason(DisconnectFailReason.DISCONNECTED);
         this.sendPacketImmediately(packet);
     }
 
