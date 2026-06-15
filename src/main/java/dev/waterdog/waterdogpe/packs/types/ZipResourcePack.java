@@ -54,6 +54,11 @@ public class ZipResourcePack extends ResourcePack {
     }
 
     @Override
+    public void close() throws IOException {
+        zipFile.close();
+    }
+
+    @Override
     public void saveToCache() throws IOException {
         try (FileChannel fileChannel = FileChannel.open(this.packPath)) {
             ByteBuffer buffer = ByteBuffer.allocateDirect((int) fileChannel.size());
