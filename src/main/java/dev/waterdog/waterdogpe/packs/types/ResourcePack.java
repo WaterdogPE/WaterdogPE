@@ -77,4 +77,6 @@ public abstract class ResourcePack {
         return this.packManifest.getModules().get(0).getType();
     }
 
+    public abstract void close() throws IOException;
+
 }
