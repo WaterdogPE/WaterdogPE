@@ -231,6 +231,11 @@ public class ProxyServer {
         this.boot();
     }
 
+    public void reloadPackManager() {
+        this.packManager.clear();
+        this.packManager.loadPacks(this.packsPath);
+    }
+
     private void boot() {
         this.console.getConsoleThread().start();
         this.pluginManager.enableAllPlugins();
