@@ -461,6 +461,19 @@ public class PlayerRewriteUtils {
         packet.getMetadata().setFlag(EntityFlag.NO_AI, immobile);
         packet.getMetadata().setFlag(EntityFlag.BREATHING, true); // Hide bubbles
         packet.getMetadata().setFlag(EntityFlag.HAS_GRAVITY, true); // Disable floating
+        packet.getMetadata().setFlag(EntityFlag.SLEEPING, false); // Wake from the forced inventory close, see injectForceCloseInventory
+        session.sendPacketImmediately(packet);
+    }
+
+    public static void injectForceCloseInventory(ProxiedConnection session, long runtimeId) {
+        if (session == null || !session.isConnected()){
+            return;
+        }
+        // The client closes every open inventory, including its own window which ContainerClosePacket can not close,
+        // when the SLEEPING flag is set. Cleared again by injectEntityImmobile once the transfer settles.
+        SetEntityDataPacket packet = new SetEntityDataPacket();
+        packet.setRuntimeEntityId(runtimeId);
+        packet.getMetadata().setFlag(EntityFlag.SLEEPING, true);
         session.sendPacketImmediately(packet);
     }
 
