@@ -94,6 +94,11 @@ public class TransferCallback {
     }
 
     private void onTransferPhase2Completed() {
+        if (!this.connection.isConnected()) {
+            this.onTransferFailed();
+            return;
+        }
+
         RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setTransferCallback(null);
 
@@ -104,9 +109,11 @@ public class TransferCallback {
 
         injectPosition(this.player.getConnection(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
 
-        if (!this.connection.isConnected()) {
-            this.onTransferFailed();
-            return;
+        if (!rewriteData.hasImmobileFlag()) {
+            injectEntityImmobile(this.player.getConnection(), rewriteData.getEntityId(), false);
+        }
+        if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_50)) {
+            injectInputLocks(this.player.getConnection(), this.player.getInputLockData(), rewriteData.getSpawnPosition());
         }
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
