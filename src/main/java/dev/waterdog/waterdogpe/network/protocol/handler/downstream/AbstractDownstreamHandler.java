@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.protocol.handler.downstream;
 
 import dev.waterdog.waterdogpe.command.Command;
+import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
@@ -50,6 +51,17 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
     public AbstractDownstreamHandler(ProxiedPlayer player, ClientConnection connection) {
         this.player = player;
         this.connection = connection;
+    }
+
+    @Override
+    public PacketSignal handle(PlayStatusPacket packet) {
+        if (!this.player.acceptPlayStatus() || packet.getStatus() != PlayStatusPacket.Status.PLAYER_SPAWN) {
+            return PacketSignal.UNHANDLED;
+        }
+        this.player.setAcceptPlayStatus(false);
+        PostTransferCompleteEvent event = new PostTransferCompleteEvent(this.connection, this.player);
+        this.player.getProxy().getEventManager().callEvent(event);
+        return PacketSignal.UNHANDLED;
     }
 
     @Override

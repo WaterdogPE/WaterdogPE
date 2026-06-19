@@ -53,30 +53,6 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
     }
 
     @Override
-    public PacketSignal handle(PlayStatusPacket packet) {
-        if (!this.player.acceptPlayStatus() || packet.getStatus() != PlayStatusPacket.Status.PLAYER_SPAWN) {
-            return PacketSignal.UNHANDLED;
-        }
-
-        this.player.setAcceptPlayStatus(false);
-        RewriteData rewriteData = this.player.getRewriteData();
-        if (!rewriteData.hasImmobileFlag()) {
-            injectEntityImmobile(this.player.getConnection(), rewriteData.getEntityId(), false);
-        }
-        if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_50)) {
-            injectInputLocks(this.player.getConnection(), this.player.getInputLockData(), rewriteData.getSpawnPosition());
-        }
-
-        SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(rewriteData.getEntityId());
-        this.connection.sendPacket(initializedPacket);
-
-        PostTransferCompleteEvent event = new PostTransferCompleteEvent(this.connection, this.player);
-        this.player.getProxy().getEventManager().callEvent(event);
-        return PacketSignal.UNHANDLED;
-    }
-
-    @Override
     public PacketSignal handle(TransferPacket packet) {
         if (!this.player.getProxy().getConfiguration().useFastTransfer()) {
             return PacketSignal.UNHANDLED;
