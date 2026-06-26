@@ -59,6 +59,11 @@ public class NetworkSettings extends YamlConfig {
     @Comment("Enable RakNet cookies for additional security. Do NOT disable this unless you know what you are doing.")
     private boolean enableCookies = true;
 
+    @Path("enable_proxy_protocol")
+    @Accessors(fluent = true)
+    @Comment("Enable HAProxy PROXY protocol (v1/v2) so the proxy can read the real client address when running behind a load balancer (e.g. HAProxy/UDP forwarder)")
+    private boolean enableProxyProtocol = false;
+
     @Path("error_timeout")
     @Accessors(fluent = true)
     @Comment("How many seconds should a connection be blocked if an error is thrown. Set to 0 to disable.")

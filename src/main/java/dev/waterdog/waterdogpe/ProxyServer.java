@@ -294,6 +294,7 @@ public class ProxyServer {
         this.logger.debug("Downstream <-> Proxy compression level " + this.getConfiguration().getDownstreamCompression());
         this.logger.debug("MTU Settings: max_user=" + this.getNetworkSettings().getMaximumMtu() + " max_server=" + this.getNetworkSettings().getMaximumDownstreamMtu());
         this.logger.debug("RakNet Cookies: enabled=" + this.getNetworkSettings().enableCookies());
+        this.logger.debug("PROXY protocol: enabled=" + this.getNetworkSettings().enableProxyProtocol());
 
         ProxiedSessionInitializer.ZLIB_RAW_STRATEGY.getDefaultCompression().setLevel(this.getConfiguration().getUpstreamCompression());
         ProxiedSessionInitializer.ZLIB_STRATEGY.getDefaultCompression().setLevel(this.getConfiguration().getUpstreamCompression());
