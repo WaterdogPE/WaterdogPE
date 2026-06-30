@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.CancellableEvent;
+import dev.waterdog.waterdogpe.event.CompletableEvent;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import lombok.Getter;
@@ -28,6 +29,7 @@ import lombok.Setter;
  */
 @Setter
 @Getter
+@CompletableEvent
 public class ServerTransferRequestEvent extends PlayerEvent implements CancellableEvent {
 
     private ServerInfo targetServer;
