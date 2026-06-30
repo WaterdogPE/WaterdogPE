@@ -52,6 +52,7 @@ public class PluginManager {
     private final Object2ObjectMap<String, Class<?>> cachedClasses = new Object2ObjectArrayMap<>();
 
     private final List<Pair<PluginYAML, Path>> pluginsToLoad = new ObjectArrayList<>();
+    private final List<Plugin> enabledOrder = new ObjectArrayList<>();
 
     public PluginManager(ProxyServer proxy) {
         this.proxy = proxy;
@@ -212,11 +213,21 @@ public class PluginManager {
             }
             return false;
         }
+        this.enabledOrder.add(plugin);
         return true;
     }
 
     public void disableAllPlugins() {
+        // Disable in reverse of enable order so dependents shut down before their dependencies
+        List<Plugin> order = new ObjectArrayList<>(this.enabledOrder);
         for (Plugin plugin : this.pluginMap.values()) {
+            if (plugin.isEnabled() && !order.contains(plugin)) {
+                order.add(plugin); // enabled outside enablePlugin; disable last
+            }
+        }
+
+        for (int i = order.size() - 1; i >= 0; i--) {
+            Plugin plugin = order.get(i);
             this.proxy.getLogger().info("Disabling plugin " + plugin.getName() + "!");
             try {
                 plugin.setEnabled(false);
@@ -224,6 +235,7 @@ public class PluginManager {
                 this.proxy.getLogger().error(e.getMessage(), e.getCause());
             }
         }
+        this.enabledOrder.clear();
     }
 
     public Class<?> getClassFromCache(String className) {
