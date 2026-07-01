@@ -17,11 +17,13 @@ package dev.waterdog.waterdogpe.utils.config.proxy;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
+import dev.waterdog.waterdogpe.network.protocol.user.UuidFormat;
 import dev.waterdog.waterdogpe.utils.config.ServerList;
 import dev.waterdog.waterdogpe.utils.config.serializer.CompressionAlgorithmConverter;
 import dev.waterdog.waterdogpe.utils.config.serializer.InetSocketAddressConverter;
 import dev.waterdog.waterdogpe.utils.config.serializer.ServerEntryConverter;
 import dev.waterdog.waterdogpe.utils.config.serializer.ServerListConverter;
+import dev.waterdog.waterdogpe.utils.config.serializer.UuidFormatConverter;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.Setter;
@@ -125,6 +127,14 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Replaces username spaces with underscores if enabled")
     private boolean replaceUsernameSpaces = false;
 
+    @Path("player_uuid_format")
+    @Comments({
+            "Determines how the proxy assigns the unique id (UUID) of connecting players.",
+            "IDENTITY: Uses the UUID parsed from the player's login chain (default).",
+            "FLOODGATE: Derives the UUID from the player's XUID (zero-padded hex of the XUID), identical to GeyserMC/Floodgate."
+    })
+    private UuidFormat uuidFormat = UuidFormat.IDENTITY;
+
     @Path("enable_query")
     @Accessors(fluent = true)
     @Comment("Whether server query should be enabled")
@@ -197,6 +207,7 @@ public class ProxyConfig extends YamlConfig {
             this.addConverter(ServerEntryConverter.class);
             this.addConverter(ServerListConverter.class);
             this.addConverter(CompressionAlgorithmConverter.class);
+            this.addConverter(UuidFormatConverter.class);
         } catch (InvalidConverterException e) {
             ProxyServer.getInstance().getLogger().error("Error while initiating config converters", e);
         }

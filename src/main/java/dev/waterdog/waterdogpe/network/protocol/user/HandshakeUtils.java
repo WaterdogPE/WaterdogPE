@@ -138,7 +138,7 @@ public class HandshakeUtils {
         ECPublicKey identityPublicKey = (ECPublicKey) identityClaims.parsedIdentityPublicKey();
         String xuid = identityData.xuid;
         //UUID uuid = UUID.nameUUIDFromBytes(("pocket-auth-1-xuid:" + xuid).getBytes(StandardCharsets.UTF_8));
-        UUID uuid = identityData.identity;
+        UUID uuid = ProxyServer.getInstance().getConfiguration().getUuidFormat().resolve(identityData.identity, xuid);
         String minecraftId = identityData.minecraftId;
 
         SignedJWT clientDataJwt = SignedJWT.parse(packet.getClientJwt());
@@ -148,8 +148,7 @@ public class HandshakeUtils {
         }
         String displayName;
         if (ProxyServer.getInstance().getConfiguration().isReplaceUsernameSpaces()) {
-            displayName = identityData.displayName
-                    .replaceAll(" ", "_");
+            displayName = identityData.displayName.replace(" ", "_");
         } else {
             displayName = identityData.displayName;
         }
@@ -164,7 +163,7 @@ public class HandshakeUtils {
         // We are trying to replicate that behavior.
         return new HandshakeEntry(identityPublicKey, clientData, xuid, uuid, displayName, minecraftId, xboxAuth, protocol,
                 packet.getAuthPayload() instanceof CertificateChainPayload ||
-                    protocol.isBefore(ProtocolVersion.MINECRAFT_PE_1_26_20));
+                        protocol.isBefore(ProtocolVersion.MINECRAFT_PE_1_26_20));
     }
 
     public static JsonObject parseClientData(JWSObject clientJwt, String xuid, BedrockSession session) {
