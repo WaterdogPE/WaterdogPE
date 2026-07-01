@@ -60,9 +60,9 @@ public class HandshakeEntry {
         proxy.getEventManager().callEvent(event);
 
         LoginData.LoginDataBuilder builder = LoginData.builder();
-        builder.displayName(this.displayName);
-        builder.uuid(this.uuid);
-        builder.xuid(this.xuid);
+        builder.displayName(event.getDisplayName());
+        builder.uuid(event.getUuid());
+        builder.xuid(event.getXuid());
         builder.minecraftId(this.minecraftId);
         builder.xboxAuthed(this.xboxAuthed);
         builder.protocol(this.protocol);
