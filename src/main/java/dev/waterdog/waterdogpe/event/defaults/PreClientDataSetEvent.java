@@ -28,20 +28,15 @@ import java.util.UUID;
  * Called right when we decoded the player's LoginPacket data in the handshake(HandshakeUpstreamHandler).
  * Can be used to modify or filter (for) certain data, for example skin data.
  */
+@Getter
+@Setter
 public class PreClientDataSetEvent extends Event {
 
-    @Getter
     private final ProxiedConnection connection;
-    @Getter
     private final JsonObject clientData;
-    @Getter
-    private final String xuid;
-    @Getter
-    private final UUID uuid;
-    @Getter
-    private final String displayName;
-    @Getter
-    @Setter
+    private String xuid;
+    private UUID uuid;
+    private String displayName;
     private KeyPair keyPair;
 
     public PreClientDataSetEvent(JsonObject clientData, String xuid, UUID uuid, String displayName, KeyPair keyPair, ProxiedConnection playerSession) {
