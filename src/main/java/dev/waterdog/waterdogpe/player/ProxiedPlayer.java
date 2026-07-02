@@ -83,6 +83,13 @@ public class ProxiedPlayer implements CommandSender {
      */
     private static final long LOGIN_EVENT_TIMEOUT_SECONDS = 60;
 
+    /**
+     * Hard cap on how long the async {@link ServerPreConnectEvent} future may take before we dial the
+     * target anyway. Mirrors {@link #LOGIN_EVENT_TIMEOUT_SECONDS}: a hung handler future must never leave
+     * the player without a connection or {@code targetServer} stuck in {@link #pendingServers} forever.
+     */
+    private static final long PRE_CONNECT_EVENT_TIMEOUT_SECONDS = 60;
+
     @Getter
     private final RewriteData rewriteData = new RewriteData();
     @Getter
@@ -296,6 +303,40 @@ public class ProxiedPlayer implements CommandSender {
             this.setPendingConnection(null);
         }
 
+        // Give plugins a chance to hold out the connection (e.g. to save the player's inventory or other
+        // state on the current server) before we dial the target. The event is async and completable:
+        // any future a handler registers delays createConnection until it settles.
+        ServerPreConnectEvent preConnectEvent = new ServerPreConnectEvent(this, this.getServerInfo(), targetServer);
+        this.proxy.getEventManager().callEvent(preConnectEvent)
+                // Never let a hung handler future leave the player without a connection or targetServer pending forever.
+                .orTimeout(PRE_CONNECT_EVENT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .whenComplete((event1, error) -> {
+                    if (error != null) {
+                        // A hung or failing hold-out leaves the player's state ambiguous (e.g. a half-saved
+                        // inventory), so abort the transfer and disconnect rather than dial the target anyway.
+                        if (error instanceof TimeoutException) {
+                            this.getLogger().warning("[{}|{}] ServerPreConnectEvent did not complete within {}s - disconnecting",
+                                    this.getAddress(), this.getName(), PRE_CONNECT_EVENT_TIMEOUT_SECONDS);
+                        } else {
+                            this.getLogger().throwing(error);
+                        }
+                        this.pendingServers.remove(targetServer);
+                        this.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed",
+                                targetServer.getServerName(),
+                                error instanceof TimeoutException ? "timed out" : error.getClass().getSimpleName()));
+                        return;
+                    }
+
+                    if (!this.isConnected()) { // player might have disconnected while the event was processed
+                        this.pendingServers.remove(targetServer);
+                        return;
+                    }
+
+                    this.createConnection(targetServer);
+                });
+    }
+
+    private void createConnection(ServerInfo targetServer) {
         targetServer.createConnection(this).addListener(future -> {
             ClientConnection connection = null;
             try {
