@@ -159,6 +159,14 @@ public class ProxiedPlayer implements CommandSender {
     @Setter
     private volatile boolean acceptItemComponentPacket = true;
     /**
+     * Whether the current downstream server serves chunks using the sub-chunk request system
+     * (LevelChunkPacket with a negative sub-chunk count). When set, injected empty chunks must use
+     * request mode too, otherwise the client breaks instead of requesting the sub-chunks.
+     */
+    @Getter
+    @Setter
+    private volatile boolean subChunkRequestMode = false;
+    /**
      * Additional downstream and upstream handlers can be set by plugin.
      * Do not set directly BedrockPacketHandler to sessions!
      */

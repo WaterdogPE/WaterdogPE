@@ -82,15 +82,19 @@ public class TransferCallback {
         if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_50)) {
             injectInputLocks(this.player.getConnection(), INPUT_LOCK_FREEZE, fakePosition);
         }
-        if (rewriteData.getDimension() == this.targetDimension) {
-            return;
+
+        if (rewriteData.getDimension() != this.targetDimension) {
+            injectPosition(this.player.getConnection(), fakePosition, rewriteData.getRotation(), rewriteData.getEntityId());
+            rewriteData.setDimension(determineDimensionId(rewriteData.getDimension(), this.targetDimension));
+            injectDimensionChange(this.player.getConnection(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), rewriteData.getEntityId(), this.player.getProtocol(), true, this.player.isSubChunkRequestMode());
         }
 
-        // Send second dim-change to correct dimension
-        injectPosition(this.player.getConnection(), fakePosition, rewriteData.getRotation(), rewriteData.getEntityId());
-
-        rewriteData.setDimension(determineDimensionId(rewriteData.getDimension(), this.targetDimension));
-        injectDimensionChange(this.player.getConnection(), rewriteData.getDimension(), rewriteData.getSpawnPosition(), rewriteData.getEntityId(), this.player.getProtocol(), true);
+        // Hand the client over to the new server and flush the queue so its real chunks reach the client. This
+        // is the single wiring point for every transfer path; phase 2 only finalizes.
+        if (this.player.getConnection().getPacketHandler() instanceof ConnectedUpstreamHandler handler) {
+            handler.setTargetConnection(this.connection);
+        }
+        this.player.getConnection().setTransferQueueActive(false);
     }
 
     private void onTransferPhase2Completed() {
@@ -120,11 +124,6 @@ public class TransferCallback {
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalEntityId());
         this.connection.sendPacket(initializedPacket);
-
-        this.player.getConnection().setTransferQueueActive(false);
-        if (this.player.getConnection().getPacketHandler() instanceof ConnectedUpstreamHandler handler) {
-            handler.setTargetConnection(this.connection);
-        }
 
         TransferCompleteEvent event = new TransferCompleteEvent(this.sourceServer, this.connection, this.player);
         this.player.getProxy().getEventManager().callEvent(event);

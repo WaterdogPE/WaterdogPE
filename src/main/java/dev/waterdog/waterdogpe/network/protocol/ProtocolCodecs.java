@@ -127,6 +127,8 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(ContainerOpenPacket.class);
         HANDLED_PACKETS.add(ContainerClosePacket.class);
         HANDLED_PACKETS.add(SetTimePacket.class);
+        HANDLED_PACKETS.add(SubChunkRequestPacket.class);
+        HANDLED_PACKETS.add(SubChunkPacket.class);
     }
 
     private static final List<ProtocolCodecUpdater> UPDATERS = new ObjectArrayList<>();

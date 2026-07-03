@@ -53,6 +53,14 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
     }
 
     @Override
+    public PacketSignal handle(LevelChunkPacket packet) {
+        // Remember whether this server serves chunks via the sub-chunk request system so injected
+        // empty chunks match it and the client keeps requesting sub-chunks instead of breaking.
+        this.player.setSubChunkRequestMode(packet.isRequestSubChunks());
+        return PacketSignal.UNHANDLED;
+    }
+
+    @Override
     public PacketSignal handle(TransferPacket packet) {
         if (!this.player.getProxy().getConfiguration().useFastTransfer()) {
             return PacketSignal.UNHANDLED;

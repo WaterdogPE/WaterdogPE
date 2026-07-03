@@ -31,6 +31,8 @@ import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
 import org.cloudburstmc.protocol.common.PacketSignal;
 
+import static dev.waterdog.waterdogpe.network.protocol.user.PlayerRewriteUtils.injectAirSubChunkResponse;
+
 /**
  * Main handler for handling packets received from upstream.
  */
@@ -67,6 +69,18 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler implements
             return Signals.CANCEL;
         }
         return PacketSignal.UNHANDLED;
+    }
+
+    @Override
+    public PacketSignal handle(SubChunkRequestPacket packet) {
+        // Only the fake intermediate chunks (phase 1) are answered by us. On the target hop (phase 2) the new
+        // server is wired to the client and provides the real chunks, so its sub-chunk requests must pass through.
+        TransferCallback callback = this.player.getRewriteData().getTransferCallback();
+        if (callback == null || callback.getPhase() != TransferCallback.TransferPhase.PHASE_1) {
+            return PacketSignal.UNHANDLED;
+        }
+        injectAirSubChunkResponse(this.player.getConnection(), packet);
+        return Signals.CANCEL;
     }
 
     @Override

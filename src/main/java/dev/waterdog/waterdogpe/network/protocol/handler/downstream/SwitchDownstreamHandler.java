@@ -16,7 +16,6 @@
 package dev.waterdog.waterdogpe.network.protocol.handler.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
-import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -245,28 +244,12 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             injectPosition(this.player.getConnection(), fakePosition, packet.getRotation(), rewriteData.getEntityId());
             this.player.getConnection().setTransferQueueActive(true);
             injectDimensionChange(this.player.getConnection(), newDimension, fakePosition,
-                    rewriteData.getEntityId(), player.getProtocol(), true);
-            // Force client to exit first dim screen after one second
-            this.player.getProxy().getScheduler().scheduleDelayed(() -> {
-                if (!player.acceptPlayStatus()) {
-                    return;
-                }
-                PlayStatusPacket statusPacket = new PlayStatusPacket();
-                statusPacket.setStatus(PlayStatusPacket.Status.PLAYER_SPAWN);
-                this.player.getConnection().sendPacketImmediately(statusPacket);
-                player.setAcceptPlayStatus(false);
-
-                transferCallback.onDimChangeSuccess();
-                transferCallback.onDimChangeSuccess();
-
-                PostTransferCompleteEvent postEvent = new PostTransferCompleteEvent(this.connection, this.player);
-                this.player.getProxy().getEventManager().callEvent(postEvent);
-            }, 40);
+                    rewriteData.getEntityId(), player.getProtocol(), true, this.player.isSubChunkRequestMode());
         } else if (newDimension == packet.getDimensionId()) {
             // Transfer between different dimensions
             injectPosition(this.player.getConnection(), packet.getPlayerPosition(), packet.getRotation(), rewriteData.getEntityId());
             injectDimensionChange(this.player.getConnection(), newDimension, packet.getPlayerPosition(),
-                    rewriteData.getEntityId(), player.getProtocol(), false);
+                    rewriteData.getEntityId(), player.getProtocol(), false, this.player.isSubChunkRequestMode());
             transferCallback.onDimChangeSuccess(); // Simulate two dim-change behaviour
         } else {
             injectPosition(this.player.getConnection(), packet.getPlayerPosition(), packet.getRotation(), rewriteData.getEntityId());
