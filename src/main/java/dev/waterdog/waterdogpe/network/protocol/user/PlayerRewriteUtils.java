@@ -124,13 +124,13 @@ public class PlayerRewriteUtils {
         return to;
     }
 
-    public static void injectChunkPublisherUpdate(ProxiedConnection session, Vector3i defaultSpawn, int radius) {
+    public static void injectChunkPublisherUpdate(ProxiedConnection session, Vector3i center, int chunkRadius) {
         if (session == null || !session.isConnected()) {
             return;
         }
         NetworkChunkPublisherUpdatePacket packet = new NetworkChunkPublisherUpdatePacket();
-        packet.setPosition(defaultSpawn);
-        packet.setRadius(radius);
+        packet.setPosition(center);
+        packet.setRadius(chunkRadius << 4); // radius is in blocks, not chunks
         session.sendPacketImmediately(packet);
     }
 
@@ -333,7 +333,7 @@ public class PlayerRewriteUtils {
         session.sendPacketImmediately(packet);
     }
 
-    public static void injectDimensionChange(ProxiedConnection session, int dimensionId, Vector3f position, long runtimeId, ProtocolVersion version, boolean chunks) {
+    public static void injectDimensionChange(ProxiedConnection session, int dimensionId, Vector3f position, long runtimeId, ProtocolVersion version, boolean chunks, boolean requestSubChunks) {
         if (session == null || !session.isConnected()){
             return;
         }
@@ -345,7 +345,7 @@ public class PlayerRewriteUtils {
 
         if (chunks) {
             injectChunkPublisherUpdate(session, position.toInt(), 3);
-            injectEmptyChunks(session, position, 3, dimensionId, version);
+            injectEmptyChunks(session, position, 3, dimensionId, version, requestSubChunks);
         }
 
         if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_50)) {
@@ -361,14 +361,14 @@ public class PlayerRewriteUtils {
         }
     }
 
-    public static void injectEmptyChunks(ProxiedConnection session, Vector3f spawnPosition, int radius, int dimension, ProtocolVersion version) {
+    public static void injectEmptyChunks(ProxiedConnection session, Vector3f spawnPosition, int radius, int dimension, ProtocolVersion version, boolean requestSubChunks) {
         int chunkPositionX = spawnPosition.getFloorX() >> 4;
         int chunkPositionZ = spawnPosition.getFloorZ() >> 4;
 
         List<BedrockPacket> packets = new ObjectArrayList<>();
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
-                packets.add(injectEmptyChunk(chunkPositionX + x, chunkPositionZ + z, dimension, version));
+                packets.add(injectEmptyChunk(chunkPositionX + x, chunkPositionZ + z, dimension, version, requestSubChunks));
             }
         }
 
@@ -377,13 +377,22 @@ public class PlayerRewriteUtils {
         session.sendPacket(wrapper);
     }
 
-    public static LevelChunkPacket injectEmptyChunk(int chunkX, int chunkZ, int dimension, ProtocolVersion version) {
+    public static LevelChunkPacket injectEmptyChunk(int chunkX, int chunkZ, int dimension, ProtocolVersion version, boolean requestSubChunks) {
         LevelChunkPacket packet = new LevelChunkPacket();
         packet.setChunkX(chunkX);
         packet.setChunkZ(chunkZ);
         packet.setCachingEnabled(false);
         packet.setDimension(dimension);
-        if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_18_30)) {
+        // Request mode is only serializable since 1.18.30 (v486 codec); older codecs ignore the flag
+        if (requestSubChunks && version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_18_30)) {
+            packet.setRequestSubChunks(true);
+            packet.setSubChunkLimit(switch (dimension) {
+                case DIMENSION_NETHER -> 7;
+                case DIMENSION_END -> 15;
+                default -> 23;
+            });
+            packet.setData(Unpooled.EMPTY_BUFFER);
+        } else if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_18_30)) {
             packet.setSubChunksLength(1);
             switch (dimension) {
                 case DIMENSION_NETHER -> packet.setData(fakeChunkDataNether.retainedSlice());
@@ -409,6 +418,37 @@ public class PlayerRewriteUtils {
             packet.getBlobs().put(blob, emptyChunkRaw);
         }
         session.sendPacket(packet);
+    }
+
+    /**
+     * Answers a client sub-chunk request with all-air sub-chunks. Used during a transfer to satisfy the
+     * requests triggered by our injected request-mode empty chunks, so the client finishes loading the
+     * spawn column and sends DIMENSION_CHANGE_SUCCESS instead of waiting on the not-yet-wired new server.
+     */
+    public static void injectAirSubChunkResponse(ProxiedConnection session, SubChunkRequestPacket request) {
+        if (session == null || !session.isConnected()) {
+            return;
+        }
+
+        SubChunkPacket packet = new SubChunkPacket();
+        packet.setDimension(request.getDimension());
+        packet.setCacheEnabled(false);
+        packet.setCenterPosition(request.getSubChunkPosition());
+
+        List<Vector3i> offsets = request.getPositionOffsets();
+        if (offsets.isEmpty()) {
+            offsets = List.of(Vector3i.ZERO); // pre-v485 clients request a single sub-chunk with no offsets
+        }
+        for (Vector3i offset : offsets) {
+            SubChunkData data = new SubChunkData();
+            data.setPosition(offset);
+            data.setResult(SubChunkRequestResult.SUCCESS_ALL_AIR);
+            data.setData(Unpooled.EMPTY_BUFFER);
+            data.setHeightMapType(HeightMapDataType.NO_DATA);
+            data.setRenderHeightMapType(HeightMapDataType.NO_DATA); // serialized since v818
+            packet.getSubChunks().add(data);
+        }
+        session.sendPacketImmediately(packet);
     }
 
     public static void injectEntityImmobile(ProxiedConnection session, long runtimeId, boolean immobile) {
