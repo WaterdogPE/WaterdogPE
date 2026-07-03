@@ -78,6 +78,12 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
 
     @Override
     public void sendProxiedBatch(BedrockBatchWrapper batch) {
+        ClientConnection current = this.player.getDownstreamConnection();
+        if (current != null && this.connection != current) {
+            // Noop. Drop batches from a downstream that is no longer the player's active one.
+            // Null check is for the initial connection.
+            return;
+        }
         if (this.player.getConnection().isConnected()) {
             this.player.getConnection().sendPacket(batch.retain());
         }
