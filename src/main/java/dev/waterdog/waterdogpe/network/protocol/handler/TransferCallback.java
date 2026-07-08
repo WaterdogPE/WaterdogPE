@@ -115,12 +115,11 @@ public class TransferCallback {
         if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_50)) {
             injectInputLocks(this.player.getConnection(), this.player.getInputLockData(), rewriteData.getSpawnPosition());
         }
+        this.connection.setPacketHandler(new ConnectedDownstreamHandler(player, this.connection));
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalEntityId());
         this.connection.sendPacket(initializedPacket);
-
-        this.connection.setPacketHandler(new ConnectedDownstreamHandler(player, this.connection));
 
         this.player.getConnection().setTransferQueueActive(false);
         if (this.player.getConnection().getPacketHandler() instanceof ConnectedUpstreamHandler handler) {
