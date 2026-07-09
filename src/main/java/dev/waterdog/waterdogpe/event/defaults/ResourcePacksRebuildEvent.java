@@ -26,20 +26,10 @@ import org.cloudburstmc.protocol.bedrock.packet.ResourcePacksInfoPacket;
 public class ResourcePacksRebuildEvent extends Event {
 
     private final ResourcePacksInfoPacket packsInfoPacket;
-    /**
-     * Variant of the info packet whose entries carry CDN URLs. Sent to players on platforms
-     * which are not listed in the disable_cdn_for config option when CDN packs are configured.
-     */
-    private final ResourcePacksInfoPacket cdnPacksInfoPacket;
     private final ResourcePackStackPacket stackPacket;
 
     public ResourcePacksRebuildEvent(ResourcePacksInfoPacket packsInfoPacket, ResourcePackStackPacket stackPacket) {
-        this(packsInfoPacket, packsInfoPacket, stackPacket);
-    }
-
-    public ResourcePacksRebuildEvent(ResourcePacksInfoPacket packsInfoPacket, ResourcePacksInfoPacket cdnPacksInfoPacket, ResourcePackStackPacket stackPacket) {
         this.packsInfoPacket = packsInfoPacket;
-        this.cdnPacksInfoPacket = cdnPacksInfoPacket;
         this.stackPacket = stackPacket;
     }
 

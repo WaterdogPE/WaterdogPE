@@ -38,8 +38,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -52,23 +55,27 @@ public class PackManager {
     private static final ResourcePackStackPacket.Entry EDU_PACK = new ResourcePackStackPacket.Entry("0fba4063-dba1-4281-9b89-ff9390653530", "1.0.0", "");
 
     private final ProxyServer proxy;
+    // Swapped as a whole on (re)load so joining players always read a complete, consistent set.
     @Getter
-    private final Map<UUID, ResourcePack> packs = new HashMap<>();
+    private volatile Map<UUID, ResourcePack> packs = new HashMap<>();
     @Getter
-    private final Map<String, ResourcePack> packsByIdVer = new HashMap<>();
+    private volatile Map<String, ResourcePack> packsByIdVer = new HashMap<>();
 
     @Getter
-    private final ResourcePacksInfoPacket packsInfoPacket = new ResourcePacksInfoPacket();
+    private volatile ResourcePacksInfoPacket packsInfoPacket = new ResourcePacksInfoPacket();
     @Getter
-    private final ResourcePacksInfoPacket cdnPacksInfoPacket = new ResourcePacksInfoPacket();
-    @Getter
-    private final ResourcePackStackPacket stackPacket = new ResourcePackStackPacket();
+    private volatile ResourcePackStackPacket stackPacket = new ResourcePackStackPacket();
 
-    private Set<Platform> disabledCdnPlatforms = EnumSet.noneOf(Platform.class);
-    private boolean hasCdnPacks;
+    private volatile ResourcePacksInfoPacket noCdnPacksInfoPacket;
 
-    public PackManager(ProxyServer proxy) {
+    private volatile Set<Platform> disabledCdnPlatforms = EnumSet.noneOf(Platform.class);
+
+    // The packs directory, injected at construction; reloadPacks re-scans it.
+    private final Path packsPath;
+
+    public PackManager(ProxyServer proxy, Path packsPath) {
         this.proxy = proxy;
+        this.packsPath = Preconditions.checkNotNull(packsPath, "Packs directory can not be null!");
     }
 
     public void clear() {
@@ -81,35 +88,73 @@ public class PackManager {
         this.packsByIdVer.clear();
     }
 
-    public void loadPacks(Path packsDirectory) {
-        Preconditions.checkNotNull(packsDirectory, "Packs directory can not be null!");
-        Preconditions.checkArgument(Files.isDirectory(packsDirectory), packsDirectory + " must be directory!");
+    /**
+     * Loads packs from their configured source and swaps them in for players who connect from now on;
+     * players already past the resource pack stage keep what they were sent. When pack_cdn_urls is
+     * empty the local packs folder is served, otherwise the CDN packs are. Safe to call at runtime,
+     * which is what {@link #reloadPacks()} does.
+     */
+    public void loadPacks() {
+        Preconditions.checkArgument(Files.isDirectory(this.packsPath), this.packsPath + " must be directory!");
         this.proxy.getLogger().info("Loading resource packs!");
 
-        try {
-            DirectoryStream<Path> stream = Files.newDirectoryStream(packsDirectory);
+        Path cacheDirectory = this.packsPath.resolveSibling("packs_cdn_cache");
+        Set<Platform> disabled = this.parseDisabledCdnPlatforms();
+        Map<UUID, ResourcePack> newPacks = new HashMap<>();
+        Map<String, ResourcePack> newPacksByIdVer = new HashMap<>();
+
+        List<String> cdnUrls = this.proxy.getConfiguration().getPackCdnUrls();
+        if (cdnUrls.isEmpty()) {
+            this.loadLocalPacks(this.packsPath, newPacks, newPacksByIdVer);
+        } else {
+            this.loadCdnPacks(cacheDirectory, cdnUrls, newPacks, newPacksByIdVer);
+        }
+
+        // Swap the freshly built set in first, then dispose the old one, so an in-flight chunk request
+        // is already reading the new packs before we close the packs it replaced.
+        Map<UUID, ResourcePack> oldPacks = this.packs;
+        this.disabledCdnPlatforms = disabled;
+        this.packs = newPacks;
+        this.packsByIdVer = newPacksByIdVer;
+        this.rebuildPackets();
+
+        for (ResourcePack pack : oldPacks.values()) {
+            try {
+                pack.close();
+            } catch (IOException ignored) {}
+        }
+
+        // With the replaced packs closed, drop any cache files no longer backing a live pack (older
+        // downloads, and everything if we just switched from CDN back to local packs).
+        this.cleanupCdnCache(cacheDirectory, newPacks.values());
+
+        this.proxy.getLogger().info("Loaded " + this.packs.size() + " packs!");
+    }
+
+    /**
+     * Reloads packs from the same directory {@link #loadPacks(Path)} was first called with, picking up
+     * any config changes and refreshing pack contents for players who connect from now on.
+     */
+    public void reloadPacks() {
+        this.loadPacks();
+    }
+
+    private void loadLocalPacks(Path packsDirectory, Map<UUID, ResourcePack> packs, Map<String, ResourcePack> packsByIdVer) {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(packsDirectory)) {
             for (Path path : stream) {
                 ResourcePack resourcePack = this.constructPack(path);
                 if (resourcePack != null) {
-                    String packIdVer = resourcePack.getPackId() + "_" + resourcePack.getPackManifest().getHeader().getVersion();
-                    this.packsByIdVer.put(packIdVer, resourcePack);
-                    this.packs.put(resourcePack.getPackId(), resourcePack);
+                    packsByIdVer.put(resourcePack.getPackId() + "_" + resourcePack.getPackManifest().getHeader().getVersion(), resourcePack);
+                    packs.put(resourcePack.getPackId(), resourcePack);
                 }
             }
         } catch (IOException e) {
             this.proxy.getLogger().error("Can not load packs!", e);
         }
-
-        this.loadCdnPacks(packsDirectory.resolveSibling("packs_cdn_cache"));
-
-        this.rebuildPackets();
-        this.proxy.getLogger().info("Loaded " + this.packs.size() + " packs!");
     }
 
-    private void loadCdnPacks(Path cacheDirectory) {
-        this.disabledCdnPlatforms = this.parseDisabledCdnPlatforms();
-
-        for (String url : this.proxy.getConfiguration().getPackCdnUrls()) {
+    private void loadCdnPacks(Path cacheDirectory, List<String> urls, Map<UUID, ResourcePack> packs, Map<String, ResourcePack> packsByIdVer) {
+        for (String url : urls) {
             try {
                 Path packPath = this.downloadCdnPack(url, cacheDirectory);
                 if (packPath == null) {
@@ -122,16 +167,16 @@ public class PackManager {
                     continue;
                 }
 
-                if (this.packs.containsKey(pack.getPackId())) {
-                    this.proxy.getLogger().warning("CDN resource pack from " + url + " has the same UUID as an already loaded pack ("
-                            + pack.getPackId() + ")! Skipping the CDN pack. Remove the local copy from the packs folder to serve it from the CDN.");
+                if (packs.containsKey(pack.getPackId())) {
+                    this.proxy.getLogger().warning("CDN resource pack from " + url + " has the same UUID as another CDN pack ("
+                            + pack.getPackId() + ")! Skipping the duplicate.");
                     pack.close();
                     continue;
                 }
 
                 pack.setCdnUrl(url);
-                this.packsByIdVer.put(pack.getPackId() + "_" + pack.getVersion(), pack);
-                this.packs.put(pack.getPackId(), pack);
+                packsByIdVer.put(pack.getPackId() + "_" + pack.getVersion(), pack);
+                packs.put(pack.getPackId(), pack);
                 this.proxy.getLogger().info("Loaded CDN resource pack " + pack.getPackName() + " (" + pack.getPackId() + ") from " + url);
             } catch (Exception e) {
                 this.proxy.getLogger().error("Can not load CDN resource pack from " + url, e);
@@ -139,15 +184,46 @@ public class PackManager {
         }
     }
 
+    private void cleanupCdnCache(Path cacheDirectory, Collection<ResourcePack> livePacks) {
+        if (!Files.isDirectory(cacheDirectory)) {
+            return;
+        }
+
+        Set<String> keep = new HashSet<>();
+        for (ResourcePack pack : livePacks) {
+            if (pack.getCdnUrl() != null) {
+                keep.add(pack.getPackPath().getFileName().toString());
+            }
+        }
+
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(cacheDirectory)) {
+            for (Path path : stream) {
+                if (keep.contains(path.getFileName().toString())) {
+                    continue;
+                }
+                try {
+                    Files.deleteIfExists(path);
+                } catch (IOException ignored) {}
+            }
+        } catch (IOException e) {
+            this.proxy.getLogger().warning("Failed to clean up CDN pack cache: " + e.getMessage());
+        }
+    }
+
     /**
-     * Downloads the pack so its manifest, size and hash are known and chunked
-     * transfer stays available as fallback. If the download fails but a copy from
-     * a previous start exists in the cache, that copy is used instead.
+     * Downloads the pack so its manifest, size and hash are known and chunked transfer stays available
+     * as fallback. Each download lands in a uniquely named file so it never collides with a file the
+     * pack being replaced still holds open. If the download fails but a copy from an earlier load or a
+     * previous start exists in the cache, the newest such copy is used instead.
      */
     private Path downloadCdnPack(String url, Path cacheDirectory) throws IOException {
         Files.createDirectories(cacheDirectory);
-        Path packPath = cacheDirectory.resolve(this.hashUrl(url) + ".zip");
-        Path downloadPath = cacheDirectory.resolve(this.hashUrl(url) + ".zip.part");
+        String prefix = this.hashUrl(url);
+        // Unique per download (as Geyser does) so a fresh download never has to overwrite a file that a
+        // pack being replaced still holds open, which Windows would refuse.
+        String fileName = prefix + "." + System.currentTimeMillis();
+        Path packPath = cacheDirectory.resolve(fileName + ".zip");
+        Path downloadPath = cacheDirectory.resolve(fileName + ".zip.part");
 
         try {
             HttpClient client = HttpClient.newBuilder()
@@ -166,15 +242,35 @@ public class PackManager {
             Files.move(downloadPath, packPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
             Files.deleteIfExists(downloadPath);
-            if (Files.exists(packPath)) {
+            Path cached = this.findCachedPack(cacheDirectory, prefix);
+            if (cached != null) {
                 this.proxy.getLogger().warning("Failed to download CDN resource pack from " + url + ": " + e.getMessage()
-                        + "! Using the copy cached from a previous start. Note that clients will still download from the CDN, so the URL must serve the same pack once reachable again.");
-                return packPath;
+                        + "! Using a previously cached copy. Note that clients will still download from the CDN, so the URL must serve the same pack once reachable again.");
+                return cached;
             }
             this.proxy.getLogger().error("Failed to download CDN resource pack from " + url + " and no cached copy exists! Skipping this pack.", e);
             return null;
         }
         return packPath;
+    }
+
+    /**
+     * Finds the most recently cached copy of a pack (from any earlier download) for the given url hash,
+     * used as a fallback when a fresh download fails.
+     */
+    private Path findCachedPack(Path cacheDirectory, String prefix) {
+        Path newest = null;
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(cacheDirectory, prefix + ".*.zip")) {
+            long newestTime = Long.MIN_VALUE;
+            for (Path path : stream) {
+                long time = Files.getLastModifiedTime(path).toMillis();
+                if (time > newestTime) {
+                    newestTime = time;
+                    newest = path;
+                }
+            }
+        } catch (IOException ignored) {}
+        return newest;
     }
 
     private String hashUrl(String url) {
@@ -275,50 +371,43 @@ public class PackManager {
     }
 
     public void rebuildPackets() {
-        this.packsInfoPacket.setForcedToAccept(this.proxy.getConfiguration().isForceServerPacks());
-        this.packsInfoPacket.setWorldTemplateId(UUID.randomUUID());
-        this.packsInfoPacket.setWorldTemplateVersion("");
-        this.cdnPacksInfoPacket.setForcedToAccept(this.packsInfoPacket.isForcedToAccept());
-        this.cdnPacksInfoPacket.setWorldTemplateId(this.packsInfoPacket.getWorldTemplateId());
-        this.cdnPacksInfoPacket.setWorldTemplateVersion(this.packsInfoPacket.getWorldTemplateVersion());
-        this.stackPacket.setForcedToAccept(this.proxy.getConfiguration().isOverwriteClientPacks());
+        ResourcePacksInfoPacket infoPacket = new ResourcePacksInfoPacket();
+        infoPacket.setForcedToAccept(this.proxy.getConfiguration().isForceServerPacks());
+        infoPacket.setWorldTemplateId(UUID.randomUUID());
+        infoPacket.setWorldTemplateVersion("");
 
-        this.packsInfoPacket.getBehaviorPackInfos().clear();
-        this.packsInfoPacket.getResourcePackInfos().clear();
+        ResourcePackStackPacket stackPacket = new ResourcePackStackPacket();
+        stackPacket.setForcedToAccept(this.proxy.getConfiguration().isOverwriteClientPacks());
+        stackPacket.setGameVersion("");
 
-        this.cdnPacksInfoPacket.getBehaviorPackInfos().clear();
-        this.cdnPacksInfoPacket.getResourcePackInfos().clear();
-
-        this.stackPacket.getBehaviorPacks().clear();
-        this.stackPacket.getResourcePacks().clear();
-
-        this.stackPacket.setGameVersion("");
-
-        this.hasCdnPacks = false;
+        boolean hasCdnPacks = false;
         for (ResourcePack pack : this.packs.values()) {
-            ResourcePacksInfoPacket.Entry infoEntry = this.createInfoEntry(pack, null);
-            // Separate entry instance carrying the CDN URL, so mutating one packet never leaks into the other
-            ResourcePacksInfoPacket.Entry cdnInfoEntry = this.createInfoEntry(pack, pack.getCdnUrl());
+            // The CDN URL goes straight into the packet entry; disabled platforms get a stripped copy below.
+            ResourcePacksInfoPacket.Entry infoEntry = this.createInfoEntry(pack, pack.getCdnUrl());
             ResourcePackStackPacket.Entry stackEntry = new ResourcePackStackPacket.Entry(pack.getPackId().toString(), pack.getVersion().toString(), "");
             if (pack.getCdnUrl() != null) {
-                this.hasCdnPacks = true;
+                hasCdnPacks = true;
             }
             if (pack.getType().equals(ResourcePack.TYPE_RESOURCES)) {
-                this.packsInfoPacket.getResourcePackInfos().add(infoEntry);
-                this.cdnPacksInfoPacket.getResourcePackInfos().add(cdnInfoEntry);
-                this.stackPacket.getResourcePacks().add(stackEntry);
+                infoPacket.getResourcePackInfos().add(infoEntry);
+                stackPacket.getResourcePacks().add(stackEntry);
             } else if (pack.getType().equals(ResourcePack.TYPE_DATA)) {
-                this.packsInfoPacket.getBehaviorPackInfos().add(infoEntry);
-                this.cdnPacksInfoPacket.getBehaviorPackInfos().add(cdnInfoEntry);
-                this.stackPacket.getBehaviorPacks().add(stackEntry);
+                infoPacket.getBehaviorPackInfos().add(infoEntry);
+                stackPacket.getBehaviorPacks().add(stackEntry);
             }
         }
 
         if (this.proxy.getConfiguration().enableEducationFeatures()) {
-            this.stackPacket.getBehaviorPacks().add(EDU_PACK);
+            stackPacket.getBehaviorPacks().add(EDU_PACK);
         }
-        ResourcePacksRebuildEvent event = new ResourcePacksRebuildEvent(this.packsInfoPacket, this.cdnPacksInfoPacket, this.stackPacket);
+        ResourcePacksRebuildEvent event = new ResourcePacksRebuildEvent(infoPacket, stackPacket);
         this.proxy.getEventManager().callEvent(event);
+
+        this.noCdnPacksInfoPacket = (hasCdnPacks && !this.disabledCdnPlatforms.isEmpty())
+                ? this.buildNoCdnPacket(infoPacket) : null;
+        // Swap the freshly built packets in last so joining players never observe a half-built packet.
+        this.packsInfoPacket = infoPacket;
+        this.stackPacket = stackPacket;
     }
 
     private ResourcePacksInfoPacket.Entry createInfoEntry(ResourcePack pack, String cdnUrl) {
@@ -327,15 +416,39 @@ public class PackManager {
     }
 
     /**
+     * Builds a copy of packsInfoPacket with the CDN URL removed from every entry, so clients on
+     * platforms in disable_cdn_for fall back to the in-protocol chunked transfer.
+     */
+    private ResourcePacksInfoPacket buildNoCdnPacket(ResourcePacksInfoPacket source) {
+        ResourcePacksInfoPacket packet = new ResourcePacksInfoPacket();
+        packet.setForcedToAccept(source.isForcedToAccept());
+        packet.setWorldTemplateId(source.getWorldTemplateId());
+        packet.setWorldTemplateVersion(source.getWorldTemplateVersion());
+        for (ResourcePacksInfoPacket.Entry entry : source.getResourcePackInfos()) {
+            packet.getResourcePackInfos().add(this.stripCdnUrl(entry));
+        }
+        for (ResourcePacksInfoPacket.Entry entry : source.getBehaviorPackInfos()) {
+            packet.getBehaviorPackInfos().add(this.stripCdnUrl(entry));
+        }
+        return packet;
+    }
+
+    private ResourcePacksInfoPacket.Entry stripCdnUrl(ResourcePacksInfoPacket.Entry entry) {
+        return new ResourcePacksInfoPacket.Entry(entry.getPackId(), entry.getPackVersion(), entry.getPackSize(),
+                entry.getContentKey(), entry.getSubPackName(), entry.getContentId(), entry.isScripting(),
+                entry.isRaytracingCapable(), entry.isAddonPack(), null);
+    }
+
+    /**
      * Returns the ResourcePacksInfoPacket which should be sent to a player on the given platform.
-     * Platforms listed in the disable_cdn_for config option always receive the packet without
-     * CDN URLs, causing them to use the in-protocol chunked transfer.
+     * Platforms listed in the disable_cdn_for config option receive the packet without CDN URLs,
+     * causing them to use the in-protocol chunked transfer.
      */
     public ResourcePacksInfoPacket getPacksInfoPacket(Platform platform) {
-        if (!this.hasCdnPacks || this.disabledCdnPlatforms.contains(platform)) {
-            return this.packsInfoPacket;
+        if (this.noCdnPacksInfoPacket != null && this.disabledCdnPlatforms.contains(platform)) {
+            return this.noCdnPacksInfoPacket;
         }
-        return this.cdnPacksInfoPacket;
+        return this.packsInfoPacket;
     }
 
     public ResourcePackDataInfoPacket packInfoFromIdVer(String idVersion) {

@@ -217,7 +217,7 @@ public class ProxyServer {
         this.scheduler = new WaterdogScheduler(this);
         this.playerManager = new PlayerManager(this);
         this.eventManager = new EventManager(this);
-        this.packManager = new PackManager(this);
+        this.packManager = new PackManager(this, this.packsPath);
         this.securityManager = new SecurityManager(this);
         this.commandSender = new ConsoleCommandSender(this);
         this.commandMap = new DefaultCommandMap(this, SimpleCommandMap.DEFAULT_PREFIX);
@@ -232,8 +232,13 @@ public class ProxyServer {
     }
 
     public void reloadPackManager() {
-        this.packManager.clear();
-        this.packManager.loadPacks(this.packsPath);
+        try {
+            this.configurationManager.loadProxyConfig();
+        } catch (InvalidConfigurationException e) {
+            this.logger.error("Failed to reload proxy config, keeping the currently loaded packs!", e);
+            return;
+        }
+        this.packManager.reloadPacks();
     }
 
     private void boot() {
@@ -258,7 +263,7 @@ public class ProxyServer {
         }
 
         if (this.getConfiguration().enableResourcePacks()) {
-            this.packManager.loadPacks(this.packsPath);
+            this.packManager.loadPacks();
         }
 
         InetSocketAddress bindAddress = this.getConfiguration().getBindAddress();
