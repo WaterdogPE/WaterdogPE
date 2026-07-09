@@ -17,7 +17,6 @@ package dev.waterdog.waterdogpe.utils.config.proxy;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
-import dev.waterdog.waterdogpe.network.protocol.user.Platform;
 import dev.waterdog.waterdogpe.utils.config.ServerList;
 import dev.waterdog.waterdogpe.utils.config.serializer.CompressionAlgorithmConverter;
 import dev.waterdog.waterdogpe.utils.config.serializer.InetSocketAddressConverter;
@@ -189,13 +188,10 @@ public class ProxyConfig extends YamlConfig {
 
     @Path("disable_cdn_for")
     @Comments({
-            "Device platforms set to true never receive CDN URLs and instead get packs through the chunked transfer."
+            "Device platforms listed here never receive CDN URLs and instead get packs through the chunked transfer.",
+            "Example: [ANDROID, IOS]"
     })
-    private Map<String, Boolean> disableCdnPlatforms = new LinkedHashMap<>() {{
-        for (Platform platform : Platform.values()) {
-            this.put(platform.name(), false);
-        }
-    }};
+    private List<String> disableCdnPlatforms = new ArrayList<>();
 
     @Path("default_idle_threads")
     @Comment("Creating threads may be in some situations expensive. Specify minimum count of idle threads per internal thread executors. Set to -1 to auto-detect by core count.")

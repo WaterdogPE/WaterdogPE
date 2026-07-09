@@ -188,14 +188,11 @@ public class PackManager {
 
     private Set<Platform> parseDisabledCdnPlatforms() {
         Set<Platform> platforms = EnumSet.noneOf(Platform.class);
-        for (Map.Entry<String, Boolean> entry : this.proxy.getConfiguration().getDisableCdnPlatforms().entrySet()) {
-            if (!Boolean.TRUE.equals(entry.getValue())) {
-                continue;
-            }
+        for (String name : this.proxy.getConfiguration().getDisableCdnPlatforms()) {
             try {
-                platforms.add(Platform.valueOf(entry.getKey().trim().toUpperCase().replace(' ', '_')));
+                platforms.add(Platform.valueOf(name.trim().toUpperCase().replace(' ', '_')));
             } catch (IllegalArgumentException e) {
-                this.proxy.getLogger().warning("Unknown platform " + entry.getKey() + " in disable_cdn_for config option!");
+                this.proxy.getLogger().warning("Unknown platform " + name + " in disable_cdn_for config option!");
             }
         }
         return platforms;
