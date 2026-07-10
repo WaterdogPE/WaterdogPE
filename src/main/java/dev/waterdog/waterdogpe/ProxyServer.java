@@ -232,8 +232,13 @@ public class ProxyServer {
     }
 
     public void reloadPackManager() {
-        this.packManager.clear();
-        this.packManager.loadPacks(this.packsPath);
+        try {
+            this.configurationManager.loadProxyConfig();
+        } catch (InvalidConfigurationException e) {
+            this.logger.error("Failed to reload proxy config, keeping the currently loaded packs!", e);
+            return;
+        }
+        this.packManager.reloadPacks();
     }
 
     private void boot() {
