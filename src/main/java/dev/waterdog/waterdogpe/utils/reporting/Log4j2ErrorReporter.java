@@ -25,9 +25,20 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Log4j2ErrorReporter extends AbstractAppender {
 
+    // Cap how many events we forward to Bugsnag per window so a burst of exceptions
+    // (e.g. a flood of malformed-packet decode errors) can't outrun the async delivery
+    // and pile up in memory until the heap is exhausted.
+    private static final long RATE_WINDOW_MS = 1000L;
+    private static final int MAX_REPORTS_PER_WINDOW = 30;
+
+    private final AtomicLong windowStart = new AtomicLong(0L);
+    private final AtomicInteger windowCount = new AtomicInteger(0);
+    private final AtomicLong droppedReports = new AtomicLong(0L);
 
     public Log4j2ErrorReporter(String name, Filter filter, Layout<? extends Serializable> layout, boolean ignoreExceptions) {
         super(name, filter, layout, ignoreExceptions, Property.EMPTY_ARRAY);
@@ -39,7 +50,30 @@ public class Log4j2ErrorReporter extends AbstractAppender {
             return;
         }
 
-        ProxyServer.getInstance().getErrorReporting().reportError(event.getThrown(), event.getLevel().intLevel() > Level.WARN.intLevel() ? Severity.WARNING : Severity.ERROR);
+        // Only report warnings and errors; lower-severity events aren't actionable reports.
+        if (event.getLevel().intLevel() > Level.WARN.intLevel()) {
+            return;
+        }
+
+        if (!this.allowReport(System.currentTimeMillis())) {
+            this.droppedReports.incrementAndGet();
+            return;
+        }
+
+        Severity severity = event.getLevel().intLevel() <= Level.ERROR.intLevel() ? Severity.ERROR : Severity.WARNING;
+        ProxyServer.getInstance().getErrorReporting().reportError(event.getThrown(), severity);
+    }
+
+    private boolean allowReport(long now) {
+        long start = this.windowStart.get();
+        if (now - start >= RATE_WINDOW_MS && this.windowStart.compareAndSet(start, now)) {
+            this.windowCount.set(0);
+        }
+        return this.windowCount.incrementAndGet() <= MAX_REPORTS_PER_WINDOW;
+    }
+
+    public long getDroppedReports() {
+        return this.droppedReports.get();
     }
 
     public static void init() {
