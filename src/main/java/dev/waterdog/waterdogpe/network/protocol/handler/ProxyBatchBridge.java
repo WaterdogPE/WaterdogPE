@@ -24,6 +24,7 @@ import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.protocol.bedrock.PacketDirection;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
+import org.cloudburstmc.protocol.bedrock.data.PacketRecipient;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
@@ -41,10 +42,12 @@ public class ProxyBatchBridge implements BedrockPacketHandler {
 
     private ProxyPacketHandler handler;
     private boolean forceEncode;
+    private PacketDirection direction;
 
-    public ProxyBatchBridge(BedrockCodec codec, BedrockCodecHelper helper, ProxyPacketHandler handler) {
+    public ProxyBatchBridge(BedrockCodec codec, BedrockCodecHelper helper, ProxyPacketHandler handler, PacketDirection direction) {
         this.codec = codec;
         this.helper = helper;
+        this.direction = direction;
         this.setHandler(handler);
     }
 
@@ -78,7 +81,9 @@ public class ProxyBatchBridge implements BedrockPacketHandler {
         try {
             PacketSignal signal = this.handler.handlePacket(packet);
             PacketSignal rewriteSignal = this.handler.doPacketRewrite(packet);
-            this.handler.getRewriteMaps().getEntityTracker().trackEntity(packet);
+            if (this.direction.getInbound() == PacketRecipient.CLIENT) { // only track packets sent by downstream
+                this.handler.getRewriteMaps().getEntityTracker().trackEntity(packet);
+            }
             return Signals.mergeSignals(signal, rewriteSignal);
         } catch (Exception e) {
             throw new IllegalStateException("Error while handling " + packet.getPacketType(), e);
