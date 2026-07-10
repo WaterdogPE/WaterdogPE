@@ -49,7 +49,6 @@ import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 
 import javax.crypto.SecretKey;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 @Log4j2
 public class ProxiedBedrockPeer extends BedrockPeer {
@@ -66,6 +65,9 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     }
 
     private void onBedrockBatch(BedrockBatchWrapper batch) {
+        if (this.closing.get()) {
+            return;
+        }
         if (this.firstSession == null) {
             for (BedrockPacketWrapper wrapper : batch.getPackets()) {
                 this.getSession(wrapper.getTargetSubClientId()).onPacket(wrapper);
@@ -101,16 +103,17 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     }
 
     @Override
-    protected void onTick() {
-        if (!this.closed.get() && !this.packetQueue.isEmpty()) {
-            BedrockBatchWrapper batch = BedrockBatchWrapper.newInstance();
-
-            BedrockPacketWrapper packet;
-            while ((packet = this.packetQueue.poll()) != null) {
-                batch.getPackets().add(packet);
-            }
-            this.channel.writeAndFlush(batch);
+    protected void flushQueue() {
+        if (this.packetQueue.isEmpty()) {
+            return;
         }
+        BedrockBatchWrapper batch = BedrockBatchWrapper.newInstance();
+
+        BedrockPacketWrapper packet;
+        while ((packet = this.packetQueue.poll()) != null) {
+            batch.getPackets().add(packet);
+        }
+        this.channel.writeAndFlush(batch);
     }
 
     public void sendPacket(BedrockBatchWrapper wrapper) {
@@ -122,6 +125,10 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     }
 
     private void sendPacket0(BedrockBatchWrapper wrapper) {
+        if (this.closing.get()) { // closed is covered by netty: writes to a closed channel are failed and released
+            wrapper.release();
+            return;
+        }
         if (!(wrapper.getAlgorithm() instanceof PacketCompressionAlgorithm)) {
             wrapper.setCompressed(null); // Do not allow using unsupported algorithms when sending to client
         } else if (this.version.isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) && (this.compressionStrategy == null || 
@@ -211,15 +218,6 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         this.compressionStrategy = strategy;
     }
 
-    public void disconnect(String reason) {
-        this.sessions.values().forEach(session -> session.disconnect(reason));
-        this.channel.eventLoop().schedule(() -> this.channel.close(), 200, TimeUnit.MILLISECONDS);
-    }
-
-    public int getRakVersion() {
-        return this.channel.config().getOption(RakChannelOption.RAK_PROTOCOL_VERSION);
-    }
-
     public boolean isSplitScreen() {
         return this.sessions.size() > 1;
     }
@@ -240,8 +238,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
                 super.channelRead(ctx, ReferenceCountUtil.retain(msg));
             }
         } catch (Exception e) {
-            this.disconnect("Internal error");
-            this.proxy.getSecurityManager().onConnectionError(ctx.channel().remoteAddress(), e);
+            exceptionCaught(ctx, e);
         } finally {
             ReferenceCountUtil.release(msg);
         }
@@ -249,7 +246,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        this.disconnect("Internal error");
+        this.close0("Internal error", true);
         this.proxy.getSecurityManager().onConnectionError(ctx.channel().remoteAddress(), cause);
     }
 }
