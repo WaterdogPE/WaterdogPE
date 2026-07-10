@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.utils.config.proxy;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.cubespace.Yamler.Config.Comment;
+import net.cubespace.Yamler.Config.Comments;
 import net.cubespace.Yamler.Config.Path;
 import net.cubespace.Yamler.Config.YamlConfig;
 import org.cloudburstmc.netty.channel.raknet.RakConstants;
@@ -68,4 +69,12 @@ public class NetworkSettings extends YamlConfig {
     @Accessors(fluent = true)
     @Comment("How many seconds should a connection be blocked if an error is thrown. Set to 0 to disable.")
     private int errorTimeout = 15;
+
+    @Path("max_blocked_addresses")
+    @Accessors(fluent = true)
+    @Comments({
+            "Maximum number of addresses kept in the temporary error-block list. Bounds memory use during a flood",
+            "of many (possibly spoofed) source addresses. Once full, new offenders are not tracked until entries expire."
+    })
+    private int maxBlockedAddresses = 65536;
 }

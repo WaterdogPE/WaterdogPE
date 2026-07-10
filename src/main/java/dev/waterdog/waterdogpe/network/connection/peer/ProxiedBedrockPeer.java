@@ -48,6 +48,7 @@ import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 
 import javax.crypto.SecretKey;
+import java.net.SocketAddress;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -57,6 +58,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     @Getter
     private CompressionStrategy compressionStrategy;
     private ProtocolVersion version = ProtocolVersion.oldest();
+    private boolean errored;
 
     private final ProxyServer proxy;
 
@@ -240,8 +242,7 @@ public class ProxiedBedrockPeer extends BedrockPeer {
                 super.channelRead(ctx, ReferenceCountUtil.retain(msg));
             }
         } catch (Exception e) {
-            this.disconnect("Internal error");
-            this.proxy.getSecurityManager().onConnectionError(ctx.channel().remoteAddress(), e);
+            this.handleFailure(ctx.channel().remoteAddress(), e);
         } finally {
             ReferenceCountUtil.release(msg);
         }
@@ -249,7 +250,20 @@ public class ProxiedBedrockPeer extends BedrockPeer {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        this.handleFailure(ctx.channel().remoteAddress(), cause);
+    }
+
+    /**
+     * Tears the peer down and reports the error at most once. Under a malformed-packet flood the pipeline
+     * can raise many exceptions on the same connection before it finishes closing; without this guard each
+     * one re-triggers disconnect and re-fails an already-completed promise, multiplying the log volume.
+     */
+    private void handleFailure(SocketAddress address, Throwable cause) {
+        if (this.errored) {
+            return;
+        }
+        this.errored = true;
         this.disconnect("Internal error");
-        this.proxy.getSecurityManager().onConnectionError(ctx.channel().remoteAddress(), cause);
+        this.proxy.getSecurityManager().onConnectionError(address, cause);
     }
 }

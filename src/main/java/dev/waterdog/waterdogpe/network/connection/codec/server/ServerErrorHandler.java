@@ -33,7 +33,7 @@ public class ServerErrorHandler {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            log.error("Parent channel has thrown an exception", cause);
+            this.proxy.getSecurityManager().onParentChannelError(cause);
         }
     }
 
