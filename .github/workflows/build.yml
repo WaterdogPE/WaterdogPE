@@ -25,7 +25,6 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           perform_deploy: ${{ env.DOCKER_DEPLOY }}
-          deploy_repository: "waterdog-snapshots"
           deploy_username: ${{ secrets.DEPLOY_USERNAME }}
           deploy_password: ${{ secrets.DEPLOY_PASSWORD }}
           create_prerelease: ${{ github.ref == 'refs/heads/master' }}

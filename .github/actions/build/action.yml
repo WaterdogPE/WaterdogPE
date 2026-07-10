@@ -8,9 +8,6 @@ inputs:
   perform_deploy:
     description: "Whether to deploy to maven repository"
     required: true
-  deploy_repository:
-    description: "The maven repository name to deploy"
-    required: true
   deploy_username:
     description: "A username to access maven repository"
     required: true
@@ -33,33 +30,26 @@ runs:
       with:
         java-version: 17
         distribution: adopt-hotspot
-
-    - name: Setup maven repo
-      uses: s4u/maven-settings-action@v3.1.0
-      if: ${{ inputs.perform_deploy == 'true' }}
-      with:
-        servers: |
-          [{
-            "id": "${{ inputs.deploy_repository }}",
-            "username": "${{ inputs.deploy_username }}",
-            "password": "${{ inputs.deploy_password }}"
-          }]
+        cache: gradle
 
     - name: Build
       if: ${{ inputs.perform_deploy == 'false' }}
-      run: mvn -B package --file pom.xml
+      run: ./gradlew build
       shell: bash
 
     - name: Build and Deploy
       if: ${{ inputs.perform_deploy == 'true' }}
-      run: mvn -B package deploy --file pom.xml
+      run: ./gradlew build publish
       shell: bash
+      env:
+        ORG_GRADLE_PROJECT_waterdogUsername: ${{ inputs.deploy_username }}
+        ORG_GRADLE_PROJECT_waterdogPassword: ${{ inputs.deploy_password }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: waterdog
-        path: target/Waterdog.jar
+        path: build/libs/Waterdog.jar
 
     - name: Create pre-release
       if: ${{ inputs.create_prerelease == 'true' }}
@@ -70,4 +60,4 @@ runs:
         prerelease: false
         title: "Snapshot Build"
         files: |
-          target/Waterdog.jar
+          build/libs/Waterdog.jar
