@@ -132,7 +132,7 @@ public class BedrockServerSession extends BedrockSession implements ProxiedConne
                 bridge.setHandler(packetHandler);
             } else {
                 super.setPacketHandler(new ProxyBatchBridge(this.getPeer().getCodec(),
-                        this.getPeer().getCodecHelper(), packetHandler));
+                        this.getPeer().getCodecHelper(), packetHandler, this.getPacketDirection()));
             }
         } else {
             super.setPacketHandler(handler);

@@ -219,7 +219,7 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
             if (this.getPacketHandler() instanceof ProxyBatchBridge bridge) {
                 bridge.setHandler(packetHandler);
             } else {
-                this.packetHandler = new ProxyBatchBridge(this.getCodec(), this.getCodecHelper(), packetHandler);
+                this.packetHandler = new ProxyBatchBridge(this.getCodec(), this.getCodecHelper(), packetHandler, this.getPacketDirection());
             }
         } else {
             this.packetHandler = handler;
