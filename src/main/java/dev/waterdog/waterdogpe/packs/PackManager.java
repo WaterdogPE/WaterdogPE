@@ -38,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -55,27 +56,26 @@ public class PackManager {
     private static final ResourcePackStackPacket.Entry EDU_PACK = new ResourcePackStackPacket.Entry("0fba4063-dba1-4281-9b89-ff9390653530", "1.0.0", "");
 
     private final ProxyServer proxy;
-    // Swapped as a whole on (re)load so joining players always read a complete, consistent set.
+    // Rebuilt and swapped in as a whole on (re)load so joining players read a complete, consistent set.
     @Getter
-    private volatile Map<UUID, ResourcePack> packs = new HashMap<>();
+    private Map<UUID, ResourcePack> packs = new HashMap<>();
     @Getter
-    private volatile Map<String, ResourcePack> packsByIdVer = new HashMap<>();
+    private Map<String, ResourcePack> packsByIdVer = new HashMap<>();
 
     @Getter
-    private volatile ResourcePacksInfoPacket packsInfoPacket = new ResourcePacksInfoPacket();
+    private ResourcePacksInfoPacket packsInfoPacket = new ResourcePacksInfoPacket();
     @Getter
-    private volatile ResourcePackStackPacket stackPacket = new ResourcePackStackPacket();
+    private ResourcePackStackPacket stackPacket = new ResourcePackStackPacket();
 
-    private volatile ResourcePacksInfoPacket noCdnPacksInfoPacket;
+    private ResourcePacksInfoPacket noCdnPacksInfoPacket;
 
-    private volatile Set<Platform> disabledCdnPlatforms = EnumSet.noneOf(Platform.class);
+    private Set<Platform> disabledCdnPlatforms = EnumSet.noneOf(Platform.class);
 
-    // The packs directory, injected at construction; reloadPacks re-scans it.
-    private final Path packsPath;
+    // Directories loadPacks has been called with; reloadPacks re-scans all of them.
+    private final List<Path> packDirectories = new ArrayList<>();
 
-    public PackManager(ProxyServer proxy, Path packsPath) {
+    public PackManager(ProxyServer proxy) {
         this.proxy = proxy;
-        this.packsPath = Preconditions.checkNotNull(packsPath, "Packs directory can not be null!");
     }
 
     public void clear() {
@@ -89,24 +89,42 @@ public class PackManager {
     }
 
     /**
-     * Loads packs from their configured source and swaps them in for players who connect from now on;
-     * players already past the resource pack stage keep what they were sent. When pack_cdn_urls is
-     * empty the local packs folder is served, otherwise the CDN packs are. Safe to call at runtime,
-     * which is what {@link #reloadPacks()} does.
+     * Registers a packs directory and loads packs, swapping them in for players who connect from now on;
+     * players already past the resource pack stage keep what they were sent. May be called more than
+     * once to serve packs from several directories. When pack_cdn_urls is empty the registered folders
+     * are served, otherwise the CDN packs are.
      */
-    public void loadPacks() {
-        Preconditions.checkArgument(Files.isDirectory(this.packsPath), this.packsPath + " must be directory!");
+    public void loadPacks(Path packsDirectory) {
+        Preconditions.checkNotNull(packsDirectory, "Packs directory can not be null!");
+        Preconditions.checkArgument(Files.isDirectory(packsDirectory), packsDirectory + " must be directory!");
+        if (!this.packDirectories.contains(packsDirectory)) {
+            this.packDirectories.add(packsDirectory);
+        }
+        this.buildPacks();
+    }
+
+    /**
+     * Reloads packs from every directory {@link #loadPacks(Path)} was called with, picking up config
+     * changes and refreshing pack contents for players who connect from now on.
+     */
+    public void reloadPacks() {
+        this.buildPacks();
+    }
+
+    private void buildPacks() {
         this.proxy.getLogger().info("Loading resource packs!");
 
-        Path cacheDirectory = this.packsPath.resolveSibling("packs_cdn_cache");
+        Path cacheDirectory = this.cdnCacheDirectory();
         Set<Platform> disabled = this.parseDisabledCdnPlatforms();
         Map<UUID, ResourcePack> newPacks = new HashMap<>();
         Map<String, ResourcePack> newPacksByIdVer = new HashMap<>();
 
         List<String> cdnUrls = this.proxy.getConfiguration().getPackCdnUrls();
         if (cdnUrls.isEmpty()) {
-            this.loadLocalPacks(this.packsPath, newPacks, newPacksByIdVer);
-        } else {
+            for (Path directory : this.packDirectories) {
+                this.loadLocalPacks(directory, newPacks, newPacksByIdVer);
+            }
+        } else if (cacheDirectory != null) {
             this.loadCdnPacks(cacheDirectory, cdnUrls, newPacks, newPacksByIdVer);
         }
 
@@ -126,17 +144,15 @@ public class PackManager {
 
         // With the replaced packs closed, drop any cache files no longer backing a live pack (older
         // downloads, and everything if we just switched from CDN back to local packs).
-        this.cleanupCdnCache(cacheDirectory, newPacks.values());
+        if (cacheDirectory != null) {
+            this.cleanupCdnCache(cacheDirectory, newPacks.values());
+        }
 
         this.proxy.getLogger().info("Loaded " + this.packs.size() + " packs!");
     }
 
-    /**
-     * Reloads packs from the same directory {@link #loadPacks(Path)} was first called with, picking up
-     * any config changes and refreshing pack contents for players who connect from now on.
-     */
-    public void reloadPacks() {
-        this.loadPacks();
+    private Path cdnCacheDirectory() {
+        return this.packDirectories.isEmpty() ? null : this.packDirectories.get(0).resolveSibling("packs_cdn_cache");
     }
 
     private void loadLocalPacks(Path packsDirectory, Map<UUID, ResourcePack> packs, Map<String, ResourcePack> packsByIdVer) {
