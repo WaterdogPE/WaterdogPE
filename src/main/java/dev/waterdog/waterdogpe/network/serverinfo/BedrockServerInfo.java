@@ -58,6 +58,7 @@ public class BedrockServerInfo extends ServerInfo {
         new Bootstrap()
                 .channelFactory(RakChannelFactory.client(EventLoops.getChannelType().getDatagramChannel()))
                 .group(eventLoop)
+                .option(RakChannelOption.RAK_GUID, ThreadLocalRandom.current().nextLong())
                 .option(RakChannelOption.RAK_PROTOCOL_VERSION, version.getRaknetVersion())
                 .option(RakChannelOption.RAK_ORDERING_CHANNELS, 1)
                 .option(RakChannelOption.RAK_CONNECT_TIMEOUT, networkSettings.getConnectTimeout() * 1000L)
