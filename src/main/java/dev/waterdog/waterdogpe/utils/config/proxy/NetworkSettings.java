@@ -68,4 +68,9 @@ public class NetworkSettings extends YamlConfig {
     @Accessors(fluent = true)
     @Comment("How many seconds should a connection be blocked if an error is thrown. Set to 0 to disable.")
     private int errorTimeout = 15;
+
+    @Path("random_downstream_loopback_address")
+    @Accessors(fluent = true)
+    @Comment("Bind each downstream connection to a random 127.0.0.0/8 source address when the target server is on loopback. Certain server softwares like BDS rate limit connections per IP, this causes problems when transferring multiple players at the same time to a certain server. Requires an OS that allows binding the whole loopback range.")
+    private boolean randomDownstreamLoopbackAddress = false;
 }

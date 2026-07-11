@@ -33,11 +33,18 @@ import org.cloudburstmc.netty.channel.raknet.RakPing;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.protocol.bedrock.BedrockPong;
 
+import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 public class BedrockServerInfo extends ServerInfo {
+
+    private static volatile Boolean loopbackBindSupported;
 
     public BedrockServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {
         super(serverName, address, publicAddress);
@@ -56,7 +63,8 @@ public class BedrockServerInfo extends ServerInfo {
         // Just pick EventLoop here, and we can use it for our promise too
         EventLoop eventLoop = player.getProxy().getWorkerEventLoopGroup().next();
         Promise<ClientConnection> promise = eventLoop.newPromise();
-        new Bootstrap()
+        InetSocketAddress remoteAddress = this.getResolvedAddress();
+        Bootstrap bootstrap = new Bootstrap()
                 .channelFactory(RakChannelFactory.client(EventLoops.getChannelType().getDatagramChannel()))
                 .group(eventLoop)
                 .option(RakChannelOption.RAK_GUID, RakNetInterface.createRandomGUID())
@@ -65,14 +73,49 @@ public class BedrockServerInfo extends ServerInfo {
                 .option(RakChannelOption.RAK_CONNECT_TIMEOUT, networkSettings.getConnectTimeout() * 1000L)
                 .option(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)
                 .option(RakChannelOption.RAK_MTU, networkSettings.getMaximumDownstreamMtu())
-                .handler(new ProxiedClientSessionInitializer(player, this, promise))
-                .connect(this.getResolvedAddress()).addListener((ChannelFuture future) -> {
-                    if (!future.isSuccess()) {
-                        promise.tryFailure(future.cause());
-                        future.channel().close();
-                    }
-                });
+                .handler(new ProxiedClientSessionInitializer(player, this, promise));
+        if (networkSettings.randomDownstreamLoopbackAddress()
+                && remoteAddress.getAddress() instanceof Inet4Address
+                && remoteAddress.getAddress().isLoopbackAddress()
+                && isLoopbackBindSupported()) {
+            bootstrap.localAddress(randomLoopbackAddress());
+        }
+        bootstrap.connect(remoteAddress).addListener((ChannelFuture future) -> {
+            if (!future.isSuccess()) {
+                promise.tryFailure(future.cause());
+                future.channel().close();
+            }
+        });
         return promise;
+    }
+
+    /**
+     * Sidesteps RakNet's per-IP connection rate limit by giving each connection its own source
+     * address from the loopback range.
+     */
+    private static InetSocketAddress randomLoopbackAddress() {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        byte[] address = {127, (byte) random.nextInt(1, 255), (byte) random.nextInt(1, 255), (byte) random.nextInt(1, 255)};
+        try {
+            return new InetSocketAddress(InetAddress.getByAddress(address), 0);
+        } catch (UnknownHostException e) {
+            throw new AssertionError(e); // 4-byte address is always valid
+        }
+    }
+
+    // Linux and Windows allow binding the whole 127.0.0.0/8 out of the box, macOS does not
+    private static boolean isLoopbackBindSupported() {
+        Boolean supported = loopbackBindSupported;
+        if (supported == null) {
+            try (DatagramSocket socket = new DatagramSocket(new InetSocketAddress(InetAddress.getByAddress(new byte[]{127, 1, 2, 3}), 0))) {
+                supported = true;
+            } catch (IOException e) {
+                ProxyServer.getInstance().getLogger().warning("This host cannot bind random loopback addresses, using the default source address", e);
+                supported = false;
+            }
+            loopbackBindSupported = supported;
+        }
+        return supported;
     }
 
     public Future<BedrockPong> ping(long timeout, TimeUnit timeUnit) {
