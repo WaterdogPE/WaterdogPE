@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.network;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.OfflineServerChannelInitializer;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedServerSessionInitializer;
+import dev.waterdog.waterdogpe.network.serverinfo.BedrockServerInfo;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -44,7 +45,7 @@ public class RakNetInterface implements NetworkInterface {
 
     public RakNetInterface(ProxyServer server) {
         this.server = server;
-        this.serverId = ThreadLocalRandom.current().nextLong();
+        this.serverId = createRandomGUID();
     }
 
     @Override
@@ -111,5 +112,11 @@ public class RakNetInterface implements NetworkInterface {
     @Override
     public boolean isRunning() {
         return running;
+    }
+
+    // BDS accepts any GUID that is unique, but client itself sends negative GUID so we mirror that behavior.
+    // Some raknet implementations like go-raknet seem to enforce this rule.
+    public static long createRandomGUID() {
+        return ThreadLocalRandom.current().nextLong(Long.MIN_VALUE, 0);
     }
 }
