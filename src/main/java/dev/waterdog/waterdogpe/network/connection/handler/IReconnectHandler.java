@@ -33,6 +33,21 @@ public interface IReconnectHandler {
         return this.getFallbackServer(player, oldServer, kickMessage); // backward compatibility
     }
 
+    /**
+     * Called when the connection to a new downstream server fails before StartGamePacket was received.
+     * At this point the player is still fully connected to the previous downstream server, so unlike
+     * {@link #getFallbackServer} this failure is recoverable: returning null (or the server the player
+     * is currently on) keeps the player where they are, returning any other server transfers them to it.
+     * Defaults to a regular reconnect through {@link #getFallbackServer}.
+     *
+     * @param player       the player whose transfer failed
+     * @param targetServer the ServerInfo of the server that could not be reached
+     * @return the server to reconnect the player to, or null to stay on the current server
+     */
+    default ServerInfo getTransferFailureServer(ProxiedPlayer player, ServerInfo targetServer, ReconnectReason reason, String kickMessage) {
+        return this.getFallbackServer(player, targetServer, reason, kickMessage);
+    }
+
     @Deprecated
     default ServerInfo getFallbackServer(ProxiedPlayer player, ServerInfo oldServer, String kickMessage) {
         throw new UnsupportedOperationException("Use getFallbackServer(ProxiedPlayer player, ServerInfo oldServer, ReconnectReason reason, String kickMessage) instead");

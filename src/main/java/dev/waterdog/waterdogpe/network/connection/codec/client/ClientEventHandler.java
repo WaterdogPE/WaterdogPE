@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network.connection.codec.client;
 
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
+import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import io.netty.channel.ChannelHandlerContext;
@@ -57,6 +58,22 @@ public class ClientEventHandler extends ChannelInboundHandlerAdapter {
         }
 
         this.player.getLogger().warning("[" + connection.getSocketAddress() + "|" + this.player.getName() + "] - exception caught", cause);
+
+        // Mid-transfer target failure: release the transfer state before falling back.
+        TransferCallback transferCallback = this.player.getRewriteData().getTransferCallback();
+        if (transferCallback != null && transferCallback.getConnection() == this.connection
+                && transferCallback.getPhase() != TransferCallback.TransferPhase.RESET) {
+            transferCallback.onTransferFailed();
+            return;
+        }
+
+        // Failed before START_GAME: the previous downstream still works, recover there.
+        if (this.player.getPendingConnection() == this.connection) {
+            this.player.onTransferFailure(this.connection, this.connection.getServerInfo(),
+                    ReconnectReason.EXCEPTION, cause.getMessage());
+            return;
+        }
+
         this.connection.disconnect();
 
         TranslationContainer msg = new TranslationContainer("waterdog.downstream.down", this.connection.getServerInfo().getServerName(), cause.getMessage());

@@ -59,7 +59,7 @@ public class TransferCallback {
         this.targetDimension = targetDimension;
     }
 
-    public boolean onDimChangeSuccess() {
+    public synchronized boolean onDimChangeSuccess() {
         switch (this.transferPhase) {
             case PHASE_1:
                 // First dimension change was completed successfully.
@@ -107,7 +107,6 @@ public class TransferCallback {
         }
 
         RewriteData rewriteData = this.player.getRewriteData();
-        rewriteData.setTransferCallback(null);
 
         StopSoundPacket soundPacket = new StopSoundPacket();
         soundPacket.setSoundName("portal.travel");
@@ -124,10 +123,12 @@ public class TransferCallback {
         }
         this.connection.setPacketHandler(new ConnectedDownstreamHandler(player, this.connection));
 
+        // RESET before the event so handlers may start a new transfer right away.
+        this.transferPhase = RESET;
+
         TransferCompleteEvent event = new TransferCompleteEvent(this.sourceServer, this.connection, this.player);
         this.player.getProxy().getEventManager().callEvent(event);
 
-        this.transferPhase = RESET;
         tryTransferFinalize();
     }
 
@@ -135,11 +136,14 @@ public class TransferCallback {
      * This function will check if we have finished the dimension exchange and got PlayStatus.PLAYER_SPAWN
      * Only then it will finalize the transfer.
      */
-    public void tryTransferFinalize() {
+    public synchronized void tryTransferFinalize() {
         if (this.finalized || !this.hasPlayStatus || this.transferPhase != RESET) {
             return;
         }
         this.finalized = true;
+        // The callback stays registered until now so a PLAYER_SPAWN arriving after phase 2 can still
+        // finalize the transfer through AbstractDownstreamHandler.
+        this.player.getRewriteData().clearTransferCallback(this);
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalEntityId());
@@ -154,7 +158,17 @@ public class TransferCallback {
         tryTransferFinalize();
     }
 
-    public void onTransferFailed() {
+    public synchronized void onTransferFailed() {
+        if (this.transferPhase == RESET) {
+            return; // already completed or failed
+        }
+        // Release the transfer state first: the fallback connect() below is blocked while this
+        // callback is active, and queued packets from the abandoned target must never reach the client.
+        this.transferPhase = RESET;
+        this.finalized = true; // a late PLAYER_SPAWN must not finalize a failed transfer
+        this.player.getRewriteData().clearTransferCallback(this);
+        this.player.getConnection().discardTransferQueue();
+
         if (this.player.sendToFallback(this.targetServer, ReconnectReason.TRANSFER_FAILED, "Disconnected")) {
             this.player.sendMessage(new TranslationContainer("waterdog.connected.fallback", this.targetServer.getServerName()));
         } else {
@@ -167,5 +181,13 @@ public class TransferCallback {
 
     public TransferPhase getPhase() {
         return this.transferPhase;
+    }
+
+    public ServerInfo getTargetServer() {
+        return this.targetServer;
+    }
+
+    public ClientConnection getConnection() {
+        return this.connection;
     }
 }

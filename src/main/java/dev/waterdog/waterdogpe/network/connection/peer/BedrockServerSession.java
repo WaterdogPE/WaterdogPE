@@ -108,6 +108,23 @@ public class BedrockServerSession extends BedrockSession implements ProxiedConne
         }
     }
 
+    /**
+     * Removes the transfer queue, dropping queued batches instead of flushing them to the client.
+     * Used when a transfer fails: the queue holds packets from the abandoned target server.
+     */
+    public void discardTransferQueue() {
+        if (!this.getPeer().isConnected()) {
+            return;
+        }
+
+        ChannelPipeline pipeline = this.getPeer().getChannel().pipeline();
+        PacketQueueHandler handler = (PacketQueueHandler) pipeline.get(PacketQueueHandler.NAME);
+        if (handler != null) {
+            handler.dropQueued();
+            pipeline.remove(handler);
+        }
+    }
+
     @Override
     public void setPacketHandler(BedrockPacketHandler handler) {
         if (handler instanceof ProxyPacketHandler packetHandler) {

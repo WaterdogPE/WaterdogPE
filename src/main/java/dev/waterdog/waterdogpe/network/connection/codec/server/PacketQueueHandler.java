@@ -24,9 +24,18 @@ public class PacketQueueHandler extends ChannelDuplexHandler {
     private final Queue<BedrockBatchWrapper> queue = PlatformDependent.newMpscQueue(MAX_BATCHES);
 
     private volatile boolean finished;
+    private volatile boolean dropQueued;
 
     public PacketQueueHandler(BedrockServerSession session) {
         this.session = session;
+    }
+
+    /**
+     * Drop queued batches instead of flushing them on removal.
+     * Used when the transfer fails and the queue holds packets from the abandoned target server.
+     */
+    public void dropQueued() {
+        this.dropQueued = true;
     }
 
     private void finish(ChannelHandlerContext ctx, boolean send) {
@@ -60,7 +69,7 @@ public class PacketQueueHandler extends ChannelDuplexHandler {
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) {
-        this.finish(ctx, ctx.channel().isActive());
+        this.finish(ctx, !this.dropQueued && ctx.channel().isActive());
     }
 
     @Override

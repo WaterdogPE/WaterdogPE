@@ -17,6 +17,7 @@ package dev.waterdog.waterdogpe.network.protocol.handler.downstream;
 
 import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import lombok.extern.log4j.Log4j2;
@@ -100,10 +101,13 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public PacketSignal handle(PlayStatusPacket packet) {
-        return this.onPlayStatus(packet, message -> {
-            this.connection.disconnect();
-            this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.connection.getServerInfo().getServerName(), message));
-        }, this.connection);
+        PacketSignal signal = this.onPlayStatus(packet, message -> this.player.onTransferFailure(this.connection,
+                this.connection.getServerInfo(), ReconnectReason.SERVER_KICK, message), this.connection);
+        if (signal == PacketSignal.UNHANDLED) {
+            // PLAYER_SPAWN may arrive before phase 2 completes: route it to the transfer callback.
+            return super.handle(packet);
+        }
+        return signal;
     }
 
     @Override
@@ -127,7 +131,20 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             return Signals.CANCEL;
         }
 
-        if (rewriteData.getTransferCallback() != null && rewriteData.getTransferCallback().getPhase() != TransferCallback.TransferPhase.RESET) {
+        // A newer connect() request discards this connection asynchronously, but its START_GAME
+        // may already be in flight, drop it before it hijacks the player.
+        if (this.player.getPendingConnection() != this.connection) {
+            this.connection.disconnect();
+            log.warn("[{}] Aborted server transfer to {} because the connection was discarded!",
+                    this.player.getName(), this.connection.getServerInfo().getServerName());
+            return Signals.CANCEL;
+        }
+
+        ClientConnection oldConnection = this.player.getDownstreamConnection();
+        TransferCallback transferCallback = new TransferCallback(this.player, this.connection, oldConnection.getServerInfo(), packet.getDimensionId());
+        // Downstream connections run on different event loops: two of them can reach START_GAME
+        // concurrently, so the transfer slot must be claimed atomically. The loser aborts here.
+        if (!rewriteData.trySetTransferCallback(transferCallback)) {
             this.connection.disconnect();
             String serverName = this.connection.getServerInfo().getServerName();
             this.player.sendMessage(new TranslationContainer("waterdog.downstream.connecting", serverName));
@@ -135,7 +152,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             return Signals.CANCEL;
         }
 
-        ClientConnection oldConnection = this.player.getDownstreamConnection();
         oldConnection.getServerInfo().removeConnection(oldConnection);
         // When disconnect is called from outside the event loop, the actual disconnection will run asynchronously.
         // Window is usually very short but in some rare cases it might take longer than usual.
@@ -239,9 +255,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         // After client successfully changes dimension we receive PlayerActionPacket#DIMENSION_CHANGE_SUCCESS and continue in transfer
         int newDimension = determineDimensionId(rewriteData.getDimension(), packet.getDimensionId());
 
-        TransferCallback transferCallback = new TransferCallback(this.player, this.connection, oldConnection.getServerInfo(), packet.getDimensionId());
         rewriteData.setDimension(newDimension);
-        rewriteData.setTransferCallback(transferCallback);
 
         boolean fastTransfer = event.isTransferScreenAllowed() && newDimension != packet.getDimensionId();
         if (fastTransfer) {
@@ -268,14 +282,16 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
     @Override
     public PacketSignal handle(DisconnectPacket packet) {
         TransferCallback transferCallback = this.player.getRewriteData().getTransferCallback();
-        if (transferCallback != null) {
+        if (transferCallback != null && transferCallback.getConnection() == this.connection) {
             // Player was already disconnected from old downstream
             transferCallback.onTransferFailed();
             return Signals.CANCEL;
         }
 
-        this.connection.disconnect();
-        this.player.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", this.connection.getServerInfo().getServerName(), packet.getKickMessage()));
+        // Kicked before START_GAME: the previous downstream is still fully functional and the
+        // reconnect handler decides where the player goes.
+        this.player.onTransferFailure(this.connection, this.connection.getServerInfo(),
+                ReconnectReason.SERVER_KICK, packet.getKickMessage());
         return Signals.CANCEL;
     }
 }
