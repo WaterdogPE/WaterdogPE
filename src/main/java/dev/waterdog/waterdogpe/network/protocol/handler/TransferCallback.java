@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.protocol.handler;
 
+import dev.waterdog.waterdogpe.event.defaults.PostTransferCompleteEvent;
 import dev.waterdog.waterdogpe.event.defaults.TransferCompleteEvent;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
@@ -33,6 +34,7 @@ import static dev.waterdog.waterdogpe.network.protocol.user.PlayerRewriteUtils.*
 import static dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback.TransferPhase.*;
 
 public class TransferCallback {
+
     public enum TransferPhase {
         RESET,
         PHASE_1,
@@ -46,6 +48,8 @@ public class TransferCallback {
     private final int targetDimension;
 
     private volatile TransferPhase transferPhase = PHASE_1;
+    private volatile boolean finalized = false;
+    private volatile boolean hasPlayStatus = false;
 
     public TransferCallback(ProxiedPlayer player, ClientConnection connection, ServerInfo sourceServer, int targetDimension) {
         this.player = player;
@@ -60,13 +64,11 @@ public class TransferCallback {
             case PHASE_1:
                 // First dimension change was completed successfully.
                 this.onTransferPhase1Completed();
-                this.transferPhase = PHASE_2;
                 break;
             case PHASE_2:
                 // At this point dimension change sequence was completed.
                 // We can finally fully initialize connection.
                 this.onTransferPhase2Completed();
-                this.transferPhase = RESET;
                 break;
             default:
                 return false;
@@ -95,6 +97,7 @@ public class TransferCallback {
             handler.setTargetConnection(this.connection);
         }
         this.player.getConnection().setTransferQueueActive(false);
+        this.transferPhase = PHASE_2;
     }
 
     private void onTransferPhase2Completed() {
@@ -121,12 +124,34 @@ public class TransferCallback {
         }
         this.connection.setPacketHandler(new ConnectedDownstreamHandler(player, this.connection));
 
+        TransferCompleteEvent event = new TransferCompleteEvent(this.sourceServer, this.connection, this.player);
+        this.player.getProxy().getEventManager().callEvent(event);
+
+        this.transferPhase = RESET;
+        tryTransferFinalize();
+    }
+
+    /**
+     * This function will check if we have finished the dimension exchange and got PlayStatus.PLAYER_SPAWN
+     * Only then it will finalize the transfer.
+     */
+    public void tryTransferFinalize() {
+        if (this.finalized || !this.hasPlayStatus || this.transferPhase != RESET) {
+            return;
+        }
+        this.finalized = true;
+
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
         initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalEntityId());
         this.connection.sendPacket(initializedPacket);
 
-        TransferCompleteEvent event = new TransferCompleteEvent(this.sourceServer, this.connection, this.player);
+        PostTransferCompleteEvent event = new PostTransferCompleteEvent(this.connection, this.player);
         this.player.getProxy().getEventManager().callEvent(event);
+    }
+
+    public void onPlayStatus() {
+        this.hasPlayStatus = true;
+        tryTransferFinalize();
     }
 
     public void onTransferFailed() {

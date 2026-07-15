@@ -144,7 +144,6 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         oldConnection.disconnect();
         this.player.setDownstreamConnection(this.connection);
         this.connection.getServerInfo().addConnection(this.connection);
-        this.player.setAcceptPlayStatus(true);
 
         ServerTransferEvent event = new ServerTransferEvent(this.player, oldConnection.getServerInfo(), this.connection.getServerInfo());
         this.player.getProxy().getEventManager().callEvent(event);
