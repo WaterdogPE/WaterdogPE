@@ -67,7 +67,7 @@ public class RewriteData {
     @Getter
     private int dimension = 0;
     @Getter
-    private TransferCallback transferCallback;
+    private volatile TransferCallback transferCallback;
 
     @Getter
     private Vector3f spawnPosition;
@@ -90,6 +90,33 @@ public class RewriteData {
 
     public RewriteData() {
         this.proxyName = ProxyServer.getInstance().getConfiguration().getName();
+    }
+
+    /**
+     * Atomically claims the transfer slot. Downstream connections run on different event loops,
+     * so two of them can reach START_GAME concurrently and only one may win.
+     *
+     * @return false if another transfer is still in progress.
+     */
+    public synchronized boolean trySetTransferCallback(TransferCallback callback) {
+        if (this.transferCallback != null && this.transferCallback.getPhase() != TransferCallback.TransferPhase.RESET) {
+            return false;
+        }
+        this.transferCallback = callback;
+        return true;
+    }
+
+    /**
+     * Clears the transfer slot only if it is still owned by the given callback.
+     */
+    public synchronized void clearTransferCallback(TransferCallback callback) {
+        if (this.transferCallback == callback) {
+            this.transferCallback = null;
+        }
+    }
+
+    public synchronized void setTransferCallback(TransferCallback callback) {
+        this.transferCallback = callback;
     }
 
     public boolean hasImmobileFlag() {

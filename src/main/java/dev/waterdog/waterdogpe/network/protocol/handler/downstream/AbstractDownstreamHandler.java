@@ -59,7 +59,7 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
             return PacketSignal.UNHANDLED;
         }
         TransferCallback transferCallback = player.getRewriteData().getTransferCallback();
-        if (transferCallback != null) {
+        if (transferCallback != null && transferCallback.getConnection() == this.connection) {
             transferCallback.onPlayStatus();
         }
         return PacketSignal.UNHANDLED;
