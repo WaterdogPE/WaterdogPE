@@ -21,6 +21,10 @@ import dev.waterdog.waterdogpe.security.SecurityManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.DatagramPacket;
+import org.cloudburstmc.netty.channel.raknet.RakServerChannel;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 public class ServerDatagramHandler extends ChannelInboundHandlerAdapter {
     public static final String NAME = "server-datagram-handler";
@@ -33,7 +37,7 @@ public class ServerDatagramHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof DatagramPacket packet && this.manager.isAddressBlocked(packet.sender().getAddress())) {
+        if (msg instanceof DatagramPacket packet && this.manager.isAddressBlocked(this.resolveSource(ctx, packet.sender()))) {
             NetworkMetrics metrics = ProxyServer.getInstance().getNetworkMetrics();
             if (metrics != null) {
                 metrics.droppedBytes(packet.content().readableBytes());
@@ -42,5 +46,25 @@ public class ServerDatagramHandler extends ChannelInboundHandlerAdapter {
             return; // drop any incoming messages
         }
         ctx.fireChannelRead(msg);
+    }
+
+    /**
+     * Resolve a datagram's sender to the address bans are recorded against.
+     * <p>
+     * When running behind HAProxy (PROXY protocol enabled) datagrams arrive from the load balancer's
+     * address, while bans are keyed on the real client address (the RakNet child channel's remote
+     * address, which the library substitutes from the PROXY header). Without translating here, blocked
+     * clients would never be dropped. We resolve the sender to the real client via the parent
+     * {@link RakServerChannel}'s proxy-&gt;client mapping, falling back to the raw sender when PROXY
+     * protocol is disabled or the mapping has not been established yet.
+     */
+    private InetAddress resolveSource(ChannelHandlerContext ctx, InetSocketAddress sender) {
+        if (ctx.channel() instanceof RakServerChannel rakServerChannel) {
+            InetSocketAddress realClient = rakServerChannel.getClientAddress(sender);
+            if (realClient != null) {
+                return realClient.getAddress();
+            }
+        }
+        return sender.getAddress();
     }
 }
