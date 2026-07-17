@@ -30,6 +30,9 @@ netty-codec-haproxy = { module = "io.netty:netty-codec-haproxy", version.ref = "
 netty-transport-native-epoll = { module = "io.netty:netty-transport-native-epoll", version.ref = "netty" }
 netty-transport-native-kqueue = { module = "io.netty:netty-transport-native-kqueue", version.ref = "netty" }
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "9.37.4" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.10.2" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version = "1.10.2" }
+mockito-core = { module = "org.mockito:mockito-core", version = "5.14.2" }
 
 [plugins]
 shadow = { id = "com.gradleup.shadow", version = "8.3.6" }

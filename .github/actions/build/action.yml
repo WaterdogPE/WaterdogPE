@@ -45,6 +45,15 @@ runs:
         ORG_GRADLE_PROJECT_waterdogUsername: ${{ inputs.deploy_username }}
         ORG_GRADLE_PROJECT_waterdogPassword: ${{ inputs.deploy_password }}
 
+    - name: Upload test report
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-report
+        path: |
+          build/reports/tests/test
+          build/test-results/test
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
