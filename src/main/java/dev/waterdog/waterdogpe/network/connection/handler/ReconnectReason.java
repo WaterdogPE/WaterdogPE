@@ -25,6 +25,7 @@ public interface ReconnectReason {
     ReconnectReason EXCEPTION = new ReconnectReasonImpl("exception");
     ReconnectReason SERVER_KICK = new ReconnectReasonImpl("server_kick");
     ReconnectReason TRANSFER_FAILED = new ReconnectReasonImpl("transfer_failed");
+    ReconnectReason INCOMPATIBLE = new ReconnectReasonImpl("incompatible");
 
     String getName();
 
