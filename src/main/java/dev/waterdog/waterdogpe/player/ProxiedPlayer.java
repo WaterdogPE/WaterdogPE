@@ -48,6 +48,7 @@ import dev.waterdog.waterdogpe.network.protocol.handler.upstream.ConnectedUpstre
 import dev.waterdog.waterdogpe.utils.types.Permission;
 import dev.waterdog.waterdogpe.utils.types.TextContainer;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
+import io.netty.util.concurrent.Future;
 import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.longs.*;
 import it.unimi.dsi.fastutil.objects.*;
@@ -363,7 +364,18 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     private void createConnection(ServerInfo targetServer) {
-        targetServer.createConnection(this).addListener(future -> {
+        Future<ClientConnection> connectionFuture;
+        try {
+            // A custom ServerInfo implementation may throw instead of failing the future; without
+            // this guard that would leak the pendingServers entry and block the target forever.
+            connectionFuture = Objects.requireNonNull(targetServer.createConnection(this), "createConnection returned null");
+        } catch (Throwable error) {
+            this.pendingServers.remove(targetServer);
+            this.connectFailure(null, targetServer, error);
+            return;
+        }
+
+        connectionFuture.addListener(future -> {
             ClientConnection connection = null;
             try {
                 if (future.cause() == null) {
@@ -489,7 +501,14 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
-        ServerInfo reconnectServer = this.proxy.getReconnectHandler().getTransferFailureServer(this, targetServer, reason, message);
+        ServerInfo reconnectServer;
+        try {
+            reconnectServer = this.proxy.getReconnectHandler().getTransferFailureServer(this, targetServer, reason, message);
+        } catch (Throwable t) {
+            // A throwing reconnect handler must not abort recovery; treat it as "stay".
+            this.getLogger().error("[" + this.getName() + "] ReconnectHandler getTransferFailureServer threw", t);
+            reconnectServer = null;
+        }
         if (reconnectServer == null || reconnectServer == this.getServerInfo()) {
             // Stay on the previous downstream, which is still fully functional.
             this.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", targetServer.getServerName(), message));
@@ -508,8 +527,8 @@ public class ProxiedPlayer implements CommandSender {
     }
 
     public void disconnect(TextContainer message) {
-        if (message instanceof TranslationContainer) {
-            this.disconnect(((TranslationContainer) message).getTranslated());
+        if (message instanceof TranslationContainer tr) {
+            this.disconnect(tr.getTranslated());
         } else {
             this.disconnect(message.getMessage());
         }
@@ -572,7 +591,14 @@ public class ProxiedPlayer implements CommandSender {
             return false;
         }
 
-        ServerInfo fallbackServer = this.proxy.getReconnectHandler().getFallbackServer(this, oldServer, reason, message);
+        ServerInfo fallbackServer;
+        try {
+            fallbackServer = this.proxy.getReconnectHandler().getFallbackServer(this, oldServer, reason, message);
+        } catch (Throwable t) {
+            // A throwing reconnect handler must not abort failure handling; treat it as no fallback.
+            this.getLogger().error("[" + this.getName() + "] ReconnectHandler getFallbackServer threw", t);
+            return false;
+        }
         if (fallbackServer != null && fallbackServer != this.getServerInfo()) {
             this.getLogger().debug("[{}] Connecting to fallback server {} with reason {}", this.getName(), fallbackServer.getServerName(), reason.getName());
             this.connect(fallbackServer);
@@ -581,58 +607,90 @@ public class ProxiedPlayer implements CommandSender {
         return false;
     }
 
-    // TODO: I'm not super happy with this, but moving it to a netty handler would mean anyone who implements own handler,
-    //  has to copy that piece of code. PLS: find a better place for this two methods
+    /**
+     * Single entry point for every downstream failure signal: kicks, timeouts, channel exceptions
+     * and channel closes all route here and are handled based on the connection's role.
+     */
+    public final void onDownstreamFailure(ClientConnection connection, ReconnectReason reason, String message) {
+        Preconditions.checkNotNull(connection, "Connection can not be null!");
+
+        // CLAIMED: mid-transfer target failure, the old downstream is already gone, fail the transfer.
+        TransferCallback transferCallback = this.rewriteData.getTransferCallback();
+        if (transferCallback != null && transferCallback.getConnection() == connection
+                && transferCallback.getPhase() != TransferCallback.TransferPhase.RESET) {
+            transferCallback.onTransferFailed(message);
+            return;
+        }
+
+        // PENDING: failed before StartGame, the previous downstream still works, recover there.
+        if (this.getPendingConnection() == connection) {
+            this.onTransferFailure(connection, connection.getServerInfo(), reason, message);
+            return;
+        }
+
+        // ACTIVE: the player's current downstream died, fail over.
+        if (connection == this.clientConnection) {
+            if (reason == ReconnectReason.EXCEPTION) {
+                // The channel may still be open after an exception, close it before failing over.
+                connection.disconnect();
+            }
+            this.onActiveDownstreamFailure(connection.getServerInfo(), reason, message);
+            return;
+        }
+
+        // STALE: a discarded attempt, nothing to recover.
+        connection.disconnect();
+    }
+
+    /**
+     * Terminal for failures of the active downstream: fall back if possible, kick otherwise.
+     * The per-reason branches preserve the messaging each failure source historically used.
+     */
+    private void onActiveDownstreamFailure(ServerInfo serverInfo, ReconnectReason reason, String message) {
+        if (reason == ReconnectReason.UNKNOWN && (this.getPendingConnection() != null
+                || !this.pendingServers.isEmpty() || this.disconnected.get())) {
+            return; // a silent close while a transfer or disconnect is already in flight, let it finish
+        }
+
+        if (this.sendToFallback(serverInfo, reason, message)) {
+            if (reason == ReconnectReason.EXCEPTION) {
+                this.sendMessage(new TranslationContainer("waterdog.downstream.down", serverInfo.getServerName(), message));
+            }
+            return;
+        }
+
+        if (reason == ReconnectReason.SERVER_KICK) {
+            this.disconnect(new TranslationContainer("waterdog.downstream.kicked", message));
+        } else if (reason == ReconnectReason.TIMEOUT) {
+            this.disconnect(new TranslationContainer("waterdog.downstream.down", serverInfo.getServerName(), "Timeout"));
+        } else if (reason == ReconnectReason.UNKNOWN) {
+            this.disconnect(new TranslationContainer("waterdog.downstream.down", serverInfo.getServerName(), "Disconnected"));
+        } else {
+            this.disconnect(new TranslationContainer("waterdog.downstream.down", serverInfo.getServerName(), message));
+        }
+    }
+
     public final void onDownstreamTimeout(ServerInfo serverInfo) {
-        // A timeout of the transfer target must release the transfer state before falling back.
         TransferCallback transferCallback = this.rewriteData.getTransferCallback();
         if (transferCallback != null && transferCallback.getTargetServer() == serverInfo
                 && transferCallback.getPhase() != TransferCallback.TransferPhase.RESET) {
-            transferCallback.onTransferFailed();
+            this.onDownstreamFailure(transferCallback.getConnection(), ReconnectReason.TIMEOUT, "Downstream Timeout");
             return;
         }
 
-        // Timed out before START_GAME: the previous downstream still works, recover there.
         ClientConnection pendingConnection = this.getPendingConnection();
         if (pendingConnection != null && pendingConnection.getServerInfo() == serverInfo) {
-            this.onTransferFailure(pendingConnection, serverInfo, ReconnectReason.TIMEOUT, "Downstream Timeout");
+            this.onDownstreamFailure(pendingConnection, ReconnectReason.TIMEOUT, "Downstream Timeout");
             return;
         }
 
-        if (!this.sendToFallback(serverInfo, ReconnectReason.TIMEOUT, "Downstream Timeout")) {
-            this.disconnect(new TranslationContainer("waterdog.downstream.down", serverInfo.getServerName(), "Timeout"));
-        }
+        this.onActiveDownstreamFailure(serverInfo, ReconnectReason.TIMEOUT, "Downstream Timeout");
     }
 
     public final void onDownstreamDisconnected(ClientConnection connection) {
         this.getLogger().info("[" + connection.getSocketAddress() + "|" + this.getName() + "] -> Downstream [" +
                 connection.getServerInfo().getServerName() + "] has disconnected");
-        if (this.getPendingConnection() == connection) {
-            // Pending connection died before START_GAME: the previous downstream still works,
-            // let the reconnect handler decide where the player goes.
-            this.onTransferFailure(connection, connection.getServerInfo(), ReconnectReason.UNKNOWN, "Downstream disconnected");
-            return;
-        }
-
-        // Transfer target died mid-transfer: fail the transfer so the queue and callback are
-        // released and the player is sent to a fallback.
-        TransferCallback transferCallback = this.rewriteData.getTransferCallback();
-        if (transferCallback != null && transferCallback.getConnection() == connection
-                && transferCallback.getPhase() != TransferCallback.TransferPhase.RESET) {
-            transferCallback.onTransferFailed();
-            return;
-        }
-
-        // Active downstream closed with no DisconnectPacket/timeout (those are handled in
-        // ConnectedDownstreamHandler/onDownstreamTimeout). Fail over instead of leaving the player frozen on
-        // a dead connection. Guards skip this when a transfer/disconnect is already in flight.
-        if (connection == this.clientConnection
-                && this.getPendingConnection() == null
-                && this.pendingServers.isEmpty()
-                && !this.disconnected.get()
-                && !this.sendToFallback(connection.getServerInfo(), ReconnectReason.UNKNOWN, "Downstream disconnected")) {
-            this.disconnect(new TranslationContainer("waterdog.downstream.down", connection.getServerInfo().getServerName(), "disconnected"));
-        }
+        this.onDownstreamFailure(connection, ReconnectReason.UNKNOWN, "Downstream Disconnected");
     }
 
     /**

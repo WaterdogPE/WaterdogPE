@@ -334,7 +334,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectDimensionChange(ProxiedConnection session, int dimensionId, Vector3f position, long runtimeId, ProtocolVersion version, boolean chunks, boolean requestSubChunks) {
-        if (session == null || !session.isConnected()){
+        if (session == null || !session.isConnected()) {
             return;
         }
         ChangeDimensionPacket packet = new ChangeDimensionPacket();

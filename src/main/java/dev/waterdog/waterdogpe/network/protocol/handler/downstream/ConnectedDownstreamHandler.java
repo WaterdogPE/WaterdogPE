@@ -26,7 +26,6 @@ import dev.waterdog.waterdogpe.network.protocol.rewrite.types.RewriteData;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
-import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import org.cloudburstmc.protocol.common.PacketSignal;
 
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
@@ -83,10 +82,8 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public final PacketSignal handle(DisconnectPacket packet) {
-        if (this.player.sendToFallback(this.connection.getServerInfo(), ReconnectReason.SERVER_KICK, packet.getKickMessage())) {
-            return Signals.CANCEL;
-        }
-        this.player.disconnect(new TranslationContainer("waterdog.downstream.kicked", packet.getKickMessage()));
+        // This is not really a failure
+        this.player.onDownstreamFailure(this.connection, ReconnectReason.SERVER_KICK, packet.getKickMessage());
         return Signals.CANCEL;
     }
 }

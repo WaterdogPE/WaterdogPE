@@ -48,8 +48,7 @@ import java.util.function.Consumer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Wires a real {@link ProxiedPlayer} against a fully mocked proxy so transfer failure modes
@@ -158,7 +157,7 @@ public class TransferTestHarness implements AutoCloseable {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Promise<ClientConnection> stubDial(ServerInfo serverInfo) {
         Promise<ClientConnection> promise = ImmediateEventExecutor.INSTANCE.newPromise();
-        when(serverInfo.createConnection(any())).thenReturn((Future) promise);
+        doReturn((Future) promise).when(serverInfo).createConnection(any());
         return promise;
     }
 

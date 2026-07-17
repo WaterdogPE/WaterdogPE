@@ -67,7 +67,7 @@ public class TransferCallbackTest {
 
     @Test
     void failureReleasesStateAndFiresEventOnce() {
-        this.callback.onTransferFailed();
+        this.callback.onTransferFailed("test failure");
 
         assertEquals(TransferCallback.TransferPhase.RESET, this.callback.getPhase());
         assertNull(this.harness.player.getRewriteData().getTransferCallback());
@@ -80,13 +80,13 @@ public class TransferCallbackTest {
         assertFalse(event.isRecoverable());
 
         // Failing again must be a no-op.
-        this.callback.onTransferFailed();
+        this.callback.onTransferFailed("test failure");
         assertEquals(1, this.harness.events(ServerTransferFailedEvent.class).size());
     }
 
     @Test
     void failureKicksPlayerWhenNoFallbackExists() {
-        this.callback.onTransferFailed();
+        this.callback.onTransferFailed("test failure");
         assertFalse(this.harness.player.isConnected(), "player should be kicked without a fallback");
     }
 
@@ -96,7 +96,7 @@ public class TransferCallbackTest {
         this.harness.stubDial(fallback);
         when(this.harness.reconnectHandler.getFallbackServer(any(), any(), any(), anyString())).thenReturn(fallback);
 
-        this.callback.onTransferFailed();
+        this.callback.onTransferFailed("test failure");
 
         assertTrue(this.harness.player.isConnected());
         verify(fallback).createConnection(this.harness.player);
@@ -133,7 +133,7 @@ public class TransferCallbackTest {
         this.harness.stubDial(fallback);
         when(this.harness.reconnectHandler.getFallbackServer(any(), any(), any(), anyString())).thenReturn(fallback);
 
-        this.callback.onTransferFailed();
+        this.callback.onTransferFailed("test failure");
         this.callback.onPlayStatus();
 
         verify(this.targetConnection, never()).sendPacket(isA(SetLocalPlayerAsInitializedPacket.class));
@@ -177,7 +177,7 @@ public class TransferCallbackTest {
         this.harness.stubDial(fallback);
         when(this.harness.reconnectHandler.getFallbackServer(any(), any(), any(), anyString())).thenReturn(fallback);
 
-        this.callback.onTransferFailed();
+        this.callback.onTransferFailed("test failure");
         this.harness.runScheduledTasks();
 
         assertTrue(this.harness.player.isConnected());
