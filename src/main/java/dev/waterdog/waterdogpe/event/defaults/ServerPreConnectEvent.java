@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.AsyncEvent;
+import dev.waterdog.waterdogpe.event.CancellableEvent;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import lombok.Getter;
@@ -32,7 +33,7 @@ import lombok.Getter;
  */
 @Getter
 @AsyncEvent
-public class ServerPreConnectEvent extends PlayerEvent {
+public class ServerPreConnectEvent extends PlayerEvent implements CancellableEvent {
 
     /**
      * The server the player is currently connected to, or {@code null} on the initial connection.
