@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.event;
 
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.logger.MainLogger;
 import dev.waterdog.waterdogpe.utils.exceptions.EventException;
 
 import java.util.ArrayList;
@@ -96,7 +97,12 @@ public class EventHandler {
         ArrayList<Consumer<Event>> handlerList = this.priority2handlers.get(priority);
         if (handlerList != null) {
             for (Consumer<Event> eventHandler : handlerList) {
-                eventHandler.accept(event);
+                try {
+                    eventHandler.accept(event);
+                } catch (Throwable t) {
+                    // One broken plugin handler must not break the caller or the remaining handlers.
+                    MainLogger.getLogger().error("Exception was thrown in " + event.getClass().getSimpleName() + " handler", t);
+                }
             }
         }
     }

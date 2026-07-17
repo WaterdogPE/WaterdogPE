@@ -242,6 +242,39 @@ public class ProxiedPlayerTransferFailureTest {
     }
 
     @Test
+    void activeDownstreamDeathIgnoredWhileConnectingElsewhere() {
+        ServerInfo target = this.harness.newServer("game");
+        this.harness.stubDial(target); // dial stays unresolved, so the target stays in pendingServers
+        this.harness.player.connect(target);
+
+        this.harness.player.onDownstreamDisconnected(this.lobbyConnection);
+
+        verify(this.harness.reconnectHandler, never()).getFallbackServer(any(), any(), any(), anyString());
+        assertTrue(this.harness.player.isConnected());
+    }
+
+    @Test
+    void activeDownstreamDeathIgnoredWhilePendingConnectionExists() {
+        ClientConnection pending = this.harness.newDownstream(this.harness.newServer("game"));
+        this.harness.setPendingConnection(pending);
+
+        this.harness.player.onDownstreamDisconnected(this.lobbyConnection);
+
+        verify(this.harness.reconnectHandler, never()).getFallbackServer(any(), any(), any(), anyString());
+        assertTrue(this.harness.player.isConnected());
+    }
+
+    @Test
+    void timeoutForUnrelatedServerFallsBack() {
+        ServerInfo unrelated = this.harness.newServer("unrelated");
+
+        this.harness.player.onDownstreamTimeout(unrelated);
+
+        verify(this.harness.reconnectHandler).getFallbackServer(this.harness.player, unrelated, ReconnectReason.TIMEOUT, "Downstream Timeout");
+        assertFalse(this.harness.player.isConnected(), "no fallback leaves nothing but a kick");
+    }
+
+    @Test
     void watchdogRecoversStuckPendingConnection() {
         ServerInfo target = this.harness.newServer("game");
         Promise<ClientConnection> dial = this.harness.stubDial(target);

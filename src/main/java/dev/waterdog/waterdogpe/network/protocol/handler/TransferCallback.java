@@ -145,7 +145,7 @@ public class TransferCallback {
 
     private void onTransferPhase2Completed() {
         if (!this.connection.isConnected()) {
-            this.onTransferFailed();
+            this.onTransferFailed("Downstream Disconnected");
             return;
         }
 
@@ -202,7 +202,7 @@ public class TransferCallback {
         tryTransferFinalize();
     }
 
-    public synchronized void onTransferFailed() {
+    public synchronized void onTransferFailed(String reason) {
         if (this.transferPhase == RESET) {
             return; // already completed or failed
         }
@@ -215,16 +215,16 @@ public class TransferCallback {
         this.player.getConnection().discardTransferQueue();
 
         this.player.getProxy().getEventManager().callEvent(new ServerTransferFailedEvent(
-                this.player, this.targetServer, ReconnectReason.TRANSFER_FAILED, "Server was closed", false));
+                this.player, this.targetServer, ReconnectReason.TRANSFER_FAILED, reason, false));
 
         if (this.player.sendToFallback(this.targetServer, ReconnectReason.TRANSFER_FAILED, "Disconnected")) {
             this.player.sendMessage(new TranslationContainer("waterdog.connected.fallback", this.targetServer.getServerName()));
         } else {
-            this.player.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", targetServer.getServerName(), "Server was closed"));
+            this.player.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", targetServer.getServerName(), reason));
         }
 
         this.connection.disconnect();
-        this.player.getLogger().warning("Failed to transfer " + this.player.getName() + " to " + this.targetServer.getServerName() + ": Server was closed");
+        this.player.getLogger().warning("Failed to transfer " + this.player.getName() + " to " + this.targetServer.getServerName() + ": " + reason);
     }
 
     public TransferPhase getPhase() {

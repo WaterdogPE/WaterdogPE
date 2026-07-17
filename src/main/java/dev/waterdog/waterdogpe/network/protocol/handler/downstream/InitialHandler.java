@@ -50,11 +50,20 @@ public class InitialHandler extends AbstractDownstreamHandler {
     @Override
     public PacketSignal handle(PlayStatusPacket packet) {
         return this.onPlayStatus(packet, message -> {
-            ServerInfo serverInfo = this.player.getServerInfo();
+            // player.getServerInfo() is still null on the initial connection, use the failed target.
+            ServerInfo serverInfo = this.connection.getServerInfo();
             if (!this.player.sendToFallback(serverInfo, ReconnectReason.TRANSFER_FAILED, message)) {
                 this.player.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed", serverInfo.getServerName(), message));
             }
         }, this.connection);
+    }
+
+    @Override
+    public PacketSignal handle(DisconnectPacket packet) {
+        // Kicked during the initial login: recover through the shared failure path so the
+        // kick message is not lost waiting for the channel close.
+        this.player.onDownstreamFailure(this.connection, ReconnectReason.SERVER_KICK, packet.getKickMessage());
+        return Signals.CANCEL;
     }
 
     @Override

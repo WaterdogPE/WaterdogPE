@@ -295,17 +295,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
     @Override
     public PacketSignal handle(DisconnectPacket packet) {
-        TransferCallback transferCallback = this.player.getRewriteData().getTransferCallback();
-        if (transferCallback != null && transferCallback.getConnection() == this.connection) {
-            // Player was already disconnected from old downstream
-            transferCallback.onTransferFailed();
-            return Signals.CANCEL;
-        }
-
-        // Kicked before START_GAME: the previous downstream is still fully functional and the
-        // reconnect handler decides where the player goes.
-        this.player.onTransferFailure(this.connection, this.connection.getServerInfo(),
-                ReconnectReason.SERVER_KICK, packet.getKickMessage());
+        this.player.onDownstreamFailure(this.connection, ReconnectReason.SERVER_KICK, packet.getKickMessage());
         return Signals.CANCEL;
     }
 }
