@@ -68,6 +68,11 @@ public class RewriteData {
     private int dimension = 0;
     @Getter
     private volatile TransferCallback transferCallback;
+    /**
+     * Captured from the first StartGamePacket: settings the client can not change without a reconnect.
+     */
+    @Getter
+    private StartGameSettings startGameSettings;
 
     @Getter
     private Vector3f spawnPosition;

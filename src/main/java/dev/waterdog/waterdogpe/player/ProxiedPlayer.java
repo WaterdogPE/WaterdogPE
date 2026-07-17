@@ -92,6 +92,14 @@ public class ProxiedPlayer implements CommandSender {
      */
     private static final long PRE_CONNECT_EVENT_TIMEOUT_SECONDS = 60;
 
+    /**
+     * Hard cap on how long an established downstream connection may take until StartGamePacket
+     * claims the transfer. A downstream that keeps the connection alive without ever completing
+     * the login would otherwise leave the pending connection stuck forever. This failure is
+     * still recoverable, so it goes through {@link #onTransferFailure} instead of a kick.
+     */
+    private static final int PENDING_CONNECTION_TIMEOUT_SECONDS = 60;
+
     @Getter
     private final RewriteData rewriteData = new RewriteData();
     @Getter
@@ -388,6 +396,13 @@ public class ProxiedPlayer implements CommandSender {
         }
 
         this.setPendingConnection(connection);
+        this.proxy.getScheduler().scheduleDelayed(() -> {
+            if (this.getPendingConnection() == connection) {
+                this.getLogger().warning("[{}|{}] Downstream {} did not send StartGame within {}s",
+                        this.getAddress(), this.getName(), targetServer.getServerName(), PENDING_CONNECTION_TIMEOUT_SECONDS);
+                this.onTransferFailure(connection, targetServer, ReconnectReason.TIMEOUT, "Transfer timed out");
+            }
+        }, PENDING_CONNECTION_TIMEOUT_SECONDS * 20);
 
         connection.setCodecHelper(this.getProtocol().getCodec(),
                 this.connection.getPeer().getCodecHelper());
@@ -435,6 +450,13 @@ public class ProxiedPlayer implements CommandSender {
      * @param targetServer the server that could not be reached
      */
     public final void onTransferFailure(ClientConnection connection, ServerInfo targetServer, ReconnectReason reason, String message) {
+        TransferCallback transferCallback = this.rewriteData.getTransferCallback();
+        if (connection != null && transferCallback != null && transferCallback.getConnection() == connection) {
+            // The connection already claimed the transfer: past the recoverable window,
+            // the mid-transfer failure paths own it now.
+            return;
+        }
+
         if (connection != null) {
             // Only the current pending attempt can trigger recovery; discarded connections just die.
             if (!this.clearPendingConnection(connection)) {
@@ -448,13 +470,16 @@ public class ProxiedPlayer implements CommandSender {
             return;
         }
 
+        boolean recoverable = this.clientConnection != null && this.clientConnection.isConnected();
+        this.proxy.getEventManager().callEvent(new ServerTransferFailedEvent(this, targetServer, reason, message, recoverable));
+
         if (connection == null && this.getPendingConnection() != null) {
             // A dial failed while a newer connection attempt is already in flight: don't stomp it.
             this.sendMessage(new TranslationContainer("waterdog.downstream.transfer.failed", targetServer.getServerName(), message));
             return;
         }
 
-        if (this.clientConnection == null || !this.clientConnection.isConnected()) {
+        if (!recoverable) {
             // No healthy downstream to stay on: regular fallback behavior.
             if (this.sendToFallback(targetServer, reason, message)) {
                 this.sendMessage(new TranslationContainer("waterdog.connected.fallback", targetServer.getServerName()));

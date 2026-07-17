@@ -30,6 +30,7 @@ import dev.waterdog.waterdogpe.event.defaults.ServerTransferEvent;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.types.BlockPalette;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.types.RewriteData;
+import dev.waterdog.waterdogpe.network.protocol.rewrite.types.StartGameSettings;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
@@ -140,6 +141,18 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             return Signals.CANCEL;
         }
 
+        // The client locks these settings on its first spawn: a server that disagrees with them can
+        // not be joined without a full reconnect, so fail the transfer while it is still recoverable.
+        StartGameSettings startGameSettings = rewriteData.getStartGameSettings();
+        String incompatibilities = startGameSettings == null ? null : startGameSettings.findIncompatibilities(packet);
+        if (incompatibilities != null) {
+            log.warn("[{}] Aborted server transfer to {} due to incompatible StartGame settings: {}",
+                    this.player.getName(), this.connection.getServerInfo().getServerName(), incompatibilities);
+            this.player.onTransferFailure(this.connection, this.connection.getServerInfo(),
+                    ReconnectReason.INCOMPATIBLE, "Incompatible server settings");
+            return Signals.CANCEL;
+        }
+
         ClientConnection oldConnection = this.player.getDownstreamConnection();
         TransferCallback transferCallback = new TransferCallback(this.player, this.connection, oldConnection.getServerInfo(), packet.getDimensionId());
         // Downstream connections run on different event loops: two of them can reach START_GAME
@@ -151,6 +164,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             log.warn("[{}] Aborted server transfer to {} because player is already being transferred!", this.player.getName(), serverName);
             return Signals.CANCEL;
         }
+        transferCallback.startTimeout();
 
         oldConnection.getServerInfo().removeConnection(oldConnection);
         // When disconnect is called from outside the event loop, the actual disconnection will run asynchronously.

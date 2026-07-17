@@ -28,6 +28,7 @@ import dev.waterdog.waterdogpe.network.protocol.rewrite.BlockMap;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.BlockMapSimple;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.types.BlockPalette;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.types.RewriteData;
+import dev.waterdog.waterdogpe.network.protocol.rewrite.types.StartGameSettings;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
@@ -107,6 +108,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setDimension(packet.getDimensionId());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
+        rewriteData.setStartGameSettings(StartGameSettings.from(packet));
         packet.setRuntimeEntityId(rewriteData.getEntityId());
         packet.setUniqueEntityId(rewriteData.getEntityId());
         packet.setLevelName(rewriteData.getProxyName());
