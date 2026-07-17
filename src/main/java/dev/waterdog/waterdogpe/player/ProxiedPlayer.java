@@ -324,7 +324,7 @@ public class ProxiedPlayer implements CommandSender {
         this.proxy.getEventManager().callEvent(preConnectEvent)
                 // Never let a hung handler future leave the player without a connection or targetServer pending forever.
                 .orTimeout(PRE_CONNECT_EVENT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .whenComplete((event1, error) -> {
+                .whenComplete((ev, error) -> {
                     if (error != null) {
                         // A hung or failing hold-out leaves the player's state ambiguous (e.g. a half-saved
                         // inventory), so abort the transfer and disconnect rather than dial the target anyway.
@@ -338,6 +338,10 @@ public class ProxiedPlayer implements CommandSender {
                         this.disconnect(new TranslationContainer("waterdog.downstream.transfer.failed",
                                 targetServer.getServerName(),
                                 error instanceof TimeoutException ? "timed out" : error.getClass().getSimpleName()));
+                        return;
+                    }
+                    if (ev.isCancelled()) {
+                        this.pendingServers.remove(targetServer);
                         return;
                     }
 
