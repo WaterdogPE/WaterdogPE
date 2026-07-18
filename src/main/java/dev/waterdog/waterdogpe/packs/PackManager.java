@@ -389,6 +389,7 @@ public class PackManager {
     public void rebuildPackets() {
         ResourcePacksInfoPacket infoPacket = new ResourcePacksInfoPacket();
         infoPacket.setForcedToAccept(this.proxy.getConfiguration().isForceServerPacks());
+        infoPacket.setVibrantVisualsForceDisabled(!this.proxy.getConfiguration().isEnableVibrantVisuals());
         infoPacket.setWorldTemplateId(UUID.randomUUID());
         infoPacket.setWorldTemplateVersion("");
 
@@ -438,6 +439,7 @@ public class PackManager {
     private ResourcePacksInfoPacket buildNoCdnPacket(ResourcePacksInfoPacket source) {
         ResourcePacksInfoPacket packet = new ResourcePacksInfoPacket();
         packet.setForcedToAccept(source.isForcedToAccept());
+        packet.setVibrantVisualsForceDisabled(source.isVibrantVisualsForceDisabled());
         packet.setWorldTemplateId(source.getWorldTemplateId());
         packet.setWorldTemplateVersion(source.getWorldTemplateVersion());
         for (ResourcePacksInfoPacket.Entry entry : source.getResourcePackInfos()) {
