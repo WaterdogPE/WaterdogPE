@@ -389,7 +389,7 @@ public class PackManager {
     public void rebuildPackets() {
         ResourcePacksInfoPacket infoPacket = new ResourcePacksInfoPacket();
         infoPacket.setForcedToAccept(this.proxy.getConfiguration().isForceServerPacks());
-        infoPacket.setVibrantVisualsForceDisabled(!this.proxy.getConfiguration().isEnableVibrantVisuals());
+        infoPacket.setVibrantVisualsForceDisabled(this.proxy.getConfiguration().isForceDisableVibrantVisuals());
         infoPacket.setWorldTemplateId(UUID.randomUUID());
         infoPacket.setWorldTemplateVersion("");
 
