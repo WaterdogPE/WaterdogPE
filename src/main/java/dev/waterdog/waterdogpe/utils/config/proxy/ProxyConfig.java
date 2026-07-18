@@ -193,6 +193,10 @@ public class ProxyConfig extends YamlConfig {
     })
     private List<String> disableCdnPlatforms = new ArrayList<>();
 
+    @Path("force_disable_vibrant_visuals")
+    @Comment("If enabled, clients which support Vibrant Visuals (deferred lighting) will be forced to turn it off.")
+    private boolean forceDisableVibrantVisuals = false;
+
     @Path("default_idle_threads")
     @Comment("Creating threads may be in some situations expensive. Specify minimum count of idle threads per internal thread executors. Set to -1 to auto-detect by core count.")
     private int defaultIdleThreads = -1;
