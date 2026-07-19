@@ -28,7 +28,6 @@ import io.netty.util.ReferenceCountUtil;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
-import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.netty.handler.codec.raknet.common.RakSessionCodec;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
@@ -49,6 +48,7 @@ import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 
 import javax.crypto.SecretKey;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Log4j2
 public class ProxiedBedrockPeer extends BedrockPeer {
@@ -248,5 +248,18 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         this.close0("Internal error", true);
         this.proxy.getSecurityManager().onConnectionError(ctx.channel().remoteAddress(), cause);
+    }
+
+    public void blackholeAndCloseLater(CharSequence reason) {
+        if (!this.closing.compareAndSet(false, true)) {
+            return;
+        }
+        this.blackholeInboundPackets();
+        for (BedrockSession session : this.sessions.values()) {
+            session.setDisconnectReason(reason);
+        }
+        this.channel.eventLoop().schedule(() -> {
+            this.channel.disconnect();
+        }, 200, TimeUnit.MILLISECONDS);
     }
 }
