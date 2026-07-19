@@ -93,6 +93,10 @@ tasks.jar {
 }
 
 tasks.shadowJar {
+    // shadow 9 defaults to EXCLUDE, dropping duplicates before the transformers merge them
+    filesMatching(listOf("META-INF/services/**", "META-INF/**/Log4j2Plugins.dat")) {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
     archiveFileName = "Waterdog.jar"
     archiveClassifier = ""
     manifest.attributes["Multi-Release"] = "true"
