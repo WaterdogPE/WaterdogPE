@@ -20,6 +20,7 @@ import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
+import dev.waterdog.waterdogpe.network.protocol.registry.FakeDefinitionRegistry;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.RewriteMaps;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
@@ -71,9 +72,6 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
             return Signals.CANCEL;
         }
         player.setAcceptItemComponentPacket(false);
-        if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_60)) {
-            setItemDefinitions(packet.getItems());
-        }
         return PacketSignal.UNHANDLED;
     }
 
@@ -193,22 +191,6 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
     @Override
     public ClientConnection getConnection() {
         return connection;
-    }
-
-    protected void setItemDefinitions(Collection<ItemDefinition> definitions) {
-        BedrockCodecHelper codecHelper = this.player.getConnection()
-                .getPeer()
-                .getCodecHelper();
-        SimpleDefinitionRegistry.Builder<ItemDefinition> itemRegistry = SimpleDefinitionRegistry.builder();
-        IntSet runtimeIds = new IntOpenHashSet();
-        for (ItemDefinition definition : definitions) {
-            if (runtimeIds.add(definition.getRuntimeId())) {
-                itemRegistry.add(definition);
-            } else {
-                player.getLogger().warning("[{}|{}] has duplicate item definition: {}", this.player.getName(), this.connection.getServerInfo().getServerName(), definition);
-            }
-        }
-        codecHelper.setItemDefinitions(itemRegistry.build());
     }
 
     protected void setCameraPresetDefinitions(Collection<CameraPreset> presets) {
