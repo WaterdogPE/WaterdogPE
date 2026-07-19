@@ -82,13 +82,19 @@ public class BedrockServerSession extends BedrockSession implements ProxiedConne
         this.checkForClosed();
 
         DisconnectPacket packet = new DisconnectPacket();
+        CharSequence effectiveReason;
         if (reason == null || hideReason) {
             packet.setMessageSkipped(true);
-            reason = BedrockDisconnectReasons.DISCONNECTED;
+            effectiveReason = BedrockDisconnectReasons.DISCONNECTED;
+        } else {
+            effectiveReason = reason;
         }
-        packet.setKickMessage(reason);
+        packet.setKickMessage(effectiveReason);
         packet.setReason(DisconnectFailReason.DISCONNECTED);
         this.sendPacketImmediately(packet);
+        if (!isSubClient()) {
+            this.getPeer().blackholeAndCloseLater(effectiveReason);
+        }
     }
 
     public void setTransferQueueActive(boolean enable) {
