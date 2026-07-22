@@ -72,6 +72,9 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
             return Signals.CANCEL;
         }
         player.setAcceptItemComponentPacket(false);
+        if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_60)) {
+            setItemDefinitions(packet.getItems());
+        }
         return PacketSignal.UNHANDLED;
     }
 
@@ -191,6 +194,22 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
     @Override
     public ClientConnection getConnection() {
         return connection;
+    }
+
+    protected static final String BLOCKING_ID = "minecraft:shield";
+
+    protected void setItemDefinitions(Collection<ItemDefinition> definitions) {
+        BedrockCodecHelper codecHelper = this.player.getConnection()
+            .getPeer()
+            .getCodecHelper();
+        FakeDefinitionRegistry<ItemDefinition> itemRegistry = FakeDefinitionRegistry.createItemRegistry();
+        for (ItemDefinition definition : definitions) {
+            if (definition.getIdentifier().equals(BLOCKING_ID)) {
+                itemRegistry.getRuntimeMap().put(definition.getRuntimeId(), definition);
+                break;
+            }
+        }
+        codecHelper.setItemDefinitions(itemRegistry);
     }
 
     protected void setCameraPresetDefinitions(Collection<CameraPreset> presets) {

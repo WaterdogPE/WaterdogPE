@@ -139,7 +139,10 @@ public class InitialHandler extends AbstractDownstreamHandler {
                 .getCodecHelper();
         // Setup block and item registries
         codecHelper.setBlockDefinitions(FakeDefinitionRegistry.createBlockRegistry());
-        codecHelper.setItemDefinitions(FakeDefinitionRegistry.createItemRegistry());
+        // Setup item registry. After 1.21.60 these are sent with ItemComponentPacket instead.
+        if (this.player.getProtocol().isBeforeOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_50)) {
+            setItemDefinitions(packet.getItemDefinitions());
+        }
         // Enable runtimeId rewrite
         this.player.setCanRewrite(true);
 
