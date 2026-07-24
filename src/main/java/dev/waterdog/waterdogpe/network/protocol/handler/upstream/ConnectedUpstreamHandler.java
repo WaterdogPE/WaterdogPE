@@ -85,15 +85,14 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler implements
 
     @Override
     public final PacketSignal handle(TextPacket packet) {
-        String oldMessage = packet.getMessage();
-        PlayerChatEvent event = new PlayerChatEvent(this.player, oldMessage);
+        PlayerChatEvent event = new PlayerChatEvent(this.player, packet.getMessage());
         ProxyServer.getInstance().getEventManager().callEvent(event);
 
         if (event.isCancelled()) {
             return Signals.CANCEL;
         }
 
-        if (!oldMessage.equals(event.getMessage())) {
+        if (event.isChanged()) {
             packet.setMessage(event.getMessage());
             return PacketSignal.HANDLED;
         }
