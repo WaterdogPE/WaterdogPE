@@ -14,6 +14,7 @@
  */
 
 package dev.waterdog.waterdogpe.network.protocol.rewrite;
+import dev.waterdog.waterdogpe.network.protocol.PacketUtils;
 import org.cloudburstmc.protocol.bedrock.data.HudVisibility;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityLinkData;
@@ -125,9 +126,10 @@ public class EntityTracker implements BedrockPacketHandler {
     public PacketSignal handle(PlayerListPacket packet) {
         List<PlayerListPacket.Entry> entries = packet.getEntries();
         for (PlayerListPacket.Entry entry : entries) {
-            if (packet.getAction() == PlayerListPacket.Action.ADD) {
+            PlayerListPacket.Action action = PacketUtils.getAction(packet, entry);
+            if (action == PlayerListPacket.Action.ADD) {
                 this.player.getPlayers().add(entry.getUuid());
-            } else if (packet.getAction() == PlayerListPacket.Action.REMOVE) {
+            } else if (action == PlayerListPacket.Action.REMOVE) {
                 this.player.getPlayers().remove(entry.getUuid());
             }
         }
