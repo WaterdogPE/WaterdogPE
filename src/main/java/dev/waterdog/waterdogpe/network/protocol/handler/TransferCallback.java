@@ -156,6 +156,8 @@ public class TransferCallback {
         soundPacket.setStoppingAllSound(true);
         this.player.sendPacketImmediately(soundPacket);
 
+        this.player.clearActionBar();
+
         injectPosition(this.player.getConnection(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());
 
         if (!rewriteData.hasImmobileFlag()) {
