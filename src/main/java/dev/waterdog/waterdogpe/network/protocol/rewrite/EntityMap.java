@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.protocol.rewrite;
 
+import dev.waterdog.waterdogpe.network.protocol.PacketUtils;
 import it.unimi.dsi.fastutil.longs.LongListIterator;
 import org.cloudburstmc.protocol.bedrock.data.camera.CameraAttachToEntityInstruction;
 import org.cloudburstmc.protocol.bedrock.data.debugshape.DebugShape;
@@ -242,13 +243,12 @@ public class EntityMap implements BedrockPacketHandler {
 
     @Override
     public PacketSignal handle(PlayerListPacket packet) {
-        if (packet.getAction() != PlayerListPacket.Action.ADD) {
-            return PacketSignal.UNHANDLED;
-        }
-
         PacketSignal signal = PacketSignal.UNHANDLED;
-
         for (PlayerListPacket.Entry entry : packet.getEntries()) {
+            PlayerListPacket.Action action = PacketUtils.getAction(packet, entry);
+            if (action != PlayerListPacket.Action.ADD) {
+                continue;
+            }
             long rewriteId = PlayerRewriteUtils.rewriteId(entry.getEntityId(), this.data.getEntityId(), this.data.getOriginalEntityId());
             if (rewriteId != entry.getEntityId()) {
                 signal = PacketSignal.HANDLED;
