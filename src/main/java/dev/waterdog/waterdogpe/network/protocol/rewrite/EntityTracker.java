@@ -173,17 +173,24 @@ public class EntityTracker implements BedrockPacketHandler {
 
     @Override
     public final PacketSignal handle(SetScorePacket packet) {
-        switch(packet.getAction()) {
-            case SET:
-                for(ScoreInfo info : packet.getInfos()) {
+        SetScorePacket.Action action = packet.getAction();
+        if (action == SetScorePacket.Action.SET) {
+            for (ScoreInfo info : packet.getInfos()) {
+                this.player.getScoreInfos().put(info.getScoreboardId(), info);
+            }
+        } else if (action == SetScorePacket.Action.REMOVE) {
+            for (ScoreInfo info : packet.getInfos()) {
+                this.player.getScoreInfos().remove(info.getScoreboardId());
+            }
+        } else {
+            // Since 26.40 the ScorerType.INVALID is used for REMOVE action
+            for (ScoreInfo info : packet.getInfos()) {
+                if (info.getType() == ScoreInfo.ScorerType.INVALID) {
+                    this.player.getScoreInfos().remove(info.getScoreboardId());
+                } else {
                     this.player.getScoreInfos().put(info.getScoreboardId(), info);
                 }
-                break;
-            case REMOVE:
-                for(ScoreInfo info : packet.getInfos()) {
-                    this.player.getScoreInfos().remove(info.getScoreboardId());
-                }
-                break;
+            }
         }
         return PacketSignal.UNHANDLED;
     }
