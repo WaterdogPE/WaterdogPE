@@ -308,8 +308,13 @@ public class PlayerRewriteUtils {
             return;
         }
         SetScorePacket packet = new SetScorePacket();
-        packet.setAction(SetScorePacket.Action.REMOVE);
-        packet.getInfos().addAll(scoreInfos.values());
+        packet.setAction(SetScorePacket.Action.REMOVE); // For backwards compatibility
+        for (ScoreInfo info : scoreInfos.values()) {
+            // Since 26.40 the ScorerType.INVALID is used for REMOVE action
+            packet.getInfos().add(new ScoreInfo(info.getScoreboardId(),
+                info.getObjectiveId(),
+                info.getScore()));
+        }
         session.sendPacket(packet);
     }
 

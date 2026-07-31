@@ -22,4 +22,5 @@ public class PacketUtils {
   public static PlayerListPacket.Action getAction(PlayerListPacket packet, PlayerListPacket.Entry entry) {
     return entry.getAction() != null ? entry.getAction() : packet.getAction();
   }
+
 }
