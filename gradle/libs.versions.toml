@@ -1,6 +1,6 @@
 [versions]
 raklib = "1.1.0.CR1-SNAPSHOT"
-protocol = "3.0.0.Beta12-SNAPSHOT"
+protocol = "3.0.0.Beta13-SNAPSHOT"
 log4j = "2.25.4"
 jline = "3.30.6"
 netty = "4.1.135.Final"
