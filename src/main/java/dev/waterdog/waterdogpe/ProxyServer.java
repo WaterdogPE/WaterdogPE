@@ -427,7 +427,8 @@ public class ProxyServer {
 
         Command command = this.getCommandMap().getCommand(args[0]);
         if (command == null) {
-            return false;
+            String[] unknownArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
+            return this.commandMap.handleCommand(sender, args[0], unknownArgs);
         }
 
         String[] shiftedArgs;
