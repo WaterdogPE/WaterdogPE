@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.protocol.rewrite;
 
 import dev.waterdog.waterdogpe.network.protocol.PacketUtils;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import it.unimi.dsi.fastutil.longs.LongListIterator;
 import org.cloudburstmc.protocol.bedrock.data.camera.CameraAttachToEntityInstruction;
 import org.cloudburstmc.protocol.bedrock.data.debugshape.DebugShape;
@@ -247,6 +248,12 @@ public class EntityMap implements BedrockPacketHandler {
         for (PlayerListPacket.Entry entry : packet.getEntries()) {
             PlayerListPacket.Action action = PacketUtils.getAction(packet, entry);
             if (action != PlayerListPacket.Action.ADD) {
+                continue;
+            }
+            // Since 26.40 the client refuses to spawn when the entityId of its own
+            // player list entry differs from the id sent by the downstream server.
+            if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_26_40)
+                    && entry.getUuid().equals(this.player.getUniqueId())) {
                 continue;
             }
             long rewriteId = PlayerRewriteUtils.rewriteId(entry.getEntityId(), this.data.getEntityId(), this.data.getOriginalEntityId());
