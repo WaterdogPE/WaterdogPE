@@ -270,17 +270,19 @@ public class PlayerRewriteUtils {
             return;
         }
 
-        int effectsCount;
+        int maxEffectId;
         if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_130)) {
-            effectsCount = 37;
+            maxEffectId = 37;
         } else if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_0)) {
-            effectsCount = 36;
+            maxEffectId = 36;
         } else if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_18_0)) {
-            effectsCount = 30;
+            maxEffectId = 30;
+        } else if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_11)) {
+            maxEffectId = 29;
         } else {
-            effectsCount = 28;
+            maxEffectId = 27;
         }
-        for (int i = 0; i < effectsCount; i++) {
+        for (int i = 0; i <= maxEffectId; i++) {
             injectRemoveEntityEffect(session, runtimeId, i);
         }
         SetEntityDataPacket packet = new SetEntityDataPacket();
