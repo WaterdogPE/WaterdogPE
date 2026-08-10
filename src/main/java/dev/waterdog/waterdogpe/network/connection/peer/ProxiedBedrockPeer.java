@@ -103,17 +103,38 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     }
 
     @Override
-    protected void flushQueue() {
-        if (this.packetQueue.isEmpty()) {
+    protected void flushPacketQueue() {
+        if (this.closed.get()) {
+            this.flushScheduled.set(false);
+            // Release anything enqueued after onClose() drained the queue.
+            this.free();
             return;
         }
-        BedrockBatchWrapper batch = BedrockBatchWrapper.newInstance();
-
-        BedrockPacketWrapper packet;
-        while ((packet = this.packetQueue.poll()) != null) {
-            batch.getPackets().add(packet);
+        if (this.closing.get()) {
+            // Once a disconnect is requested nothing more is written; the queue
+            // is freed by onClose(), which is guaranteed to follow.
+            this.flushScheduled.set(false);
+            return;
         }
-        this.channel.writeAndFlush(batch);
+
+        try {
+            BedrockBatchWrapper batch = BedrockBatchWrapper.newInstance();
+
+            BedrockPacketWrapper packet;
+            while ((packet = this.packetQueue.poll()) != null) {
+                batch.getPackets().add(packet);
+            }
+            if (!batch.getPackets().isEmpty()) {
+                this.channel.writeAndFlush(batch);
+            }
+        } finally {
+            this.flushScheduled.set(false);
+
+            // A producer can enqueue after the final poll but before the flag is cleared.
+            if (!this.closing.get() && !this.closed.get() && !this.packetQueue.isEmpty()) {
+                this.schedulePacketFlush();
+            }
+        }
     }
 
     public void sendPacket(BedrockBatchWrapper wrapper) {
@@ -131,23 +152,13 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         }
         if (!(wrapper.getAlgorithm() instanceof PacketCompressionAlgorithm)) {
             wrapper.setCompressed(null); // Do not allow using unsupported algorithms when sending to client
-        } else if (this.version.isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) && (this.compressionStrategy == null || 
+        } else if (this.version.isBefore(ProtocolVersion.MINECRAFT_PE_1_20_60) && (this.compressionStrategy == null ||
                 !Objects.equals(wrapper.getAlgorithm(), this.compressionStrategy.getDefaultCompression().getAlgorithm()))) {
             wrapper.setCompressed(null); // Before 1.20.60 dynamic compression is not supported
         }
 
-        this.onTick();
+        this.flushPacketQueue();
         this.getChannel().writeAndFlush(wrapper);
-    }
-
-    @Override
-    public void sendPacketImmediately(int senderClientId, int targetClientId, BedrockPacket packet) {
-        this.sendPacket(senderClientId, targetClientId, packet);
-        if (this.channel.eventLoop().inEventLoop()) {
-            this.onTick();
-        } else {
-            this.channel.eventLoop().execute(this::onTick);
-        }
     }
 
     @Override
