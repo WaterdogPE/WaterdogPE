@@ -98,25 +98,23 @@ public class SimpleCommandMap implements CommandMap {
 
     @Override
     public boolean handleCommand(CommandSender sender, String commandName, String[] args) {
-        Command command = this.commandsMap.get(commandName.toLowerCase());
-        if (command != null) {
-            this.execute(command, sender, null, args);
-            return true;
-        }
-
-        Command aliasCommand = this.aliasesMap.get(commandName.toLowerCase());
-        if (aliasCommand != null) {
-            this.execute(aliasCommand, sender, commandName, args);
-            return true;
-        }
-
-        if (!sender.isPlayer()) { // Player commands may be handled by servers
-            sender.sendMessage(new TranslationContainer("waterdog.command.unknown"));
-        }
-        return false;
+        return this.handleCommand(sender, this.getCommand(commandName), commandName, args);
     }
 
-    private void execute(Command command, CommandSender sender, String alias, String[] args) {
+    @Override
+    public boolean handleCommand(CommandSender sender, Command command, String alias, String[] args) {
+        if (command == null) {
+            if (!sender.isPlayer()) { // Player commands may be handled by servers
+                sender.sendMessage(new TranslationContainer("waterdog.command.unknown"));
+            }
+            return false;
+        }
+        // Alias stays null when the command was invoked by its registered name
+        this.executeInternal(sender, command, this.isRegistered(alias) ? null : alias, args);
+        return true;
+    }
+
+    private void executeInternal(CommandSender sender, Command command, String alias, String[] args) {
         boolean permission = sender.hasPermission(command.getPermission());
         if (!permission) {
             sender.sendMessage(new TextContainer(command.getPermissionMessage(), command.getName(), command.getPermission()));

@@ -64,6 +64,14 @@ public interface CommandMap {
      */
     boolean handleCommand(CommandSender sender, String command, String[] args);
 
+    /**
+     * Same as {@link #handleCommand(CommandSender, String, String[])}, but for an already resolved command.
+     * A null command is treated as unknown.
+     *
+     * @param alias the name the command was invoked with
+     */
+    boolean handleCommand(CommandSender sender, Command command, String alias, String[] args);
+
     String getCommandPrefix();
 
     Object2ObjectMap<String, Command> getCommands();
