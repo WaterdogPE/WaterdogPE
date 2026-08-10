@@ -61,6 +61,7 @@ import dev.waterdog.waterdogpe.utils.reporting.ErrorReporting;
 import dev.waterdog.waterdogpe.utils.types.TextContainer;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import io.netty.channel.EventLoopGroup;
+import io.netty.util.internal.EmptyArrays;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
@@ -421,27 +422,22 @@ public class ProxyServer {
         }
 
         String[] args = message.split(" ");
-        if (args.length < 1) {
-            return false;
-        }
-
-        Command command = this.getCommandMap().getCommand(args[0]);
-        if (command == null) {
-            return false;
-        }
+        Command command = this.commandMap.getCommand(args[0]);
 
         String[] shiftedArgs;
-        if (command.getSettings().isQuoteAware()) { // Quote aware parsing
+        if (command != null && command.getSettings().isQuoteAware()) { // Quote aware parsing
             List<String> arguments = CommandUtils.parseArguments(message);
             arguments.remove(0);
             shiftedArgs = arguments.toArray(String[]::new);
         } else {
-            shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
+            shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : EmptyArrays.EMPTY_STRINGS;
         }
-
         DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs);
         this.eventManager.callEvent(event);
-        return !event.isCancelled() && this.commandMap.handleCommand(sender, args[0], shiftedArgs);
+        if (event.isCancelled()) {
+            return true; // Consumed, must not be passed to the downstream server
+        }
+        return this.commandMap.handleCommand(sender, command, args[0], shiftedArgs);
     }
 
     public boolean isRunning() {
