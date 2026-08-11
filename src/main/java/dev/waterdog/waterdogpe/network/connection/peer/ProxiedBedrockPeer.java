@@ -262,6 +262,14 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     }
 
     public void blackholeAndCloseLater(CharSequence reason) {
+        if (this.channel.eventLoop().inEventLoop()) {
+            this.blackholeAndCloseLater0(reason);
+        } else {
+            this.channel.eventLoop().execute(() -> this.blackholeAndCloseLater0(reason));
+        }
+    }
+
+    private void blackholeAndCloseLater0(CharSequence reason) {
         if (!this.closing.compareAndSet(false, true)) {
             return;
         }
