@@ -432,12 +432,12 @@ public class ProxyServer {
         } else {
             shiftedArgs = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : EmptyArrays.EMPTY_STRINGS;
         }
-        DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs);
+        DispatchCommandEvent event = new DispatchCommandEvent(sender, args[0], shiftedArgs, command);
         this.eventManager.callEvent(event);
-        if (event.isCancelled()) {
-            return true; // Consumed, must not be passed to the downstream server
-        }
-        return this.commandMap.handleCommand(sender, command, args[0], shiftedArgs);
+
+        // Canceling only skips the execution, the consume state decides if downstream still sees the command
+        boolean consumed = !event.isCancelled() && this.commandMap.handleCommand(sender, command, args[0], shiftedArgs);
+        return event.isConsumed(consumed);
     }
 
     public boolean isRunning() {
