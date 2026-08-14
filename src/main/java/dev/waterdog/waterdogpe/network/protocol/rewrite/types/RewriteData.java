@@ -17,6 +17,8 @@ package dev.waterdog.waterdogpe.network.protocol.rewrite.types;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.Setter;
 import dev.waterdog.waterdogpe.network.protocol.user.PlayerRewriteUtils;
@@ -25,6 +27,7 @@ import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.data.BlockPropertyData;
 import org.cloudburstmc.protocol.bedrock.data.GameRuleData;
+import org.cloudburstmc.protocol.bedrock.data.debugshape.DebugShape;
 import org.cloudburstmc.protocol.common.PacketSignal;
 
 import java.util.List;
@@ -92,6 +95,9 @@ public class RewriteData {
 
     @Getter
     private BedrockCodecHelper codecHelper;
+
+    @Getter
+    private final Long2ObjectMap<DebugShape> debugShapes = new Long2ObjectOpenHashMap<>();
 
     public RewriteData() {
         this.proxyName = ProxyServer.getInstance().getConfiguration().getName();

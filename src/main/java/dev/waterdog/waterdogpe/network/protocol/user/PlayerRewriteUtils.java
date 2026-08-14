@@ -27,6 +27,10 @@ import org.cloudburstmc.math.vector.Vector2f;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.*;
+import org.cloudburstmc.protocol.bedrock.data.debugshape.DebugArrow;
+import org.cloudburstmc.protocol.bedrock.data.debugshape.DebugLine;
+import org.cloudburstmc.protocol.bedrock.data.debugshape.DebugShape;
+import org.cloudburstmc.protocol.bedrock.data.debugshape.DebugText;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataMap;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataTypes;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
@@ -319,8 +323,8 @@ public class PlayerRewriteUtils {
         for (ScoreInfo info : scoreInfos.values()) {
             // Since 26.40 the ScorerType.INVALID is used for REMOVE action
             packet.getInfos().add(new ScoreInfo(info.getScoreboardId(),
-                info.getObjectiveId(),
-                info.getScore()));
+                    info.getObjectiveId(),
+                    info.getScore()));
         }
         session.sendPacket(packet);
     }
@@ -423,7 +427,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectChunkCacheBlobs(ProxiedConnection session, LongSet blobs) {
-        if (session == null || !session.isConnected()){
+        if (session == null || !session.isConnected()) {
             return;
         }
 
@@ -466,7 +470,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectEntityImmobile(ProxiedConnection session, long runtimeId, boolean immobile) {
-        if (session == null || !session.isConnected()){
+        if (session == null || !session.isConnected()) {
             return;
         }
 
@@ -480,7 +484,7 @@ public class PlayerRewriteUtils {
     }
 
     public static void injectForceCloseInventory(ProxiedConnection session, long runtimeId) {
-        if (session == null || !session.isConnected()){
+        if (session == null || !session.isConnected()) {
             return;
         }
         // The client closes every open inventory, including its own window which ContainerClosePacket can not close,
@@ -493,5 +497,29 @@ public class PlayerRewriteUtils {
 
     public static boolean checkForImmobileFlag(EntityDataMap dataMap) {
         return dataMap != null && dataMap.getFlags() != null && Boolean.TRUE.equals(dataMap.getFlags().get(EntityFlag.NO_AI));
+    }
+
+    public static void injectClearDebugShapes(ProxiedConnection session, Long2ObjectMap<DebugShape> debugShapes) {
+        final DebugDrawerPacket packet = new DebugDrawerPacket();
+        final List<DebugShape> shapes = new ObjectArrayList<>();
+
+        for (Long2ObjectMap.Entry<DebugShape> entry : debugShapes.long2ObjectEntrySet()) {
+            final DebugShape payload = entry.getValue();
+            payload.setId(entry.getLongKey());
+            payload.setScale(0f);
+            payload.setAttachedToEntityId(null);
+
+            switch (payload.getType()) {
+                case LINE -> ((DebugLine) payload).setLineEndPosition(payload.getPosition());
+                case ARROW -> ((DebugArrow) payload).setArrowEndPosition(payload.getPosition());
+                case TEXT -> ((DebugText) payload).setText("");
+            }
+
+            shapes.add(payload);
+        }
+
+        packet.getShapes().addAll(shapes);
+
+        session.sendPacketImmediately(packet);
     }
 }
