@@ -198,10 +198,16 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
                 return PacketSignal.HANDLED;
             }
 
-            // Thank you Mojang: this version includes protocol changes, but protocol version was not increased.
+            // BLAMEMOJANG: these versions includes protocol changes, but protocol version was not increased.
             if (protocol.equals(ProtocolVersion.MINECRAFT_PE_1_19_60) && handshakeEntry.getClientData().has("GameVersion") &&
-                    ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(handshakeEntry.getClientData().get("GameVersion").getAsString())) {
+                ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(handshakeEntry.getClientData().get("GameVersion").getAsString())) {
                 handshakeEntry.setProtocol(protocol = ProtocolVersion.MINECRAFT_PE_1_19_62);
+                this.session.getPeer().setProtocol(protocol);
+            }
+
+            if (protocol.equals(ProtocolVersion.MINECRAFT_PE_1_26_40) && handshakeEntry.getClientData().has("GameVersion") &&
+                ProtocolVersion.MINECRAFT_PE_1_26_44.getMinecraftVersion().equals(handshakeEntry.getClientData().get("GameVersion").getAsString())) {
+                handshakeEntry.setProtocol(protocol = ProtocolVersion.MINECRAFT_PE_1_26_44);
                 this.session.getPeer().setProtocol(protocol);
             }
 
