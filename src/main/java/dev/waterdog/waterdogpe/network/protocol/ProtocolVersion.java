@@ -24,7 +24,7 @@ import lombok.ToString;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
 import org.cloudburstmc.protocol.bedrock.codec.v2168.Bedrock_v2168;
 import org.cloudburstmc.protocol.bedrock.codec.v2168.Bedrock_v2168_hotfix4;
-import org.cloudburstmc.protocol.bedrock.codec.v2168.Bedrock_v2169;
+import org.cloudburstmc.protocol.bedrock.codec.v2169.Bedrock_v2169;
 import org.cloudburstmc.protocol.bedrock.codec.v1001.Bedrock_v1001;
 import org.cloudburstmc.protocol.bedrock.codec.v313.Bedrock_v313;
 import org.cloudburstmc.protocol.bedrock.codec.v332.Bedrock_v332;
