@@ -1,5 +1,4 @@
 [versions]
-# https://repo.opencollab.dev/maven-snapshots/org/cloudburstmc/netty/netty-transport-raknet/1.1.0.CR1-SNAPSHOT/netty-transport-raknet-1.1.0.CR1-20260820.174333-6-sources.jar
 raklib = "1.1.0.CR1-20260820.174333-6"
 protocol = "3.0.0.Beta13-SNAPSHOT"
 log4j = "2.25.4"
