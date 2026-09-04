@@ -22,8 +22,10 @@ import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.protocol.bedrock.data.ClientStoreEntrypointConfiguration;
 import org.cloudburstmc.protocol.bedrock.data.GameType;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
+import org.cloudburstmc.protocol.bedrock.data.ServerConfigurationJoinInfo;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.event.defaults.ServerTransferEvent;
@@ -261,6 +263,19 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         injectSetDifficulty(this.player.getConnection(), packet.getDifficulty());
         injectGameRules(this.player.getConnection(), packet.getGamerules());
         injectTime(this.player.getConnection(), packet.getDayCycleStopTime());
+
+        // Client reads the store entrypoint only from the StartGamePacket sent on the first join,
+        // therefore it has to be updated explicitly when the new server advertises a different one.
+        if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_26_20)) {
+            ServerConfigurationJoinInfo joinInfo = packet.getServerConfigurationJoinInfo();
+            ClientStoreEntrypointConfiguration storeEntrypoint = joinInfo == null ? null : joinInfo.getClientStoreEntrypointConfiguration();
+            if (!Objects.equals(rewriteData.getStoreEntrypoint(), storeEntrypoint)) {
+                rewriteData.setStoreEntrypoint(storeEntrypoint);
+                ServerStoreInfoPacket storeInfoPacket = new ServerStoreInfoPacket();
+                storeInfoPacket.setStore(storeEntrypoint);
+                this.player.getConnection().sendPacket(storeInfoPacket);
+            }
+        }
 
         this.connection.sendPacket(this.player.getLoginData().getChunkRadius());
 

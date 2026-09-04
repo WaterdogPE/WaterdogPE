@@ -60,6 +60,12 @@ public class ConnectedDownstreamHandler extends AbstractDownstreamHandler {
     }
 
     @Override
+    public PacketSignal handle(ServerStoreInfoPacket packet) {
+        this.player.getRewriteData().setStoreEntrypoint(packet.getStore());
+        return PacketSignal.UNHANDLED;
+    }
+
+    @Override
     public PacketSignal handle(TransferPacket packet) {
         if (!this.player.getProxy().getConfiguration().useFastTransfer()) {
             return PacketSignal.UNHANDLED;

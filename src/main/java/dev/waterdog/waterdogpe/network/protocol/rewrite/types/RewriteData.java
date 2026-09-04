@@ -24,6 +24,7 @@ import org.cloudburstmc.math.vector.Vector2f;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.data.BlockPropertyData;
+import org.cloudburstmc.protocol.bedrock.data.ClientStoreEntrypointConfiguration;
 import org.cloudburstmc.protocol.bedrock.data.GameRuleData;
 import org.cloudburstmc.protocol.common.PacketSignal;
 
@@ -73,6 +74,11 @@ public class RewriteData {
      */
     @Getter
     private StartGameSettings startGameSettings;
+    /**
+     * The store entrypoint currently known to the client.
+     */
+    @Getter
+    private ClientStoreEntrypointConfiguration storeEntrypoint;
 
     @Getter
     private Vector3f spawnPosition;

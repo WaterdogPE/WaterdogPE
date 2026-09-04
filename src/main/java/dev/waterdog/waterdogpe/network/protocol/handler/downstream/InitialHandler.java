@@ -20,6 +20,7 @@ import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.protocol.registry.FakeDefinitionRegistry;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
+import org.cloudburstmc.protocol.bedrock.data.ServerConfigurationJoinInfo;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.event.defaults.InitialServerConnectedEvent;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
@@ -132,6 +133,10 @@ public class InitialHandler extends AbstractDownstreamHandler {
         } else {
             rewriteData.setBlockProperties(packet.getBlockProperties());
             this.player.getRewriteMaps().setBlockMap(new BlockMapSimple(this.player));
+        }
+
+        if (packet.getServerConfigurationJoinInfo() != null) {
+            rewriteData.setStoreEntrypoint(packet.getServerConfigurationJoinInfo().getClientStoreEntrypointConfiguration());
         }
 
         BedrockCodecHelper codecHelper = this.player.getConnection()
