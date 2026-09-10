@@ -53,7 +53,14 @@ public class PackManager {
     private static final long CHUNK_SIZE = 1024 * 256;
 
     private static final PathMatcher ZIP_PACK_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.{zip,mcpack}");
-    private static final ResourcePackStackPacket.Entry EDU_PACK = new ResourcePackStackPacket.Entry("0fba4063-dba1-4281-9b89-ff9390653530", "1.0.0", "");
+    private static final List<ResourcePackStackPacket.Entry> EDU_PACKS = List.of(
+            new ResourcePackStackPacket.Entry("b41c2785-c512-4a49-af56-3a87afd47c57", "1.21.30", ""),
+            new ResourcePackStackPacket.Entry("a4df0cb3-17be-4163-88d7-fcf7002b935d", "1.21.20", ""),
+            new ResourcePackStackPacket.Entry("d19adffe-a2e1-4b02-8436-ca4583368c89", "1.21.10", ""),
+            new ResourcePackStackPacket.Entry("85d5603d-2824-4b21-8044-34f441f4fce1", "1.21.0", ""),
+            new ResourcePackStackPacket.Entry("e977cd13-0a11-4618-96fb-03dfe9c43608", "1.20.60", ""),
+            new ResourcePackStackPacket.Entry("0674721c-a0aa-41a1-9ba8-1ed33ea3e7ed", "1.20.50", ""),
+            new ResourcePackStackPacket.Entry("0fba4063-dba1-4281-9b89-ff9390653530", "1.0.0", ""));
 
     private final ProxyServer proxy;
     // Rebuilt and swapped in as a whole on (re)load so joining players read a complete, consistent set.
@@ -415,7 +422,7 @@ public class PackManager {
         }
 
         if (this.proxy.getConfiguration().enableEducationFeatures()) {
-            stackPacket.getBehaviorPacks().add(EDU_PACK);
+            stackPacket.getResourcePacks().addAll(EDU_PACKS);
         }
         ResourcePacksRebuildEvent event = new ResourcePacksRebuildEvent(infoPacket, stackPacket);
         this.proxy.getEventManager().callEvent(event);
