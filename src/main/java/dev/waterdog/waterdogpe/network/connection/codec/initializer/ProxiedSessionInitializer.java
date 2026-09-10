@@ -16,9 +16,12 @@
 package dev.waterdog.waterdogpe.network.connection.codec.initializer;
 
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.network.connection.TransportProfile;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.BedrockBatchDecoder;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.BedrockBatchEncoder;
-import dev.waterdog.waterdogpe.network.connection.codec.batch.FrameIdCodec;
+import dev.waterdog.waterdogpe.network.connection.codec.batch.NetherNetFrameCodec;
+import dev.waterdog.waterdogpe.network.connection.codec.batch.RakNetFrameCodec;
+import dev.waterdog.waterdogpe.network.connection.codec.batch.TransportFrameCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.ProxiedCompressionCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec_v1;
@@ -29,7 +32,6 @@ import io.netty.channel.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
-import org.cloudburstmc.netty.channel.raknet.packet.RakMessage;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 import org.cloudburstmc.protocol.bedrock.BedrockSession;
 import org.cloudburstmc.protocol.bedrock.data.CompressionAlgorithm;
@@ -40,7 +42,14 @@ import org.cloudburstmc.protocol.common.util.Zlib;
 @Log4j2
 @AllArgsConstructor
 public abstract class ProxiedSessionInitializer<T extends BedrockSession> extends ChannelInitializer<Channel> {
-    public static final FrameIdCodec<RakMessage> RAKNET_FRAME_CODEC = FrameIdCodec.RAK_CODEC.apply(0xfe);
+    public static final RakNetFrameCodec RAKNET_FRAME_CODEC = new RakNetFrameCodec();
+    public static final NetherNetFrameCodec NETHERNET_FRAME_CODEC = new NetherNetFrameCodec();
+
+    /**
+     * NetherNet batching, compression and packet framing follow the same rules as RakNet
+     * protocol 11.
+     */
+    public static final int NETHERNET_CODEC_VERSION = 11;
     public static final BedrockBatchDecoder BATCH_DECODER = new BedrockBatchDecoder();
 
     public static final CompressionStrategy ZLIB_RAW_STRATEGY = new SimpleCompressionStrategy(new ZlibCompression(Zlib.RAW));
@@ -52,15 +61,28 @@ public abstract class ProxiedSessionInitializer<T extends BedrockSession> extend
 
     @Override
     protected void initChannel(Channel channel) {
-        int rakVersion = channel.config().getOption(RakChannelOption.RAK_PROTOCOL_VERSION);
+        TransportProfile profile = this.getTransportProfile(channel);
+        int rakVersion = profile.codecVersion();
 
         channel.pipeline()
-                .addLast(FrameIdCodec.NAME, RAKNET_FRAME_CODEC)
+                .addLast(TransportFrameCodec.NAME, this.getFrameCodec())
                 .addLast(CompressionCodec.NAME, new ProxiedCompressionCodec(getCompressionStrategy(this.proxy.getConfiguration().getCompression(), rakVersion, true), false))
                 .addLast(BedrockBatchDecoder.NAME, BATCH_DECODER)
                 .addLast(BedrockBatchEncoder.NAME, new BedrockBatchEncoder())
                 .addLast(BedrockPacketCodec.NAME, getPacketCodec(rakVersion))
-                .addLast(BedrockPeer.NAME, new ProxiedBedrockPeer(channel, this::createSession, proxy));
+                .addLast(BedrockPeer.NAME, new ProxiedBedrockPeer(channel, this::createSession, proxy, profile));
+    }
+
+    /**
+     * Framing ahead of the compression codec. Registered under {@link TransportFrameCodec#NAME} whatever
+     * the transport is, so everything above it can be shared.
+     */
+    protected ChannelHandler getFrameCodec() {
+        return RAKNET_FRAME_CODEC;
+    }
+
+    protected TransportProfile getTransportProfile(Channel channel) {
+        return TransportProfile.raknet(channel.config().getOption(RakChannelOption.RAK_PROTOCOL_VERSION));
     }
 
     protected final T createSession(BedrockPeer peer, int subClientId) {

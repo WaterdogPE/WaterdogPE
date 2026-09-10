@@ -19,11 +19,10 @@ import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.cubespace.Yamler.Config.Comment;
 import net.cubespace.Yamler.Config.Path;
-import net.cubespace.Yamler.Config.YamlConfig;
 import org.cloudburstmc.netty.channel.raknet.RakConstants;
 
 @Getter
-public class NetworkSettings extends YamlConfig {
+public class NetworkSettings extends SettingsSection {
 
     @Path("enable_ipv6")
     @Accessors(fluent = true)

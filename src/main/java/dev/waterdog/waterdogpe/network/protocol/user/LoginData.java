@@ -72,6 +72,12 @@ public class LoginData {
     private final boolean shouldSendCertificateChain;
 
     /**
+     * The credentials as the client sent them. Kept so they can be forwarded verbatim to a
+     * downstream that authenticates players itself, which is only possible where the transport
+     * carries no Bedrock encryption.
+     */
+
+    /**
      * Used to construct new login packet using this.clientData and this.extraData signed by this.keyPair.
      * This method should be called everytime client data is changed. Otherwise player will join to downstream using old data.
      *
@@ -94,6 +100,9 @@ public class LoginData {
         return loginPacket;
     }
 
+    /**
+     * The login to send downstream, signed by the proxy.
+     */
     public LoginPacket getLoginPacket() {
         if (this.loginPacket == null) {
             this.rebuildLoginPacket();

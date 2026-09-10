@@ -16,9 +16,11 @@
 package dev.waterdog.waterdogpe.network.connection.peer;
 
 import dev.waterdog.waterdogpe.ProxyServer;
-import dev.waterdog.waterdogpe.network.connection.codec.batch.FrameIdCodec;
+import dev.waterdog.waterdogpe.network.connection.TransportProfile;
+import dev.waterdog.waterdogpe.network.connection.codec.batch.TransportFrameCodec;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.ProxiedCompressionCodec;
+import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedSessionInitializer;
 import dev.waterdog.waterdogpe.network.connection.codec.packet.BedrockPacketCodec;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import io.netty.channel.Channel;
@@ -27,6 +29,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
+import org.cloudburstmc.netty.channel.nethernet.NetherNetChannel;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
 import org.cloudburstmc.netty.handler.codec.raknet.common.RakSessionCodec;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
@@ -58,10 +61,17 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     private ProtocolVersion version = ProtocolVersion.oldest();
 
     private final ProxyServer proxy;
+    /**
+     * Resolved once by the initializer rather than read from the channel, because
+     * {@link BedrockPeer#getRakVersion()} only works on a RakNet channel.
+     */
+    @Getter
+    private final TransportProfile transportProfile;
 
-    public ProxiedBedrockPeer(Channel channel, BedrockSessionFactory factory, ProxyServer proxy) {
+    public ProxiedBedrockPeer(Channel channel, BedrockSessionFactory factory, ProxyServer proxy, TransportProfile transportProfile) {
         super(channel, factory);
         this.proxy = proxy;
+        this.transportProfile = transportProfile;
     }
 
     private void onBedrockBatch(BedrockBatchWrapper batch) {
@@ -200,9 +210,9 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         int protocolVersion = this.getCodec().getProtocolVersion();
         boolean useCtr = protocolVersion >= Bedrock_v428.CODEC.getProtocolVersion();
 
-        this.channel.pipeline().addAfter(FrameIdCodec.NAME, BedrockEncryptionEncoder.NAME,
+        this.channel.pipeline().addAfter(TransportFrameCodec.NAME, BedrockEncryptionEncoder.NAME,
                 new BedrockEncryptionEncoder(secretKey, EncryptionUtils.createCipher(useCtr, true, secretKey)));
-        this.channel.pipeline().addAfter(FrameIdCodec.NAME, BedrockEncryptionDecoder.NAME,
+        this.channel.pipeline().addAfter(TransportFrameCodec.NAME, BedrockEncryptionDecoder.NAME,
                 new BedrockEncryptionDecoder(secretKey, EncryptionUtils.createCipher(useCtr, false, secretKey)));
 
         log.info("Encryption enabled for {}", getSocketAddress());
@@ -216,13 +226,23 @@ public class ProxiedBedrockPeer extends BedrockPeer {
         throw new IllegalArgumentException("Unsupported compression algorithm: " + algorithm);
     }
 
+    /**
+     * Overridden so the strategy comes from the transport's own codec version. The inherited
+     * implementation resolves it from a RakNet channel option, which does not exist on NetherNet.
+     */
+    @Override
+    public void setCompression(PacketCompressionAlgorithm algorithm) {
+        Objects.requireNonNull(algorithm, "algorithm");
+        this.setCompression(ProxiedSessionInitializer.getCompressionStrategy(algorithm, this.transportProfile.codecVersion(), false));
+    }
+
     @Override
     public void setCompression(CompressionStrategy strategy) {
         boolean needsPrefix = this.getCodec().getProtocolVersion() >= ProtocolVersion.MINECRAFT_PE_1_20_60.getProtocol();
 
         ChannelHandler handler = this.channel.pipeline().get(CompressionCodec.NAME);
         if (handler == null) {
-            this.channel.pipeline().addAfter(FrameIdCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
+            this.channel.pipeline().addAfter(TransportFrameCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
         } else {
             this.channel.pipeline().replace(CompressionCodec.NAME, CompressionCodec.NAME, new ProxiedCompressionCodec(strategy, needsPrefix));
         }
@@ -236,6 +256,9 @@ public class ProxiedBedrockPeer extends BedrockPeer {
     public long getPing() {
         if (this.channel instanceof RakChannel rakChannel) {
             return rakChannel.rakPipeline().get(RakSessionCodec.class).getPing();
+        }
+        if (this.channel instanceof NetherNetChannel netherNetChannel) {
+            return netherNetChannel.getPing();
         }
         return 0;
     }

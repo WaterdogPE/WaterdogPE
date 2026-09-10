@@ -23,6 +23,7 @@ import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionT
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
+import dev.waterdog.waterdogpe.network.nethernet.TransportIdentityBinding;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeEntry;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -198,6 +199,17 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
                 return PacketSignal.HANDLED;
             }
 
+            // Without Bedrock encryption nothing else proves the sender holds the chain's key, so
+            // the transport identity has to. See TransportIdentityBinding.
+            if (strictAuth && !this.session.getPeer().getTransportProfile().supportsEncryption()) {
+                String mismatch = TransportIdentityBinding.mismatch(this.session.getPeer().getChannel(), handshakeEntry.getIdentityPublicKey());
+                if (mismatch != null) {
+                    this.onLoginFailed(handshakeEntry, null, "disconnectionScreen.notAuthenticated");
+                    this.proxy.getLogger().info("[{}|{}] <-> Upstream has disconnected, {}", this.session.getSocketAddress(), handshakeEntry.getDisplayName(), mismatch);
+                    return PacketSignal.HANDLED;
+                }
+            }
+
             // BLAMEMOJANG: these versions includes protocol changes, but protocol version was not increased.
             if (protocol.equals(ProtocolVersion.MINECRAFT_PE_1_19_60) && handshakeEntry.getClientData().has("GameVersion") &&
                 ProtocolVersion.MINECRAFT_PE_1_19_62.getMinecraftVersion().equals(handshakeEntry.getClientData().get("GameVersion").getAsString())) {
@@ -229,7 +241,8 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
                 return PacketSignal.HANDLED;
             }
 
-            if (this.proxy.getConfiguration().isUpstreamEncryption()) {
+            if (this.proxy.getConfiguration().isUpstreamEncryption()
+                    && this.session.getPeer().getTransportProfile().supportsEncryption()) {
                 HandshakeUtils.processEncryption(session, handshakeEntry.getIdentityPublicKey());
             } else {
                 this.finishConnection();

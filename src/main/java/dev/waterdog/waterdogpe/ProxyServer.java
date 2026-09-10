@@ -33,6 +33,8 @@ import dev.waterdog.waterdogpe.network.NetworkInterface;
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import dev.waterdog.waterdogpe.network.NetworkStartupException;
 import dev.waterdog.waterdogpe.network.RakNetInterface;
+import dev.waterdog.waterdogpe.network.nethernet.NetherNetInterface;
+import dev.waterdog.waterdogpe.network.nethernet.SignalingService;
 import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionType;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.ProxiedSessionInitializer;
 import dev.waterdog.waterdogpe.network.connection.codec.query.QueryHandler;
@@ -55,6 +57,7 @@ import dev.waterdog.waterdogpe.utils.ConfigurationManager;
 import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.utils.bstats.Metrics;
 import dev.waterdog.waterdogpe.utils.config.LangConfig;
+import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetworkSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import dev.waterdog.waterdogpe.utils.reporting.ErrorReporting;
@@ -112,6 +115,7 @@ public class ProxyServer {
     private final ServerInfoMap serverInfoMap = new ServerInfoMap();
 
     private final List<NetworkInterface> interfaces = new ObjectArrayList<>();
+    private NetherNetInterface netherNetInterface;
 
     @Getter
     private QueryHandler queryHandler;
@@ -276,6 +280,9 @@ public class ProxyServer {
         }
 
         this.registerInterface(new RakNetInterface(this));
+        // Registered even when disabled so plugins can see it; start() is a no-op until it is on.
+        this.netherNetInterface = new NetherNetInterface(this);
+        this.registerInterface(this.netherNetInterface);
 
         try {
             this.bootNetworks(bindAddress);
@@ -450,6 +457,18 @@ public class ProxyServer {
 
     public NetworkSettings getNetworkSettings() {
         return this.configurationManager.getProxyConfig().getNetworkSettings();
+    }
+
+    public NetherNetSettings getNetherNetSettings() {
+        return this.configurationManager.getProxyConfig().getNetherNetSettings();
+    }
+
+    /**
+     * Feeds NetherNet SDP offers into the proxy from outside, for {@code signaling.mode: external}
+     * or to answer on behalf of another node. Null until the proxy has booted.
+     */
+    public SignalingService getSignalingService() {
+        return this.netherNetInterface;
     }
 
     public LangConfig getLanguageConfig() {

@@ -47,7 +47,7 @@ public class ProxyConfig extends YamlConfig {
 
     @Path("listener.name")
     @Comment("The name that is shown up in the player list (pause menu)")
-    private String name = "§bWaterdog§3PE";
+    private String name = "WaterdogPE";
 
     @Path("listener.priorities")
     @Comment("The server priority list. If not changed by plugins, the proxy will connect the player to the first of those servers")
@@ -80,6 +80,10 @@ public class ProxyConfig extends YamlConfig {
     @Path("network_settings")
     @Comment("Connection and security related settings. Do NOT edit unless you know what you are doing!")
     private NetworkSettings networkSettings = new NetworkSettings();
+
+    @Path("nethernet")
+    @Comment("NetherNet transport settings.")
+    private NetherNetSettings netherNetSettings = new NetherNetSettings();
 
     @Path("permissions")
     @Comment("Case-Sensitive permission list for players (empty using {})")
@@ -219,6 +223,24 @@ public class ProxyConfig extends YamlConfig {
             this.addConverter(CompressionAlgorithmConverter.class);
         } catch (InvalidConverterException e) {
             ProxyServer.getInstance().getLogger().error("Error while initiating config converters", e);
+        }
+    }
+
+    @Override
+    public void save(boolean withComments) throws InvalidConfigurationException {
+        if (withComments) {
+            SettingsSection.describeSections(this);
+        }
+        super.save(withComments);
+    }
+
+    @Override
+    public void load() throws InvalidConfigurationException {
+        super.load();
+        // Yamler writes the file back only when a key is missing at the root, so a section that
+        // gained an option has to ask for it
+        if (SettingsSection.upgradedSections(this)) {
+            this.save();
         }
     }
 

@@ -40,6 +40,7 @@ public class HandshakeEntry {
     @Setter
     private ProtocolVersion protocol;
     private final boolean shouldSendCertificateChain;
+    /** The credentials exactly as the client sent them, kept for chain forwarding. */
 
     public HandshakeEntry(ECPublicKey identityPublicKey, JsonObject clientData, String xuid, UUID uuid, String displayName, String minecraftId, boolean xboxAuthed, ProtocolVersion protocol, boolean shouldSendCertificateChain) {
         this.identityPublicKey = identityPublicKey;

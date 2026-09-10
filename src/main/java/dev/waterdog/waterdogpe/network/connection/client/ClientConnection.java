@@ -45,6 +45,14 @@ public interface ClientConnection extends ProxiedConnection {
 
     void addDisconnectListener(Runnable listener);
 
+    /**
+     * Whether this transport carries Bedrock packet encryption. NetherNet does not, since the data
+     * channel is already inside DTLS.
+     */
+    default boolean supportsEncryption() {
+        return true;
+    }
+
     void disconnect();
 
     @Override

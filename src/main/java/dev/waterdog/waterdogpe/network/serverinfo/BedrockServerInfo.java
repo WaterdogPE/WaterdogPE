@@ -52,18 +52,22 @@ public class BedrockServerInfo extends ServerInfo {
 
     @Override
     public ServerInfoType getServerType() {
-        return ServerInfoType.BEDROCK;
+        return ServerInfoType.RAKNET;
     }
 
     @Override
     public Future<ClientConnection> createConnection(ProxiedPlayer player) {
+        return connect(player, this);
+    }
+
+    static Future<ClientConnection> connect(ProxiedPlayer player, ServerInfo serverInfo) {
         ProtocolVersion version = player.getProtocol();
         NetworkSettings networkSettings = player.getProxy().getNetworkSettings();
 
         // Just pick EventLoop here, and we can use it for our promise too
         EventLoop eventLoop = player.getProxy().getWorkerEventLoopGroup().next();
         Promise<ClientConnection> promise = eventLoop.newPromise();
-        InetSocketAddress remoteAddress = this.getResolvedAddress();
+        InetSocketAddress remoteAddress = serverInfo.getResolvedAddress();
         Bootstrap bootstrap = new Bootstrap()
                 .channelFactory(RakChannelFactory.client(EventLoops.getChannelType().getDatagramChannel()))
                 .group(eventLoop)
@@ -73,7 +77,7 @@ public class BedrockServerInfo extends ServerInfo {
                 .option(RakChannelOption.RAK_CONNECT_TIMEOUT, networkSettings.getConnectTimeout() * 1000L)
                 .option(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)
                 .option(RakChannelOption.RAK_MTU, networkSettings.getMaximumDownstreamMtu())
-                .handler(new ProxiedClientSessionInitializer(player, this, promise));
+                .handler(new ProxiedClientSessionInitializer(player, serverInfo, promise));
         if (networkSettings.randomDownstreamLoopbackAddress()
                 && remoteAddress.getAddress() instanceof Inet4Address
                 && remoteAddress.getAddress().isLoopbackAddress()

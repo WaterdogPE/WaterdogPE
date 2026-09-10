@@ -71,6 +71,12 @@ dependencies {
     implementation(variantOf(libs.netty.transport.native.kqueue) { classifier("osx-x86_64") })
     implementation(libs.nimbus.jose.jwt)
 
+    // NetherNet transport. The arch-detect bundle carries the WebRTC bindings plus a native for
+    // every supported platform, so the shaded jar runs anywhere the proxy does.
+    implementation(libs.netty.transport.nethernet)
+    implementation(libs.libdatachannel.arch.detect)
+    implementation(libs.jose4j)
+
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
 

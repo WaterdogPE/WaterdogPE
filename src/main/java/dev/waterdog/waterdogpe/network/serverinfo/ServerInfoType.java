@@ -39,11 +39,28 @@ public class ServerInfoType implements Comparable<ServerInfoType> {
     private static final Map<String, ServerInfoType> types = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
 
     /**
-     * Vanilla Minecraft: Bedrock connection utilizing RakNet
+     * A Minecraft: Bedrock server whose transport is discovered rather than configured. The
+     * default, so existing configs keep working as downstream servers move to NetherNet.
      */
     public static final ServerInfoType BEDROCK = ServerInfoType.builder()
             .identifier("bedrock")
+            .serverInfoFactory(AutoServerInfo::new)
+            .register();
+
+    /**
+     * Bedrock pinned to RakNet.
+     */
+    public static final ServerInfoType RAKNET = ServerInfoType.builder()
+            .identifier("raknet")
             .serverInfoFactory(BedrockServerInfo::new)
+            .register();
+
+    /**
+     * Bedrock pinned to NetherNet.
+     */
+    public static final ServerInfoType NETHERNET = ServerInfoType.builder()
+            .identifier("nethernet")
+            .serverInfoFactory(NetherNetServerInfo::new)
             .register();
 
     private final String identifier;
