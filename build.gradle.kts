@@ -50,6 +50,8 @@ dependencies {
     implementation(libs.commons.lang3)
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
+    // libdatachannel logs through SLF4J, which without a binding silently drops everything
+    implementation(libs.log4j.slf4j2.impl)
     implementation(libs.disruptor)
     implementation(libs.jline.asProvider())
     implementation(libs.jline.terminal.asProvider())
