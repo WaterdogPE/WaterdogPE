@@ -206,8 +206,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         }
         return config
                 .withEnableIceUdpMux(true)
-                .withPortRangeBegin((short) port)
-                .withPortRangeEnd((short) port);
+                .withPortRangeBegin(port)
+                .withPortRangeEnd(port);
     }
 
     /**
