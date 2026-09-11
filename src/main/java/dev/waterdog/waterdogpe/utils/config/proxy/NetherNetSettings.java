@@ -85,6 +85,16 @@ public class NetherNetSettings extends SettingsSection {
     })
     private List<String> advertiseAddresses = new ArrayList<>();
 
+    @Path("ice_servers")
+    @Comments({
+            "STUN and TURN servers ICE may use, such as stun:stun.l.google.com:19302.",
+            "A proxy behind NAT gathers only the addresses its own interfaces carry, which no",
+            "player elsewhere can reach. A STUN server is what puts the address they do see into",
+            "the offer, and a TURN server relays when no direct path exists.",
+            "Credentials for a TURN server go in the URL, as turn:user:password@host:3478."
+    })
+    private List<String> iceServers = new ArrayList<>();
+
     @Path("udp_port")
     @Comments({
             "Dedicated UDP port for NetherNet media, multiplexing every peer over one socket.",

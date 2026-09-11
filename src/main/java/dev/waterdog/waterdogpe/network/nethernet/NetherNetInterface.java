@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.network.nethernet;
 import org.cloudburstmc.netty.channel.nethernet.NetherNetChannelFactory;
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPSignaling;
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetServerSignaling.PongData;
+import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetSignaling;
 import org.cloudburstmc.netty.util.nethernet.TokenTrust;
 import org.cloudburstmc.netty.channel.nethernet.config.NetherChannelOption;
 import org.cloudburstmc.netty.util.nethernet.NetherNetLogging;
@@ -151,6 +152,18 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     /**
+     * The configured STUN and TURN servers, as one entry carrying every URL. Credentials belong in
+     * the URL, which is the only place the configuration has to put them.
+     */
+    private static List<NetherNetSignaling.IceServerInfo> iceServers(NetherNetSettings settings) {
+        List<String> urls = settings.getIceServers();
+        if (urls.isEmpty()) {
+            return List.of();
+        }
+        return List.of(new NetherNetSignaling.IceServerInfo.Builder().setUrls(List.copyOf(urls)).build());
+    }
+
+    /**
      * Builds the signaling endpoint from the configuration.
      */
     private NetherNetHTTPSignaling signaling(NetherNetSettings settings, int icePort) throws Exception {
@@ -160,6 +173,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                 .setTrustedProxies(TrustedProxies.parse(settings.getTrustedProxies()))
                 .setProxyProtocol(settings.isProxyProtocol())
                 .setAdvertisedAddresses(settings.getAdvertiseAddresses())
+                .setIceServers(iceServers(settings))
                 // RakNet holds the UDP side of the signaling port, so ICE never uses it
                 .setIceOnLocalPort(false)
                 // A peer may be another proxy signing its own assertion, which no auth service issued
