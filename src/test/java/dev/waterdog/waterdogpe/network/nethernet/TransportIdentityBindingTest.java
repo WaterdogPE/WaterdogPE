@@ -20,6 +20,7 @@ import org.cloudburstmc.netty.channel.nethernet.NetherNetChildChannel;
 import org.cloudburstmc.netty.util.nethernet.IdentityUtils;
 import org.cloudburstmc.netty.util.nethernet.PlayerInfo;
 import org.cloudburstmc.netty.util.nethernet.TokenTrust;
+import org.cloudburstmc.netty.util.nethernet.TransportIdentityBinding;
 import org.jose4j.jwt.JwtClaims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,7 +76,7 @@ class TransportIdentityBindingTest {
     void acceptsAChainSignedByTheKeyThatOpenedTheTransport() throws Exception {
         KeyPair pair = this.generator.generateKeyPair();
         EmbeddedChannel channel = this.channelWith(this.validatedIdentity(pair));
-        assertNull(TransportIdentityBinding.mismatch(channel, (ECPublicKey) pair.getPublic()));
+        assertNull(TransportIdentityBinding.mismatch(channel, pair.getPublic()));
     }
 
     @Test
@@ -85,7 +86,7 @@ class TransportIdentityBindingTest {
         KeyPair stolen = this.generator.generateKeyPair();
         EmbeddedChannel channel = this.channelWith(this.validatedIdentity(transport));
 
-        String mismatch = TransportIdentityBinding.mismatch(channel, (ECPublicKey) stolen.getPublic());
+        String mismatch = TransportIdentityBinding.mismatch(channel, stolen.getPublic());
         assertNotNull(mismatch);
         assertTrue(mismatch.contains("different key"));
     }
@@ -93,7 +94,7 @@ class TransportIdentityBindingTest {
     @Test
     void refusesWhenTheTransportCarriesNoIdentity() throws Exception {
         KeyPair pair = this.generator.generateKeyPair();
-        String mismatch = TransportIdentityBinding.mismatch(this.channelWith(null), (ECPublicKey) pair.getPublic());
+        String mismatch = TransportIdentityBinding.mismatch(this.channelWith(null), pair.getPublic());
         assertNotNull(mismatch);
         assertTrue(mismatch.contains("no validated identity"));
     }

@@ -23,7 +23,7 @@ import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionT
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.user.LoginData;
-import dev.waterdog.waterdogpe.network.nethernet.TransportIdentityBinding;
+import org.cloudburstmc.netty.util.nethernet.TransportIdentityBinding;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeEntry;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;

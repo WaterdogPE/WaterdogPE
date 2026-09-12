@@ -20,6 +20,7 @@ import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPSignaling
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetServerSignaling.PongData;
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetSignaling;
 import org.cloudburstmc.netty.util.nethernet.TokenTrust;
+import org.cloudburstmc.netty.util.nethernet.TrustedProxies;
 import org.cloudburstmc.netty.channel.nethernet.config.NetherChannelOption;
 import org.cloudburstmc.netty.util.nethernet.NetherNetLogging;
 import org.cloudburstmc.netty.util.nethernet.ServerIdentity;
