@@ -142,7 +142,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             return;
         }
 
-        if (settings.signalingMode() == NetherNetSettings.SignalingMode.BUILTIN) {
+        if (settings.signalingMode().builtin()) {
             // TLS is served on the same port as plaintext, so both schemes reach it when configured
             String scheme = settings.getHttps().enabled() ? "https and http" : "http";
             log.info("NetherNet signaling listening on tcp/{} over {}{}", signalingAddress.getPort(), scheme,
@@ -170,7 +170,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     private NetherNetHTTPSignaling signaling(NetherNetSettings settings, int icePort) throws Exception {
         NetherNetHTTPSignaling.Builder builder = new NetherNetHTTPSignaling.Builder()
                 .setIdentity(this.identity)
-                .setServeHttp(settings.signalingMode() == NetherNetSettings.SignalingMode.BUILTIN)
+                .setServeHttp(settings.signalingMode().builtin())
                 .setTrustedProxies(TrustedProxies.parse(settings.getTrustedProxies()))
                 .setProxyProtocol(settings.isProxyProtocol())
                 .setAdvertisedAddresses(settings.getAdvertiseAddresses())

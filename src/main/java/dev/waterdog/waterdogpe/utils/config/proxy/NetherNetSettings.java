@@ -36,9 +36,25 @@ public class NetherNetSettings extends SettingsSection {
          */
         BUILTIN,
         /**
+         * The proxy registers with the NXS provider, which hands it admitted connections.
+         */
+        NXS,
+        /**
+         * Both of the above at once, so players can arrive either way.
+         */
+        HYBRID,
+        /**
          * Nothing is bound. Offers arrive through the signaling API, driven by a plugin.
          */
-        EXTERNAL
+        PLUGIN;
+
+        public boolean builtin() {
+            return this == BUILTIN || this == HYBRID;
+        }
+
+        public boolean nxs() {
+            return this == NXS || this == HYBRID;
+        }
     }
 
     @Path("enabled")
@@ -49,9 +65,15 @@ public class NetherNetSettings extends SettingsSection {
     @Path("signaling_mode")
     @Comments({
             "builtin: the proxy serves the HTTP signaling endpoint on the listener port",
-            "external: nothing is bound, a plugin feeds offers through the signaling API"
+            "nxs: the proxy registers with the provider configured below and it hands over players",
+            "hybrid: both, so players can arrive either way",
+            "plugin: nothing is bound, a plugin feeds offers through the signaling API"
     })
     private String signalingMode = "builtin";
+
+    @Path("nxs")
+    @Comment("Settings for the NXS signaling provider. Only used in the nxs and hybrid modes")
+    private NxsSettings nxs = new NxsSettings();
 
     @Path("signaling_port")
     @Comment("TCP port for the signaling endpoint. 0 mirrors the listener port, which is what clients expect")
