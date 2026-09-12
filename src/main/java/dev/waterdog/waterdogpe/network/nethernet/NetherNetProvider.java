@@ -131,6 +131,7 @@ public class NetherNetProvider implements AutoCloseable {
                 return;
             }
             log.info(ProviderRuntimeObservations.registrationMessage(registration));
+            log.info(ProviderRuntimeObservations.delegatedIdentityMessage(runtime.origin()));
         });
     }
 
