@@ -16,7 +16,6 @@
 package dev.waterdog.waterdogpe.network.nethernet;
 
 import io.netty.channel.embedded.EmbeddedChannel;
-import org.cloudburstmc.netty.channel.nethernet.NetherNetChildChannel;
 import org.cloudburstmc.netty.util.nethernet.IdentityUtils;
 import org.cloudburstmc.netty.util.nethernet.PlayerInfo;
 import org.cloudburstmc.netty.util.nethernet.TokenTrust;
@@ -64,19 +63,11 @@ class TransportIdentityBindingTest {
                 "42", null, claims);
     }
 
-    private EmbeddedChannel channelWith(PlayerInfo player) {
-        EmbeddedChannel channel = new EmbeddedChannel();
-        if (player != null) {
-            channel.attr(NetherNetChildChannel.PLAYER_INFO).set(player);
-        }
-        return channel;
-    }
-
     @Test
     void acceptsAChainSignedByTheKeyThatOpenedTheTransport() throws Exception {
         KeyPair pair = this.generator.generateKeyPair();
-        EmbeddedChannel channel = this.channelWith(this.validatedIdentity(pair));
-        assertNull(TransportIdentityBinding.mismatch(channel, pair.getPublic()));
+
+        assertNull(TransportIdentityBinding.mismatch(this.validatedIdentity(pair), pair.getPublic()));
     }
 
     @Test
@@ -84,9 +75,9 @@ class TransportIdentityBindingTest {
         // A chain whose key never took part in opening this transport.
         KeyPair transport = this.generator.generateKeyPair();
         KeyPair stolen = this.generator.generateKeyPair();
-        EmbeddedChannel channel = this.channelWith(this.validatedIdentity(transport));
 
-        String mismatch = TransportIdentityBinding.mismatch(channel, stolen.getPublic());
+        String mismatch = TransportIdentityBinding.mismatch(this.validatedIdentity(transport), stolen.getPublic());
+
         assertNotNull(mismatch);
         assertTrue(mismatch.contains("different key"));
     }
@@ -94,8 +85,18 @@ class TransportIdentityBindingTest {
     @Test
     void refusesWhenTheTransportCarriesNoIdentity() throws Exception {
         KeyPair pair = this.generator.generateKeyPair();
-        String mismatch = TransportIdentityBinding.mismatch(this.channelWith(null), pair.getPublic());
+
+        String mismatch = TransportIdentityBinding.mismatch((PlayerInfo) null, pair.getPublic());
+
         assertNotNull(mismatch);
         assertTrue(mismatch.contains("no validated identity"));
+    }
+
+    @Test
+    void leavesATransportThatBindsTheChainItselfAlone() throws Exception {
+        KeyPair pair = this.generator.generateKeyPair();
+
+        // RakNet derives its session key against the chain, so there is nothing to check here
+        assertNull(TransportIdentityBinding.mismatch(new EmbeddedChannel(), pair.getPublic()));
     }
 }
