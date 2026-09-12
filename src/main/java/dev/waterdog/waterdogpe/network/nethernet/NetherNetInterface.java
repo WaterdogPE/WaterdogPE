@@ -23,6 +23,7 @@ import org.cloudburstmc.netty.util.nethernet.TokenTrust;
 import org.cloudburstmc.netty.util.nethernet.TrustedProxies;
 import org.cloudburstmc.netty.channel.nethernet.config.NetherChannelOption;
 import org.cloudburstmc.netty.util.nethernet.NetherNetLogging;
+import org.cloudburstmc.netty.util.nethernet.SecretValue;
 import org.cloudburstmc.netty.util.nethernet.ServerIdentity;
 import tel.schich.libdatachannel.LibDataChannelArchDetect;
 import dev.waterdog.waterdogpe.ProxyServer;
@@ -215,7 +216,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         if (https.enabled()) {
             Path certificate = this.proxy.getDataPath().resolve(https.getCertificate());
             String key = https.getPrivateKey();
-            String password = https.getPassword();
+            String password = SecretValue.resolve(https.getPassword(), this.proxy.getDataPath());
             if (key == null || key.isBlank()) {
                 builder.setHttpsKeystore(certificate.toFile(), password == null ? "" : password);
             } else {

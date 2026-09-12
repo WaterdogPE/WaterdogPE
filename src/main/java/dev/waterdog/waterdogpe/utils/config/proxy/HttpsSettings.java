@@ -39,7 +39,10 @@ public class HttpsSettings extends SettingsSection {
     private String privateKey = "";
 
     @Path("password")
-    @Comment("Password for the PKCS12, or for the PEM key if it is encrypted")
+    @Comments({
+            "Password for the PKCS12, or for the PEM key if it is encrypted.",
+            "A file:/path/to/password reads it from that file instead. Prefer a locked down file over putting it here"
+    })
     private String password = "";
 
     /**
