@@ -15,7 +15,9 @@
 
 package dev.waterdog.waterdogpe.network.nethernet;
 
+import io.netty.channel.Channel;
 import io.netty.channel.embedded.EmbeddedChannel;
+import org.cloudburstmc.netty.channel.nethernet.NetherNetChildChannel;
 import org.cloudburstmc.netty.util.nethernet.IdentityUtils;
 import org.cloudburstmc.netty.util.nethernet.PlayerInfo;
 import org.cloudburstmc.netty.util.nethernet.TokenTrust;
@@ -55,19 +57,23 @@ class TransportIdentityBindingTest {
         this.generator.initialize(new ECGenParameterSpec("secp384r1"));
     }
 
-    /** What the transport hands a consumer once it has validated the offer that opened a channel. */
-    private PlayerInfo validatedIdentity(KeyPair pair) throws Exception {
+    /** A channel carrying the identity the transport validated from the offer that opened it. */
+    private Channel openedBy(KeyPair pair) throws Exception {
         String envelope = ClientAssertionFactory.create(OFFER, pair, "1234567891234678", "someone", DOMAIN);
         JwtClaims claims = IdentityUtils.validateSdp(SdpUtil.withIdentity(OFFER, envelope), TokenTrust.ANY);
-        return new PlayerInfo(claims.getClaimValueAsString("xid"), claims.getClaimValueAsString("xname"),
-                "42", null, claims);
+        PlayerInfo player = new PlayerInfo(claims.getClaimValueAsString("xid"),
+                claims.getClaimValueAsString("xname"), "42", null, claims);
+        Channel channel = new NetherNetChildChannel(null, null, null, null);
+        channel.attr(NetherNetChildChannel.PLAYER_INFO).set(player);
+        TransportIdentityBinding.install(channel, TransportIdentityBinding.forPlayer(player));
+        return channel;
     }
 
     @Test
     void acceptsAChainSignedByTheKeyThatOpenedTheTransport() throws Exception {
         KeyPair pair = this.generator.generateKeyPair();
 
-        assertNull(TransportIdentityBinding.mismatch(this.validatedIdentity(pair), pair.getPublic()));
+        assertNull(TransportIdentityBinding.mismatch(this.openedBy(pair), pair.getPublic()));
     }
 
     @Test
@@ -76,20 +82,22 @@ class TransportIdentityBindingTest {
         KeyPair transport = this.generator.generateKeyPair();
         KeyPair stolen = this.generator.generateKeyPair();
 
-        String mismatch = TransportIdentityBinding.mismatch(this.validatedIdentity(transport), stolen.getPublic());
+        String mismatch = TransportIdentityBinding.mismatch(this.openedBy(transport), stolen.getPublic());
 
         assertNotNull(mismatch);
-        assertTrue(mismatch.contains("different key"));
+        assertTrue(mismatch.contains("does not match"));
     }
 
     @Test
-    void refusesWhenTheTransportCarriesNoIdentity() throws Exception {
+    void refusesATransportThatCarriesNoBindingAtAll() throws Exception {
+        // An NXS admission that bound no identity reaches us like this, and must not log anyone in
         KeyPair pair = this.generator.generateKeyPair();
 
-        String mismatch = TransportIdentityBinding.mismatch((PlayerInfo) null, pair.getPublic());
+        String mismatch = TransportIdentityBinding.mismatch(
+                new NetherNetChildChannel(null, null, null, null), pair.getPublic());
 
         assertNotNull(mismatch);
-        assertTrue(mismatch.contains("no validated identity"));
+        assertTrue(mismatch.contains("no validated identity binding"));
     }
 
     @Test
@@ -98,5 +106,15 @@ class TransportIdentityBindingTest {
 
         // RakNet derives its session key against the chain, so there is nothing to check here
         assertNull(TransportIdentityBinding.mismatch(new EmbeddedChannel(), pair.getPublic()));
+    }
+
+    @Test
+    void spendsABindingOnTheFirstLoginItDecides() throws Exception {
+        KeyPair pair = this.generator.generateKeyPair();
+        Channel channel = this.openedBy(pair);
+
+        assertNull(TransportIdentityBinding.mismatch(channel, pair.getPublic()));
+        assertNotNull(TransportIdentityBinding.mismatch(channel, pair.getPublic()),
+                "a second chain on the same transport has nothing left to bind to");
     }
 }
