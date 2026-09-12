@@ -72,6 +72,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
     private final ProxyServer proxy;
     private final List<Binding> bindings = new ObjectArrayList<>();
+    private NetherNetProvider provider;
     /** Stable for the lifetime of the process, like the BDS advertisement nonce. */
     private ServerIdentity identity;
     private boolean running;
@@ -100,6 +101,15 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
         InetSocketAddress signalingAddress = this.signalingAddress(address, settings);
         int icePort = this.icePort(address, settings);
+
+        if (settings.signalingMode().nxs()) {
+            this.startProvider(settings, address, icePort);
+            if (settings.signalingMode() == NetherNetSettings.SignalingMode.NXS) {
+                // The provider brings its own endpoint and admits peers onto it
+                this.running = true;
+                return;
+            }
+        }
 
         NetherNetHTTPSignaling signaling;
         try {
@@ -149,6 +159,25 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                     icePort > 0 ? ", with WebRTC on udp/" + icePort : "");
         } else {
             log.info("NetherNet is bound but serves no endpoint, offers must arrive through the signaling API");
+        }
+    }
+
+    /**
+     * Registers with the provider, which then admits players onto a port of its own. A provider that
+     * cannot be reached leaves the rest of the proxy alone, the same way signalling does.
+     */
+    private void startProvider(NetherNetSettings settings, InetSocketAddress address, int icePort) {
+        if (icePort <= 0) {
+            log.error("NetherNet provider registration needs a fixed udp_port, no players will arrive through it");
+            return;
+        }
+        NetherNetProvider provider = new NetherNetProvider(this.proxy);
+        try {
+            provider.start(settings, address, icePort);
+            this.provider = provider;
+        } catch (Throwable t) {
+            provider.close();
+            log.error("Unable to register with the NetherNet provider, no players will arrive through it", t);
         }
     }
 
@@ -354,6 +383,11 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             }
         }
         this.bindings.clear();
+
+        if (this.provider != null) {
+            this.provider.close();
+            this.provider = null;
+        }
 
         if (this.signalingGroup != null) {
             this.signalingGroup.shutdownGracefully();

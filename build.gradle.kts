@@ -76,6 +76,8 @@ dependencies {
     // NetherNet transport. The arch-detect bundle carries the WebRTC bindings plus a native for
     // every supported platform, so the shaded jar runs anywhere the proxy does.
     implementation(libs.netty.transport.nethernet)
+    // NXS signalling, where the provider finds players rather than the proxy serving them
+    implementation(libs.netty.external.signalling)
     implementation(libs.libdatachannel.arch.detect)
     implementation(libs.jose4j)
 

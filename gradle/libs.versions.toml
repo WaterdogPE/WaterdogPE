@@ -33,6 +33,7 @@ netty-transport-native-epoll = { module = "io.netty:netty-transport-native-epoll
 netty-transport-native-kqueue = { module = "io.netty:netty-transport-native-kqueue", version.ref = "netty" }
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "9.37.4" }
 netty-transport-nethernet = { module = "org.cloudburstmc.netty:netty-transport-nethernet", version.ref = "network" }
+netty-external-signalling = { module = "org.cloudburstmc.netty:netty-external-signalling", version.ref = "network" }
 libdatachannel-arch-detect = { module = "dev.opencollab:libdatachannel-java-arch-detect", version.ref = "libdatachannel" }
 jose4j = { module = "org.bitbucket.b_c:jose4j", version = "0.9.6" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.10.2" }
