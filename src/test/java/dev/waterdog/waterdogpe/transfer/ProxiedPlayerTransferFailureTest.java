@@ -130,6 +130,33 @@ public class ProxiedPlayerTransferFailureTest {
     }
 
     @Test
+    void aKickedActiveDownstreamIsClosed() {
+        ServerInfo fallback = this.harness.newServer("fallback");
+        this.harness.stubDial(fallback);
+        when(this.harness.reconnectHandler.getFallbackServer(any(), any(), any(), anyString())).thenReturn(fallback);
+
+        this.harness.player.onDownstreamFailure(this.lobbyConnection, ReconnectReason.SERVER_KICK, "kicked");
+
+        // A kick leaves the channel open, and an open channel reads as somewhere the player can stay
+        verify(this.lobbyConnection).disconnect();
+        verify(fallback).createConnection(this.harness.player);
+    }
+
+    @Test
+    void aDiscardedAttemptLeavesThePlayerForAPluginToRecover() {
+        // The active downstream is gone and this attempt was discarded, so nothing is left to serve
+        // them. The proxy still keeps them: a plugin may transfer them somewhere on its own.
+        when(this.lobbyConnection.isConnected()).thenReturn(false);
+        ServerInfo target = this.harness.newServer("game");
+        ClientConnection discarded = this.harness.newDownstream(target);
+
+        this.harness.player.onTransferFailure(discarded, target, ReconnectReason.EXCEPTION, "boom");
+
+        verify(discarded).disconnect();
+        assertTrue(this.harness.player.isConnected(), "kicking them is the plugin's call, not ours");
+    }
+
+    @Test
     void discardedConnectionDoesNotTriggerRecovery() {
         ServerInfo target = this.harness.newServer("game");
         ClientConnection discarded = this.harness.newDownstream(target);

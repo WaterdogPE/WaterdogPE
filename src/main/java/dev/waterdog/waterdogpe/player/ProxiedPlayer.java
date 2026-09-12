@@ -471,11 +471,11 @@ public class ProxiedPlayer implements CommandSender {
 
         if (connection != null) {
             // Only the current pending attempt can trigger recovery; discarded connections just die.
-            if (!this.clearPendingConnection(connection)) {
-                connection.disconnect();
+            boolean current = this.clearPendingConnection(connection);
+            connection.disconnect();
+            if (!current) {
                 return;
             }
-            connection.disconnect();
         }
 
         if (this.disconnected.get()) {
@@ -630,10 +630,9 @@ public class ProxiedPlayer implements CommandSender {
 
         // ACTIVE: the player's current downstream died, fail over.
         if (connection == this.clientConnection) {
-            if (reason == ReconnectReason.EXCEPTION) {
-                // The channel may still be open after an exception, close it before failing over.
-                connection.disconnect();
-            }
+            // An open channel reads as somewhere the player can still be, so a later transfer
+            // failure would recover them onto a server that has already dropped them
+            connection.disconnect();
             this.onActiveDownstreamFailure(connection.getServerInfo(), reason, message);
             return;
         }
