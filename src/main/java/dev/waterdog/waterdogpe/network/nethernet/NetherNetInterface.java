@@ -165,7 +165,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
     /**
      * Registers with the provider, which then admits players onto a port of its own. A provider that
-     * cannot be reached leaves the rest of the proxy alone, the same way signalling does.
+     * cannot be reached leaves the rest of the proxy alone, the same way signaling does.
      */
     private void startProvider(NetherNetSettings settings, InetSocketAddress address, int icePort) {
         if (icePort <= 0) {

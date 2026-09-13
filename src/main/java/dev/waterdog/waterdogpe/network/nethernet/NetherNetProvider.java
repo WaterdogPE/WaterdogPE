@@ -28,15 +28,16 @@ import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import lombok.extern.log4j.Log4j2;
-import org.cloudburstmc.netty.signalling.ProviderClient;
-import org.cloudburstmc.netty.signalling.ProviderStateStore;
-import org.cloudburstmc.netty.signalling.ProviderTransport;
-import org.cloudburstmc.netty.signalling.ServerStatus;
-import org.cloudburstmc.netty.signalling.provider.NativeProviderHostFactory;
-import org.cloudburstmc.netty.signalling.provider.ProviderHostFactory;
-import org.cloudburstmc.netty.signalling.provider.ProviderRuntimeConfiguration;
-import org.cloudburstmc.netty.signalling.provider.ProviderRuntimeObservations;
-import org.cloudburstmc.netty.signalling.provider.ProviderShutdown;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import org.cloudburstmc.netty.signaling.ProviderClient;
+import org.cloudburstmc.netty.signaling.ProviderStateStore;
+import org.cloudburstmc.netty.signaling.ProviderTransport;
+import org.cloudburstmc.netty.signaling.ServerStatus;
+import org.cloudburstmc.netty.signaling.provider.NativeProviderHostFactory;
+import org.cloudburstmc.netty.signaling.provider.ProviderHostFactory;
+import org.cloudburstmc.netty.signaling.provider.ProviderRuntimeConfiguration;
+import org.cloudburstmc.netty.signaling.provider.ProviderShutdown;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -108,8 +109,7 @@ public class NetherNetProvider implements AutoCloseable {
             host.warnings().forEach(log::warn);
 
             this.client = new ProviderClient(runtime.clientConfiguration(), store, transport, this::status,
-                    () -> ProviderRuntimeObservations.health(this.players(), runtime.capacity(),
-                            System.currentTimeMillis(), WaterdogPE.version().baseVersion(), this.accepting()),
+                    () -> this.health(runtime.capacity()),
                     log::warn);
             // The client owns the store and the transport from here
             store = null;
@@ -130,9 +130,28 @@ public class NetherNetProvider implements AutoCloseable {
                 this.close();
                 return;
             }
-            log.info(ProviderRuntimeObservations.registrationMessage(registration));
-            log.info(ProviderRuntimeObservations.delegatedIdentityMessage(runtime.origin()));
+            log.info(registrationMessage(registration));
+            // Says where logins are vouched for, without putting provider credentials in the log
+            log.info("NetherNet client identities are authenticated by external signaling provider "
+                    + runtime.origin().getHost() + "; direct login keys are checked against its admission tickets");
         });
+    }
+
+    private ProviderClient.Health health(int capacity) {
+        int players = this.players();
+        return new ProviderClient.Health(true, this.accepting(), capacity,
+                Math.min(1, (double) players / Math.max(1, capacity)), "nethernet",
+                WaterdogPE.version().baseVersion(),
+                new ProviderClient.PlayerCount(players, System.currentTimeMillis()));
+    }
+
+    private static String registrationMessage(JsonObject registration) {
+        String instanceId = registration.get("instanceId").getAsString();
+        JsonElement address = registration.get("publicAddress");
+        return address != null && !address.isJsonNull()
+                ? "Provider address: " + address.getAsString() + " (instance " + instanceId + ")"
+                : "Provider instance registered: " + instanceId
+                        + "; public addresses are managed on its attached Signal Servers";
     }
 
     @Override

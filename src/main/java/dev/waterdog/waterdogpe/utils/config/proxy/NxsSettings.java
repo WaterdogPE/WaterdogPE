@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The NXS signalling provider, which finds players for this proxy rather than waiting for them to
+ * The NXS signaling provider, which finds players for this proxy rather than waiting for them to
  * arrive at an endpoint of its own.
  */
 @Getter
