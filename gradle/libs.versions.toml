@@ -3,7 +3,7 @@ protocol = "3.0.0.Beta13-20260907.175719-23"
 log4j = "2.25.4"
 jline = "3.30.6"
 netty = "4.1.135.Final"
-network = "2.0.0.CR2-SNAPSHOT"
+network = "2.0.0.CR3-SNAPSHOT"
 libdatachannel = "0.24.5.0-SNAPSHOT"
 lombok = "1.18.30"
 
@@ -33,7 +33,7 @@ netty-transport-native-epoll = { module = "io.netty:netty-transport-native-epoll
 netty-transport-native-kqueue = { module = "io.netty:netty-transport-native-kqueue", version.ref = "netty" }
 nimbus-jose-jwt = { module = "com.nimbusds:nimbus-jose-jwt", version = "9.37.4" }
 netty-transport-nethernet = { module = "org.cloudburstmc.netty:netty-transport-nethernet", version.ref = "network" }
-netty-external-signalling = { module = "org.cloudburstmc.netty:netty-external-signalling", version.ref = "network" }
+netty-external-signaling = { module = "org.cloudburstmc.netty:netty-external-signaling", version.ref = "network" }
 libdatachannel-arch-detect = { module = "dev.opencollab:libdatachannel-java-arch-detect", version.ref = "libdatachannel" }
 jose4j = { module = "org.bitbucket.b_c:jose4j", version = "0.9.6" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.10.2" }
