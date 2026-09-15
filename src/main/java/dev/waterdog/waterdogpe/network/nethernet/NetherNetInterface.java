@@ -115,7 +115,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
         NetherNetHTTPSignaling signaling;
         try {
-            signaling = this.signaling(settings, icePort);
+            signaling = this.signaling(settings, address, icePort);
         } catch (Exception e) {
             log.error("Failed to configure NetherNet signaling, connections will fall back to RakNet", e);
             return;
@@ -198,13 +198,14 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     /**
      * Builds the signaling endpoint from the configuration.
      */
-    private NetherNetHTTPSignaling signaling(NetherNetSettings settings, int icePort) throws Exception {
+    private NetherNetHTTPSignaling signaling(NetherNetSettings settings, InetSocketAddress address, int icePort)
+            throws Exception {
         NetherNetHTTPSignaling.Builder builder = new NetherNetHTTPSignaling.Builder()
                 .setIdentity(this.identity)
                 .setServeHttp(settings.signalingMode().builtin())
                 .setTrustedProxies(TrustedProxies.parse(settings.getTrustedProxies()))
                 .setProxyProtocol(settings.isProxyProtocol())
-                .setAdvertisedAddresses(settings.getAdvertiseAddresses())
+                .setAdvertisedAddresses(advertisedAddresses(address, settings))
                 .setIceServers(iceServers(settings))
                 // RakNet holds the UDP side of the signaling port, so ICE never uses it
                 .setIceOnLocalPort(false)
