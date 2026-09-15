@@ -43,9 +43,8 @@ public class NxsSettings extends SettingsSection {
     @Path("advertise_addresses")
     @Comments({
             "Reachable UDP endpoints, as 198.51.100.1:19133 or [2001:db8::1]:19133.",
-            "Empty derives them from the addresses this host holds, which is wrong behind a NAT or",
-            "a forwarder; name the endpoint players actually reach in that case.",
-            "Forwarding is not configured here, only described."
+            "Empty derives them from the addresses this host holds, which is wrong behind a NAT",
+            "or a forwarder. Name the endpoint players actually reach in that case."
     })
     private List<String> advertiseAddresses = new ArrayList<>();
 

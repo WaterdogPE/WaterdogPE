@@ -81,48 +81,43 @@ public class NetherNetSettings extends SettingsSection {
 
     @Path("trusted_proxies")
     @Comments({
-            "Addresses allowed to set X-Forwarded-For on signaling requests, as single hosts or",
-            "CIDR ranges such as 10.0.0.0/8 or 2001:db8::/32. An http or https entry is fetched",
-            "and read as one address per line.",
-            "Mojang recommends fronting the signaling port with a reverse proxy, this is how the",
-            "real client address survives that hop."
+            "Addresses allowed to set X-Forwarded-For on signaling requests, as hosts or CIDR ranges",
+            "such as 10.0.0.0/8. An http or https entry is fetched and read as one address per line.",
+            "Needed when a reverse proxy fronts the signaling port, so the real client address survives."
     })
     private List<String> trustedProxies = new ArrayList<>();
 
     @Path("proxy_protocol")
     @Comments({
-            "Read a HAProxy PROXY header, v1 or v2, from signaling connections that arrive from a",
-            "trusted_proxies address. A connection without a header is still served, so one listener",
-            "takes both. Without a header, X-Forwarded-For is used instead."
+            "Read a HAProxy PROXY header, v1 or v2, on signaling connections from a trusted_proxies",
+            "address. Connections without one are still served and fall back to X-Forwarded-For."
     })
     private boolean proxyProtocol = false;
 
     @Path("advertise_addresses")
     @Comments({
-            "Addresses to put in the ICE candidates clients connect to.",
-            "Empty derives them from the listener bind address, which is usually what you want: a",
-            "proxy bound to one public address should not be offering clients the internal addresses",
-            "of the machine it runs on. Set this when the address clients reach differs from the",
-            "bound one, or when the listener binds a wildcard."
+            "Addresses put in the ICE candidates clients connect to. Empty derives them from the",
+            "listener bind address. Set it when clients reach a different address or the listener",
+            "binds a wildcard. An address this machine does not hold is announced as the public side",
+            "of a NAT forwarding udp_port here, same port. Media bypasses a signaling reverse proxy,",
+            "so its address only belongs here if it forwards the media port too."
     })
     private List<String> advertiseAddresses = new ArrayList<>();
 
     @Path("ice_servers")
     @Comments({
             "STUN and TURN servers ICE may use, such as stun:stun.l.google.com:19302.",
-            "A proxy behind NAT gathers only the addresses its own interfaces carry, which no",
-            "player elsewhere can reach. A STUN server is what puts the address they do see into",
-            "the offer, and a TURN server relays when no direct path exists.",
-            "Credentials for a TURN server go in the URL, as turn:user:password@host:3478."
+            "A proxy behind NAT needs STUN to learn its public address, TURN relays when no direct",
+            "path exists. TURN credentials go in the URL, as turn:user:password@host:3478."
     })
     private List<String> iceServers = new ArrayList<>();
 
     @Path("udp_port")
     @Comments({
-            "Dedicated UDP port for NetherNet media, multiplexing every peer over one socket.",
+            "Dedicated UDP port for NetherNet media, one socket for every peer.",
             "It must not be the listener port, which RakNet already holds.",
-            "0 lets the operating system pick an ephemeral port per peer, which works without",
-            "opening a fixed port but publishes a different one to every client."
+            "0 picks an ephemeral port per peer, which needs no fixed port open but publishes a",
+            "different one to every client."
     })
     private int udpPort = 0;
 
@@ -140,9 +135,8 @@ public class NetherNetSettings extends SettingsSection {
 
     @Path("identity_domain")
     @Comments({
-            "The operator name players see in the first use trust prompt, so set it to something",
-            "they will recognise and keep it stable. Empty falls back to listener.name.",
-            "Changing it does not prompt anyone again, because clients pin the key and not the name."
+            "Operator name shown in the first use trust prompt. Empty falls back to listener.name.",
+            "Clients pin the key, not the name, so changing it prompts nobody again."
     })
     private String identityDomain = "";
 
@@ -150,13 +144,10 @@ public class NetherNetSettings extends SettingsSection {
     @Comment("Seconds a connection has to finish ICE and DTLS before it is dropped")
     private int handshakeTimeout = 30;
 
-
     @Path("transport_memory")
     @Comments({
-            "How long a server_type: bedrock downstream remembers which transport worked, in seconds.",
-            "Keeps every join from paying for a probe without pinning the answer: the memory",
-            "expires, and a failure on the remembered transport switches to the other one at once.",
-            "0 probes on every connection."
+            "Seconds a server_type: bedrock downstream remembers which transport worked, so not every",
+            "join probes. A failure on the remembered transport switches at once. 0 probes every join."
     })
     private int transportMemory = 300;
 
