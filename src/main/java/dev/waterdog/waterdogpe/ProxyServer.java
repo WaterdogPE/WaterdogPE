@@ -471,6 +471,10 @@ public class ProxyServer {
         return this.netherNetInterface;
     }
 
+    public NetherNetInterface getNetherNetInterface() {
+        return this.netherNetInterface;
+    }
+
     public LangConfig getLanguageConfig() {
         return this.configurationManager.getLangConfig();
     }

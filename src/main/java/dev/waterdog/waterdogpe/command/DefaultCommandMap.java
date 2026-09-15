@@ -35,5 +35,6 @@ public class DefaultCommandMap extends SimpleCommandMap {
         this.registerCommand(new StatusCommand());
         this.registerCommand(new PluginsCommand());
         this.registerCommand(new ReloadPacksCommand());
+        this.registerCommand(new NetherNetCommand());
     }
 }

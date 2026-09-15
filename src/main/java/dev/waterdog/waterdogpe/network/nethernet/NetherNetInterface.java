@@ -49,6 +49,7 @@ import tel.schich.libdatachannel.PeerConnectionConfiguration;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -73,7 +74,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
     private final ProxyServer proxy;
     private final List<Binding> bindings = new ObjectArrayList<>();
-    private NetherNetProvider provider;
+    private volatile NetherNetProvider provider;
     /** Stable for the lifetime of the process, like the BDS advertisement nonce. */
     private ServerIdentity identity;
     private boolean running;
@@ -371,6 +372,25 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         return this.running && !this.bindings.isEmpty() && !this.isFull();
     }
 
+    /**
+     * The provider registration, or null outside the nxs and hybrid modes.
+     */
+    public NetherNetProvider provider() {
+        return this.provider;
+    }
+
+    /**
+     * One entry per signaling endpoint the proxy serves itself.
+     */
+    public List<SignalingInfo> signalingInfo() {
+        List<SignalingInfo> info = new ObjectArrayList<>(this.bindings.size());
+        for (Binding binding : this.bindings) {
+            info.add(new SignalingInfo(binding.channel().localAddress(), binding.signaling().isActive(),
+                    binding.signaling().pendingJoins(), binding.signaling().getLocalNetworkId()));
+        }
+        return info;
+    }
+
     @Override
     public void shutdown() {
         if (!this.running) {
@@ -402,5 +422,13 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     private record Binding(NetherNetHTTPSignaling signaling, Channel channel) {
+    }
+
+    /**
+     * @param pendingJoins offers answered but not yet connected, which is where a blocked ICE port
+     *                     shows up first
+     * @param networkId    the NetworkID clients address this endpoint by
+     */
+    public record SignalingInfo(SocketAddress bind, boolean active, int pendingJoins, String networkId) {
     }
 }
