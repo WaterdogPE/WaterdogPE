@@ -154,7 +154,7 @@ public enum ProtocolVersion {
     MINECRAFT_PE_1_26_40(2168, Bedrock_v2168.CODEC, "26.40", "26.41", "26.42", "26.43"),
     MINECRAFT_PE_1_26_44(2168, 1, Bedrock_v2168_hotfix4.CODEC, "26.44"), // this version has not bumped protocol number on client side
     MINECRAFT_PE_1_26_45(2169, Bedrock_v2169.CODEC, "26.45"),
-    MINECRAFT_PE_1_26_50(2193, Bedrock_v2192.CODEC, "26.50"),
+    MINECRAFT_PE_1_26_50(2193, Bedrock_v2192.CODEC.toBuilder().protocolVersion(2193).build(), "26.50"),
     ;
 
     private static final ProtocolVersion[] VALUES = values();
