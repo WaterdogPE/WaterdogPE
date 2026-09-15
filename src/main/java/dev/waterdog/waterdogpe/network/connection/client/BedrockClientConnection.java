@@ -207,6 +207,13 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
         return this.channel.isOpen();
     }
 
+    /**
+     * The transport channel, for diagnostics. Anything sent through it bypasses the codec.
+     */
+    public Channel getChannel() {
+        return this.channel;
+    }
+
     @Override
     public SocketAddress getSocketAddress() {
         return this.channel.remoteAddress();
