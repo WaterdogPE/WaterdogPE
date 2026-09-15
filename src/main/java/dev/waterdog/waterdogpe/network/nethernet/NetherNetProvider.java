@@ -39,12 +39,14 @@ import org.cloudburstmc.netty.signaling.provider.ProviderHostFactory;
 import org.cloudburstmc.netty.signaling.provider.ProviderRuntimeConfiguration;
 import org.cloudburstmc.netty.signaling.provider.ProviderShutdown;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * Registers the proxy with an NXS provider, which then hands it players.
@@ -62,9 +64,11 @@ public class NetherNetProvider implements AutoCloseable {
     private final ProxyServer proxy;
 
     private EventLoopGroup group;
-    private Channel channel;
-    private ProviderClient client;
+    private volatile Channel channel;
+    private volatile ProviderClient client;
     private ProviderShutdown shutdown;
+    /** What the provider is told about this proxy. Swapped out by a status override. */
+    private volatile Supplier<ServerStatus> statusSupplier = this::collectStatus;
 
     public NetherNetProvider(ProxyServer proxy) {
         this.proxy = proxy;
@@ -108,7 +112,8 @@ public class NetherNetProvider implements AutoCloseable {
             transport = host.transport();
             host.warnings().forEach(log::warn);
 
-            this.client = new ProviderClient(runtime.clientConfiguration(), store, transport, this::status,
+            this.client = new ProviderClient(runtime.clientConfiguration(), store, transport,
+                    () -> this.statusSupplier.get(),
                     () -> this.health(runtime.capacity()),
                     log::warn);
             // The client owns the store and the transport from here
@@ -179,9 +184,70 @@ public class NetherNetProvider implements AutoCloseable {
     }
 
     /**
+     * Whether the provider registration is up. False before {@link #start} and after a failure.
+     */
+    public boolean isRunning() {
+        return this.client != null;
+    }
+
+    public ProviderClient client() {
+        return this.client;
+    }
+
+    /**
+     * The endpoint the provider admits peers onto, for diagnostics.
+     */
+    public Channel channel() {
+        return this.channel;
+    }
+
+    /**
+     * The status the provider currently gets, whether collected or overridden.
+     */
+    public ServerStatus serverStatus() {
+        return this.statusSupplier.get();
+    }
+
+    /**
+     * Pins the provider status to a fixed snapshot. Values fixed at the provider still win.
+     */
+    public void setServerStatus(ServerStatus snapshot) {
+        this.statusSupplier = () -> snapshot;
+        this.refreshStatus();
+    }
+
+    public void restoreAutomaticServerStatus() {
+        this.statusSupplier = this::collectStatus;
+        this.refreshStatus();
+    }
+
+    /**
+     * Pushes the current status on the next heartbeat. Unchanged snapshots send nothing.
+     */
+    public void refreshStatus() {
+        ProviderClient client = this.client;
+        if (client != null) {
+            client.requestStatusRefresh();
+        }
+    }
+
+    /**
+     * The provider's own error text where it gave one, otherwise only the exception type, so
+     * nothing internal reaches a command output.
+     */
+    public static String failureMessage(Throwable failure) {
+        while (failure.getCause() != null
+                && (failure instanceof CompletionException || failure instanceof ExecutionException)) {
+            failure = failure.getCause();
+        }
+        return failure instanceof ProviderClient.ProviderException ? failure.getMessage()
+                : failure.getClass().getSimpleName();
+    }
+
+    /**
      * What the provider shows for this proxy, which is the same thing a player sees in the list.
      */
-    private ServerStatus status() {
+    private ServerStatus collectStatus() {
         ProxyConfig config = this.proxy.getConfiguration();
         return new ServerStatus(config.getMotd(), ProtocolVersion.latest().getProtocol(),
                 ProtocolVersion.latest().getMinecraftVersion(), config.getSubMotd(), this.players(),
