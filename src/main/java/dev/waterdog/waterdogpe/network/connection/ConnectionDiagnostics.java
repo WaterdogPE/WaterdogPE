@@ -48,10 +48,12 @@ import java.util.List;
  * Describes what a player's connection runs over, on both legs of the proxy.
  * <p>
  * Every fact here comes from the live channel rather than the configuration, so the report shows
- * what a session negotiated, not what it was meant to. That is what makes it useful when a client
- * shows nothing about its own transport.
+ * what a session negotiated, not what it was meant to.
  */
 public final class ConnectionDiagnostics {
+
+    public static final String UPSTREAM_LEG = "player <-> proxy";
+    public static final String DOWNSTREAM_LEG = "proxy <-> server";
 
     private ConnectionDiagnostics() {
     }
@@ -67,8 +69,10 @@ public final class ConnectionDiagnostics {
 
     /**
      * The client itself and the leg between it and the proxy.
+     *
+     * @param addresses whether IP addresses and ticket ids may appear
      */
-    public static List<Line> upstream(ProxiedPlayer player) {
+    public static List<Line> upstream(ProxiedPlayer player, boolean addresses) {
         List<Line> lines = new ObjectArrayList<>();
         LoginData login = player.getLoginData();
         ProtocolVersion protocol = player.getProtocol();
@@ -83,7 +87,7 @@ public final class ConnectionDiagnostics {
         }
 
         ProxiedBedrockPeer peer = player.getConnection().getPeer();
-        transport(lines, peer.getChannel(), player.getConnection().getSocketAddress());
+        transport(lines, peer.getChannel(), player.getConnection().getSocketAddress(), UPSTREAM_LEG, addresses);
         codecs(lines, peer.getChannel(), peer.getTransportProfile(), protocol);
         return lines;
     }
@@ -91,41 +95,56 @@ public final class ConnectionDiagnostics {
     /**
      * The leg between the proxy and a downstream server.
      */
-    public static List<Line> downstream(ClientConnection connection, ProtocolVersion protocol) {
+    public static List<Line> downstream(ClientConnection connection, ProtocolVersion protocol, boolean addresses) {
         List<Line> lines = new ObjectArrayList<>();
         ServerInfo server = connection.getServerInfo();
         lines.add(new Line("Server", server.getServerName() + " (" + server.getServerType().getIdentifier() + ")"));
-        lines.add(new Line("Configured", String.valueOf(server.getAddress())));
+        if (addresses) {
+            lines.add(new Line("Configured", String.valueOf(server.getAddress())));
+        }
 
         if (connection instanceof BedrockClientConnection bedrock) {
-            transport(lines, bedrock.getChannel(), connection.getSocketAddress());
+            transport(lines, bedrock.getChannel(), connection.getSocketAddress(), DOWNSTREAM_LEG, addresses);
             codecs(lines, bedrock.getChannel(), profile(bedrock, protocol), protocol);
         } else {
             lines.add(new Line("Transport", connection.getClass().getSimpleName()));
-            lines.add(new Line("Address", String.valueOf(connection.getSocketAddress())));
-            lines.add(new Line("Ping", connection.getPing() + " ms"));
+            if (addresses) {
+                lines.add(new Line("Address", String.valueOf(connection.getSocketAddress())));
+            }
+            lines.add(new Line("Ping", ping(connection.getPing()), DOWNSTREAM_LEG));
         }
         return lines;
+    }
+
+    /**
+     * Transports report 0 until their first ping has been answered.
+     */
+    public static String ping(long millis) {
+        return millis <= 0 ? "not measured yet" : millis + " ms";
     }
 
     private static TransportProfile profile(BedrockClientConnection connection, ProtocolVersion protocol) {
         return connection.supportsEncryption() ? TransportProfile.raknet(protocol.getRaknetVersion()) : TransportProfile.NETHERNET;
     }
 
-    private static void transport(List<Line> lines, Channel channel, SocketAddress address) {
+    private static void transport(List<Line> lines, Channel channel, SocketAddress address, String leg, boolean addresses) {
         if (channel instanceof RakChannel rak) {
-            rakNet(lines, rak, address);
+            rakNet(lines, rak, address, leg, addresses);
         } else if (channel instanceof NetherNetChannel netherNet) {
-            netherNet(lines, netherNet, address);
+            netherNet(lines, netherNet, address, leg, addresses);
         } else {
             lines.add(new Line("Transport", channel == null ? "unknown" : channel.getClass().getSimpleName()));
-            lines.add(new Line("Address", String.valueOf(address)));
+            if (addresses) {
+                lines.add(new Line("Address", String.valueOf(address)));
+            }
         }
     }
 
-    private static void rakNet(List<Line> lines, RakChannel channel, SocketAddress address) {
-        lines.add(new Line("Transport", "RakNet", "UDP, the default Bedrock transport"));
-        lines.add(new Line("Address", String.valueOf(address)));
+    private static void rakNet(List<Line> lines, RakChannel channel, SocketAddress address, String leg, boolean addresses) {
+        lines.add(new Line("Transport", "RakNet", null));
+        if (addresses) {
+            lines.add(new Line("Address", String.valueOf(address)));
+        }
         Integer version = channel.config().getOption(RakChannelOption.RAK_PROTOCOL_VERSION);
         if (version != null) {
             lines.add(new Line("RakNet protocol", String.valueOf(version)));
@@ -134,17 +153,17 @@ public final class ConnectionDiagnostics {
         if (session == null) {
             return;
         }
-        lines.add(new Line("MTU", session.getMtu() + " bytes", "largest datagram, bigger batches are split"));
-        lines.add(new Line("Ping", session.getPing() + " ms", "this leg only"));
+        lines.add(new Line("MTU", session.getMtu() + " bytes", null));
+        lines.add(new Line("Ping", ping(session.getPing()), leg));
     }
 
-    private static void netherNet(List<Line> lines, NetherNetChannel channel, SocketAddress address) {
+    private static void netherNet(List<Line> lines, NetherNetChannel channel, SocketAddress address, String leg, boolean addresses) {
         lines.add(new Line("Transport", "NetherNet", "WebRTC data channels inside DTLS"));
 
         AdmissionPrincipal admission = channel.attr(AdmissionPrincipal.KEY).get();
         PlayerInfo signaled = channel.attr(NetherNetChildChannel.PLAYER_INFO).get();
         if (admission != null) {
-            lines.add(new Line("Signaling", "provider admission", "ticket " + admission.ticketId()));
+            lines.add(new Line("Signaling", "provider admission", addresses ? "ticket " + admission.ticketId() : null));
             lines.add(new Line("Network id", admission.networkId()));
         } else if (signaled != null) {
             lines.add(new Line("Signaling", "builtin http", "offer arrived on the proxy's own endpoint"));
@@ -155,7 +174,7 @@ public final class ConnectionDiagnostics {
         } else if (channel.parent() != null) {
             lines.add(new Line("Signaling", "external", "offer was fed in through the signaling API"));
         }
-        if (address instanceof InetSocketAddress) {
+        if (addresses && address instanceof InetSocketAddress) {
             lines.add(new Line("Address", String.valueOf(address), "as seen at signaling"));
         }
 
@@ -163,8 +182,8 @@ public final class ConnectionDiagnostics {
         if (path == null) {
             lines.add(new Line("Path", "not connected yet", "ICE has not selected a candidate pair"));
         } else {
-            lines.add(new Line("Path", candidate(path.remote(), path.remoteType()) + " to "
-                    + candidate(path.local(), path.localType()), pathNote(path)));
+            lines.add(new Line("Path", candidate(path.remote(), path.remoteType(), addresses) + " to "
+                    + candidate(path.local(), path.localType(), addresses), pathNote(path)));
             InetAddress signaledIp = signaled == null || signaled.remoteAddress() == null ? null : signaled.remoteAddress().getAddress();
             if (signaledIp != null && path.remote() != null && !signaledIp.equals(path.remote().getAddress())) {
                 lines.add(new Line("Path address", "differs from the signaling address",
@@ -172,10 +191,10 @@ public final class ConnectionDiagnostics {
             }
         }
 
-        lines.add(new Line("Ping", channel.getPing() + " ms", "SCTP round trip, this leg only"));
+        lines.add(new Line("Ping", ping(channel.getPing()), "SCTP round trip, " + leg));
         int maxMessage = channel.remoteMaxMessageSize();
         if (maxMessage > 0) {
-            lines.add(new Line("Max message", maxMessage + " bytes", "bigger batches are segmented"));
+            lines.add(new Line("Max message", maxMessage + " bytes", null));
         }
 
         if (channel.parent() != null) {
@@ -183,7 +202,10 @@ public final class ConnectionDiagnostics {
         }
     }
 
-    private static String candidate(InetSocketAddress address, String type) {
+    private static String candidate(InetSocketAddress address, String type, boolean addresses) {
+        if (!addresses) {
+            return type == null ? "unknown" : type;
+        }
         return address + (type == null ? "" : " (" + type + ")");
     }
 
@@ -232,6 +254,6 @@ public final class ConnectionDiagnostics {
             lines.add(new Line("Compression", "not negotiated yet"));
         }
         lines.add(new Line("Framing", "RakNet protocol " + profile.codecVersion() + " rules",
-                "how batches are framed and compressed"));
+                null));
     }
 }

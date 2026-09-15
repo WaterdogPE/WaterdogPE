@@ -48,6 +48,10 @@ class ConnectionDiagnosticsTest {
     private static final ProtocolVersion PROTOCOL = ProtocolVersion.latest();
 
     private static Map<String, ConnectionDiagnostics.Line> report(EmbeddedChannel channel, boolean supportsEncryption) {
+        return report(channel, supportsEncryption, true);
+    }
+
+    private static Map<String, ConnectionDiagnostics.Line> report(EmbeddedChannel channel, boolean supportsEncryption, boolean addresses) {
         ServerInfo server = mock(ServerInfo.class);
         when(server.getServerName()).thenReturn("lobby");
         when(server.getServerType()).thenReturn(ServerInfoType.BEDROCK);
@@ -59,7 +63,7 @@ class ConnectionDiagnosticsTest {
         when(connection.getSocketAddress()).thenReturn(new InetSocketAddress("10.0.0.2", 19132));
         when(connection.supportsEncryption()).thenReturn(supportsEncryption);
 
-        List<ConnectionDiagnostics.Line> lines = ConnectionDiagnostics.downstream(connection, PROTOCOL);
+        List<ConnectionDiagnostics.Line> lines = ConnectionDiagnostics.downstream(connection, PROTOCOL, addresses);
         return lines.stream().collect(Collectors.toMap(ConnectionDiagnostics.Line::label, line -> line));
     }
 
@@ -82,6 +86,18 @@ class ConnectionDiagnosticsTest {
         assertEquals("RakNet protocol " + PROTOCOL.getRaknetVersion() + " rules", lines.get("Framing").value());
         // An embedded channel is neither transport, so the report says what it saw
         assertEquals("EmbeddedChannel", lines.get("Transport").value());
+    }
+
+    @Test
+    void hidesAddressesFromPlayers() {
+        Map<String, ConnectionDiagnostics.Line> full = report(new EmbeddedChannel(), true, true);
+        Map<String, ConnectionDiagnostics.Line> hidden = report(new EmbeddedChannel(), true, false);
+
+        assertEquals("/10.0.0.2:19132", full.get("Configured").value());
+        assertNotNull(full.get("Address"));
+        assertNull(hidden.get("Configured"));
+        assertNull(hidden.get("Address"));
+        assertEquals("lobby (bedrock)", hidden.get("Server").value());
     }
 
     @Test

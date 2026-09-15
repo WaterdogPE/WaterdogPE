@@ -60,22 +60,41 @@ public class MeCommand extends Command {
             }
         }
 
+        boolean addresses = !sender.isPlayer();
+
         StringBuilder sb = new StringBuilder();
         sb.append("§b--- §3Connection of ").append(player.getName()).append(" §b---\n");
-        append(sb, "Client to proxy", ConnectionDiagnostics.upstream(player));
+        append(sb, "Client to proxy", ConnectionDiagnostics.upstream(player, addresses));
 
         ClientConnection downstream = player.getDownstreamConnection();
         if (downstream != null) {
-            append(sb, "Proxy to server", ConnectionDiagnostics.downstream(downstream, player.getProtocol()));
+            append(sb, "Proxy to server", ConnectionDiagnostics.downstream(downstream, player.getProtocol(), addresses));
         } else {
             sb.append("§3Proxy to server: §cnot connected\n");
         }
         ClientConnection pending = player.getPendingConnection();
         if (pending != null && pending != downstream) {
-            append(sb, "Connecting to", ConnectionDiagnostics.downstream(pending, player.getProtocol()));
+            append(sb, "Connecting to", ConnectionDiagnostics.downstream(pending, player.getProtocol(), addresses));
         }
+        pings(sb, player.getPing(), downstream == null ? 0 : downstream.getPing());
         sender.sendMessage(sb.toString().stripTrailing());
         return true;
+    }
+
+    /**
+     * Both legs side by side, and their sum, which is the closest thing to the latency the
+     * player feels. Shown as soon as either leg has a value.
+     */
+    private static void pings(StringBuilder sb, long upstream, long downstream) {
+        if (upstream <= 0 && downstream <= 0) {
+            return;
+        }
+        sb.append("§ePing\n");
+        sb.append("§3Player to proxy: §b").append(ConnectionDiagnostics.ping(upstream)).append('\n');
+        sb.append("§3Proxy to server: §b").append(ConnectionDiagnostics.ping(downstream)).append('\n');
+        if (upstream > 0 && downstream > 0) {
+            sb.append("§3End to end: §b").append(upstream + downstream).append(" ms §7(through the proxy)\n");
+        }
     }
 
     private static void append(StringBuilder sb, String section, List<ConnectionDiagnostics.Line> lines) {
