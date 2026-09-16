@@ -209,11 +209,16 @@ public final class ConnectionDiagnostics {
         return address + (type == null ? "" : " (" + type + ")");
     }
 
+    /** A peer reflexive candidate is one NAT mapping learned from a check rather than from STUN. */
+    private static boolean reflexive(String type) {
+        return "srflx".equals(type) || "prflx".equals(type);
+    }
+
     private static String pathNote(NetherNetChannel.Path path) {
         if ("relay".equals(path.remoteType()) || "relay".equals(path.localType())) {
             return "traffic passes through a TURN server";
         }
-        if ("srflx".equals(path.remoteType()) || "srflx".equals(path.localType())) {
+        if (reflexive(path.remoteType()) || reflexive(path.localType())) {
             return "direct, through NAT";
         }
         if ("host".equals(path.remoteType()) && "host".equals(path.localType())) {
