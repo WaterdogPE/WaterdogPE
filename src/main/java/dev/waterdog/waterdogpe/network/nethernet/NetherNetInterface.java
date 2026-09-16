@@ -96,7 +96,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             // Clients that cannot reach a signaling endpoint fall back to RakNet on their own, so a
             // NetherNet failure degrades the proxy instead of taking it down. Logged as an error
             // anyway, because nothing else reports that the transport is missing.
-            log.error("Unable to initialise NetherNet, connections will fall back to RakNet. The native "
+            log.error("Unable to initialize NetherNet, connections will fall back to RakNet. The native "
                     + "ICE and DTLS library may be missing for this platform", t);
             return;
         }

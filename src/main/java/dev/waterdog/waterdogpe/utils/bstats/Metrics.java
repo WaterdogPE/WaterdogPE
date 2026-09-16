@@ -101,7 +101,7 @@ public class Metrics {
 
     public static void startMetrics(ProxyServer server, ProxyConfig metricsConfig) {
         if (instance != null) {
-            throw new IllegalStateException("Metrics were already initialised");
+            throw new IllegalStateException("Metrics were already initialized");
         }
 
         Metrics metrics = new Metrics(WaterdogPE.version().metricsId(), metricsConfig.isEnableAnonymousStatistics());
