@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.netty.transport.nethernet)
     // NXS signaling, where the provider finds players rather than the proxy serving them
     implementation(libs.netty.external.signaling)
+    implementation(libs.libdatachannel.java)
     implementation(libs.libdatachannel.arch.detect)
     implementation(libs.jose4j)
 
