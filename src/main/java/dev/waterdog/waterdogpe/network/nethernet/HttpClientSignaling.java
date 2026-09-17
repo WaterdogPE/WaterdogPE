@@ -86,7 +86,8 @@ public class HttpClientSignaling implements NetherNetClientSignaling {
 
     /**
      * The capability probe. A non 2xx here is how a server says it does not speak NetherNet, which
-     * is what drives the fallback to RakNet.
+     * is what drives the fallback to RakNet. A server that requires TLS answers 426, and this
+     * signaling only speaks plaintext, so that counts as unreachable too.
      */
     public static CompletableFuture<Boolean> probe(InetSocketAddress address) {
         HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl(address) + "/v1/join"))
