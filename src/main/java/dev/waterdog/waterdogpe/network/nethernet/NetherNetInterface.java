@@ -369,8 +369,14 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     @Override
-    public boolean acceptsConnections() {
-        return this.running && !this.bindings.isEmpty() && !this.isFull();
+    public NetherNetHTTPSignaling.JoinRefusal acceptsConnections() {
+        if (!this.running || this.bindings.isEmpty()) {
+            return NetherNetHTTPSignaling.JoinRefusal.ERROR;
+        }
+        if (this.isFull()) {
+            return NetherNetHTTPSignaling.JoinRefusal.FULL;
+        }
+        return null;
     }
 
     /**
