@@ -29,6 +29,7 @@ import dev.waterdog.waterdogpe.network.nethernet.ProxyIdentity;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import io.netty.channel.Channel;
+import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPSignaling;
 import org.cloudburstmc.netty.signaling.ProviderClient;
 import org.cloudburstmc.netty.signaling.ServerStatus;
 import org.cloudburstmc.netty.signaling.admission.NativeAdmissionServerChannel;
@@ -105,7 +106,7 @@ public class NetherNetCommand extends Command {
                     .append(provider != null && provider.isRunning() ? "§aregistered" : "§cnot registered").append('\n');
         }
 
-        sb.append("§3Accepting connections: ").append(yesNo(nethernet.acceptsConnections()));
+        sb.append("§3Accepting connections: ").append(refusal(nethernet.acceptsConnections()));
         if (settings.getMaxConnections() > 0) {
             sb.append(" §3(limit §b").append(settings.getMaxConnections()).append("§3)");
         }
@@ -232,5 +233,12 @@ public class NetherNetCommand extends Command {
 
     private static String yesNo(boolean value) {
         return value ? "§ayes" : "§cno";
+    }
+
+    private static String refusal(NetherNetHTTPSignaling.JoinRefusal refusal) {
+        if (refusal == null) {
+            return "§ayes";
+        }
+        return refusal.toString();
     }
 }
