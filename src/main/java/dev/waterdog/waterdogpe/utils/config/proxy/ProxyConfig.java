@@ -244,6 +244,17 @@ public class ProxyConfig extends YamlConfig {
         }
     }
 
+    @Override
+    protected void saveToYaml() throws InvalidConfigurationException {
+        // The file may come from a read-only mount, such as a Kubernetes ConfigMap. Options it does
+        // not carry keep their defaults instead of failing the startup
+        if (this.CONFIG_FILE.exists() && !this.CONFIG_FILE.canWrite()) {
+            ProxyServer.getInstance().getLogger().warning("Config file " + this.CONFIG_FILE + " is not writable, options missing from it keep their defaults");
+            return;
+        }
+        super.saveToYaml();
+    }
+
     public int getIdleThreads() {
         return this.defaultIdleThreads < 1 ? Runtime.getRuntime().availableProcessors() : this.defaultIdleThreads;
     }
