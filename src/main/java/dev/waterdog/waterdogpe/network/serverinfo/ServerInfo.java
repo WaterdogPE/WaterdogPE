@@ -19,8 +19,6 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.util.concurrent.Future;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectSets;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -29,6 +27,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -73,8 +72,8 @@ public abstract class ServerInfo {
     private volatile long resolvedAt;
     private final AtomicBoolean resolving = new AtomicBoolean(false);
 
-    private final Set<ClientConnection> connections = ObjectSets.synchronize(new ObjectOpenHashSet<>());
-    private final Set<ProxiedPlayer> players = ObjectSets.synchronize(new ObjectOpenHashSet<>());
+    private final Set<ClientConnection> connections = ConcurrentHashMap.newKeySet();
+    private final Set<ProxiedPlayer> players = ConcurrentHashMap.newKeySet();
 
     public ServerInfo(String serverName, InetSocketAddress address, InetSocketAddress publicAddress) {
         this.serverName = serverName;
