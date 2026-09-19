@@ -33,6 +33,9 @@ import io.netty.channel.*;
 import io.netty.util.concurrent.Promise;
 import lombok.RequiredArgsConstructor;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
+import org.cloudburstmc.netty.channel.nethernet.NetherNetChannel;
+import org.cloudburstmc.netty.channel.nethernet.config.NetherChannelMetrics;
+import org.cloudburstmc.netty.channel.nethernet.config.NetherChannelOption;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelMetrics;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.protocol.bedrock.PacketDirection;
@@ -63,8 +66,16 @@ public class ProxiedClientSessionInitializer extends ChannelInitializer<Channel>
             channel.attr(NetworkMetrics.ATTRIBUTE).set(metrics);
         }
 
-        if (metrics instanceof RakChannelMetrics rakMetrics && channel instanceof RakChannel) {
-            channel.config().setOption(RakChannelOption.RAK_METRICS, rakMetrics);
+        if (metrics != null && channel instanceof RakChannel) {
+            RakChannelMetrics rakMetrics = metrics.rakMetrics(NetworkMetrics.Leg.DOWNSTREAM);
+            if (rakMetrics != null) {
+                channel.config().setOption(RakChannelOption.RAK_METRICS, rakMetrics);
+            }
+        } else if (metrics != null && channel instanceof NetherNetChannel) {
+            NetherChannelMetrics netherMetrics = metrics.netherMetrics(NetworkMetrics.Leg.DOWNSTREAM);
+            if (netherMetrics != null) {
+                channel.config().setOption(NetherChannelOption.NETHER_METRICS, netherMetrics);
+            }
         }
 
         channel.pipeline()

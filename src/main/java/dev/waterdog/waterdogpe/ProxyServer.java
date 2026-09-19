@@ -336,6 +336,10 @@ public class ProxyServer {
         this.eventManager.callEvent(event);
         if (!event.isCancelled()) {
             this.interfaces.add(interfaze);
+            // Plugins are enabled before the interfaces exist, so metrics are usually already set.
+            if (this.networkMetrics != null) {
+                interfaze.setNetworkMetrics(this.networkMetrics);
+            }
         }
     }
 
@@ -583,9 +587,15 @@ public class ProxyServer {
         return this.commandSender;
     }
 
+    /**
+     * @param metrics the metrics to report to, or null to stop reporting
+     */
     public void setNetworkMetrics(NetworkMetrics metrics) {
-        Preconditions.checkNotNull(metrics, "You cannot set the metricsHandler to null!");
         this.networkMetrics = metrics;
+        // Listener wide metrics live on the bound channels, which only the interfaces hold.
+        for (NetworkInterface interfaze : this.interfaces) {
+            interfaze.setNetworkMetrics(metrics);
+        }
     }
 
     @Deprecated

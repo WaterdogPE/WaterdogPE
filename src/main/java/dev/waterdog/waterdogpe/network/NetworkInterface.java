@@ -40,4 +40,11 @@ public interface NetworkInterface {
      * Returns whether the network interface is currently running and able to accept connections.
      */
     boolean isRunning();
+
+    /**
+     * Hands this interface the metrics to report listener wide events to, or null to report none.
+     * Called whenever the proxy's metrics change, which is usually after the bind.
+     */
+    default void setNetworkMetrics(NetworkMetrics metrics) {
+    }
 }

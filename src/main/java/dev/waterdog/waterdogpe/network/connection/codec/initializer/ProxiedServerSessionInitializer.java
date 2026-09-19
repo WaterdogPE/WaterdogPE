@@ -50,7 +50,8 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
         if (metrics != null) {
             channel.attr(NetworkMetrics.ATTRIBUTE).set(metrics);
         }
-        if (metrics instanceof RakChannelMetrics rakMetrics) {
+        RakChannelMetrics rakMetrics = metrics == null ? null : metrics.rakMetrics(NetworkMetrics.Leg.UPSTREAM);
+        if (rakMetrics != null) {
             channel.config().setOption(RakChannelOption.RAK_METRICS, rakMetrics);
         }
         channel.config().setOption(RakChannelOption.RAK_AUTO_FLUSH, false);

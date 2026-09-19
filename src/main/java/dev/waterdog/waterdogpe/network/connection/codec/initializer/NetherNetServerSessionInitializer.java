@@ -24,6 +24,8 @@ import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockPeer;
 import dev.waterdog.waterdogpe.network.protocol.handler.upstream.LoginUpstreamHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
+import org.cloudburstmc.netty.channel.nethernet.config.NetherChannelMetrics;
+import org.cloudburstmc.netty.channel.nethernet.config.NetherChannelOption;
 import org.cloudburstmc.protocol.bedrock.BedrockPeer;
 import org.cloudburstmc.protocol.bedrock.PacketDirection;
 
@@ -48,6 +50,11 @@ public class NetherNetServerSessionInitializer extends ProxiedSessionInitializer
         NetworkMetrics metrics = this.proxy.getNetworkMetrics();
         if (metrics != null) {
             channel.attr(NetworkMetrics.ATTRIBUTE).set(metrics);
+        }
+        // Mirrors the RakNet path, so peer and ICE state changes are recorded the same way losses are.
+        NetherChannelMetrics netherMetrics = metrics == null ? null : metrics.netherMetrics(NetworkMetrics.Leg.UPSTREAM);
+        if (netherMetrics != null) {
+            channel.config().setOption(NetherChannelOption.NETHER_METRICS, netherMetrics);
         }
 
         super.initChannel(channel);

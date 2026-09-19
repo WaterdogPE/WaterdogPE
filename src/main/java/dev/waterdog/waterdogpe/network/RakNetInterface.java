@@ -31,7 +31,9 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import org.cloudburstmc.netty.channel.raknet.RakChannelFactory;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
+import org.cloudburstmc.netty.channel.raknet.config.RakServerChannelConfig;
 import org.cloudburstmc.netty.channel.raknet.config.RakServerCookieMode;
+import org.cloudburstmc.netty.channel.raknet.config.RakServerMetrics;
 
 public class RakNetInterface implements NetworkInterface {
 
@@ -42,6 +44,8 @@ public class RakNetInterface implements NetworkInterface {
     private final long serverId;
 
     private boolean running = false;
+
+    private volatile RakServerMetrics serverMetrics;
 
     public RakNetInterface(ProxyServer server) {
         this.server = server;
@@ -62,6 +66,7 @@ public class RakNetInterface implements NetworkInterface {
                         .group(this.server.getBossEventLoopGroup(), this.server.getWorkerEventLoopGroup())
                         // .option(CustomChannelOption.IP_DONT_FRAG, 2 /* IP_PMTUDISC_DO */)
                         .option(RakChannelOption.RAK_GUID, this.serverId)
+                        .option(RakChannelOption.RAK_SERVER_METRICS, this.serverMetrics)
                         .option(RakChannelOption.RAK_HANDLE_PING, true)
                         .option(RakChannelOption.RAK_MAX_MTU, this.server.getNetworkSettings().getMaximumMtu())
                         .option(RakChannelOption.RAK_SERVER_COOKIE_MODE, this.server.getNetworkSettings().enableCookies() ?
@@ -93,6 +98,17 @@ public class RakNetInterface implements NetworkInterface {
                 }
             }
             throw new NetworkStartupException("Failed to start RakNet", e);
+        }
+    }
+
+    @Override
+    public void setNetworkMetrics(NetworkMetrics metrics) {
+        this.serverMetrics = metrics == null ? null : metrics.rakServerMetrics();
+        for (Channel channel : this.serverChannels) {
+            // setOption rejects null, and clearing the metrics again has to work.
+            if (channel.config() instanceof RakServerChannelConfig config) {
+                config.setMetrics(this.serverMetrics);
+            }
         }
     }
 

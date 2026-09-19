@@ -21,7 +21,9 @@ import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetServerSignali
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetSignaling;
 import org.cloudburstmc.netty.util.nethernet.TokenTrust;
 import org.cloudburstmc.netty.util.nethernet.TrustedProxies;
+import org.cloudburstmc.netty.channel.nethernet.config.DefaultNetherServerChannelConfig;
 import org.cloudburstmc.netty.channel.nethernet.config.NetherChannelOption;
+import org.cloudburstmc.netty.channel.nethernet.config.NetherServerMetrics;
 import org.cloudburstmc.netty.util.nethernet.NetherNetLogging;
 import org.cloudburstmc.netty.util.nethernet.SecretValue;
 import org.cloudburstmc.netty.util.nethernet.ServerIdentity;
@@ -35,6 +37,7 @@ import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.utils.config.proxy.HttpsSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
+import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelConfig;
@@ -74,6 +77,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
     private final ProxyServer proxy;
     private final List<Binding> bindings = new ObjectArrayList<>();
+
+    private volatile NetherServerMetrics serverMetrics;
     private volatile NetherNetProvider provider;
     /** Stable for the lifetime of the process, like the BDS advertisement nonce. */
     private ServerIdentity identity;
@@ -128,6 +133,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                     .group(this.signalingGroup())
                     .channelFactory(NetherNetChannelFactory.server(signaling))
                     .option(NetherChannelOption.NETHER_SERVER_RTC_HANDSHAKE_TIMEOUT_SECONDS, settings.getHandshakeTimeout())
+                    .option(NetherChannelOption.NETHER_SERVER_METRICS, this.serverMetrics)
                     .handler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel channel) {
@@ -426,6 +432,17 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     @Override
     public boolean isRunning() {
         return this.running;
+    }
+
+    @Override
+    public void setNetworkMetrics(NetworkMetrics metrics) {
+        this.serverMetrics = metrics == null ? null : metrics.netherServerMetrics();
+        for (Binding binding : this.bindings) {
+            // setOption rejects null, and clearing the metrics again has to work.
+            if (binding.channel().config() instanceof DefaultNetherServerChannelConfig config) {
+                config.setServerMetrics(this.serverMetrics);
+            }
+        }
     }
 
     private record Binding(NetherNetHTTPSignaling signaling, Channel channel) {
