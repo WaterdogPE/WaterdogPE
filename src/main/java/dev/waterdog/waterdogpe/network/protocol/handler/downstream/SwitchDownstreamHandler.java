@@ -241,6 +241,11 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             hiddenHud.clear();
         }
 
+        if (!rewriteData.getDebugShapes().isEmpty()) {
+            injectClearDebugShapes(this.player.getConnection(), rewriteData.getDebugShapes());
+            rewriteData.getDebugShapes().clear();
+        }
+
         Int2ObjectMap<ContainerType> openContainers = this.player.getOpenContainers();
         for (Int2ObjectMap.Entry<ContainerType> entry : openContainers.int2ObjectEntrySet()) {
             injectCloseContainer(this.player.getConnection(), (byte) entry.getIntKey(), entry.getValue());
