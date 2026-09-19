@@ -125,7 +125,7 @@ public class TransferCallback {
 
         Vector3f fakePosition = rewriteData.getSpawnPosition().add(-2000, 0, -2000);
         if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_19_50)) {
-            injectInputLocks(this.player.getConnection(), INPUT_LOCK_FREEZE, fakePosition);
+            injectInputLocks(this.player.getConnection(), INPUT_LOCK_FREEZE, rewriteData.getSpawnPosition());
         }
 
         if (rewriteData.getDimension() != this.targetDimension) {
