@@ -21,10 +21,13 @@ import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
+import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.packet.SetLocalPlayerAsInitializedPacket;
+import org.cloudburstmc.protocol.bedrock.packet.UpdateClientInputLocksPacket;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -138,6 +141,18 @@ public class TransferCallbackTest {
 
         verify(this.targetConnection, never()).sendPacket(isA(SetLocalPlayerAsInitializedPacket.class));
         assertTrue(this.harness.events(PostTransferCompleteEvent.class).isEmpty());
+    }
+
+    @Test
+    void phaseOneInputLockUsesSpawnPosition() {
+        Vector3f spawnPosition = Vector3f.from(128, 64, -32);
+        this.harness.player.getRewriteData().setSpawnPosition(spawnPosition);
+
+        this.callback.onDimChangeSuccess();
+
+        ArgumentCaptor<UpdateClientInputLocksPacket> packet = ArgumentCaptor.forClass(UpdateClientInputLocksPacket.class);
+        verify(this.harness.upstream).sendPacket(packet.capture());
+        assertEquals(spawnPosition, packet.getValue().getServerPosition());
     }
 
     @Test
