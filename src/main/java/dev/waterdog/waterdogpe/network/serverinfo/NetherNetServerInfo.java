@@ -30,7 +30,6 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 
 import java.net.InetSocketAddress;
-import tel.schich.libdatachannel.LibDataChannelArchDetect;
 
 /**
  * A downstream server reached over NetherNet.
@@ -60,9 +59,6 @@ public class NetherNetServerInfo extends ServerInfo {
         InetSocketAddress remoteAddress = serverInfo.getResolvedAddress();
 
         int timeout = player.getProxy().getNetworkSettings().getConnectTimeout() * 1000;
-
-        // A proxy with no NetherNet listener reaches the native through this path first.
-        LibDataChannelArchDetect.initialize();
 
         // Derived per connection: the token names the player and expires
         OperatorIdentity identity;

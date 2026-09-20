@@ -27,7 +27,6 @@ import org.cloudburstmc.netty.channel.nethernet.config.NetherServerMetrics;
 import org.cloudburstmc.netty.util.nethernet.NetherNetLogging;
 import org.cloudburstmc.netty.util.nethernet.SecretValue;
 import org.cloudburstmc.netty.util.nethernet.OperatorIdentity;
-import tel.schich.libdatachannel.LibDataChannelArchDetect;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.ProxyPingEvent;
 import dev.waterdog.waterdogpe.network.NetworkInterface;
@@ -238,9 +237,6 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         if (this.identity != null) {
             return;
         }
-
-        // Loads the native built for this platform out of the bundled set.
-        LibDataChannelArchDetect.initialize();
 
         // The native ICE and DTLS stack logs through slf4j once a threshold is set.
         NetherNetLogging.setNativeLogLevel(System.getProperty("waterdog.nethernetLog", "WARN"));
