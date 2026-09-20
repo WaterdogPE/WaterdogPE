@@ -175,7 +175,9 @@ public final class ConnectionDiagnostics {
             lines.add(new Line("Signaling", "external", "offer was fed in through the signaling API"));
         }
         if (addresses && address instanceof InetSocketAddress) {
-            lines.add(new Line("Address", String.valueOf(address), "as seen at signaling"));
+            // A client channel adopts the selected pair once connected, a child keeps what signaling saw
+            lines.add(new Line("Address", String.valueOf(address),
+                    channel.parent() == null ? "the media path once connected" : "as seen at signaling"));
         }
 
         NetherNetChannel.Path path = channel.selectedPath();
