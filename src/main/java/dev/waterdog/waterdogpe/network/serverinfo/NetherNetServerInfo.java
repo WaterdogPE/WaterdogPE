@@ -75,7 +75,7 @@ public class NetherNetServerInfo extends ServerInfo {
 
         new Bootstrap()
                 .group(eventLoop)
-                .channelFactory(NetherNetChannelFactory.client(new NetherNetHTTPClientSignaling()))
+                .channelFactory(NetherNetChannelFactory.client(NetherNetHTTPClientSignaling::new))
                 .option(NetherChannelOption.NETHER_CLIENT_HANDSHAKE_TIMEOUT_MS, timeout)
                 .option(NetherChannelOption.NETHER_CLIENT_MAX_HANDSHAKE_ATTEMPTS, HANDSHAKE_ATTEMPTS)
                 .option(NetherChannelOption.NETHER_CLIENT_IDENTITY, identity)
