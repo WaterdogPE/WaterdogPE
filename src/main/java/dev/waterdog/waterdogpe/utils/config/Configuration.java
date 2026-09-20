@@ -45,18 +45,21 @@ public abstract class Configuration {
         this(saveFile, null);
     }
 
+    public Configuration(InputStream inputStream) {
+        this(null, inputStream);
+    }
+
     public Configuration(File saveFile, InputStream inputStream) {
         this.file = saveFile;
 
         try {
-            if (!this.file.exists()) {
-                this.save();
-            }
+            if (this.file != null && inputStream == null) {
+                if (!this.file.exists()) {
+                    this.save();
+                }
 
-            if (inputStream == null) {
                 inputStream = Files.newInputStream(this.file.toPath());
             }
-
             this.load(inputStream);
         } catch (IOException e) {
             MainLogger.getLogger().error("Unable to initialize Config " + this.file.toString(), e);
