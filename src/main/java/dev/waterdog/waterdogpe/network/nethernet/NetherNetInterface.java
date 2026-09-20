@@ -40,14 +40,10 @@ import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelConfig;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.ChannelInitializer;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.extern.log4j.Log4j2;
-
-import tel.schich.libdatachannel.PeerConnectionConfiguration;
 
 
 import java.net.InetAddress;
@@ -135,20 +131,12 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                     .channelFactory(NetherNetChannelFactory.server(signaling))
                     .option(NetherChannelOption.NETHER_SERVER_RTC_HANDSHAKE_TIMEOUT_SECONDS, settings.getHandshakeTimeout())
                     .option(NetherChannelOption.NETHER_SERVER_METRICS, this.serverMetrics)
-                    .handler(new ChannelInitializer<Channel>() {
-                        @Override
-                        protected void initChannel(Channel channel) {
-                            if (icePort <= 0) {
-                                return;
-                            }
-                            // Runs before the first connection, so every peer sees the pinned port
-                            ChannelConfig options = channel.config();
-                            options.setOption(NetherChannelOption.NETHER_PEER_CONNECTION_CONFIG,
-                                    pinIce(options.getOption(NetherChannelOption.NETHER_PEER_CONNECTION_CONFIG),
-                                            address.getAddress(), icePort));
-                        }
-                    })
                     .childHandler(new NetherNetServerSessionInitializer(this.proxy));
+            if (icePort > 0) {
+                // Media on its own port, because the signaling port is only free on the TCP side
+                bootstrap.option(NetherChannelOption.NETHER_SERVER_ICE_ADDRESS,
+                        new InetSocketAddress(address.getAddress(), icePort));
+            }
 
             // The channel binds signaling over TCP here; RakNet keeps the UDP side of the same port
             Channel channel = bootstrap.bind(signalingAddress).syncUninterruptibly().channel();
@@ -234,20 +222,6 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             }
         }
         return builder.build();
-    }
-
-    /**
-     * Sends ICE to its own port, because the signaling port is only free on the TCP side.
-     */
-    private static PeerConnectionConfiguration pinIce(PeerConnectionConfiguration config, InetAddress host, int port) {
-        // A wildcard bind is left unset so ICE keeps gathering on every interface
-        if (host != null && !host.isAnyLocalAddress()) {
-            config = config.withBindAddress(host);
-        }
-        return config
-                .withEnableIceUdpMux(true)
-                .withPortRangeBegin(port)
-                .withPortRangeEnd(port);
     }
 
     /**
