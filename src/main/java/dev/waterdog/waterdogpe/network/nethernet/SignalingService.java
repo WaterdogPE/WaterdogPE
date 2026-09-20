@@ -16,7 +16,7 @@
 package dev.waterdog.waterdogpe.network.nethernet;
 
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetServerSignaling.PongData;
-import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPSignaling.JoinRefusal;
+import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPServerSignaling.JoinRefusal;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;

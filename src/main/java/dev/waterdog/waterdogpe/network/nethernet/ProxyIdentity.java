@@ -17,11 +17,10 @@ package dev.waterdog.waterdogpe.network.nethernet;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.logger.Color;
-import org.cloudburstmc.netty.util.nethernet.ServerIdentity;
+import org.cloudburstmc.netty.util.nethernet.OperatorIdentity;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.KeyPair;
 
 /**
  * The proxy's NetherNet identity, used both to identify it to connecting clients and to sign the
@@ -32,7 +31,7 @@ import java.security.KeyPair;
  */
 public final class ProxyIdentity {
 
-    private static volatile ServerIdentity identity;
+    private static volatile OperatorIdentity identity;
 
     private ProxyIdentity() {
     }
@@ -40,8 +39,8 @@ public final class ProxyIdentity {
     /**
      * The identity, generated on the first start if it is missing.
      */
-    public static ServerIdentity identity(ProxyServer proxy) throws Exception {
-        ServerIdentity current = identity;
+    public static OperatorIdentity identity(ProxyServer proxy) throws Exception {
+        OperatorIdentity current = identity;
         if (current != null) {
             return current;
         }
@@ -54,18 +53,11 @@ public final class ProxyIdentity {
         }
     }
 
-    /**
-     * The keypair behind {@link #identity}, for the assertions the proxy signs as a client.
-     */
-    public static KeyPair keyPair(ProxyServer proxy) throws Exception {
-        return identity(proxy).keyPair();
-    }
-
-    private static ServerIdentity load(ProxyServer proxy) throws Exception {
+    private static OperatorIdentity load(ProxyServer proxy) throws Exception {
         Path file = proxy.getDataPath().resolve(proxy.getNetherNetSettings().getIdentityFile());
 
         boolean existed = Files.isRegularFile(file);
-        ServerIdentity loaded = ServerIdentity.fromPemOrCreate(file.toFile(), domain(proxy));
+        OperatorIdentity loaded = OperatorIdentity.fromPemOrCreate(file.toFile(), domain(proxy));
         if (!existed) {
             proxy.getLogger().info("Generated a NetherNet identity at {}. Share this file across a fleet "
                     + "to be trusted as one operator, and keep it, replacing it re-prompts every player", file);

@@ -16,7 +16,7 @@
 package dev.waterdog.waterdogpe.network.nethernet;
 
 import org.cloudburstmc.netty.channel.nethernet.NetherNetChannelFactory;
-import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPSignaling;
+import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPServerSignaling;
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetServerSignaling.PongData;
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetSignaling;
 import org.cloudburstmc.netty.util.nethernet.TokenTrust;
@@ -26,7 +26,7 @@ import org.cloudburstmc.netty.channel.nethernet.config.NetherChannelOption;
 import org.cloudburstmc.netty.channel.nethernet.config.NetherServerMetrics;
 import org.cloudburstmc.netty.util.nethernet.NetherNetLogging;
 import org.cloudburstmc.netty.util.nethernet.SecretValue;
-import org.cloudburstmc.netty.util.nethernet.ServerIdentity;
+import org.cloudburstmc.netty.util.nethernet.OperatorIdentity;
 import tel.schich.libdatachannel.LibDataChannelArchDetect;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.ProxyPingEvent;
@@ -48,6 +48,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.extern.log4j.Log4j2;
 
 import tel.schich.libdatachannel.PeerConnectionConfiguration;
+
 
 import java.net.InetAddress;
 import java.nio.file.Path;
@@ -81,7 +82,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     private volatile NetherServerMetrics serverMetrics;
     private volatile NetherNetProvider provider;
     /** Stable for the lifetime of the process, like the BDS advertisement nonce. */
-    private ServerIdentity identity;
+    private OperatorIdentity identity;
     private boolean running;
 
     public NetherNetInterface(ProxyServer proxy) {
@@ -118,7 +119,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             }
         }
 
-        NetherNetHTTPSignaling signaling;
+        NetherNetHTTPServerSignaling signaling;
         try {
             signaling = this.signaling(settings, address, icePort);
         } catch (Exception e) {
@@ -204,9 +205,9 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     /**
      * Builds the signaling endpoint from the configuration.
      */
-    private NetherNetHTTPSignaling signaling(NetherNetSettings settings, InetSocketAddress address, int icePort)
+    private NetherNetHTTPServerSignaling signaling(NetherNetSettings settings, InetSocketAddress address, int icePort)
             throws Exception {
-        NetherNetHTTPSignaling.Builder builder = new NetherNetHTTPSignaling.Builder()
+        NetherNetHTTPServerSignaling.Builder builder = new NetherNetHTTPServerSignaling.Builder()
                 .setIdentity(this.identity)
                 .setServeHttp(settings.signalingMode().builtin())
                 .setTrustedProxies(TrustedProxies.parse(settings.getTrustedProxies()))
@@ -375,12 +376,12 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     @Override
-    public NetherNetHTTPSignaling.JoinRefusal acceptsConnections() {
+    public NetherNetHTTPServerSignaling.JoinRefusal acceptsConnections() {
         if (!this.running || this.bindings.isEmpty()) {
-            return NetherNetHTTPSignaling.JoinRefusal.ERROR;
+            return NetherNetHTTPServerSignaling.JoinRefusal.ERROR;
         }
         if (this.isFull()) {
-            return NetherNetHTTPSignaling.JoinRefusal.FULL;
+            return NetherNetHTTPServerSignaling.JoinRefusal.FULL;
         }
         return null;
     }
@@ -445,7 +446,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         }
     }
 
-    private record Binding(NetherNetHTTPSignaling signaling, Channel channel) {
+    private record Binding(NetherNetHTTPServerSignaling signaling, Channel channel) {
     }
 
     /**

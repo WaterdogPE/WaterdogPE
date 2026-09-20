@@ -29,7 +29,7 @@ import dev.waterdog.waterdogpe.network.nethernet.ProxyIdentity;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import io.netty.channel.Channel;
-import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPSignaling;
+import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPServerSignaling;
 import org.cloudburstmc.netty.signaling.ProviderClient;
 import org.cloudburstmc.netty.signaling.ServerStatus;
 import org.cloudburstmc.netty.signaling.admission.NativeAdmissionServerChannel;
@@ -224,7 +224,7 @@ public class NetherNetCommand extends Command {
      */
     private String identityFingerprint(ProxyServer proxy) {
         try {
-            byte[] key = ProxyIdentity.identity(proxy).keyPair().getPublic().getEncoded();
+            byte[] key = ProxyIdentity.identity(proxy).publicKey().getEncoded();
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(key));
         } catch (Exception e) {
             return null;
@@ -235,7 +235,7 @@ public class NetherNetCommand extends Command {
         return value ? "§ayes" : "§cno";
     }
 
-    private static String refusal(NetherNetHTTPSignaling.JoinRefusal refusal) {
+    private static String refusal(NetherNetHTTPServerSignaling.JoinRefusal refusal) {
         if (refusal == null) {
             return "§ayes";
         }

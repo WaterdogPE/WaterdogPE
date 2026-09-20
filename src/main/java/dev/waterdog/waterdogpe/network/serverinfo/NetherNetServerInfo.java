@@ -17,9 +17,10 @@ package dev.waterdog.waterdogpe.network.serverinfo;
 
 import org.cloudburstmc.netty.channel.nethernet.NetherNetChannelFactory;
 import org.cloudburstmc.netty.channel.nethernet.config.NetherChannelOption;
+import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPClientSignaling;
+import org.cloudburstmc.netty.util.nethernet.OperatorIdentity;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.NetherNetClientSessionInitializer;
-import dev.waterdog.waterdogpe.network.nethernet.HttpClientSignaling;
 import dev.waterdog.waterdogpe.network.nethernet.ProxyIdentity;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.bootstrap.Bootstrap;
@@ -63,26 +64,21 @@ public class NetherNetServerInfo extends ServerInfo {
         // A proxy with no NetherNet listener reaches the native through this path first.
         LibDataChannelArchDetect.initialize();
 
-        HttpClientSignaling.Identity identity;
+        // Derived per connection: the token names the player and expires
+        OperatorIdentity identity;
         try {
-            String domain = player.getProxy().getNetherNetSettings().getIdentityDomain();
-            identity = new HttpClientSignaling.Identity(
-                    ProxyIdentity.keyPair(player.getProxy()),
-                    player.getXuid(),
-                    player.getName(),
-                    domain == null || domain.isBlank() ? player.getProxy().getConfiguration().getName() : domain);
+            identity = ProxyIdentity.identity(player.getProxy()).forPlayer(player.getXuid(), player.getName());
         } catch (Exception e) {
             promise.tryFailure(e);
             return promise;
         }
 
-        HttpClientSignaling signaling = new HttpClientSignaling(eventLoop, remoteAddress, identity);
-
         new Bootstrap()
                 .group(eventLoop)
-                .channelFactory(NetherNetChannelFactory.client(signaling))
+                .channelFactory(NetherNetChannelFactory.client(new NetherNetHTTPClientSignaling()))
                 .option(NetherChannelOption.NETHER_CLIENT_HANDSHAKE_TIMEOUT_MS, timeout)
                 .option(NetherChannelOption.NETHER_CLIENT_MAX_HANDSHAKE_ATTEMPTS, HANDSHAKE_ATTEMPTS)
+                .option(NetherChannelOption.NETHER_CLIENT_IDENTITY, identity)
                 .handler(new NetherNetClientSessionInitializer(player, serverInfo, promise))
                 .connect(remoteAddress)
                 .addListener((ChannelFuture future) -> {
