@@ -75,6 +75,16 @@ public abstract class Configuration {
         }
     }
 
+    public void reload() {
+        if (this.file == null) return;
+        try {
+            this.values.clear();
+            this.values = this.deserialize(Files.newInputStream(this.file.toPath()));
+        } catch (Exception e) {
+            MainLogger.getLogger().error("Unable to reload Config " + this.file.toString());
+        }
+    }
+
     public void save() {
         this.save(this.serialize(this.values));
     }
