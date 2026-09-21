@@ -30,7 +30,6 @@ import dev.waterdog.waterdogpe.network.nethernet.ProxyIdentity;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import io.netty.channel.Channel;
-import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPServerSignaling;
 import org.cloudburstmc.netty.signaling.ProviderClient;
 import org.cloudburstmc.netty.signaling.ServerStatus;
 import org.cloudburstmc.netty.signaling.admission.NativeAdmissionServerChannel;
