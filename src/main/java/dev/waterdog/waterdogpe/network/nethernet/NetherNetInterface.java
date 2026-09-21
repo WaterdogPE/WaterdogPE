@@ -15,9 +15,11 @@
 
 package dev.waterdog.waterdogpe.network.nethernet;
 
+import org.cloudburstmc.netty.channel.nethernet.signaling.IceServerInfo;
+import org.cloudburstmc.netty.channel.nethernet.signaling.JoinRefusal;
 import org.cloudburstmc.netty.channel.nethernet.NetherNetChannelFactory;
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPServerSignaling;
-import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetServerSignaling.PongData;
+import org.cloudburstmc.netty.channel.nethernet.signaling.PongData;
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetSignaling;
 import org.cloudburstmc.netty.util.nethernet.TokenTrust;
 import org.cloudburstmc.netty.util.nethernet.TrustedProxies;
@@ -181,12 +183,12 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
      * The configured STUN and TURN servers, as one entry carrying every URL. Credentials belong in
      * the URL, which is the only place the configuration has to put them.
      */
-    private static List<NetherNetSignaling.IceServerInfo> iceServers(NetherNetSettings settings) {
+    private static List<IceServerInfo> iceServers(NetherNetSettings settings) {
         List<String> urls = settings.getIceServers();
         if (urls.isEmpty()) {
             return List.of();
         }
-        return List.of(new NetherNetSignaling.IceServerInfo.Builder().setUrls(List.copyOf(urls)).build());
+        return List.of(new IceServerInfo.Builder().setUrls(List.copyOf(urls)).build());
     }
 
     /**
@@ -346,12 +348,12 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     @Override
-    public NetherNetHTTPServerSignaling.JoinRefusal acceptsConnections() {
+    public JoinRefusal acceptsConnections() {
         if (!this.running || this.bindings.isEmpty()) {
-            return NetherNetHTTPServerSignaling.JoinRefusal.ERROR;
+            return JoinRefusal.ERROR;
         }
         if (this.isFull()) {
-            return NetherNetHTTPServerSignaling.JoinRefusal.FULL;
+            return JoinRefusal.FULL;
         }
         return null;
     }

@@ -17,7 +17,7 @@ package dev.waterdog.waterdogpe.event.defaults;
 
 import dev.waterdog.waterdogpe.event.CancellableEvent;
 import dev.waterdog.waterdogpe.event.Event;
-import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetServerSignaling.PongData;
+import org.cloudburstmc.netty.channel.nethernet.signaling.PongData;
 import lombok.Getter;
 
 import java.net.InetSocketAddress;

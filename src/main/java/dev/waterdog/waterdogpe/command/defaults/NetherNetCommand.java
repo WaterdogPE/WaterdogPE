@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.command.defaults;
 
+import org.cloudburstmc.netty.channel.nethernet.signaling.JoinRefusal;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -235,7 +236,7 @@ public class NetherNetCommand extends Command {
         return value ? "§ayes" : "§cno";
     }
 
-    private static String refusal(NetherNetHTTPServerSignaling.JoinRefusal refusal) {
+    private static String refusal(JoinRefusal refusal) {
         if (refusal == null) {
             return "§ayes";
         }
