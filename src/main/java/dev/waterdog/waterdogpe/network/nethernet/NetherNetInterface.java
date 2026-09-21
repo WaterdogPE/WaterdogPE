@@ -33,15 +33,12 @@ import dev.waterdog.waterdogpe.event.defaults.ProxyPingEvent;
 import dev.waterdog.waterdogpe.network.NetworkInterface;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.NetherNetServerSessionInitializer;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
-import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import dev.waterdog.waterdogpe.utils.config.proxy.HttpsSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.extern.log4j.Log4j2;
 
@@ -65,8 +62,6 @@ import java.util.concurrent.CompletableFuture;
  */
 @Log4j2
 public class NetherNetInterface implements NetworkInterface, SignalingService {
-
-    private EventLoopGroup signalingGroup;
 
     private static final int GAME_TYPE_SURVIVAL = 0;
     private static final int GAME_TYPE_CREATIVE = 1;
@@ -125,9 +120,9 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
         try {
             ServerBootstrap bootstrap = new ServerBootstrap()
-                    // The signaling endpoint binds an NIO channel, so it needs a matching loop.
-                    // Nothing hot runs here: the media is handled by the native ICE and DTLS stack.
-                    .group(this.signalingGroup())
+                    // Nothing hot runs on this loop: the listener has one of its own and the
+                    // media is handled by the native ICE and DTLS stack
+                    .group(this.proxy.getWorkerEventLoopGroup())
                     .channelFactory(NetherNetChannelFactory.server(signaling))
                     .option(NetherChannelOption.NETHER_SERVER_RTC_HANDSHAKE_TIMEOUT_SECONDS, settings.getHandshakeTimeout())
                     .option(NetherChannelOption.NETHER_SERVER_METRICS, this.serverMetrics)
@@ -265,14 +260,6 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         return Set.of(bound.getHostAddress());
     }
 
-    private synchronized EventLoopGroup signalingGroup() {
-        if (this.signalingGroup == null) {
-            this.signalingGroup = new NioEventLoopGroup(1, ThreadFactoryBuilder.builder()
-                    .format("NetherNet Signaling - #%d").build());
-        }
-        return this.signalingGroup;
-    }
-
     /**
      * The port ICE gathers on. A dedicated port lets the transport multiplex every peer over one
      * socket; without one, ICE falls back to an ephemeral port per peer, because the signaling port
@@ -393,11 +380,6 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         if (this.provider != null) {
             this.provider.close();
             this.provider = null;
-        }
-
-        if (this.signalingGroup != null) {
-            this.signalingGroup.shutdownGracefully();
-            this.signalingGroup = null;
         }
     }
 
