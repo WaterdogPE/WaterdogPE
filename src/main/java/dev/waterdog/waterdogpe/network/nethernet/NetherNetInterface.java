@@ -124,7 +124,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                     // media is handled by the native ICE and DTLS stack
                     .group(this.proxy.getWorkerEventLoopGroup())
                     .channelFactory(NetherNetChannelFactory.server(signaling))
-                    .option(NetherChannelOption.NETHER_SERVER_RTC_HANDSHAKE_TIMEOUT_SECONDS, settings.getHandshakeTimeout())
+                    .option(NetherChannelOption.NETHER_SERVER_RTC_HANDSHAKE_TIMEOUT_SECONDS,
+                            NetherNetProperties.HANDSHAKE_TIMEOUT)
                     .option(NetherChannelOption.NETHER_SERVER_METRICS, this.serverMetrics)
                     .childHandler(new NetherNetServerSessionInitializer(this.proxy));
             if (icePort > 0) {
@@ -174,11 +175,11 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     /**
-     * The configured STUN and TURN servers, as one entry carrying every URL. Credentials belong in
-     * the URL, which is the only place the configuration has to put them.
+     * The STUN and TURN servers from the system property, as one entry carrying every URL.
+     * Credentials belong in the URL, which is the only place they have to go.
      */
-    private static List<IceServerInfo> iceServers(NetherNetSettings settings) {
-        List<String> urls = settings.getIceServers();
+    private static List<IceServerInfo> iceServers() {
+        List<String> urls = NetherNetProperties.ICE_SERVERS;
         if (urls.isEmpty()) {
             return List.of();
         }
@@ -196,7 +197,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                 .setTrustedProxies(TrustedProxies.parse(settings.getTrustedProxies()))
                 .setProxyProtocol(settings.isProxyProtocol())
                 .setAdvertisedAddresses(advertisedAddresses(address, settings))
-                .setIceServers(iceServers(settings))
+                .setIceServers(iceServers())
                 // RakNet holds the UDP side of the signaling port, so ICE never uses it
                 .setIceOnLocalPort(false)
                 // A peer may be another proxy signing its own assertion, which no auth service issued
@@ -224,8 +225,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
      * override only applies to the primary bind, additional ports always mirror their own.
      */
     private InetSocketAddress signalingAddress(InetSocketAddress address, NetherNetSettings settings) {
-        int port = settings.getSignalingPort() > 0 && this.bindings.isEmpty()
-                ? settings.getSignalingPort() : address.getPort();
+        int port = NetherNetProperties.SIGNALING_PORT > 0 && this.bindings.isEmpty()
+                ? NetherNetProperties.SIGNALING_PORT : address.getPort();
         return new InetSocketAddress(address.getAddress(), port);
     }
 
@@ -235,7 +236,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         }
 
         // The native ICE and DTLS stack logs through slf4j once a threshold is set.
-        NetherNetLogging.setNativeLogLevel(System.getProperty("waterdog.nethernetLog", "WARN"));
+        NetherNetLogging.setNativeLogLevel(NetherNetProperties.NATIVE_LOG_LEVEL);
 
         this.identity = ProxyIdentity.identity(this.proxy);
         log.info("NetherNet identifies this operator to players as {}", ProxyIdentity.domain(this.proxy));
@@ -321,7 +322,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
      * rather than capacity, and refusing signaling on it would lock out every join past the first.
      */
     boolean isFull() {
-        int limit = this.proxy.getNetherNetSettings().getMaxConnections();
+        int limit = NetherNetProperties.MAX_CONNECTIONS;
         return limit > 0 && this.proxy.getPlayerManager().getPlayers().size() >= limit;
     }
 

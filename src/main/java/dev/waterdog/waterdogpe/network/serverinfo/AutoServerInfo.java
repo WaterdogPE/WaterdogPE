@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.serverinfo;
 
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.nethernet.NetherNetProperties;
 import org.cloudburstmc.netty.channel.nethernet.signaling.HttpSignalingSettings;
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPClientSignaling;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -66,7 +67,7 @@ public class AutoServerInfo extends ServerInfo {
         EventLoop eventLoop = player.getProxy().getWorkerEventLoopGroup().next();
         Promise<ClientConnection> promise = eventLoop.newPromise();
 
-        Transport known = this.recall(player.getProxy().getNetherNetSettings().getTransportMemory());
+        Transport known = this.recall(NetherNetProperties.TRANSPORT_MEMORY);
         if (known != null) {
             this.attempt(player, promise, known, true);
             return promise;

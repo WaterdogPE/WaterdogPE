@@ -54,6 +54,7 @@ public final class ProxyIdentity {
     }
 
     private static OperatorIdentity load(ProxyServer proxy) throws Exception {
+        // An absolute path resolves to itself, so a mounted key works
         Path file = proxy.getDataPath().resolve(proxy.getNetherNetSettings().getIdentityFile());
 
         boolean existed = Files.isRegularFile(file);
@@ -66,16 +67,11 @@ public final class ProxyIdentity {
     }
 
     /**
-     * The operator name shown to players in the first use prompt. It is display text only, so it
-     * can change at any time without replacing the key and re-prompting anyone.
-     * <p>
-     * Falls back to the listener name rather than the MOTD, which plugins rewrite per ping.
+     * The name the identity carries, as the assertion's provider and the token issuer. Clients pin
+     * the key and nothing displays this today, so it is the listener name rather than the MOTD,
+     * which plugins rewrite per ping.
      */
     public static String domain(ProxyServer proxy) {
-        String domain = proxy.getNetherNetSettings().getIdentityDomain();
-        if (domain != null && !domain.isBlank()) {
-            return domain;
-        }
         return Color.clean(proxy.getConfiguration().getName());
     }
 }

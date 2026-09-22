@@ -75,10 +75,6 @@ public class NetherNetSettings extends SettingsSection {
     @Comment("Settings for the NXS signaling provider. Only used in the nxs and hybrid modes")
     private NxsSettings nxs = new NxsSettings();
 
-    @Path("signaling_port")
-    @Comment("TCP port for the signaling endpoint. 0 mirrors the listener port, which is what clients expect")
-    private int signalingPort = 0;
-
     @Path("trusted_proxies")
     @Comments({
             "Addresses allowed to set X-Forwarded-For on signaling requests, as hosts or CIDR ranges",
@@ -104,14 +100,6 @@ public class NetherNetSettings extends SettingsSection {
     })
     private List<String> advertiseAddresses = new ArrayList<>();
 
-    @Path("ice_servers")
-    @Comments({
-            "STUN and TURN servers ICE may use, such as stun:stun.l.google.com:19302.",
-            "A proxy behind NAT needs STUN to learn its public address, TURN relays when no direct",
-            "path exists. TURN credentials go in the URL, as turn:user:password@host:3478."
-    })
-    private List<String> iceServers = new ArrayList<>();
-
     @Path("udp_port")
     @Comments({
             "Dedicated UDP port for NetherNet media, one socket for every peer.",
@@ -129,31 +117,10 @@ public class NetherNetSettings extends SettingsSection {
     @Comments({
             "Unencrypted PEM private key holding the P-384 key identifying this operator to",
             "clients, generated on first start. Share it across a fleet to be trusted as one",
-            "operator; replacing it re-prompts every returning player."
+            "operator; replacing it re-prompts every returning player. An absolute path works,",
+            "so it can be mounted from outside the proxy directory."
     })
     private String identityFile = "keys/identity.pem";
-
-    @Path("identity_domain")
-    @Comments({
-            "Operator name shown in the first use trust prompt. Empty falls back to listener.name.",
-            "Clients pin the key, not the name, so changing it prompts nobody again."
-    })
-    private String identityDomain = "";
-
-    @Path("handshake_timeout")
-    @Comment("Seconds a connection has to finish ICE and DTLS before it is dropped")
-    private int handshakeTimeout = 30;
-
-    @Path("transport_memory")
-    @Comments({
-            "Seconds a server_type: bedrock downstream remembers which transport worked, so not every",
-            "join probes. A failure on the remembered transport switches at once. 0 probes every join."
-    })
-    private int transportMemory = 300;
-
-    @Path("max_connections")
-    @Comment("Maximum concurrent NetherNet connections. 0 follows the global player limit")
-    private int maxConnections = 0;
 
     public SignalingMode signalingMode() {
         try {

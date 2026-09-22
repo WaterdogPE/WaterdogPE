@@ -25,6 +25,7 @@ import dev.waterdog.waterdogpe.command.CommandSender;
 import dev.waterdog.waterdogpe.command.CommandSettings;
 import dev.waterdog.waterdogpe.network.connection.TransportProfile;
 import dev.waterdog.waterdogpe.network.nethernet.NetherNetInterface;
+import dev.waterdog.waterdogpe.network.nethernet.NetherNetProperties;
 import dev.waterdog.waterdogpe.network.nethernet.NetherNetProvider;
 import dev.waterdog.waterdogpe.network.nethernet.ProxyIdentity;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -107,8 +108,8 @@ public class NetherNetCommand extends Command {
         }
 
         sb.append("§3Accepting connections: ").append(refusal(nethernet.acceptsConnections()));
-        if (settings.getMaxConnections() > 0) {
-            sb.append(" §3(limit §b").append(settings.getMaxConnections()).append("§3)");
+        if (NetherNetProperties.MAX_CONNECTIONS > 0) {
+            sb.append(" §3(limit §b").append(NetherNetProperties.MAX_CONNECTIONS).append("§3)");
         }
         sb.append('\n');
 
