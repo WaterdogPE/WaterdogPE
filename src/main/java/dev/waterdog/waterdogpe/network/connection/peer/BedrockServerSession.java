@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.network.connection.peer;
 import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
 import dev.waterdog.waterdogpe.network.connection.codec.batch.BatchFlags;
 import dev.waterdog.waterdogpe.network.connection.codec.server.PacketQueueHandler;
+import dev.waterdog.waterdogpe.network.protocol.PacketUtils;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyBatchBridge;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
@@ -72,6 +73,7 @@ public class BedrockServerSession extends BedrockSession implements ProxiedConne
 
     @Override
     public void sendPacketImmediately(BedrockPacket packet) {
+        PacketUtils.tracePacketSent("client", this.getSocketAddress(), packet);
         BedrockBatchWrapper batch = BedrockBatchWrapper.create(this.subClientId, packet);
         batch.setFlag(BatchFlags.SKIP_QUEUE);
         this.getPeer().sendPacket(batch);
