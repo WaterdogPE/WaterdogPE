@@ -298,6 +298,17 @@ public class EntityMap implements BedrockPacketHandler {
         return data.rewriteEntityId(packet.getRuntimeEntityId(), packet::setRuntimeEntityId);
     }
 
+    /**
+     * The credits the client plays after the dragon dies are addressed to the player by runtime id,
+     * and so is the packet it sends back when they finish. Without the rewrite neither side
+     * recognises the id: the credits never start, and the server never gets the acknowledgement it
+     * waits for before moving the player out of the end.
+     */
+    @Override
+    public PacketSignal handle(ShowCreditsPacket packet) {
+        return data.rewriteEntityId(packet.getRuntimeEntityId(), packet::setRuntimeEntityId);
+    }
+
     @Override
     public PacketSignal handle(EventPacket packet) {
         return data.rewriteEntityId(packet.getUniqueEntityId(), packet::setUniqueEntityId);
