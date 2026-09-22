@@ -62,7 +62,11 @@ public class SwitchDownstreamHandlerTest {
         this.target = newFixture("game");
         this.harness.setActiveDownstream(this.lobby.connection());
         this.harness.setPendingConnection(this.target.connection());
-        this.harness.player.getRewriteData().setStartGameSettings(StartGameSettings.from(newStartGame()));
+        // The baseline is captured the way InitialHandler captures it: after the rewind history size
+        // every downstream is made to report has been applied.
+        StartGamePacket baseline = newStartGame();
+        StartGameSettings.applyBedrockRewindHistory(baseline);
+        this.harness.player.getRewriteData().setStartGameSettings(StartGameSettings.from(baseline));
         this.handler = new SwitchDownstreamHandler(this.harness.player, this.target.connection());
     }
 
