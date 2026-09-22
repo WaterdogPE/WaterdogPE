@@ -44,8 +44,6 @@ import java.util.*;
  */
 public class PlayerRewriteUtils {
 
-    public static final RequestChunkRadiusPacket defaultChunkRadius = new RequestChunkRadiusPacket();
-    public static final ClientCacheStatusPacket defaultCachePacket = new ClientCacheStatusPacket();
 
     public static final int DIMENSION_OVERWORLD = 0;
     public static final int DIMENSION_NETHER = 1;
@@ -66,7 +64,6 @@ public class PlayerRewriteUtils {
     private static final ByteBuf emptyHeightMapData;
 
     static {
-        defaultChunkRadius.setRadius(8);
         // Here we create hardcoded "empty" chunk which is accepted by client
         // Because client does not accept empty array list we try to hardcode this
         // Keep in mind that this CAN change with newer versions!

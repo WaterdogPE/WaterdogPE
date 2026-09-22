@@ -142,7 +142,7 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
 
     @Override
     public PacketSignal handle(ChunkRadiusUpdatedPacket packet) {
-        this.player.getLoginData().getChunkRadius().setRadius(packet.getRadius());
+        this.player.getLoginData().setChunkRadius(packet.getRadius());
         return PacketSignal.UNHANDLED;
     }
 
@@ -171,7 +171,9 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
         switch (packet.getStatus()) {
             case LOGIN_SUCCESS -> {
                 if (this.player.getProtocol().isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_12)) {
-                    connection.sendPacket(this.player.getLoginData().getCachePacket());
+                    ClientCacheStatusPacket cachePacket = new ClientCacheStatusPacket();
+                    cachePacket.setSupported(this.player.getLoginData().isCacheSupported());
+                    connection.sendPacket(cachePacket);
                 }
                 return Signals.CANCEL;
             }

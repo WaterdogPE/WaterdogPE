@@ -54,7 +54,8 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler implements
 
     @Override
     public final PacketSignal handle(RequestChunkRadiusPacket packet) {
-        this.player.getLoginData().setChunkRadius(packet);
+        this.player.getLoginData().setChunkRadius(packet.getRadius());
+        this.player.getLoginData().setMaxChunkRadius(packet.getMaxRadius());
         return PacketSignal.UNHANDLED;
     }
 

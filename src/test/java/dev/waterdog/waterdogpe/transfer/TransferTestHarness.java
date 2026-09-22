@@ -37,7 +37,6 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.ImmediateEventExecutor;
 import io.netty.util.concurrent.Promise;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
-import org.cloudburstmc.protocol.bedrock.packet.RequestChunkRadiusPacket;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -126,7 +125,7 @@ public class TransferTestHarness implements AutoCloseable {
         when(this.loginData.getProtocol()).thenReturn(ProtocolVersion.MINECRAFT_PE_1_19_50);
         when(this.loginData.getDisplayName()).thenReturn("TestPlayer");
         when(this.loginData.getXuid()).thenReturn("123456");
-        when(this.loginData.getChunkRadius()).thenReturn(new RequestChunkRadiusPacket());
+        when(this.loginData.getChunkRadius()).thenReturn(8);
 
         setProxyInstance(this.proxy);
         this.player = new ProxiedPlayer(this.proxy, this.upstream, CompressionType.ZLIB, this.loginData);
