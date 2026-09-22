@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.serverinfo;
 
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import org.cloudburstmc.netty.channel.nethernet.signaling.HttpSignalingSettings;
 import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetHTTPClientSignaling;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.channel.EventLoop;
@@ -71,11 +72,12 @@ public class AutoServerInfo extends ServerInfo {
             return promise;
         }
 
-        NetherNetHTTPClientSignaling.probe(this.getResolvedAddress()).whenCompleteAsync((supported, error) -> {
-            Transport choice = Boolean.TRUE.equals(supported) ? Transport.NETHERNET : Transport.RAKNET;
-            log.debug("[{}] Probed as {}", this.getServerName(), choice);
-            this.attempt(player, promise, choice, true);
-        }, eventLoop);
+        NetherNetHTTPClientSignaling.probe(this.getResolvedAddress(), HttpSignalingSettings.DEFAULT)
+                .whenCompleteAsync((probe, error) -> {
+                    Transport choice = error == null ? Transport.NETHERNET : Transport.RAKNET;
+                    log.debug("[{}] Probed as {}", this.getServerName(), choice);
+                    this.attempt(player, promise, choice, true);
+                }, eventLoop);
         return promise;
     }
 

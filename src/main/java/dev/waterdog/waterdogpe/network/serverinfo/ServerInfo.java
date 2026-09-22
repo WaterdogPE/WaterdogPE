@@ -113,7 +113,9 @@ public abstract class ServerInfo {
             // getByName on an IP literal is purely local (no network), so IP-configured servers resolve cheaply
             // and still short-circuit Netty's resolver because the result is a resolved InetSocketAddress.
             InetAddress resolved = InetAddress.getByName(configured.getHostString());
-            this.resolvedAddress = new InetSocketAddress(resolved, configured.getPort());
+            // Keeps the configured name on the address: HTTPS signaling validates the certificate against it
+            this.resolvedAddress = new InetSocketAddress(
+                    InetAddress.getByAddress(configured.getHostString(), resolved.getAddress()), configured.getPort());
         } catch (UnknownHostException e) {
             // Keep the last-known-good (or the raw configured) address; a transient DNS failure must not break
             // connects. The next access past the TTL will retry.
