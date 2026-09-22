@@ -16,17 +16,29 @@
 package dev.waterdog.waterdogpe.transfer;
 
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.ConnectedDownstreamHandler;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
+import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.packet.DisconnectPacket;
+import org.cloudburstmc.protocol.bedrock.packet.RespawnPacket;
+import dev.waterdog.waterdogpe.network.protocol.Signals;
+import org.cloudburstmc.protocol.common.PacketSignal;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentCaptor.forClass;
+import org.mockito.ArgumentCaptor;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -79,5 +91,39 @@ public class ConnectedDownstreamHandlerTest {
 
         assertFalse(this.harness.player.isConnected());
         assertTrue(this.harness.sentMessages.contains("waterdog.downstream.kicked"), "kick reason must reach the player");
+    }
+
+    private static RespawnPacket respawn(RespawnPacket.State state) {
+        RespawnPacket packet = new RespawnPacket();
+        packet.setRuntimeEntityId(42);
+        packet.setPosition(Vector3f.from(8, 64, 8));
+        packet.setState(state);
+        return packet;
+    }
+
+    /**
+     * A server the player is being transferred to starts its spawn sequence with a respawn
+     * handshake. The client never asked to respawn and will not answer it, so the proxy answers on
+     * its behalf - otherwise the server never starts ticking the player and nothing they do counts.
+     */
+    @Test
+    void answersTheRespawnHandshakeOfATransferInFlight() {
+        TransferCallback callback = new TransferCallback(this.harness.player, this.lobbyConnection,
+                this.harness.newServer("game"), 0);
+        assertTrue(this.harness.player.getRewriteData().trySetTransferCallback(callback));
+
+        assertSame(Signals.CANCEL, this.handler.handle(respawn(RespawnPacket.State.SERVER_SEARCHING)));
+
+        ArgumentCaptor<RespawnPacket> response = forClass(RespawnPacket.class);
+        verify(this.lobbyConnection).sendPacket(response.capture());
+        assertEquals(RespawnPacket.State.CLIENT_READY, response.getValue().getState());
+        assertEquals(42, response.getValue().getRuntimeEntityId());
+    }
+
+    /** A respawn on the server the player already plays on is a real death: leave it to the client. */
+    @Test
+    void leavesARealRespawnToTheClient() {
+        assertSame(PacketSignal.UNHANDLED, this.handler.handle(respawn(RespawnPacket.State.SERVER_SEARCHING)));
+        verify(this.lobbyConnection, never()).sendPacket(isA(RespawnPacket.class));
     }
 }

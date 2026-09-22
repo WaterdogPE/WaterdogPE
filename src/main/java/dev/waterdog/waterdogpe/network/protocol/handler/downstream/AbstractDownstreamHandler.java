@@ -66,6 +66,39 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
         return PacketSignal.UNHANDLED;
     }
 
+    /**
+     * A server the player is being handed to runs its own spawn sequence, and a Bedrock Dedicated
+     * Server opens it with a respawn handshake: it asks for a spawn point and waits for the client
+     * to answer that it is ready before it starts ticking the player.
+     *
+     * <p>The client has no reason to answer. It is mid session, it never died, and it was never told
+     * it changed servers, so it ignores the request - and forwarding it would risk showing a death
+     * screen for a death that did not happen. The proxy answers on its behalf instead, or the player
+     * ends up in a world where they can walk and break blocks and the server registers none of it.</p>
+     *
+     * <p>Only while a transfer to this connection is still in flight: a respawn on the server the
+     * player already plays on is a real death and belongs to the client.</p>
+     */
+    @Override
+    public PacketSignal handle(RespawnPacket packet) {
+        if (packet.getState() != RespawnPacket.State.SERVER_SEARCHING) {
+            return PacketSignal.UNHANDLED;
+        }
+
+        TransferCallback transferCallback = this.player.getRewriteData().getTransferCallback();
+        if (transferCallback == null || transferCallback.getConnection() != this.connection) {
+            return PacketSignal.UNHANDLED;
+        }
+
+        RespawnPacket response = new RespawnPacket();
+        // Still the id downstream knows: the rewrite runs after the handlers.
+        response.setRuntimeEntityId(packet.getRuntimeEntityId());
+        response.setPosition(packet.getPosition());
+        response.setState(RespawnPacket.State.CLIENT_READY);
+        this.connection.sendPacket(response);
+        return Signals.CANCEL;
+    }
+
     @Override
     public PacketSignal handle(ItemComponentPacket packet) {
         if (!this.player.acceptItemComponentPacket()) {
