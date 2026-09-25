@@ -299,6 +299,11 @@ public class EntityMap implements BedrockPacketHandler {
     }
 
     @Override
+    public PacketSignal handle(ShowCreditsPacket packet) {
+        return data.rewriteEntityId(packet.getRuntimeEntityId(), packet::setRuntimeEntityId);
+    }
+
+    @Override
     public PacketSignal handle(EventPacket packet) {
         return data.rewriteEntityId(packet.getUniqueEntityId(), packet::setUniqueEntityId);
     }
