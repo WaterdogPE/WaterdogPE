@@ -118,6 +118,9 @@ public class InitialHandler extends AbstractDownstreamHandler {
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setDimension(packet.getDimensionId());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
+        // This packet is forwarded to the client, which locks these settings for the whole session,
+        // so the override has to happen before both the client and the baseline see the value.
+        StartGameSettings.applyBedrockRewindHistory(packet);
         rewriteData.setStartGameSettings(StartGameSettings.from(packet));
         packet.setRuntimeEntityId(rewriteData.getEntityId());
         packet.setUniqueEntityId(rewriteData.getEntityId());

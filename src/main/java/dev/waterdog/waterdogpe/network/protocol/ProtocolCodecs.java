@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.protocol;
 
 import dev.waterdog.waterdogpe.network.protocol.updaters.CodecUpdater419;
+import dev.waterdog.waterdogpe.network.protocol.updaters.CodecUpdaterEvents;
 import dev.waterdog.waterdogpe.network.protocol.updaters.ProtocolCodecUpdater;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodec;
@@ -74,6 +75,7 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(RequestChunkRadiusPacket.class);
         HANDLED_PACKETS.add(GameRulesChangedPacket.class);
         HANDLED_PACKETS.add(BossEventPacket.class);
+        HANDLED_PACKETS.add(ShowCreditsPacket.class);
         HANDLED_PACKETS.add(CommandRequestPacket.class);
         HANDLED_PACKETS.add(UpdateTradePacket.class);
         HANDLED_PACKETS.add(TransferPacket.class);
@@ -138,6 +140,7 @@ public class ProtocolCodecs {
     private static final ProtocolCodecUpdater DEFAULT_UPDATER = (builder, codec) -> builder.retainPackets(HANDLED_PACKETS.toArray(new Class[]{}));
     static {
         UPDATERS.add(new CodecUpdater419());
+        UPDATERS.add(new CodecUpdaterEvents());
     }
 
     public static void addUpdater(ProtocolCodecUpdater updater) {

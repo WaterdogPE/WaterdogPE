@@ -145,6 +145,8 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
 
         // The client locks these settings on its first spawn: a server that disagrees with them can
         // not be joined without a full reconnect, so fail the transfer while it is still recoverable.
+        // This packet never reaches the client, so the override only settles what it is compared to.
+        StartGameSettings.applyBedrockRewindHistory(packet);
         StartGameSettings startGameSettings = rewriteData.getStartGameSettings();
         String incompatibilities = startGameSettings == null ? null : startGameSettings.findIncompatibilities(packet);
         if (incompatibilities != null) {

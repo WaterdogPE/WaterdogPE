@@ -38,6 +38,25 @@ public record StartGameSettings(AuthoritativeMovementMode movementMode,
     }
 
     /**
+     * The rewind history size a Bedrock Dedicated Server reports, and the one every downstream is
+     * made to report along with it.
+     */
+    private static final int BEDROCK_REWIND_HISTORY_SIZE = 40;
+
+    /**
+     * Reports the Bedrock Dedicated Server rewind history size on a StartGame packet a downstream
+     * server sent.
+     *
+     * <p>Server software disagrees on this value and the client can only hold one: it locks what the
+     * first server reports and a later server that disagrees is refused. A Bedrock Dedicated Server
+     * reports 40 and no longer has a setting to change that, so it is the value every server has to
+     * agree on. Nothing else in the packet is touched.</p>
+     */
+    public static void applyBedrockRewindHistory(StartGamePacket packet) {
+        packet.setRewindHistorySize(BEDROCK_REWIND_HISTORY_SIZE);
+    }
+
+    /**
      * @return a description of the incompatible settings, or null if the packet is compatible.
      */
     public String findIncompatibilities(StartGamePacket packet) {

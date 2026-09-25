@@ -121,4 +121,33 @@ public class StartGameSettingsTest {
         assertTrue(result.contains("rewindHistorySize"));
         assertTrue(result.contains("blockNetworkIdsHashed"));
     }
+
+    /**
+     * The mismatch this exists for: a lobby that does not implement rewind reports 0, and a Bedrock
+     * Dedicated Server reports 40 and cannot be told otherwise. Reporting the backend's value on the
+     * lobby's packet too is what lets the player cross between them.
+     */
+    @Test
+    void bedrockRewindHistoryMakesALobbyAgreeWithABedrockBackend() {
+        StartGamePacket lobby = packet(AuthoritativeMovementMode.SERVER_WITH_REWIND, 0, true, true, true);
+        StartGamePacket bedrockBackend = packet(AuthoritativeMovementMode.SERVER_WITH_REWIND, 40, true, true, true);
+
+        assertNotNull(StartGameSettings.from(lobby).findIncompatibilities(bedrockBackend));
+
+        StartGameSettings.applyBedrockRewindHistory(lobby);
+        assertEquals(40, lobby.getRewindHistorySize());
+        assertNull(StartGameSettings.from(lobby).findIncompatibilities(bedrockBackend));
+    }
+
+    /** The other four settings still have to match on their own. */
+    @Test
+    void bedrockRewindHistoryTouchesNothingElse() {
+        StartGamePacket packet = basePacket();
+        StartGameSettings.applyBedrockRewindHistory(packet);
+
+        assertEquals(AuthoritativeMovementMode.SERVER, packet.getAuthoritativeMovementMode());
+        assertTrue(packet.isServerAuthoritativeBlockBreaking());
+        assertTrue(packet.isInventoriesServerAuthoritative());
+        assertTrue(packet.isBlockNetworkIdsHashed());
+    }
 }
