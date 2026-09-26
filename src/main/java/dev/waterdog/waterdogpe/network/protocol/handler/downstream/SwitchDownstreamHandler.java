@@ -117,6 +117,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
     public final PacketSignal handle(StartGamePacket packet) {
         RewriteData rewriteData = this.player.getRewriteData();
         rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
+        rewriteData.setOriginalUniqueEntityId(packet.getUniqueEntityId());
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());
         rewriteData.setRotation(packet.getRotation());

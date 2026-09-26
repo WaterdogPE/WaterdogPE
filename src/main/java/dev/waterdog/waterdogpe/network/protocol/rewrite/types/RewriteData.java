@@ -49,6 +49,11 @@ public class RewriteData {
      */
     @Getter
     private long originalEntityId;
+    /**
+     * The downstream-known unique entityId, BDS keeps it apart from the runtime one
+     */
+    @Getter
+    private long originalUniqueEntityId;
 
     @Getter
     private BlockPalette blockPalette;
@@ -145,7 +150,18 @@ public class RewriteData {
     }
 
     public PacketSignal rewriteEntityId(long from, LongConsumer setter) {
-        long rewriteId = PlayerRewriteUtils.rewriteId(from, getEntityId(), getOriginalEntityId());
+        return rewrite(from, PlayerRewriteUtils.rewriteId(from, getEntityId(), getOriginalEntityId()), setter);
+    }
+
+    public PacketSignal rewriteUniqueEntityId(long from, LongConsumer setter) {
+        return rewrite(from, this.rewriteUniqueId(from), setter);
+    }
+
+    public long rewriteUniqueId(long from) {
+        return PlayerRewriteUtils.rewriteId(from, getEntityId(), getOriginalUniqueEntityId());
+    }
+
+    private static PacketSignal rewrite(long from, long rewriteId, LongConsumer setter) {
         if (rewriteId == from) {
             return PacketSignal.UNHANDLED;
         }

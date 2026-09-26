@@ -20,7 +20,12 @@ import dev.waterdog.waterdogpe.network.protocol.rewrite.types.RewriteData;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.transfer.TransferTestHarness;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
+import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
+import org.cloudburstmc.protocol.bedrock.packet.PlayerListPacket;
+import org.cloudburstmc.protocol.bedrock.packet.SetScorePacket;
+import org.cloudburstmc.protocol.bedrock.packet.SetScoreboardIdentityPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ShowCreditsPacket;
+import org.cloudburstmc.protocol.bedrock.packet.UpdateAbilitiesPacket;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +38,8 @@ class EntityMapTest {
 
     private static final long PROXY_ENTITY_ID = 12345;
     private static final long DOWNSTREAM_ENTITY_ID = 7;
+    // BDS keeps the unique id apart from the runtime one
+    private static final long DOWNSTREAM_UNIQUE_ENTITY_ID = -38654705663L;
 
     private EntityMap entityMap;
 
@@ -48,6 +55,7 @@ class EntityMapTest {
         RewriteData rewriteData = new RewriteData();
         rewriteData.setEntityId(PROXY_ENTITY_ID);
         rewriteData.setOriginalEntityId(DOWNSTREAM_ENTITY_ID);
+        rewriteData.setOriginalUniqueEntityId(DOWNSTREAM_UNIQUE_ENTITY_ID);
 
         ProxiedPlayer player = mock(ProxiedPlayer.class);
         when(player.getRewriteData()).thenReturn(rewriteData);
@@ -92,5 +100,68 @@ class EntityMapTest {
         this.entityMap.doRewrite(packet);
 
         assertEquals(999, packet.getRuntimeEntityId());
+    }
+
+    @Test
+    void rewritesUniqueIdsAgainstTheServersUniqueId() {
+        UpdateAbilitiesPacket packet = new UpdateAbilitiesPacket();
+        packet.setUniqueEntityId(DOWNSTREAM_UNIQUE_ENTITY_ID);
+
+        this.entityMap.doRewrite(packet);
+        assertEquals(PROXY_ENTITY_ID, packet.getUniqueEntityId());
+
+        // Back towards the server
+        this.entityMap.doRewrite(packet);
+        assertEquals(DOWNSTREAM_UNIQUE_ENTITY_ID, packet.getUniqueEntityId());
+    }
+
+    @Test
+    void leavesTheRuntimeIdAloneInUniqueFields() {
+        UpdateAbilitiesPacket packet = new UpdateAbilitiesPacket();
+        packet.setUniqueEntityId(DOWNSTREAM_ENTITY_ID);
+
+        this.entityMap.doRewrite(packet);
+
+        assertEquals(DOWNSTREAM_ENTITY_ID, packet.getUniqueEntityId());
+    }
+
+    @Test
+    void rewritesThePlayersOwnPlayerListEntry() {
+        PlayerListPacket packet = new PlayerListPacket();
+        packet.setAction(PlayerListPacket.Action.ADD);
+        PlayerListPacket.Entry entry = new PlayerListPacket.Entry(java.util.UUID.randomUUID());
+        entry.setEntityId(DOWNSTREAM_UNIQUE_ENTITY_ID);
+        packet.getEntries().add(entry);
+
+        this.entityMap.doRewrite(packet);
+
+        assertEquals(PROXY_ENTITY_ID, entry.getEntityId());
+    }
+
+    @Test
+    void rewritesThePlayersOwnScores() {
+        SetScorePacket packet = new SetScorePacket();
+        packet.setAction(SetScorePacket.Action.SET);
+        packet.getInfos().add(new ScoreInfo(1, "test", 5, ScoreInfo.ScorerType.PLAYER, DOWNSTREAM_UNIQUE_ENTITY_ID));
+        packet.getInfos().add(new ScoreInfo(2, "test", 3, "fake"));
+
+        this.entityMap.doRewrite(packet);
+
+        ScoreInfo player = packet.getInfos().get(0);
+        assertEquals(PROXY_ENTITY_ID, player.getEntityId());
+        assertEquals(ScoreInfo.ScorerType.PLAYER, player.getType());
+        assertEquals(5, player.getScore());
+        assertEquals("fake", packet.getInfos().get(1).getName());
+    }
+
+    @Test
+    void rewritesThePlayersOwnScoreboardIdentity() {
+        SetScoreboardIdentityPacket packet = new SetScoreboardIdentityPacket();
+        packet.setAction(SetScoreboardIdentityPacket.Action.ADD);
+        packet.getEntries().add(new SetScoreboardIdentityPacket.Entry(1, DOWNSTREAM_UNIQUE_ENTITY_ID));
+
+        this.entityMap.doRewrite(packet);
+
+        assertEquals(PROXY_ENTITY_ID, packet.getEntries().get(0).getPlayerId());
     }
 }
