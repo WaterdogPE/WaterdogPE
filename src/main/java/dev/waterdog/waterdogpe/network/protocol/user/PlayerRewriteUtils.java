@@ -29,6 +29,7 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.*;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataMap;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataTypes;
+import org.cloudburstmc.protocol.bedrock.data.entity.EntityEventType;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityLinkData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
@@ -344,6 +345,27 @@ public class PlayerRewriteUtils {
         packet.setRuntimeEntityId(runtimeId);
         packet.setRotation(rotation.toVector3(rotation.getY()));
         packet.setMode(MovePlayerPacket.Mode.RESPAWN);
+        session.sendPacketImmediately(packet);
+    }
+
+    public static void injectRespawn(ProxiedConnection session, Vector3f position, long runtimeId) {
+        if (session == null || !session.isConnected()) {
+            return;
+        }
+        RespawnPacket packet = new RespawnPacket();
+        packet.setPosition(position);
+        packet.setState(RespawnPacket.State.SERVER_READY);
+        packet.setRuntimeEntityId(runtimeId);
+        session.sendPacketImmediately(packet);
+    }
+
+    public static void injectRespawnFinished(ProxiedConnection session, long runtimeId) {
+        if (session == null || !session.isConnected()) {
+            return;
+        }
+        EntityEventPacket packet = new EntityEventPacket();
+        packet.setRuntimeEntityId(runtimeId);
+        packet.setType(EntityEventType.RESPAWN);
         session.sendPacketImmediately(packet);
     }
 

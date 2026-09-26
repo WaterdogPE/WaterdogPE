@@ -22,11 +22,13 @@ import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import dev.waterdog.waterdogpe.network.protocol.registry.FakeDefinitionRegistry;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.RewriteMaps;
+import dev.waterdog.waterdogpe.network.protocol.rewrite.types.RewriteData;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
+import org.cloudburstmc.protocol.bedrock.data.AttributeData;
 import org.cloudburstmc.protocol.bedrock.data.camera.CameraPreset;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandData;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumConstraint;
@@ -64,6 +66,49 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
             transferCallback.onPlayStatus();
         }
         return PacketSignal.UNHANDLED;
+    }
+
+    @Override
+    public PacketSignal handle(UpdateAttributesPacket packet) {
+        if (packet.getRuntimeEntityId() != this.player.getRewriteData().getOriginalEntityId()) {
+            return PacketSignal.UNHANDLED;
+        }
+        for (AttributeData attribute : packet.getAttributes()) {
+            if (attribute.getName().equals("minecraft:health")) {
+                this.trackDeath(attribute.getValue() <= 0);
+            }
+        }
+        return PacketSignal.UNHANDLED;
+    }
+
+    @Override
+    public PacketSignal handle(SetHealthPacket packet) {
+        // BDS and PowerNukkitX send this on every spawn and respawn
+        this.trackDeath(packet.getHealth() <= 0);
+        return PacketSignal.UNHANDLED;
+    }
+
+    @Override
+    public PacketSignal handle(RespawnPacket packet) {
+        // Geyser only sends health 0, a Nukkit kill() only SERVER_SEARCHING
+        if (packet.getState() == RespawnPacket.State.SERVER_SEARCHING) {
+            this.trackDeath(true);
+        } else if (packet.getState() == RespawnPacket.State.SERVER_READY) {
+            this.trackDeath(false);
+        }
+        return PacketSignal.UNHANDLED;
+    }
+
+    private void trackDeath(boolean dead) {
+        if (this.connection != this.player.getDownstreamConnection()) {
+            return;
+        }
+        RewriteData rewriteData = this.player.getRewriteData();
+        rewriteData.setDead(dead);
+        // A new death once the transfer settled outdates a respawn the proxy started
+        if (dead && rewriteData.getTransferCallback() == null) {
+            rewriteData.setProxyRespawn(false);
+        }
     }
 
     @Override

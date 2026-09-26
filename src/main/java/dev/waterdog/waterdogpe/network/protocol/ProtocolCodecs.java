@@ -55,6 +55,7 @@ public class ProtocolCodecs {
         HANDLED_PACKETS.add(EntityEventPacket.class);
         HANDLED_PACKETS.add(MobEffectPacket.class);
         HANDLED_PACKETS.add(UpdateAttributesPacket.class);
+        HANDLED_PACKETS.add(SetHealthPacket.class);
         HANDLED_PACKETS.add(MobEquipmentPacket.class);
         HANDLED_PACKETS.add(MobArmorEquipmentPacket.class);
         HANDLED_PACKETS.add(InteractPacket.class);

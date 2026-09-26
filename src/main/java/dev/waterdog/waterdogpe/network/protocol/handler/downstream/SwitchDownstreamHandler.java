@@ -180,6 +180,13 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         ServerTransferEvent event = new ServerTransferEvent(this.player, oldConnection.getServerInfo(), this.connection.getServerInfo());
         this.player.getProxy().getEventManager().callEvent(event);
 
+        // The old server can no longer end its death screen, the new one spawns the player as usual
+        if (rewriteData.isDead()) {
+            rewriteData.setDead(false);
+            rewriteData.setProxyRespawn(true);
+            injectRespawn(this.player.getConnection(), packet.getPlayerPosition(), rewriteData.getEntityId());
+        }
+
         LongSet blobs = this.player.getChunkBlobs();
         if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_18_30) &&
                 this.player.getLoginData().isCacheSupported() && !blobs.isEmpty()) {

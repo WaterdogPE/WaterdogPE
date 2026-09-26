@@ -85,6 +85,16 @@ public class RewriteData {
     @Getter
     private Vector2f rotation;
     /**
+     * Whether the client is on the death screen of the current server
+     */
+    @Getter
+    private volatile boolean dead;
+    /**
+     * Set while the client answers a death screen the proxy ended during a transfer
+     */
+    @Getter
+    private volatile boolean proxyRespawn;
+    /**
      * Server known value of immobile flag
      * Actually applied value may be different during server transfer
      */

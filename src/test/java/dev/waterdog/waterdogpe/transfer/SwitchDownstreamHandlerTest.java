@@ -71,7 +71,7 @@ public class SwitchDownstreamHandlerTest {
         this.harness.close();
     }
 
-    private static StartGamePacket newStartGame() {
+    static StartGamePacket newStartGame() {
         StartGamePacket packet = new StartGamePacket();
         packet.setRuntimeEntityId(100);
         packet.setUniqueEntityId(100);

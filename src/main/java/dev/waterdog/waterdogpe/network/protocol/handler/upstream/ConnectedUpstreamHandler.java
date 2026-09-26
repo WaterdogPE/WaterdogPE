@@ -19,6 +19,7 @@ import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.protocol.handler.ProxyPacketHandler;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.RewriteMaps;
+import dev.waterdog.waterdogpe.network.protocol.rewrite.types.RewriteData;
 import lombok.Setter;
 import org.cloudburstmc.protocol.bedrock.data.PlayerActionType;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
@@ -32,6 +33,7 @@ import dev.waterdog.waterdogpe.network.protocol.Signals;
 import org.cloudburstmc.protocol.common.PacketSignal;
 
 import static dev.waterdog.waterdogpe.network.protocol.user.PlayerRewriteUtils.injectAirSubChunkResponse;
+import static dev.waterdog.waterdogpe.network.protocol.user.PlayerRewriteUtils.injectRespawnFinished;
 
 /**
  * Main handler for handling packets received from upstream.
@@ -61,6 +63,16 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler implements
 
     @Override
     public PacketSignal handle(PlayerActionPacket packet) {
+        if (packet.getAction() == PlayerActionType.RESPAWN) {
+            RewriteData rewriteData = this.player.getRewriteData();
+            if (!rewriteData.isProxyRespawn()) {
+                return PacketSignal.UNHANDLED;
+            }
+            // No server saw the death the proxy ended, so finish the respawn like one would
+            rewriteData.setProxyRespawn(false);
+            injectRespawnFinished(this.player.getConnection(), rewriteData.getEntityId());
+            return Signals.CANCEL;
+        }
         if (packet.getAction() != PlayerActionType.DIMENSION_CHANGE_SUCCESS) {
             return PacketSignal.UNHANDLED;
         }
@@ -70,6 +82,11 @@ public class ConnectedUpstreamHandler extends AbstractUpstreamHandler implements
             return Signals.CANCEL;
         }
         return PacketSignal.UNHANDLED;
+    }
+
+    @Override
+    public PacketSignal handle(RespawnPacket packet) {
+        return this.player.getRewriteData().isProxyRespawn() ? Signals.CANCEL : PacketSignal.UNHANDLED;
     }
 
     @Override
