@@ -30,7 +30,6 @@ import dev.waterdog.waterdogpe.scheduler.TaskHandler;
 import dev.waterdog.waterdogpe.utils.types.TranslationContainer;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.packet.SetLocalPlayerAsInitializedPacket;
-import org.cloudburstmc.protocol.bedrock.packet.StopSoundPacket;
 
 import static dev.waterdog.waterdogpe.network.protocol.user.PlayerRewriteUtils.*;
 import static dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback.TransferPhase.*;
@@ -151,11 +150,7 @@ public class TransferCallback {
 
         RewriteData rewriteData = this.player.getRewriteData();
 
-        StopSoundPacket soundPacket = new StopSoundPacket();
-        soundPacket.setSoundName("portal.travel");
-        soundPacket.setStoppingAllSound(true);
-        this.player.sendPacketImmediately(soundPacket);
-
+        injectStopAllSounds(this.player.getConnection());
         this.player.clearActionBar();
 
         injectPosition(this.player.getConnection(), rewriteData.getSpawnPosition(), rewriteData.getRotation(), rewriteData.getEntityId());

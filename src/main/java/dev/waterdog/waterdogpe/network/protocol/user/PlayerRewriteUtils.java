@@ -378,6 +378,8 @@ public class PlayerRewriteUtils {
         packet.setRespawn(true);
         packet.setDimension(dimensionId);
         session.sendPacketImmediately(packet);
+        // The client plays the portal sound on dimension changes
+        injectStopAllSounds(session);
 
         if (chunks) {
             injectChunkPublisherUpdate(session, position.toInt(), 3);
@@ -395,6 +397,16 @@ public class PlayerRewriteUtils {
             actionPacket.setFace(0);
             session.sendPacketImmediately(actionPacket);
         }
+    }
+
+    public static void injectStopAllSounds(ProxiedConnection session) {
+        if (session == null || !session.isConnected()) {
+            return;
+        }
+        StopSoundPacket packet = new StopSoundPacket();
+        packet.setSoundName("*");
+        packet.setStoppingAllSound(true);
+        session.sendPacketImmediately(packet);
     }
 
     public static void injectEmptyChunks(ProxiedConnection session, Vector3f spawnPosition, int radius, int dimension, ProtocolVersion version, boolean requestSubChunks) {
