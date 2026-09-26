@@ -187,7 +187,7 @@ public class TransferCallback {
         this.player.getRewriteData().clearTransferCallback(this);
 
         SetLocalPlayerAsInitializedPacket initializedPacket = new SetLocalPlayerAsInitializedPacket();
-        initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalEntityId());
+        initializedPacket.setRuntimeEntityId(this.player.getRewriteData().getOriginalRuntimeEntityId());
         this.connection.sendPacket(initializedPacket);
 
         PostTransferCompleteEvent event = new PostTransferCompleteEvent(this.connection, this.player);

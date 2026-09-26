@@ -52,7 +52,7 @@ class ImmobileFlagTrackingTest {
 
         this.rewriteData = this.harness.player.getRewriteData();
         this.rewriteData.setEntityId(CLIENT_ENTITY_ID);
-        this.rewriteData.setOriginalEntityId(SERVER_ENTITY_ID);
+        this.rewriteData.setOriginalRuntimeEntityId(SERVER_ENTITY_ID);
 
         // A downstream bridge receives client bound packets
         this.lobbyBridge = new ProxyBatchBridge(CODEC, CODEC.createHelper(),

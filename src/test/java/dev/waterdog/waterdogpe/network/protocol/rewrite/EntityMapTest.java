@@ -54,7 +54,7 @@ class EntityMapTest {
 
         RewriteData rewriteData = new RewriteData();
         rewriteData.setEntityId(PROXY_ENTITY_ID);
-        rewriteData.setOriginalEntityId(DOWNSTREAM_ENTITY_ID);
+        rewriteData.setOriginalRuntimeEntityId(DOWNSTREAM_ENTITY_ID);
         rewriteData.setOriginalUniqueEntityId(DOWNSTREAM_UNIQUE_ENTITY_ID);
 
         ProxiedPlayer player = mock(ProxiedPlayer.class);

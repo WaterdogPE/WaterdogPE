@@ -48,10 +48,8 @@ import org.cloudburstmc.protocol.common.PacketSignal;
 import javax.crypto.SecretKey;
 import java.net.URI;
 import java.security.interfaces.ECPublicKey;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -166,7 +164,7 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         this.connection.getServerInfo().addConnection(this.connection);
 
         // Only after the switch, so the old server's packets are never rewritten with this server's data
-        rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
+        rewriteData.setOriginalRuntimeEntityId(packet.getRuntimeEntityId());
         rewriteData.setOriginalUniqueEntityId(packet.getUniqueEntityId());
         rewriteData.setGameRules(packet.getGamerules());
         rewriteData.setSpawnPosition(packet.getPlayerPosition());

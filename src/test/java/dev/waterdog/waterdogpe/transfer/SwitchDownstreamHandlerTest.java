@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 public class SwitchDownstreamHandlerTest {
@@ -139,7 +138,7 @@ public class SwitchDownstreamHandlerTest {
     @Test
     void rejectedTransferKeepsTheActiveServersRewriteData() {
         RewriteData rewriteData = this.harness.player.getRewriteData();
-        rewriteData.setOriginalEntityId(7);
+        rewriteData.setOriginalRuntimeEntityId(7);
         rewriteData.setOriginalUniqueEntityId(-4294967295L);
         rewriteData.setSpawnPosition(Vector3f.from(1, 2, 3));
         StartGamePacket packet = newStartGame();
@@ -148,7 +147,7 @@ public class SwitchDownstreamHandlerTest {
 
         this.handler.handle(packet);
 
-        assertEquals(7, rewriteData.getOriginalEntityId());
+        assertEquals(7, rewriteData.getOriginalRuntimeEntityId());
         assertEquals(-4294967295L, rewriteData.getOriginalUniqueEntityId());
         assertEquals(Vector3f.from(1, 2, 3), rewriteData.getSpawnPosition());
     }
@@ -164,7 +163,7 @@ public class SwitchDownstreamHandlerTest {
 
         assertSame(this.target.connection(), this.harness.player.getDownstreamConnection());
         assertNull(this.harness.player.getPendingConnection());
-        assertEquals(100, this.harness.player.getRewriteData().getOriginalEntityId());
+        assertEquals(100, this.harness.player.getRewriteData().getOriginalRuntimeEntityId());
         assertEquals(100, this.harness.player.getRewriteData().getOriginalUniqueEntityId());
         verify(this.lobby.connection()).setPacketHandler(null);
         verify(this.lobby.connection()).disconnect();

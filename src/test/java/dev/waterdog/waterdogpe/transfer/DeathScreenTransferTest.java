@@ -64,7 +64,7 @@ class DeathScreenTransferTest {
 
         this.rewriteData = this.harness.player.getRewriteData();
         this.rewriteData.setEntityId(CLIENT_ENTITY_ID);
-        this.rewriteData.setOriginalEntityId(SERVER_ENTITY_ID);
+        this.rewriteData.setOriginalRuntimeEntityId(SERVER_ENTITY_ID);
         this.rewriteData.setStartGameSettings(StartGameSettings.from(SwitchDownstreamHandlerTest.newStartGame()));
     }
 

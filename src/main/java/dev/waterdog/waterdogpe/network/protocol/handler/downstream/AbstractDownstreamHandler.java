@@ -26,8 +26,6 @@ import dev.waterdog.waterdogpe.network.protocol.rewrite.types.RewriteData;
 import dev.waterdog.waterdogpe.network.protocol.user.PlayerRewriteUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
 import org.cloudburstmc.protocol.bedrock.data.AttributeData;
 import org.cloudburstmc.protocol.bedrock.data.camera.CameraPreset;
@@ -73,7 +71,7 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
 
     @Override
     public PacketSignal handle(UpdateAttributesPacket packet) {
-        if (packet.getRuntimeEntityId() != this.player.getRewriteData().getOriginalEntityId()) {
+        if (packet.getRuntimeEntityId() != this.player.getRewriteData().getOriginalRuntimeEntityId()) {
             return PacketSignal.UNHANDLED;
         }
         for (AttributeData attribute : packet.getAttributes()) {
@@ -125,7 +123,7 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
         EntityDataMap metadata = packet.getMetadata();
         // Only what reaches the client counts, and a packet without flags keeps the last value
         if (this.connection == this.player.getDownstreamConnection()
-                && packet.getRuntimeEntityId() == rewriteData.getOriginalEntityId()
+                && packet.getRuntimeEntityId() == rewriteData.getOriginalRuntimeEntityId()
                 && metadata.isFlagPresent(EntityFlag.NO_AI)) {
             rewriteData.setImmobileFlag(PlayerRewriteUtils.checkForImmobileFlag(metadata));
         }

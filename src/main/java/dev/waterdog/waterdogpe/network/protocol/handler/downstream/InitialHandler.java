@@ -20,7 +20,6 @@ import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.protocol.registry.FakeDefinitionRegistry;
 import org.cloudburstmc.protocol.bedrock.codec.BedrockCodecHelper;
-import org.cloudburstmc.protocol.bedrock.data.ServerConfigurationJoinInfo;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.event.defaults.InitialServerConnectedEvent;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
@@ -113,7 +112,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
     @Override
     public final PacketSignal handle(StartGamePacket packet) {
         RewriteData rewriteData = this.player.getRewriteData();
-        rewriteData.setOriginalEntityId(packet.getRuntimeEntityId());
+        rewriteData.setOriginalRuntimeEntityId(packet.getRuntimeEntityId());
         rewriteData.setOriginalUniqueEntityId(packet.getUniqueEntityId());
         rewriteData.setEntityId(ThreadLocalRandom.current().nextInt(10000, 15000));
         rewriteData.setGameRules(packet.getGamerules());
