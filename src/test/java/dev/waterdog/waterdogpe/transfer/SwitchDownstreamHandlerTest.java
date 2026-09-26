@@ -21,6 +21,7 @@ import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.SwitchDownstreamHandler;
+import dev.waterdog.waterdogpe.network.protocol.rewrite.types.RewriteData;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.types.StartGameSettings;
 import org.cloudburstmc.math.vector.Vector2f;
 import org.cloudburstmc.math.vector.Vector3f;
@@ -136,6 +137,23 @@ public class SwitchDownstreamHandlerTest {
     }
 
     @Test
+    void rejectedTransferKeepsTheActiveServersRewriteData() {
+        RewriteData rewriteData = this.harness.player.getRewriteData();
+        rewriteData.setOriginalEntityId(7);
+        rewriteData.setOriginalUniqueEntityId(-4294967295L);
+        rewriteData.setSpawnPosition(Vector3f.from(1, 2, 3));
+        StartGamePacket packet = newStartGame();
+        packet.setAuthoritativeMovementMode(AuthoritativeMovementMode.CLIENT);
+        packet.setRewindHistorySize(0);
+
+        this.handler.handle(packet);
+
+        assertEquals(7, rewriteData.getOriginalEntityId());
+        assertEquals(-4294967295L, rewriteData.getOriginalUniqueEntityId());
+        assertEquals(Vector3f.from(1, 2, 3), rewriteData.getSpawnPosition());
+    }
+
+    @Test
     void claimsTransferAndActivatesQueue() {
         this.handler.handle(newStartGame());
 
@@ -146,6 +164,8 @@ public class SwitchDownstreamHandlerTest {
 
         assertSame(this.target.connection(), this.harness.player.getDownstreamConnection());
         assertNull(this.harness.player.getPendingConnection());
+        assertEquals(100, this.harness.player.getRewriteData().getOriginalEntityId());
+        assertEquals(100, this.harness.player.getRewriteData().getOriginalUniqueEntityId());
         verify(this.lobby.connection()).setPacketHandler(null);
         verify(this.lobby.connection()).disconnect();
         verify(this.harness.upstream).setTransferQueueActive(true);
