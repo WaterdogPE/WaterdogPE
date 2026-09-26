@@ -98,6 +98,11 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
             this.trackDeath(true);
         } else if (packet.getState() == RespawnPacket.State.SERVER_READY) {
             this.trackDeath(false);
+            // BDS and Geyser put a placeholder in StartGame, the real spawn only comes with the join handshake
+            TransferCallback transferCallback = this.player.getRewriteData().getTransferCallback();
+            if (transferCallback != null && transferCallback.getConnection() == this.connection) {
+                this.player.getRewriteData().setSpawnPosition(packet.getPosition());
+            }
         }
         return PacketSignal.UNHANDLED;
     }
