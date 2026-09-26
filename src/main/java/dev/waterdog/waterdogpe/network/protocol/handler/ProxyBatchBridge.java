@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.protocol.handler;
 
 import dev.waterdog.waterdogpe.network.connection.ProxiedConnection;
+import dev.waterdog.waterdogpe.network.protocol.PacketUtils;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -40,9 +41,6 @@ import java.util.ListIterator;
 @Data
 @Log4j2
 public class ProxyBatchBridge implements BedrockPacketHandler {
-    /** Names every packet crossing the proxy, for working out where one goes missing. */
-    private static final boolean TRACE_PACKETS = Boolean.getBoolean("waterdog.packetTrace");
-
     private final BedrockCodec codec;
     private final BedrockCodecHelper helper;
 
@@ -65,7 +63,7 @@ public class ProxyBatchBridge implements BedrockPacketHandler {
             BedrockPacketWrapper wrapper = iterator.next();
             boolean decoded = wrapper.getPacket() != null || this.decodePacket(source, wrapper);
 
-            if (TRACE_PACKETS) {
+            if (PacketUtils.TRACE_PACKETS) {
                 BedrockPacket packet = wrapper.getPacket();
                 // A packet bound for the server is one the client sent
                 boolean fromClient = source.getPacketDirection().getInbound() == PacketRecipient.SERVER;
