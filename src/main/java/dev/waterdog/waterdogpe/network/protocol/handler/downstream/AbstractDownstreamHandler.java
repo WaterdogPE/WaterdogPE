@@ -23,6 +23,7 @@ import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import dev.waterdog.waterdogpe.network.protocol.registry.FakeDefinitionRegistry;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.RewriteMaps;
 import dev.waterdog.waterdogpe.network.protocol.rewrite.types.RewriteData;
+import dev.waterdog.waterdogpe.network.protocol.user.PlayerRewriteUtils;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.network.protocol.Signals;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -35,6 +36,8 @@ import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumConstraint;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumData;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.SimpleNamedDefinition;
+import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataMap;
+import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
 import org.cloudburstmc.protocol.bedrock.netty.BedrockBatchWrapper;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.cloudburstmc.protocol.common.NamedDefinition;
@@ -109,6 +112,19 @@ public abstract class AbstractDownstreamHandler implements ProxyPacketHandler {
         if (dead && rewriteData.getTransferCallback() == null) {
             rewriteData.setProxyRespawn(false);
         }
+    }
+
+    @Override
+    public PacketSignal handle(SetEntityDataPacket packet) {
+        RewriteData rewriteData = this.player.getRewriteData();
+        EntityDataMap metadata = packet.getMetadata();
+        // Only what reaches the client counts, and a packet without flags keeps the last value
+        if (this.connection == this.player.getDownstreamConnection()
+                && packet.getRuntimeEntityId() == rewriteData.getOriginalEntityId()
+                && metadata.isFlagPresent(EntityFlag.NO_AI)) {
+            rewriteData.setImmobileFlag(PlayerRewriteUtils.checkForImmobileFlag(metadata));
+        }
+        return PacketSignal.UNHANDLED;
     }
 
     @Override

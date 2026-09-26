@@ -181,6 +181,9 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
         ServerTransferEvent event = new ServerTransferEvent(this.player, oldConnection.getServerInfo(), this.connection.getServerInfo());
         this.player.getProxy().getEventManager().callEvent(event);
 
+        // Only the new server may keep the player frozen once the transfer ends
+        rewriteData.setImmobileFlag(false);
+
         // The old server can no longer end its death screen, the new one spawns the player as usual
         if (rewriteData.isDead()) {
             rewriteData.setDead(false);
