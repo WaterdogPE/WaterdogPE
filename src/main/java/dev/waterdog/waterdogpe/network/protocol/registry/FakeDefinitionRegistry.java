@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectFunction;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
+import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.SimpleBlockDefinition;
@@ -14,7 +15,7 @@ import org.cloudburstmc.protocol.common.DefinitionRegistry;
 public class FakeDefinitionRegistry<D extends Definition> implements DefinitionRegistry<D> {
 
     public static FakeDefinitionRegistry<BlockDefinition> createBlockRegistry() {
-        return new FakeDefinitionRegistry<>(rid -> new SimpleBlockDefinition("unknown", rid, null));
+        return new FakeDefinitionRegistry<>(rid -> new SimpleBlockDefinition("unknown", rid, NbtMap.EMPTY));
     }
 
     public static FakeDefinitionRegistry<ItemDefinition> createItemRegistry() {
