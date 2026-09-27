@@ -181,7 +181,30 @@ public class BedrockClientConnection extends SimpleChannelInboundHandler<Bedrock
 
     @Override
     public void disconnect() {
-        this.channel.disconnect();
+        this.channel.eventLoop().execute(this::disconnect0);
+    }
+
+    /**
+     * A RakNet client channel forwards {@link Channel#disconnect()} to its UDP socket, which only drops the socket's
+     * address while the RakNet session keeps running from a new port. On a closed channel it is worse: the epoll
+     * socket disconnects its old fd number, which may already belong to another player's new downstream socket.
+     * End the RakNet session instead, and only while the channel is still open.
+     */
+    private void disconnect0() {
+        if (!this.channel.isOpen()) {
+            return;
+        }
+
+        if (this.channel instanceof RakChannel rakChannel) {
+            RakSessionCodec sessionCodec = rakChannel.rakPipeline().get(RakSessionCodec.class);
+            if (sessionCodec != null) {
+                sessionCodec.disconnect();
+            } else {
+                this.channel.close();
+            }
+        } else {
+            this.channel.disconnect();
+        }
     }
 
     @Override
