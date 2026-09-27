@@ -352,7 +352,7 @@ public class EntityMap implements BedrockPacketHandler {
 
     @Override
     public PacketSignal handle(MovementPredictionSyncPacket packet) {
-        return data.rewriteEntityId(packet.getRuntimeEntityId(), packet::setRuntimeEntityId);
+        return data.rewriteUniqueEntityId(packet.getUniqueEntityId(), packet::setUniqueEntityId);
     }
 
     @Override
