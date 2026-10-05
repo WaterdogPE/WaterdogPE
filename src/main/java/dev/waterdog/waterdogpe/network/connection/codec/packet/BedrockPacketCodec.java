@@ -112,7 +112,7 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         try {
             int index = msg.readerIndex();
             this.decodeHeader(msg, wrapper);
-            wrapper.setHeaderLength(msg.readerIndex() - index);
+            wrapper.setHeaderLength((byte)(msg.readerIndex() - index));
             if (this.alwaysDecode) { // Otherwise, we are decoding at other place
                 wrapper.setPacket(this.codec.tryDecode(helper, msg, wrapper.getPacketId(), this.inboundRecipient));
             }
