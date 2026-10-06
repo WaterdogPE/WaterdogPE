@@ -140,7 +140,7 @@ public abstract class BedrockPacketCodec extends MessageToMessageCodec<BedrockBa
         }
 
         if (encodedPackets > 0) {
-            metrics.encodedPackets(passedThought, direction);
+            metrics.encodedPackets(encodedPackets, direction);
         }
     }
 
