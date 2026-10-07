@@ -64,7 +64,7 @@ public class PlayerManager {
 
     public void removePlayer(ProxiedPlayer player) {
         if (player != null) {
-            this.players.remove(player.getUniqueId());
+            this.players.remove(player.getUniqueId(), player);
         }
     }
 
