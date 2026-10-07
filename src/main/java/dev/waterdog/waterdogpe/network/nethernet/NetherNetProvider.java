@@ -18,7 +18,6 @@ package dev.waterdog.waterdogpe.network.nethernet;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.NetherNetServerSessionInitializer;
-import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NxsSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
@@ -144,9 +143,7 @@ public class NetherNetProvider implements AutoCloseable {
 
     private ProviderClient.Health health(int capacity) {
         int players = this.players();
-        return new ProviderClient.Health(true, this.accepting(), capacity,
-                Math.min(1, (double) players / Math.max(1, capacity)), "nethernet",
-                WaterdogPE.version().baseVersion(),
+        return new ProviderClient.Health(this.accepting(), capacity, WaterdogPE.version().baseVersion(),
                 new ProviderClient.PlayerCount(players, System.currentTimeMillis()));
     }
 
@@ -249,9 +246,7 @@ public class NetherNetProvider implements AutoCloseable {
      */
     private ServerStatus collectStatus() {
         ProxyConfig config = this.proxy.getConfiguration();
-        return new ServerStatus(config.getMotd(), ProtocolVersion.latest().getProtocol(),
-                ProtocolVersion.latest().getMinecraftVersion(), config.getSubMotd(), this.players(),
-                config.getMaxPlayerCount(), 0);
+        return new ServerStatus(config.getMotd(), config.getSubMotd(), this.players(), config.getMaxPlayerCount(), 0);
     }
 
     private int players() {

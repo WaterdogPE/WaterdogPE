@@ -36,7 +36,7 @@ class NetherNetCommandTest {
 
         ServerStatus status = NetherNetCommand.parseStatus(encoded);
 
-        assertEquals(new ServerStatus("Lobby", 924, "1.26.50", "hub", 3, 100, 1), status);
+        assertEquals(new ServerStatus("Lobby", "hub", 3, 100, 1), status);
     }
 
     @Test
