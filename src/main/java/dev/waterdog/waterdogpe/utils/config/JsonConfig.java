@@ -40,6 +40,10 @@ public class JsonConfig extends Configuration {
         super(file);
     }
 
+    public JsonConfig(InputStream inputStream) {
+        super(inputStream);
+    }
+
     public JsonConfig(File saveFile, InputStream inputStream) {
         super(saveFile, inputStream);
     }
