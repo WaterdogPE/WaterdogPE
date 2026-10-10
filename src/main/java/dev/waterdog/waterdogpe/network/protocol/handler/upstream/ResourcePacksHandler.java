@@ -23,20 +23,16 @@ import org.cloudburstmc.protocol.common.PacketSignal;
 
 import java.util.BitSet;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
 
 /**
  * Upstream handler handling proxy manager resource packs.
  */
 public class ResourcePacksHandler extends AbstractUpstreamHandler {
 
-    private final Queue<ResourcePackDataInfoPacket> pendingPacks = new LinkedList<>();
     // Packs offered to this client by id_version
     private final Map<String, ResourcePackDataInfoPacket> offeredPacks = new HashMap<>();
     private final Map<String, BitSet> sentChunks = new HashMap<>();
-    private ResourcePackDataInfoPacket sendingPack;
 
     public ResourcePacksHandler(ProxiedPlayer player) {
         super(player);
@@ -51,6 +47,7 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
                 this.player.disconnect("disconnectionScreen.noReason");
                 break;
             case SEND_PACKS:
+                // All up front, as the client's progress bar only counts packs it has been offered
                 for (String packIdVer : packet.getPackIds()) {
                     ResourcePackDataInfoPacket response = packManager.packInfoFromIdVer(packIdVer);
                     if (response == null) {
@@ -58,10 +55,9 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
                         break;
                     }
                     if (this.offeredPacks.putIfAbsent(packIdVer, response) == null) {
-                        this.pendingPacks.offer(response);
+                        this.player.sendPacket(response);
                     }
                 }
-                this.sendNextPacket();
                 break;
             case HAVE_ALL_PACKS:
                 PlayerResourcePackApplyEvent event = new PlayerResourcePackApplyEvent(this.player, packManager.getStackPacket());
@@ -107,18 +103,6 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
 
         // A batch of its own, as the client asks for many chunks at once and queued ones would share a batch
         this.player.sendPacketImmediately(response);
-        if (info == this.sendingPack && sent.cardinality() >= info.getChunkCount()) {
-            this.sendNextPacket();
-        }
         return this.cancel();
-    }
-
-    private void sendNextPacket() {
-        this.sendingPack = null;
-        ResourcePackDataInfoPacket infoPacket = this.pendingPacks.poll();
-        if (infoPacket != null && this.player.isConnected()) {
-            this.sendingPack = infoPacket;
-            this.player.sendPacket(infoPacket);
-        }
     }
 }
