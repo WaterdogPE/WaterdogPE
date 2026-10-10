@@ -100,6 +100,32 @@ class ResourcePacksHandlerTest {
         verify(this.player, never()).sendPacketImmediately(any());
     }
 
+    @Test
+    void sendsTheFirstChunkLast() {
+        ResourcePackDataInfoPacket first = this.pack(3);
+        this.requestPacks(first);
+
+        this.handler.handle(this.chunk(first, 0));
+        this.handler.handle(this.chunk(first, 0));
+        this.handler.handle(this.chunk(first, 1));
+        this.handler.handle(this.chunk(first, 2));
+
+        assertEquals(List.of(1, 2, 0), this.sentChunkIndexes());
+    }
+
+    @Test
+    void sendsTheFirstChunkRightAwayOnceTheRestAreSent() {
+        ResourcePackDataInfoPacket single = this.pack(1);
+        ResourcePackDataInfoPacket pair = this.pack(2);
+        this.requestPacks(single, pair);
+
+        this.handler.handle(this.chunk(single, 0));
+        this.handler.handle(this.chunk(pair, 1));
+        this.handler.handle(this.chunk(pair, 0));
+
+        assertEquals(List.of(0, 1, 0), this.sentChunkIndexes());
+    }
+
     private List<Integer> sentChunkIndexes() {
         ArgumentCaptor<BedrockPacket> sent = ArgumentCaptor.forClass(BedrockPacket.class);
         verify(this.player, atLeast(0)).sendPacketImmediately(sent.capture());

@@ -33,6 +33,10 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
     // Packs offered to this client by id_version
     private final Map<String, ResourcePackDataInfoPacket> offeredPacks = new HashMap<>();
     private final Map<String, BitSet> sentChunks = new HashMap<>();
+    // The client writes chunks in order on one IO thread that also unzips finished packs, and only shows an
+    // in-order chunk on its progress bar once written. Chunk 0 goes last so the rest skip that queue, as on BDS.
+    // Holds at most one request per offered pack.
+    private final Map<String, ResourcePackChunkRequestPacket> heldFirstChunks = new HashMap<>();
 
     public ResourcePacksHandler(ProxiedPlayer player) {
         super(player);
@@ -89,20 +93,32 @@ public class ResourcePacksHandler extends AbstractUpstreamHandler {
 
         // Each chunk is sent once
         BitSet sent = this.sentChunks.computeIfAbsent(packIdVer, id -> new BitSet());
-        if (sent.get(index)) {
+        if (sent.get(index) || (index == 0 && this.heldFirstChunks.containsKey(packIdVer))) {
             return this.cancel();
         }
-        sent.set(index);
+        if (index == 0 && sent.cardinality() < info.getChunkCount() - 1) {
+            this.heldFirstChunks.put(packIdVer, packet);
+            return this.cancel();
+        }
 
-        PackManager packManager = this.player.getProxy().getPackManager();
-        ResourcePackChunkDataPacket response = packManager.packChunkDataPacket(packIdVer, packet);
+        if (this.sendChunk(packIdVer, sent, packet) && sent.cardinality() == info.getChunkCount() - 1) {
+            ResourcePackChunkRequestPacket first = this.heldFirstChunks.remove(packIdVer);
+            if (first != null) {
+                this.sendChunk(packIdVer, sent, first);
+            }
+        }
+        return this.cancel();
+    }
+
+    private boolean sendChunk(String packIdVer, BitSet sent, ResourcePackChunkRequestPacket request) {
+        ResourcePackChunkDataPacket response = this.player.getProxy().getPackManager().packChunkDataPacket(packIdVer, request);
         if (response == null) {
             this.player.disconnect("Unknown resource pack!");
-            return this.cancel();
+            return false;
         }
-
+        sent.set(request.getChunkIndex());
         // A batch of its own, as the client asks for many chunks at once and queued ones would share a batch
         this.player.sendPacketImmediately(response);
-        return this.cancel();
+        return true;
     }
 }
