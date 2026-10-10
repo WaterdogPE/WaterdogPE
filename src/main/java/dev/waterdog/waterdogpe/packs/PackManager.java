@@ -50,7 +50,8 @@ import java.util.UUID;
 
 public class PackManager {
 
-    private static final long CHUNK_SIZE = 1024 * 256;
+    // Same as BDS, the client's progress bar moves a chunk at a time
+    private static final long CHUNK_SIZE = 1024 * 100;
 
     private static final PathMatcher ZIP_PACK_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.{zip,mcpack}");
     private static final List<ResourcePackStackPacket.Entry> EDU_PACKS = List.of(
