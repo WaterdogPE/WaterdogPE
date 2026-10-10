@@ -20,6 +20,7 @@ import dev.waterdog.waterdogpe.network.connection.handler.IReconnectHandler;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
+import dev.waterdog.waterdogpe.network.nethernet.NetherNetClientConnection;
 import dev.waterdog.waterdogpe.network.protocol.handler.PluginPacketHandler;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import dev.waterdog.waterdogpe.network.protocol.handler.downstream.CompressionInitHandler;
@@ -135,6 +136,16 @@ public class ProxiedPlayer implements CommandSender {
     private ClientConnection clientConnection;
     private ClientConnection pendingConnection;
 
+    public LoginPacket getDownstreamLoginPacket(ClientConnection downstream) {
+        List<String> targets = this.proxy.getConfiguration().getForwardOriginalLoginTo();
+        if (targets == null || !targets.contains(downstream.getServerInfo().getServerName())) {
+            return this.loginData.getLoginPacket();
+        }
+        if (!this.proxy.getConfiguration().isOnlineMode() || !(downstream instanceof NetherNetClientConnection)) {
+            throw new IllegalStateException("Original login forwarding requires online mode and a NetherNet backend");
+        }
+        return this.loginData.getOriginalLoginPacket();
+    }
 
     /**
      *  Whether this player should have administrator status.
@@ -432,7 +443,7 @@ public class ProxiedPlayer implements CommandSender {
             connection.setPacketHandler(new CompressionInitHandler(this, connection, handler));
         } else {
             connection.setPacketHandler(handler);
-            connection.sendPacket(this.loginData.getLoginPacket());
+            connection.sendPacket(this.getDownstreamLoginPacket(connection));
         }
 
         this.getLogger().info("[{}|{}] -> Downstream [{}] has connected", connection.getSocketAddress(), this.getName(), targetServer.getServerName());

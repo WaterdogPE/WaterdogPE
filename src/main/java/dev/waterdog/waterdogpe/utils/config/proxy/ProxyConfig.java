@@ -108,6 +108,14 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, only players which are authenticated with XBOX Live can join. If disabled, anyone can connect *with any name*")
     private boolean onlineMode = true;
 
+    @Path("forward_original_login_to")
+    @Comments({
+            "Experimental: forward the authenticated client's original Xbox login to these NetherNet servers",
+            "instead of a proxy-signed login. Only use with trusted BDS backends; requires online_mode: true.",
+            "The backend must not use Bedrock packet encryption. Default: no servers."
+    })
+    private List<String> forwardOriginalLoginTo = new ArrayList<>();
+
     @Path("listener.additional_ports")
     @Comment("Additional ports to listen to")
     private List<Integer> additionalPorts = new ArrayList<>();
