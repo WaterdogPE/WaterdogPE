@@ -70,12 +70,19 @@ public class LoginData {
     private boolean cacheSupported;
 
     private final boolean shouldSendCertificateChain;
+    private final LoginPacket originalLoginPacket;
 
-    /**
-     * The credentials as the client sent them. Kept so they can be forwarded verbatim to a
-     * downstream that authenticates players itself, which is only possible where the transport
-     * carries no Bedrock encryption.
-     */
+    /** Forward signed credentials only to an explicitly selected, non-encrypting backend. */
+    public LoginPacket getOriginalLoginPacket() {
+        if (!this.xboxAuthed || this.originalLoginPacket == null) {
+            throw new IllegalStateException("Original Xbox login is unavailable");
+        }
+        LoginPacket packet = new LoginPacket();
+        packet.setProtocolVersion(this.originalLoginPacket.getProtocolVersion());
+        packet.setAuthPayload(this.originalLoginPacket.getAuthPayload());
+        packet.setClientJwt(this.originalLoginPacket.getClientJwt());
+        return packet;
+    }
 
     /**
      * Used to construct new login packet using this.clientData and this.extraData signed by this.keyPair.

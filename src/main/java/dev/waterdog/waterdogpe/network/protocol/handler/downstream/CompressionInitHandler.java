@@ -46,7 +46,7 @@ public class CompressionInitHandler extends AbstractDownstreamHandler {
         CompressionType compression = CompressionType.fromBedrockCompression(packet.getCompressionAlgorithm());
         this.connection.setCompression(compression);
         this.connection.setPacketHandler(nextHandler);
-        this.connection.sendPacket(this.player.getLoginData().getLoginPacket());
+        this.connection.sendPacket(this.player.getDownstreamLoginPacket(this.connection));
         return Signals.CANCEL;
     }
 }

@@ -30,6 +30,30 @@ You can find list of currently supported/unsupported software [here](https://doc
 
 To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
 
+## Experimental BDS player identity forwarding
+
+BDS ignores the XUID in WaterdogPE's self-signed downstream login, so inventory and
+operator permissions may not persist through a proxy. This fork can instead relay the
+Xbox-signed login received from the player, unchanged, to selected NetherNet backends:
+
+```yaml
+online_mode: true
+forward_original_login_to: [greatworld]
+```
+
+The default is `[]`. Server names must match entries in `servers` exactly. This is
+restricted to NetherNet because WaterdogPE cannot negotiate a Bedrock-encrypted
+downstream connection with the client's private key. Do not enable it for unknown
+backends: the original login contains the player's signed credentials. The proxy
+still authenticates the client and runs its login plugins first. Client-data changes
+made by plugins and `replace_username_spaces` cannot be included in the forwarded
+signed login.
+
+**This has not been validated against BDS.** Test with a disposable world and an
+authenticated client first: check BDS's logged XUID, inventory across repeated
+joins, OP permissions, and a direct join with the same account. Do not enable it
+on an established world until those tests pass.
+
 ## Maven usage
 
 ```xml
