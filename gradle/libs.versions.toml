@@ -3,8 +3,8 @@ protocol = "3.0.0.Beta14-20261009.172637-6"
 log4j = "2.25.4"
 jline = "3.30.6"
 netty = "4.1.135.Final"
-network = "2.0.0.CR5-20261009.162522-2"
-libdatachannel = "0.24.6.0-20261006.072145-3"
+network = "2.0.0.CR5-20261010.095725-3"
+libdatachannel = "0.24.6.0-20261010.095218-4"
 lombok = "1.18.30"
 
 [libraries]
