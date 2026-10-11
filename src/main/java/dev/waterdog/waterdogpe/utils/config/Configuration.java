@@ -45,18 +45,21 @@ public abstract class Configuration {
         this(saveFile, null);
     }
 
+    public Configuration(InputStream inputStream) {
+        this(null, inputStream);
+    }
+
     public Configuration(File saveFile, InputStream inputStream) {
         this.file = saveFile;
 
         try {
-            if (!this.file.exists()) {
-                this.save();
-            }
+            if (this.file != null && inputStream == null) {
+                if (!this.file.exists()) {
+                    this.save();
+                }
 
-            if (inputStream == null) {
                 inputStream = Files.newInputStream(this.file.toPath());
             }
-
             this.load(inputStream);
         } catch (IOException e) {
             MainLogger.getLogger().error("Unable to initialize Config " + this.file.toString(), e);
@@ -75,7 +78,22 @@ public abstract class Configuration {
         }
     }
 
+    public void reload() {
+        if (this.file == null) return;
+        try {
+            this.values.clear();
+            this.values = this.deserialize(Files.newInputStream(this.file.toPath()));
+        } catch (Exception e) {
+            MainLogger.getLogger().error("Unable to reload Config " + this.file.toString());
+        }
+    }
+
     public void save() {
+        this.save(this.serialize(this.values));
+    }
+
+    public void save(File file) {
+        this.file = file;
         this.save(this.serialize(this.values));
     }
 
