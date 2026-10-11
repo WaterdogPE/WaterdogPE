@@ -69,7 +69,18 @@ public class HandshakeEntry {
         builder.minecraftId(this.minecraftId);
         builder.xboxAuthed(this.xboxAuthed);
         builder.protocol(this.protocol);
-        builder.joinHostname(this.clientData.get("ServerAddress").getAsString().split(":")[0]);
+        String joinHostname = this.clientData.get("ServerAddress").getAsString().split(":")[0];
+        if (proxy.getNetherNetInterface() != null) {
+            String signalingHostname = proxy.getNetherNetInterface().takeJoinHostname(session.getPeer().getChannel());
+            if (signalingHostname != null) {
+                if (!signalingHostname.equalsIgnoreCase(joinHostname)) {
+                    proxy.getLogger().info("[{}] NetherNet signaling host {} selected instead of login address",
+                            session.getSocketAddress(), signalingHostname);
+                }
+                joinHostname = signalingHostname;
+            }
+        }
+        builder.joinHostname(joinHostname);
         builder.address(session.getSocketAddress());
         builder.keyPair(event.getKeyPair());
         builder.clientData(this.clientData);

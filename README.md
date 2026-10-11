@@ -54,6 +54,10 @@ authenticated client first: check BDS's logged XUID, inventory across repeated
 joins, OP permissions, and a direct join with the same account. Do not enable it
 on an established world until those tests pass.
 
+For NetherNet joins, forced-host routing uses the HTTP signaling request's
+`Host` header. The client's `ServerAddress` login field is not necessarily the
+hostname used for signaling. RakNet joins continue to use `ServerAddress`.
+
 ## Maven usage
 
 ```xml
