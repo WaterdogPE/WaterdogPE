@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -44,6 +45,7 @@ public class SettingsSectionTest {
         assertTrue(text.contains("# Serves signaling over HTTPS as well as HTTP, on the same port"));
         assertTrue(text.contains("# PEM private key for the certificate"), "https subsection is undocumented");
         assertTrue(text.contains("# Maximum MTU size of user <-> proxy connection that is allowed"));
+        assertTrue(text.contains("forward_original_login_to: []"));
     }
 
     @Test
@@ -70,6 +72,20 @@ public class SettingsSectionTest {
         assertTrue(text.contains("# Serves signaling over HTTPS as well as HTTP, on the same port"));
         assertEquals(19134, config.getNetherNetSettings().getUdpPort(), "an existing value was overwritten");
         assertTrue(config.getNetherNetSettings().enabled());
+    }
+
+    @Test
+    public void originalLoginForwardingIsOptIn() throws Exception {
+        File file = Files.createTempDirectory("waterdog-forwarding").resolve("config.yml").toFile();
+        ProxyConfig config = new ProxyConfig(file);
+        config.save();
+        assertEquals(List.of(), config.getForwardOriginalLoginTo());
+
+        config.setForwardOriginalLoginTo(List.of("greatworld"));
+        config.save();
+        ProxyConfig reloaded = new ProxyConfig(file);
+        reloaded.init();
+        assertEquals(List.of("greatworld"), reloaded.getForwardOriginalLoginTo());
     }
 
     @Test

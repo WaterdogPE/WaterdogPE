@@ -165,7 +165,7 @@ public class HandshakeUtils {
         }
         // Before 1.26.20, client sends CertificateChainPayload in LoginPacket instead of TokenPayload
         // We are trying to replicate that behavior.
-        return new HandshakeEntry(identityPublicKey, clientData, xuid, uuid, displayName, minecraftId, xboxAuth, protocol,
+        return new HandshakeEntry(identityPublicKey, clientData, xuid, uuid, displayName, minecraftId, xboxAuth, protocol, packet,
                 packet.getAuthPayload() instanceof CertificateChainPayload ||
                     protocol.isBefore(ProtocolVersion.MINECRAFT_PE_1_26_20));
     }
