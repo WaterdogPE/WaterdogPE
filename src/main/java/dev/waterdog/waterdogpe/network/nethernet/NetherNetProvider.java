@@ -126,7 +126,7 @@ public class NetherNetProvider implements AutoCloseable {
             // The provider may offer the operator a link, such as one to claim this proxy
             client.operatorAction().thenAccept(action -> action.ifPresent(value -> log.info(operatorActionMessage(value))));
             // Says where logins are vouched for, without putting provider credentials in the log
-            log.info("NetherNet client identities are authenticated by external signaling provider "
+            log.debug("NetherNet client identities are authenticated by external signaling provider "
                     + runtime.origin().getHost() + "; direct login keys are checked against its admission tickets");
         });
     }
@@ -166,10 +166,11 @@ public class NetherNetProvider implements AutoCloseable {
     }
 
     private static void log(ProviderDiagnostic diagnostic) {
+        String message = "NXS: " + diagnostic.message();
         switch (diagnostic.level()) {
-            case DEBUG -> log.debug(diagnostic.message());
-            case INFO -> log.info(diagnostic.message());
-            case WARN -> log.warn(diagnostic.message());
+            case DEBUG -> log.debug(message);
+            case INFO -> log.info(message);
+            case WARN -> log.warn(message);
         }
     }
 
