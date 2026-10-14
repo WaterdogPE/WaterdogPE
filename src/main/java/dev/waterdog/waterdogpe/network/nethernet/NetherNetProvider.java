@@ -19,6 +19,7 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.NetherNetServerSessionInitializer;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
+import dev.waterdog.waterdogpe.utils.config.proxy.NxsAdvancedSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NxsSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
@@ -27,21 +28,18 @@ import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import lombok.extern.log4j.Log4j2;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.cloudburstmc.netty.signaling.ProviderClient;
+import org.cloudburstmc.netty.signaling.ProviderDiagnostic;
 import org.cloudburstmc.netty.signaling.ProviderStateStore;
 import org.cloudburstmc.netty.signaling.ProviderTransport;
 import org.cloudburstmc.netty.signaling.ServerStatus;
 import org.cloudburstmc.netty.signaling.provider.NativeProviderHostFactory;
-import org.cloudburstmc.netty.signaling.provider.ProviderHostFactory;
 import org.cloudburstmc.netty.signaling.provider.ProviderRuntimeConfiguration;
 import org.cloudburstmc.netty.signaling.provider.ProviderShutdown;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -57,14 +55,12 @@ import java.util.function.Supplier;
 @Log4j2
 public class NetherNetProvider implements AutoCloseable {
 
-    private static final String LABEL = "WaterdogPE";
-    private static final Set<String> LOCAL_ORIGINS = Set.of("127.0.0.1", "localhost", "[::1]");
-
     private final ProxyServer proxy;
 
     private EventLoopGroup group;
     private volatile Channel channel;
     private volatile ProviderClient client;
+    private final GameOutcomeReporter gameOutcomes = new GameOutcomeReporter(this::reportGameOutcome);
     private ProviderShutdown shutdown;
     /** What the provider is told about this proxy. Swapped out by a status override. */
     private volatile Supplier<ServerStatus> statusSupplier = this::collectStatus;
@@ -83,11 +79,8 @@ public class NetherNetProvider implements AutoCloseable {
         NxsSettings nxs = settings.getNxs();
         Path dataPath = this.proxy.getDataPath();
 
-        ProviderRuntimeConfiguration runtime = ProviderRuntimeConfiguration.resolve(
-                new ProviderRuntimeConfiguration.Settings(nxs.getEndpoint(), nxs.getToken(),
-                        nxs.getAdvertiseAddresses(), nxs.getData()),
-                dataPath, address.getAddress().getHostAddress(), udpPort,
-                this.proxy.getConfiguration().getMaxPlayerCount(), LABEL);
+        ProviderRuntimeConfiguration runtime = ProviderRuntimeConfiguration.resolve(providerSettings(nxs), dataPath, address.getAddress().getHostAddress(), udpPort,
+                this.proxy.getConfiguration().getMaxPlayerCount());
 
         ProviderStateStore store = new ProviderStateStore(runtime.stateDirectory());
         ProviderTransport transport = null;
@@ -96,15 +89,9 @@ public class NetherNetProvider implements AutoCloseable {
                     .format("NetherNet Provider - #%d").build());
             ServerBootstrap bootstrap = new ServerBootstrap()
                     .group(this.group)
-                    .childHandler(new NetherNetServerSessionInitializer(this.proxy));
+                    .childHandler(new NetherNetServerSessionInitializer(this.proxy, this.gameOutcomes));
 
-            ProviderHostFactory.Host host = new NativeProviderHostFactory()
-                    .open(bootstrap, new InetSocketAddress(runtime.bindAddress(), runtime.udpPort()),
-                            Map.of("stateDirectory", runtime.stateDirectory().toAbsolutePath().toString(),
-                                    "profile", runtime.profile(),
-                                    "advertisedEndpoints", runtime.encodedAdvertisedEndpoints(),
-                                    "localDevelopment",
-                                    Boolean.toString(LOCAL_ORIGINS.contains(runtime.origin().getHost()))))
+            NativeProviderHostFactory.Host host = NativeProviderHostFactory.open(bootstrap, runtime)
                     .toCompletableFuture().get(30, TimeUnit.SECONDS);
 
             this.channel = host.channel();
@@ -114,7 +101,7 @@ public class NetherNetProvider implements AutoCloseable {
             this.client = new ProviderClient(runtime.clientConfiguration(), store, transport,
                     () -> this.statusSupplier.get(),
                     () -> this.health(runtime.capacity()),
-                    log::warn);
+                    NetherNetProvider::log);
             // The client owns the store and the transport from here
             store = null;
             transport = null;
@@ -128,30 +115,69 @@ public class NetherNetProvider implements AutoCloseable {
             }
         }
 
-        this.client.start().whenComplete((registration, failure) -> {
+        ProviderClient client = this.client;
+        client.start().whenComplete((registration, failure) -> {
             if (failure != null) {
                 log.error("NetherNet provider registration failed, no players will arrive through it", failure);
                 this.close();
                 return;
             }
             log.info(registrationMessage(registration));
+            // The provider may offer the operator a link, such as one to claim this proxy
+            client.operatorAction().thenAccept(action -> action.ifPresent(value -> log.info(operatorActionMessage(value))));
             // Says where logins are vouched for, without putting provider credentials in the log
             log.info("NetherNet client identities are authenticated by external signaling provider "
                     + runtime.origin().getHost() + "; direct login keys are checked against its admission tickets");
         });
     }
 
-    private ProviderClient.Health health(int capacity) {
-        int players = this.players();
-        return new ProviderClient.Health(this.accepting(), capacity, WaterdogPE.version().baseVersion(),
-                new ProviderClient.PlayerCount(players, System.currentTimeMillis()));
+    /**
+     * What the provider runtime is configured with, named like Geyser's options. The proxy reports
+     * game outcomes itself.
+     */
+    static ProviderRuntimeConfiguration.Settings providerSettings(NxsSettings nxs) throws IOException {
+        NxsAdvancedSettings advanced = nxs.getAdvanced();
+        ProviderClient.Location location;
+        try {
+            location = ProviderClient.Location.of(advanced.getLocation());
+        } catch (IllegalArgumentException invalid) {
+            throw new IOException("nethernet.nxs.advanced.location needs a two-letter country code, a latitude and longitude pair, or both; city is optional");
+        }
+        return ProviderRuntimeConfiguration.Settings.builder(nxs.getEndpoint())
+                .token(nxs.getToken())
+                .advertiseAddresses(nxs.getAdvertiseAddresses())
+                .assistedJoins(advanced.isAssistedJoins())
+                .connectionChecks(advanced.isConnectionChecks())
+                .stunDiscovery(advanced.isStunDiscovery())
+                .deregisterOnShutdown(advanced.isDeregisterOnShutdown())
+                .location(location)
+                .gameOutcomes(true)
+                .build();
     }
 
-    private static String registrationMessage(JsonObject registration) {
-        String instanceId = registration.get("instanceId").getAsString();
-        JsonElement address = registration.get("publicAddress");
-        return address != null && !address.isJsonNull()
-                ? "Provider address: " + address.getAsString() + " (instance " + instanceId + ")"
+    public static String operatorActionMessage(ProviderClient.OperatorAction action) {
+        return action.text() + " " + action.url();
+    }
+
+    private ProviderClient.Health health(int capacity) {
+        return new ProviderClient.Health(this.accepting(), capacity,
+                new ProviderClient.Software("WaterdogPE", WaterdogPE.version().baseVersion()),
+                new ProviderClient.ConnectedPlayers(this.players(), System.currentTimeMillis()));
+    }
+
+    private static void log(ProviderDiagnostic diagnostic) {
+        switch (diagnostic.level()) {
+            case DEBUG -> log.debug(diagnostic.message());
+            case INFO -> log.info(diagnostic.message());
+            case WARN -> log.warn(diagnostic.message());
+        }
+    }
+
+    private static String registrationMessage(ProviderClient.Registration registration) {
+        String instanceId = registration.instanceId();
+        String address = registration.publicAddress();
+        return address != null
+                ? "Provider address: " + address + " (instance " + instanceId + ")"
                 : "Provider instance registered: " + instanceId
                         + "; public addresses are managed on its attached Signal Servers";
     }
@@ -185,6 +211,15 @@ public class NetherNetProvider implements AutoCloseable {
      */
     public boolean isRunning() {
         return this.client != null;
+    }
+
+    private boolean reportGameOutcome(String ticketId, ProviderClient.GameOutcome outcome, String reason) {
+        ProviderClient client = this.client;
+        return client != null && client.reportGameOutcome(ticketId, outcome, reason);
+    }
+
+    public GameOutcomeReporter gameOutcomes() {
+        return this.gameOutcomes;
     }
 
     public ProviderClient client() {
@@ -246,7 +281,7 @@ public class NetherNetProvider implements AutoCloseable {
      */
     private ServerStatus collectStatus() {
         ProxyConfig config = this.proxy.getConfiguration();
-        return new ServerStatus(config.getMotd(), config.getSubMotd(), this.players(), config.getMaxPlayerCount(), 0);
+        return new ServerStatus(config.getMotd(), config.getSubMotd(), config.getMaxPlayerCount(), 0);
     }
 
     private int players() {
@@ -254,8 +289,7 @@ public class NetherNetProvider implements AutoCloseable {
     }
 
     /**
-     * Whether the proxy wants more players, which is separate from whether it is healthy: a full
-     * proxy is working perfectly and simply has nowhere to put them.
+     * Whether the proxy has room for more players.
      */
     private boolean accepting() {
         return this.players() < this.proxy.getConfiguration().getMaxPlayerCount();

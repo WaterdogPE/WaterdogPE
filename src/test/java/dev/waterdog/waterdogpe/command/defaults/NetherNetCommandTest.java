@@ -31,12 +31,12 @@ class NetherNetCommandTest {
     @Test
     void parsesBase64UrlSnapshot() {
         String json = "{\"name\":\"Lobby\",\"protocol\":924,\"version\":\"1.26.50\",\"level\":\"hub\","
-                + "\"players\":3,\"maxPlayers\":100,\"gameType\":1}";
+                + "\"maxPlayerCount\":100,\"gameType\":1}";
         String encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(json.getBytes(StandardCharsets.UTF_8));
 
         ServerStatus status = NetherNetCommand.parseStatus(encoded);
 
-        assertEquals(new ServerStatus("Lobby", "hub", 3, 100, 1), status);
+        assertEquals(new ServerStatus("Lobby", "hub", 100, 1), status);
     }
 
     @Test

@@ -21,6 +21,8 @@ import dev.waterdog.waterdogpe.network.connection.TransportProfile;
 import dev.waterdog.waterdogpe.network.connection.codec.server.ServerErrorHandler;
 import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockPeer;
+import dev.waterdog.waterdogpe.network.nethernet.GameOutcomeReporter;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.network.protocol.handler.upstream.LoginUpstreamHandler;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -36,9 +38,14 @@ import org.cloudburstmc.protocol.bedrock.PacketDirection;
  * body, minus the frame id, so compression, encryption, batching and the packet codec are shared.
  */
 public class NetherNetServerSessionInitializer extends ProxiedSessionInitializer<BedrockServerSession> {
+    private final GameOutcomeReporter outcomes;
 
-    public NetherNetServerSessionInitializer(ProxyServer proxy) {
+    /**
+     * @param outcomes Reports game outcomes to the provider, or null when no provider admits players here
+     */
+    public NetherNetServerSessionInitializer(ProxyServer proxy, GameOutcomeReporter outcomes) {
         super(proxy);
+        this.outcomes = outcomes;
     }
 
     @Override
@@ -58,6 +65,10 @@ public class NetherNetServerSessionInitializer extends ProxiedSessionInitializer
         }
 
         super.initChannel(channel);
+        if (this.outcomes != null) {
+            channel.pipeline().addBefore(BedrockPeer.NAME, GameOutcomeReporter.HANDLER_NAME,
+                    this.outcomes.observer(protocol -> ProtocolVersion.get(protocol) != null));
+        }
 
         channel.pipeline().addLast(ServerErrorHandler.NAME, new ServerErrorHandler.Child(this.proxy));
     }

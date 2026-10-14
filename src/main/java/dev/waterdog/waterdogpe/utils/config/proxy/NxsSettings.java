@@ -21,9 +21,7 @@ import net.cubespace.Yamler.Config.Comments;
 import net.cubespace.Yamler.Config.Path;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The NXS signaling provider, which finds players for this proxy rather than waiting for them to
@@ -48,10 +46,7 @@ public class NxsSettings extends SettingsSection {
     })
     private List<String> advertiseAddresses = new ArrayList<>();
 
-    @Path("data")
-    @Comments({
-            "Instance metadata. The region and pool keys place this instance,",
-            "anything else is a registration tag."
-    })
-    private Map<String, String> data = new HashMap<>();
+    @Path("advanced")
+    @Comment("Options most proxies leave unchanged")
+    private NxsAdvancedSettings advanced = new NxsAdvancedSettings();
 }

@@ -79,6 +79,7 @@ public class NetherNetCommand extends Command {
 
         switch (args[0].toLowerCase()) {
             case "status" -> this.status(sender, nethernet, args);
+            case "action" -> this.action(sender, nethernet);
             case "diagnostics" -> this.diagnostics(sender, nethernet);
             default -> {
                 return false;
@@ -163,8 +164,20 @@ public class NetherNetCommand extends Command {
     }
 
     /**
-     * Admission counters and the provider's own view of this proxy.
+     * Shows the provider's current link for the operator, such as one to claim this proxy.
      */
+    private void action(CommandSender sender, NetherNetInterface nethernet) {
+        NetherNetProvider provider = nethernet.provider();
+        ProviderClient client = provider == null ? null : provider.client();
+        if (client == null) {
+            sender.sendMessage("Provider is not running.");
+            return;
+        }
+        client.operatorAction().whenComplete((action, failure) -> sender.sendMessage(failure == null
+                ? action.map(NetherNetProvider::operatorActionMessage).orElse("The signaling service has no link for you right now.")
+                : "Could not get a link from the signaling service: " + NetherNetProvider.failureMessage(failure)));
+    }
+
     private void diagnostics(CommandSender sender, NetherNetInterface nethernet) {
         JsonObject report = new JsonObject();
 
@@ -184,11 +197,8 @@ public class NetherNetCommand extends Command {
         if (channel instanceof NativeAdmissionServerChannel nativeChannel && nativeChannel.isActive()) {
             JsonObject entry = new JsonObject();
             entry.addProperty("bind", String.valueOf(nativeChannel.localAddress()));
-            entry.addProperty("nativeCreationAttempts", nativeChannel.creationAttempts());
-            entry.addProperty("liveNativePeers", nativeChannel.liveNativePeers());
-            entry.addProperty("droppedEvents", nativeChannel.droppedEvents());
-            entry.add("admission", GSON.toJsonTree(nativeChannel.admissionStats()));
-            entry.add("native", GSON.toJsonTree(nativeChannel.nativeStats()));
+            entry.add("native", GSON.toJsonTree(nativeChannel.stats()));
+            entry.addProperty("droppedGameOutcomeEvents", provider.gameOutcomes().droppedEvents());
             report.add("provider", entry);
         }
         sender.sendMessage(GSON.toJson(report));

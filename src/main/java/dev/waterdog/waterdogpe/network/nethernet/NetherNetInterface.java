@@ -127,7 +127,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                     .option(NetherChannelOption.NETHER_SERVER_RTC_HANDSHAKE_TIMEOUT_SECONDS,
                             NetherNetProperties.HANDSHAKE_TIMEOUT)
                     .option(NetherChannelOption.NETHER_SERVER_METRICS, this.serverMetrics)
-                    .childHandler(new NetherNetServerSessionInitializer(this.proxy));
+                    .childHandler(new NetherNetServerSessionInitializer(this.proxy, null));
             if (icePort > 0) {
                 // Media on its own port, because the signaling port is only free on the TCP side
                 bootstrap.option(NetherChannelOption.NETHER_SERVER_ICE_ADDRESS,
