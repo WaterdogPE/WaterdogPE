@@ -22,6 +22,7 @@ import dev.waterdog.waterdogpe.network.connection.peer.BedrockServerSession;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import lombok.Getter;
 import lombok.Setter;
+import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
 
 import java.security.interfaces.ECPublicKey;
@@ -40,9 +41,9 @@ public class HandshakeEntry {
     @Setter
     private ProtocolVersion protocol;
     private final boolean shouldSendCertificateChain;
-    /** The credentials exactly as the client sent them, kept for chain forwarding. */
+    private final LoginPacket originalLoginPacket;
 
-    public HandshakeEntry(ECPublicKey identityPublicKey, JsonObject clientData, String xuid, UUID uuid, String displayName, String minecraftId, boolean xboxAuthed, ProtocolVersion protocol, boolean shouldSendCertificateChain) {
+    public HandshakeEntry(ECPublicKey identityPublicKey, JsonObject clientData, String xuid, UUID uuid, String displayName, String minecraftId, boolean xboxAuthed, ProtocolVersion protocol, LoginPacket originalLoginPacket, boolean shouldSendCertificateChain) {
         this.identityPublicKey = identityPublicKey;
         this.clientData = clientData;
         this.xuid = xuid;
@@ -51,6 +52,7 @@ public class HandshakeEntry {
         this.minecraftId = minecraftId;
         this.xboxAuthed = xboxAuthed;
         this.protocol = protocol;
+        this.originalLoginPacket = originalLoginPacket;
         this.shouldSendCertificateChain = shouldSendCertificateChain;
     }
 
@@ -72,6 +74,7 @@ public class HandshakeEntry {
         builder.keyPair(event.getKeyPair());
         builder.clientData(this.clientData);
         builder.shouldSendCertificateChain(this.shouldSendCertificateChain);
+        builder.originalLoginPacket(this.originalLoginPacket);
         if (this.clientData.has("DeviceModel")) {
             builder.deviceModel(this.clientData.get("DeviceModel").getAsString());
         }
