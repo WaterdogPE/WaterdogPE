@@ -420,6 +420,16 @@ public class EntityMap implements BedrockPacketHandler {
         return signal;
     }
 
+    @Override
+    public PacketSignal handle(ClientboundStonecutterSetRecipePacket packet) {
+        return data.rewriteUniqueEntityId(packet.getPlayerUniqueEntityId(), packet::setPlayerUniqueEntityId);
+    }
+
+    @Override
+    public PacketSignal handle(SetPassengerOfBlockPacket packet) {
+        return data.rewriteUniqueEntityId(packet.getEntityUniqueId(), packet::setEntityUniqueId);
+    }
+
     private PacketSignal rewriteMetadata(EntityDataMap metadata) {
         PacketSignal signal = PacketSignal.UNHANDLED;
         for (EntityDataType<Long> data : ENTITY_DATA_FIELDS) {

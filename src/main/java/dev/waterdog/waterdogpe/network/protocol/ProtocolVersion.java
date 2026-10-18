@@ -27,6 +27,7 @@ import org.cloudburstmc.protocol.bedrock.codec.v2168.Bedrock_v2168_hotfix4;
 import org.cloudburstmc.protocol.bedrock.codec.v2169.Bedrock_v2169;
 import org.cloudburstmc.protocol.bedrock.codec.v1001.Bedrock_v1001;
 import org.cloudburstmc.protocol.bedrock.codec.v2193.Bedrock_v2193;
+import org.cloudburstmc.protocol.bedrock.codec.v2225.Bedrock_v2225;
 import org.cloudburstmc.protocol.bedrock.codec.v313.Bedrock_v313;
 import org.cloudburstmc.protocol.bedrock.codec.v332.Bedrock_v332;
 import org.cloudburstmc.protocol.bedrock.codec.v340.Bedrock_v340;
@@ -155,6 +156,7 @@ public enum ProtocolVersion {
     MINECRAFT_PE_1_26_44(2168, 1, Bedrock_v2168_hotfix4.CODEC, "26.44"), // this version has not bumped protocol number on client side
     MINECRAFT_PE_1_26_45(2169, Bedrock_v2169.CODEC, "26.45"),
     MINECRAFT_PE_1_26_50(2193, Bedrock_v2193.CODEC, "26.50", "26.51", "26.52"),
+    MINECRAFT_PE_1_26_60(2225, Bedrock_v2225.CODEC, "26.60"),
     ;
 
     private static final ProtocolVersion[] VALUES = values();
