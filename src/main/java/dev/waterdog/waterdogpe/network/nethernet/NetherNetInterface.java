@@ -69,6 +69,11 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
     private final ProxyServer proxy;
     private final List<Binding> bindings = new ObjectArrayList<>();
+    private final NetherNetJoinHosts joinHosts = new NetherNetJoinHosts();
+
+    public String takeJoinHostname(Channel channel) {
+        return this.joinHosts.take(channel);
+    }
 
     private volatile NetherServerMetrics serverMetrics;
     private volatile NetherNetProvider provider;
@@ -203,7 +208,13 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                 // A peer may be another proxy signing its own assertion, which no auth service issued
                 .setTokenTrust(TokenTrust.ANY)
                 .setMotdProvider((host, client, info) -> this.advertisement(client))
-                .setPlayerFilter((host, player) -> this.acceptsConnections());
+                .setPlayerFilter((host, player) -> {
+                    JoinRefusal refusal = this.acceptsConnections();
+                    if (refusal == null) {
+                        this.joinHosts.record(host, player);
+                    }
+                    return refusal;
+                });
 
         HttpsSettings https = settings.getHttps();
         if (https.enabled()) {
