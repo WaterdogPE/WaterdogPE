@@ -272,7 +272,9 @@ public class PlayerRewriteUtils {
         }
 
         int maxEffectId;
-        if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_130)) {
+        if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_26_60)) {
+            maxEffectId = 38;
+        } else if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_130)) {
             maxEffectId = 37;
         } else if (version.isAfterOrEqual(ProtocolVersion.MINECRAFT_PE_1_21_0)) {
             maxEffectId = 36;
