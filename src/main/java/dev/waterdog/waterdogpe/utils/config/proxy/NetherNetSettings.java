@@ -92,13 +92,22 @@ public class NetherNetSettings extends SettingsSection {
 
     @Path("advertise_addresses")
     @Comments({
-            "Addresses put in the ICE candidates clients connect to. Empty derives them from the",
-            "listener bind address. Set it when clients reach a different address or the listener",
-            "binds a wildcard. An address this machine does not hold is announced as the public side",
-            "of a NAT forwarding udp_port here, same port. Media bypasses a signaling reverse proxy,",
-            "so its address only belongs here if it forwards the media port too."
+            "Addresses players connect to for NetherNet media, for built-in signaling and NXS alike: IP",
+            "addresses or host names, such as play.example.com or [2001:db8::1]:19133. One without a",
+            "port uses udp_port. A host name is looked up when signaling starts, which fails if it does",
+            "not resolve. An address this machine does not hold is announced as the public side of a",
+            "NAT forwarding that port here. Media bypasses a signaling reverse proxy, so its address",
+            "only belongs here if it forwards the media port too. Empty derives them from the listener",
+            "bind address, or from this host's addresses and what stun_discovery finds."
     })
     private List<String> advertiseAddresses = new ArrayList<>();
+
+    @Path("stun_discovery")
+    @Comments({
+            "Finds this proxy's public address through STUN when advertise_addresses is empty. NXS asks",
+            "the signaling service's STUN servers"
+    })
+    private boolean stunDiscovery = true;
 
     @Path("udp_port")
     @Comments({

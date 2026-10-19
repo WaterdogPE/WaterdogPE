@@ -21,9 +21,11 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -59,6 +61,34 @@ public class ProxyConfigTest {
         new ProxyConfig(file).init();
 
         assertTrue(Files.readString(file.toPath()).contains("\nconfig_version: " + ConfigMigrations.CURRENT + "\n"));
+    }
+
+    @Test
+    public void unversionedFilesAreMigrated() throws Exception {
+        File file = newFile();
+        Path path = file.toPath();
+        // The layout before built-in signaling and NXS shared their options
+        Files.writeString(path, """
+                nethernet:
+                  advertise_addresses: ['1.1.1.1', ' play.example.com:19133 ']
+                  nxs:
+                    advertise_addresses: ['play.example.com:19133', '8.8.8.8:19133']
+                    advanced:
+                      stun_discovery: false
+                """);
+
+        ProxyConfig config = new ProxyConfig(file);
+        config.init();
+
+        // One list, each address once, built-in signaling's first
+        NetherNetSettings settings = config.getNetherNetSettings();
+        assertEquals(List.of("1.1.1.1", "play.example.com:19133", "8.8.8.8:19133"), settings.getAdvertiseAddresses());
+        assertFalse(settings.isStunDiscovery());
+        String text = Files.readString(path);
+        assertFalse(text.contains("    advertise_addresses:"), "the NXS list stays in the file");
+        assertFalse(text.contains("      stun_discovery:"), "the NXS switch stays in the file");
+        assertTrue(text.contains("\n  stun_discovery: false"));
+        assertTrue(text.contains("\nconfig_version: " + ConfigMigrations.CURRENT + "\n"));
     }
 
     @Test

@@ -29,17 +29,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class NetherNetProviderSettingsTest {
 
-    private static ProviderRuntimeConfiguration.Settings settings(String nxs) throws Exception {
+    private static ProviderRuntimeConfiguration.Settings settings(String nethernet) throws Exception {
         File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
-        Files.writeString(file.toPath(), "nethernet:\n  nxs:\n" + nxs.indent(4));
+        Files.writeString(file.toPath(), "nethernet:\n" + nethernet.indent(2));
         ProxyConfig config = new ProxyConfig(file);
         config.init();
-        return NetherNetProvider.providerSettings(config.getNetherNetSettings().getNxs());
+        return NetherNetProvider.providerSettings(config.getNetherNetSettings());
     }
 
     @Test
     public void defaultsCheckConnectivityWithoutAssistance() throws Exception {
-        var settings = settings("token: secret\n");
+        var settings = settings("nxs:\n  token: secret\n");
         assertEquals("secret", settings.token());
         assertFalse(settings.assistedJoins());
         assertTrue(settings.connectionChecks());
@@ -53,12 +53,13 @@ public class NetherNetProviderSettingsTest {
     @Test
     public void passesTheAdvancedOptions() throws Exception {
         var settings = settings("""
-                advanced:
-                  assisted_joins: true
-                  connection_checks: false
-                  stun_discovery: false
-                  deregister_on_shutdown: true
-                  location: {country: nl, latitude: '52.37', longitude: '4.89'}
+                stun_discovery: false
+                nxs:
+                  advanced:
+                    assisted_joins: true
+                    connection_checks: false
+                    deregister_on_shutdown: true
+                    location: {country: nl, latitude: '52.37', longitude: '4.89'}
                 """);
         assertTrue(settings.assistedJoins());
         assertFalse(settings.connectionChecks());
@@ -68,9 +69,15 @@ public class NetherNetProviderSettingsTest {
     }
 
     @Test
+    public void takesTheAddressesBuiltInSignalingAdvertises() throws Exception {
+        var settings = settings("advertise_addresses: ['1.1.1.1:19133', 'play.example.com']\n");
+        assertEquals(List.of("1.1.1.1:19133", "play.example.com"), settings.advertiseAddresses());
+    }
+
+    @Test
     public void refusesAnInvalidLocation() {
         for (String location : List.of("{city: London}", "{country: GBR}", "{latitude: '91', longitude: '0'}")) {
-            assertThrows(IOException.class, () -> settings("advanced:\n  location: " + location + "\n"), location);
+            assertThrows(IOException.class, () -> settings("nxs:\n  advanced:\n    location: " + location + "\n"), location);
         }
     }
 }

@@ -76,10 +76,9 @@ public class NetherNetProvider implements AutoCloseable {
      *                 it is ephemeral
      */
     public void start(NetherNetSettings settings, InetSocketAddress address, int udpPort) throws Exception {
-        NxsSettings nxs = settings.getNxs();
         Path dataPath = this.proxy.getDataPath();
 
-        ProviderRuntimeConfiguration runtime = ProviderRuntimeConfiguration.resolve(providerSettings(nxs), dataPath, address.getAddress().getHostAddress(), udpPort,
+        ProviderRuntimeConfiguration runtime = ProviderRuntimeConfiguration.resolve(providerSettings(settings), dataPath, address.getAddress().getHostAddress(), udpPort,
                 this.proxy.getConfiguration().getMaxPlayerCount());
 
         ProviderStateStore store = new ProviderStateStore(runtime.stateDirectory());
@@ -135,7 +134,8 @@ public class NetherNetProvider implements AutoCloseable {
      * What the provider runtime is configured with, named like Geyser's options. The proxy reports
      * game outcomes itself.
      */
-    static ProviderRuntimeConfiguration.Settings providerSettings(NxsSettings nxs) throws IOException {
+    static ProviderRuntimeConfiguration.Settings providerSettings(NetherNetSettings settings) throws IOException {
+        NxsSettings nxs = settings.getNxs();
         NxsAdvancedSettings advanced = nxs.getAdvanced();
         ProviderClient.Location location;
         try {
@@ -145,10 +145,10 @@ public class NetherNetProvider implements AutoCloseable {
         }
         return ProviderRuntimeConfiguration.Settings.builder(nxs.getEndpoint())
                 .token(nxs.getToken())
-                .advertiseAddresses(nxs.getAdvertiseAddresses())
+                .advertiseAddresses(settings.getAdvertiseAddresses())
                 .assistedJoins(advanced.isAssistedJoins())
                 .connectionChecks(advanced.isConnectionChecks())
-                .stunDiscovery(advanced.isStunDiscovery())
+                .stunDiscovery(settings.isStunDiscovery())
                 .deregisterOnShutdown(advanced.isDeregisterOnShutdown())
                 .location(location)
                 .gameOutcomes(true)

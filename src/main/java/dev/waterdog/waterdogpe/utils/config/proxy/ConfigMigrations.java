@@ -17,7 +17,10 @@ package dev.waterdog.waterdogpe.utils.config.proxy;
 
 import net.cubespace.Yamler.Config.ConfigSection;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -34,7 +37,9 @@ import java.util.function.Consumer;
  */
 final class ConfigMigrations {
 
-    private static final List<Consumer<ConfigSection>> STEPS = List.of();
+    private static final List<Consumer<ConfigSection>> STEPS = List.of(
+            ConfigMigrations::shareNetherNetAddresses
+    );
 
     static final int CURRENT = STEPS.size();
 
@@ -44,6 +49,33 @@ final class ConfigMigrations {
     static void migrate(ConfigSection root, int version) {
         for (int step = version; step < CURRENT; step++) {
             STEPS.get(step).accept(root);
+        }
+    }
+
+    /**
+     * Step 1: built-in signaling and NXS share one advertise_addresses list, each address once, and the
+     * NXS stun_discovery switch moves next to it.
+     */
+    private static void shareNetherNetAddresses(ConfigSection root) {
+        String nxsAddresses = "nethernet.nxs.advertise_addresses";
+        if (root.has(nxsAddresses)) {
+            Set<String> merged = new LinkedHashSet<>();
+            for (String path : List.of("nethernet.advertise_addresses", nxsAddresses)) {
+                if (root.get(path) instanceof List<?> addresses) {
+                    addresses.forEach(address -> merged.add(String.valueOf(address).trim()));
+                }
+            }
+            merged.remove("");
+            root.set("nethernet.advertise_addresses", new ArrayList<>(merged));
+            root.remove(nxsAddresses);
+        }
+
+        String nxsStunDiscovery = "nethernet.nxs.advanced.stun_discovery";
+        if (root.has(nxsStunDiscovery)) {
+            if (!root.has("nethernet.stun_discovery")) {
+                root.set("nethernet.stun_discovery", root.get(nxsStunDiscovery));
+            }
+            root.remove(nxsStunDiscovery);
         }
     }
 }

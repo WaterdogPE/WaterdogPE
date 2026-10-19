@@ -42,13 +42,6 @@ public class NxsAdvancedSettings extends SettingsSection {
     })
     private boolean connectionChecks = true;
 
-    @Path("stun_discovery")
-    @Comments({
-            "Finds this proxy's public address through the signaling service's STUN servers when it has",
-            "none of its own. Not used when advertise_addresses is set"
-    })
-    private boolean stunDiscovery = true;
-
     @Path("location")
     @Comments({
             "Where this proxy is: country (a two-letter code), city, latitude and longitude. Leave empty",
