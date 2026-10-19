@@ -35,6 +35,7 @@ import org.cloudburstmc.netty.signaling.ProviderClient;
 import org.cloudburstmc.netty.signaling.ServerStatus;
 import org.cloudburstmc.netty.signaling.admission.NativeAdmissionServerChannel;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -164,7 +165,7 @@ public class NetherNetCommand extends Command {
     }
 
     /**
-     * Shows the provider's current link for the operator, such as one to claim this proxy.
+     * Fetches the provider's current link for the operator, such as one to claim this proxy, into its file.
      */
     private void action(CommandSender sender, NetherNetInterface nethernet) {
         NetherNetProvider provider = nethernet.provider();
@@ -173,9 +174,18 @@ public class NetherNetCommand extends Command {
             sender.sendMessage("Provider is not running.");
             return;
         }
-        client.operatorAction().whenComplete((action, failure) -> sender.sendMessage(failure == null
-                ? action.map(NetherNetProvider::operatorActionMessage).orElse("The signaling service has no link for you right now.")
-                : "Could not get a link from the signaling service: " + NetherNetProvider.failureMessage(failure)));
+        client.operatorAction().whenComplete((action, failure) -> {
+            if (failure != null) {
+                sender.sendMessage("Could not get a link from the signaling service: " + NetherNetProvider.failureMessage(failure));
+                return;
+            }
+            try {
+                String message = provider.storeOperatorAction(action);
+                sender.sendMessage(message != null ? message : "The signaling service has no link for you right now.");
+            } catch (IOException e) {
+                sender.sendMessage("Could not keep the link in a file: " + e.getMessage());
+            }
+        });
     }
 
     private void diagnostics(CommandSender sender, NetherNetInterface nethernet) {

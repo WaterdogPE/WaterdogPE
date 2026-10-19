@@ -39,7 +39,11 @@ import org.cloudburstmc.netty.signaling.provider.ProviderShutdown;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -54,6 +58,13 @@ import java.util.function.Supplier;
  */
 @Log4j2
 public class NetherNetProvider implements AutoCloseable {
+
+    /** NetherNet's own files, next to config.yml, as Geyser keeps them. */
+    static final String DATA_FOLDER = "nethernet";
+    /**
+     * Holds the provider's link for the operator, in {@link #DATA_FOLDER}.
+     */
+    private static final String OPERATOR_LINK_FILE = "operator-link.txt";
 
     private final ProxyServer proxy;
 
@@ -122,7 +133,7 @@ public class NetherNetProvider implements AutoCloseable {
             }
             log.info(registrationMessage(registration));
             // The provider may offer the operator a link, such as one to claim this proxy
-            client.operatorAction().thenAccept(action -> action.ifPresent(value -> log.info(operatorActionMessage(value))));
+            client.operatorAction().thenAccept(this::announceOperatorAction);
             // Says where logins are vouched for, without putting provider credentials in the log
             log.debug("NetherNet client identities are authenticated by external signaling provider "
                     + runtime.origin().getHost() + "; direct login keys are checked against its admission tickets");
@@ -154,8 +165,48 @@ public class NetherNetProvider implements AutoCloseable {
                 .build();
     }
 
-    public static String operatorActionMessage(ProviderClient.OperatorAction action) {
-        return action.text() + " " + action.url();
+    private void announceOperatorAction(Optional<ProviderClient.OperatorAction> action) {
+        try {
+            String message = this.storeOperatorAction(action);
+            if (message != null) {
+                log.info(message);
+            }
+        } catch (IOException e) {
+            log.warn("Could not keep the signaling service's link in {}: {}", this.operatorLinkFile(), e.getMessage());
+        }
+    }
+
+    /**
+     * Keeps the provider's link for the operator, such as one to claim this proxy, in the nethernet folder. See
+     * {@link #storeOperatorAction(Path, Optional)}.
+     */
+    public String storeOperatorAction(Optional<ProviderClient.OperatorAction> action) throws IOException {
+        return storeOperatorAction(this.operatorLinkFile(), action);
+    }
+
+    private Path operatorLinkFile() {
+        return this.proxy.getDataPath().resolve(DATA_FOLDER).resolve(OPERATOR_LINK_FILE);
+    }
+
+    /**
+     * Writes the provider's link to a file only this user can read, as it grants access to this proxy and a
+     * console is often logged. With no link the file is removed. The provider and wdnethernet action can both
+     * write it, so one waits for the other.
+     *
+     * @return the provider's text and where its link is, or null when there is none
+     */
+    public static synchronized String storeOperatorAction(Path file, Optional<ProviderClient.OperatorAction> action) throws IOException {
+        Files.deleteIfExists(file);
+        if (action.isEmpty()) {
+            return null;
+        }
+        ProviderClient.OperatorAction value = action.get();
+        Files.createDirectories(file.getParent());
+        if (file.getFileSystem().supportedFileAttributeViews().contains("posix")) {
+            Files.createFile(file, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
+        }
+        Files.writeString(file, value.text() + "\n" + value.url() + "\nExpires " + Instant.ofEpochMilli(value.expiresAt()) + "\n");
+        return value.text() + " The link is in " + file + ".";
     }
 
     private ProviderClient.Health health(int capacity) {

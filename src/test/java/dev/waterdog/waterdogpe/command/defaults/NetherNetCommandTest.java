@@ -16,14 +16,24 @@
 package dev.waterdog.waterdogpe.command.defaults;
 
 import dev.waterdog.waterdogpe.network.nethernet.NetherNetProvider;
+import org.cloudburstmc.netty.signaling.ProviderClient;
 import org.cloudburstmc.netty.signaling.ServerStatus;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class NetherNetCommandTest {
@@ -50,5 +60,20 @@ class NetherNetCommandTest {
     void failureMessageUnwrapsFuturesButNotInternals() {
         Throwable wrapped = new CompletionException(new IllegalStateException("secret detail"));
         assertEquals("IllegalStateException", NetherNetProvider.failureMessage(wrapped));
+    }
+
+    @Test
+    void theOperatorLinkGoesToAFileOnlyThisUserReads(@TempDir Path dir) throws IOException {
+        Path file = dir.resolve("operator-link.txt");
+        var action = new ProviderClient.OperatorAction(URI.create("https://panel.example.net/claim/secret"), "Claim it.",
+                1_800_000_000_000L);
+        assertEquals("Claim it. The link is in " + file + ".", NetherNetProvider.storeOperatorAction(file, Optional.of(action)));
+        assertEquals("Claim it.\nhttps://panel.example.net/claim/secret\nExpires 2027-01-15T08:00:00Z\n", Files.readString(file));
+        if (file.getFileSystem().supportedFileAttributeViews().contains("posix")) {
+            assertEquals(PosixFilePermissions.fromString("rw-------"), Files.getPosixFilePermissions(file));
+        }
+        // Once the service offers none, as after a claim, the old link goes
+        assertNull(NetherNetProvider.storeOperatorAction(file, Optional.empty()));
+        assertFalse(Files.exists(file));
     }
 }
