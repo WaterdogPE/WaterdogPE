@@ -47,7 +47,12 @@ public class LoginData {
     private final boolean xboxAuthed;
     private final SocketAddress address;
     private final ProtocolVersion protocol;
+    /**
+     * The host and port the client joined through, as
+     * {@link org.cloudburstmc.protocol.bedrock.util.JoinAddress} reads its ServerAddress.
+     */
     private final String joinHostname;
+    private final int joinPort;
 
     @Builder.Default
     private final Platform devicePlatform = Platform.UNKNOWN;

@@ -23,6 +23,7 @@ import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import lombok.Getter;
 import lombok.Setter;
 import org.cloudburstmc.protocol.bedrock.util.EncryptionUtils;
+import org.cloudburstmc.protocol.bedrock.util.JoinAddress;
 
 import java.security.interfaces.ECPublicKey;
 import java.util.UUID;
@@ -67,7 +68,10 @@ public class HandshakeEntry {
         builder.minecraftId(this.minecraftId);
         builder.xboxAuthed(this.xboxAuthed);
         builder.protocol(this.protocol);
-        builder.joinHostname(this.clientData.get("ServerAddress").getAsString().split(":")[0]);
+        JoinAddress joinAddress = JoinAddress.parse(this.clientData.get("ServerAddress").getAsString(),
+                proxy.getConfiguration().getBindAddress().getPort());
+        builder.joinHostname(joinAddress.getHost());
+        builder.joinPort(joinAddress.getPort());
         builder.address(session.getSocketAddress());
         builder.keyPair(event.getKeyPair());
         builder.clientData(this.clientData);
