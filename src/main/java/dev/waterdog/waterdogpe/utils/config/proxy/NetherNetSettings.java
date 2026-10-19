@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.utils.config.proxy;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import net.cubespace.Yamler.Config.Comment;
 import net.cubespace.Yamler.Config.Comments;
@@ -70,6 +71,7 @@ public class NetherNetSettings extends SettingsSection {
             "hybrid: both, so players can arrive either way",
             "plugin: nothing is bound, a plugin feeds offers through the signaling API"
     })
+    @Setter
     private String signalingMode = "builtin";
 
     @Path("nxs")
@@ -101,6 +103,7 @@ public class NetherNetSettings extends SettingsSection {
             "only belongs here if it forwards the media port too. Empty derives them from the listener",
             "bind address, or from this host's addresses and what stun_discovery finds."
     })
+    @Setter
     private List<String> advertiseAddresses = new ArrayList<>();
 
     @Path("stun_discovery")
@@ -108,6 +111,7 @@ public class NetherNetSettings extends SettingsSection {
             "Finds this proxy's public address through STUN when advertise_addresses is empty. Built-in",
             "signaling asks public STUN servers from udp_port, NXS the signaling service's own"
     })
+    @Setter
     private boolean stunDiscovery = true;
 
     @Path("udp_port")
