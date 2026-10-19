@@ -118,7 +118,9 @@ public class NetherNetSettings extends SettingsSection {
     @Comments({
             "Dedicated UDP port for NetherNet media, one socket for every peer, which STUN discovery",
             "shares. It must not be the listener port, which RakNet already holds. 0 picks the first port",
-            "after the listener port that no server in servers uses, which the startup log names."
+            "after the listener port that no server in servers uses, which the startup log names. Players",
+            "connect to it directly, so forward it like the listener port when behind a router. With NXS",
+            "signaling and assisted_joins off, they cannot connect otherwise."
     })
     private int udpPort = 0;
 
