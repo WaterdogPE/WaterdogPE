@@ -266,8 +266,16 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             return;
         }
 
-        // The native ICE and DTLS stack logs through slf4j once a threshold is set.
-        NetherNetLogging.setNativeLogLevel(NetherNetProperties.NATIVE_LOG_LEVEL);
+        // The native ICE and DTLS stack logs through slf4j once a threshold is set
+        String level = NetherNetProperties.LOG_LEVEL;
+        if (level == null) {
+            NetherNetLogging.setNativeLogLevel("WARN");
+        } else if (NetherNetLogging.setLogLevel(level)) {
+            log.info("NetherNet log level set from system property: {}", level.trim());
+        } else {
+            log.warn("Invalid waterdog.nethernetLog \"{}\", expected OFF, ERROR, WARN, INFO, DEBUG or TRACE", level);
+            NetherNetLogging.setNativeLogLevel("WARN");
+        }
 
         this.identity = ProxyIdentity.identity(this.proxy);
         log.info("NetherNet identifies this operator to players as {}", ProxyIdentity.domain(this.proxy));

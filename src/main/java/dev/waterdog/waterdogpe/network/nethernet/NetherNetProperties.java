@@ -40,8 +40,9 @@ import java.util.Locale;
  * share the listener port, which is where clients look for it. 0 mirrors the listener port.</li>
  * <li>{@code waterdog.nethernetMaxConnections}: concurrent NetherNet connections, 0 for no
  * limit.</li>
- * <li>{@code waterdog.nethernetLog}: the level the native ICE and DTLS stack logs at. Defaults to
- * WARN.</li>
+ * <li>{@code waterdog.nethernetLog}: the level NetherNet logs at, the native ICE and DTLS stack and
+ * NetherNet's own logs alike: OFF, ERROR, WARN, INFO, DEBUG or TRACE. DEBUG also shows what
+ * signaling and STUN discovery do. Unset, the native stack logs at WARN.</li>
  * <li>{@code waterdog.nethernetStunServers}: the servers built-in signaling asks for this proxy's
  * public address, comma separated {@code stun:host[:port]} URLs, empty for none. Defaults to
  * Cloudflare's and Google's, as either may be blocked where a proxy runs. Unlike
@@ -63,7 +64,8 @@ public final class NetherNetProperties {
     public static final int TRANSPORT_MEMORY = Integer.getInteger("waterdog.nethernetTransportMemory", 300);
     public static final int SIGNALING_PORT = Integer.getInteger("waterdog.nethernetSignalingPort", 0);
     public static final int MAX_CONNECTIONS = Integer.getInteger("waterdog.nethernetMaxConnections", 0);
-    public static final String NATIVE_LOG_LEVEL = System.getProperty("waterdog.nethernetLog", "WARN");
+    /** Null when the property is not set. */
+    public static final String LOG_LEVEL = System.getProperty("waterdog.nethernetLog");
     /** Null when the property is not set, so the defaults apply. */
     public static final List<String> STUN_SERVERS = optionalList(System.getProperty("waterdog.nethernetStunServers"));
     public static final List<String> DEFAULT_STUN_SERVERS =
