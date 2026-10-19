@@ -228,9 +228,10 @@ public class NetherNetProvider implements AutoCloseable {
         String instanceId = registration.instanceId();
         String address = registration.publicAddress();
         return address != null
-                ? "Provider address: " + address + " (instance " + instanceId + ")"
-                : "Provider instance registered: " + instanceId
-                        + "; public addresses are managed on its attached Signal Servers";
+                ? "Registered with the external signaling service. Players can join at " + address
+                        + " (instance " + instanceId + ")."
+                : "Registered with the external signaling service (instance " + instanceId + "). "
+                        + "The addresses players join with are managed by the service.";
     }
 
     @Override
