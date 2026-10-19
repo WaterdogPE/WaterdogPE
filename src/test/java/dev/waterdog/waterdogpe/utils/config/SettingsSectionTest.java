@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -70,6 +71,28 @@ public class SettingsSectionTest {
         assertTrue(text.contains("# Serves signaling over HTTPS as well as HTTP, on the same port"));
         assertEquals(19134, config.getNetherNetSettings().getUdpPort(), "an existing value was overwritten");
         assertTrue(config.getNetherNetSettings().enabled());
+    }
+
+    @Test
+    public void udpPortZeroTakesThePortAfterTheListenerNoServerUses() throws Exception {
+        File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
+        ProxyConfig config = new ProxyConfig(file);
+        config.init();
+
+        NetherNetSettings settings = config.getNetherNetSettings();
+        assertTrue(Files.readString(file.toPath()).contains("\n  udp_port: 0\n"), "0 is replaced in the file");
+        // The example server, lobby1, is on 19133, the port after the listener's
+        assertEquals(19134, settings.resolveUdpPort(19132, Set.of(19133)));
+    }
+
+    @Test
+    public void udpPortKeepsAChosenPort() throws Exception {
+        File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
+        Files.writeString(file.toPath(), "nethernet:\n  udp_port: 19140\n");
+        ProxyConfig config = new ProxyConfig(file);
+        config.init();
+
+        assertEquals(19140, config.getNetherNetSettings().resolveUdpPort(19132, Set.of(19133)));
     }
 
     @Test

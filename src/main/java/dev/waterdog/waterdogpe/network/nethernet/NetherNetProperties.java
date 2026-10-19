@@ -37,6 +37,11 @@ import java.util.List;
  * limit.</li>
  * <li>{@code waterdog.nethernetLog}: the level the native ICE and DTLS stack logs at. Defaults to
  * WARN.</li>
+ * <li>{@code waterdog.nethernetStunServers}: the servers built-in signaling asks for this proxy's
+ * public address, comma separated {@code stun:host[:port]} URLs, empty for none. Defaults to
+ * Cloudflare's and Google's, as either may be blocked where a proxy runs. Unlike
+ * {@code waterdog.nethernetIceServers}, they are asked once in the background, not by every
+ * peer.</li>
  * </ul>
  */
 public final class NetherNetProperties {
@@ -47,8 +52,16 @@ public final class NetherNetProperties {
     public static final int SIGNALING_PORT = Integer.getInteger("waterdog.nethernetSignalingPort", 0);
     public static final int MAX_CONNECTIONS = Integer.getInteger("waterdog.nethernetMaxConnections", 0);
     public static final String NATIVE_LOG_LEVEL = System.getProperty("waterdog.nethernetLog", "WARN");
+    /** Null when the property is not set, so the defaults apply. */
+    public static final List<String> STUN_SERVERS = optionalList(System.getProperty("waterdog.nethernetStunServers"));
+    public static final List<String> DEFAULT_STUN_SERVERS =
+            List.of("stun:stun.cloudflare.com:3478", "stun:stun.l.google.com:19302");
 
     private NetherNetProperties() {
+    }
+
+    private static List<String> optionalList(String value) {
+        return value == null ? null : list(value);
     }
 
     private static List<String> list(String value) {

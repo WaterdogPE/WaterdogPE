@@ -72,8 +72,7 @@ public class NetherNetProvider implements AutoCloseable {
     /**
      * @param settings The NetherNet settings, for the provider section and the UDP port
      * @param address  The address the proxy listens on
-     * @param udpPort  The fixed UDP port peers are handed, which the provider cannot advertise if
-     *                 it is ephemeral
+     * @param udpPort  The UDP port peers are handed
      */
     public void start(NetherNetSettings settings, InetSocketAddress address, int udpPort) throws Exception {
         Path dataPath = this.proxy.getDataPath();

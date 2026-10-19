@@ -240,6 +240,9 @@ public class ProxyConfig extends YamlConfig {
 
     @Override
     public void save(boolean withComments) throws InvalidConfigurationException {
+        // Yamler gathers the comments on every save without dropping the last ones, so a second save
+        // of this object would repeat them all
+        this.clearComments();
         if (withComments) {
             SettingsSection.describeSections(this);
         }

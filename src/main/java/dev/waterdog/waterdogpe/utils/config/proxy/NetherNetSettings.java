@@ -23,6 +23,7 @@ import net.cubespace.Yamler.Config.Path;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 public class NetherNetSettings extends SettingsSection {
@@ -104,17 +105,16 @@ public class NetherNetSettings extends SettingsSection {
 
     @Path("stun_discovery")
     @Comments({
-            "Finds this proxy's public address through STUN when advertise_addresses is empty. NXS asks",
-            "the signaling service's STUN servers"
+            "Finds this proxy's public address through STUN when advertise_addresses is empty. Built-in",
+            "signaling asks public STUN servers from udp_port, NXS the signaling service's own"
     })
     private boolean stunDiscovery = true;
 
     @Path("udp_port")
     @Comments({
-            "Dedicated UDP port for NetherNet media, one socket for every peer.",
-            "It must not be the listener port, which RakNet already holds.",
-            "0 picks an ephemeral port per peer, which needs no fixed port open but publishes a",
-            "different one to every client."
+            "Dedicated UDP port for NetherNet media, one socket for every peer, which STUN discovery",
+            "shares. It must not be the listener port, which RakNet already holds. 0 picks the first port",
+            "after the listener port that no server in servers uses, which the startup log names."
     })
     private int udpPort = 0;
 
@@ -130,6 +130,29 @@ public class NetherNetSettings extends SettingsSection {
             "so it can be mounted from outside the proxy directory."
     })
     private String identityFile = "keys/identity.pem";
+
+    /**
+     * The port media binds for a listener: udp_port, or for 0 the first port after the listener's
+     * that no server uses, as a server on this machine would already hold it.
+     *
+     * @param serverPorts The ports of the servers in the server list
+     */
+    public int resolveUdpPort(int listenerPort, Set<Integer> serverPorts) {
+        if (this.udpPort > 0) {
+            return this.udpPort;
+        }
+        int port = listenerPort + 1;
+        while (port <= 65535 && serverPorts.contains(port)) {
+            port++;
+        }
+        if (port > 65535) {
+            port = listenerPort - 1;
+            while (serverPorts.contains(port)) {
+                port--;
+            }
+        }
+        return port;
+    }
 
     public SignalingMode signalingMode() {
         try {

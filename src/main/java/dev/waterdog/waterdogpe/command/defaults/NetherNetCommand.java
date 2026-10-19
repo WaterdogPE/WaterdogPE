@@ -93,7 +93,7 @@ public class NetherNetCommand extends Command {
         StringBuilder sb = new StringBuilder("§b--- §3NetherNet §b---\n");
         sb.append("§3Running: ").append(yesNo(nethernet.isRunning())).append('\n');
         sb.append("§3Signaling mode: §b").append(settings.signalingMode().name().toLowerCase()).append('\n');
-        sb.append("§3ICE port: §b").append(settings.getUdpPort() > 0 ? "udp/" + settings.getUdpPort() : "ephemeral").append('\n');
+        sb.append("§3ICE port: §b").append(nethernet.mediaPort() > 0 ? "udp/" + nethernet.mediaPort() : "none").append('\n');
 
         for (NetherNetInterface.SignalingInfo info : nethernet.signalingInfo()) {
             sb.append("§3Signaling: §b").append(info.bind())
