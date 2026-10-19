@@ -20,7 +20,7 @@ import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import org.cloudburstmc.netty.channel.raknet.RakDisconnectReason;
+import org.cloudburstmc.netty.channel.TransportDisconnectReason;
 
 public class ClientEventHandler extends ChannelInboundHandlerAdapter {
     public static final String NAME = "client-event-handler";
@@ -40,11 +40,11 @@ public class ClientEventHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object event) {
-        if (!(event instanceof RakDisconnectReason reason)) {
+        if (!(event instanceof TransportDisconnectReason reason)) {
             return;
         }
 
-        if (reason == RakDisconnectReason.TIMED_OUT) {
+        if (reason == TransportDisconnectReason.TIMED_OUT) {
             this.player.onDownstreamTimeout(this.connection.getServerInfo());
         }
     }

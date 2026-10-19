@@ -23,7 +23,7 @@ import dev.waterdog.waterdogpe.network.connection.peer.ProxiedBedrockPeer;
 import dev.waterdog.waterdogpe.network.protocol.handler.upstream.LoginUpstreamHandler;
 import io.netty.channel.Channel;
 import org.cloudburstmc.netty.channel.raknet.RakChannel;
-import org.cloudburstmc.netty.channel.raknet.RakDisconnectReason;
+import org.cloudburstmc.netty.channel.TransportDisconnectReason;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelMetrics;
 import org.cloudburstmc.netty.channel.raknet.config.RakChannelOption;
 import org.cloudburstmc.netty.handler.codec.raknet.common.RakSessionCodec;
@@ -40,7 +40,7 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
     protected void initChannel(Channel channel) {
         if (!this.proxy.getSecurityManager().onConnectionCreated(channel.remoteAddress())) {
             this.proxy.getLogger().info("[" + channel.remoteAddress() + "] <-> Connection request denied");
-            disconnect(channel, RakDisconnectReason.DISCONNECTED);
+            disconnect(channel, TransportDisconnectReason.DISCONNECTED);
             return;
         }
 
@@ -72,7 +72,7 @@ public class ProxiedServerSessionInitializer extends ProxiedSessionInitializer<B
         session.setPacketHandler(new LoginUpstreamHandler(this.proxy, session));
     }
 
-    private static void disconnect(Channel channel, RakDisconnectReason reason) {
+    private static void disconnect(Channel channel, TransportDisconnectReason reason) {
         if (channel instanceof RakChannel) {
             ((RakChannel) channel).rakPipeline().get(RakSessionCodec.class).disconnect(reason);
         } else {

@@ -41,12 +41,14 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import lombok.extern.log4j.Log4j2;
+import tel.schich.libdatachannel.PeerConnectionConfiguration;
 
 
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.URI;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -128,6 +130,11 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                             NetherNetProperties.HANDSHAKE_TIMEOUT)
                     .option(NetherChannelOption.NETHER_SERVER_METRICS, this.serverMetrics)
                     .childHandler(new NetherNetServerSessionInitializer(this.proxy, null));
+            List<URI> iceServers = iceServers();
+            if (!iceServers.isEmpty()) {
+                bootstrap.option(NetherChannelOption.NETHER_PEER_CONNECTION_CONFIG,
+                        PeerConnectionConfiguration.DEFAULT.withIceServers(iceServers));
+            }
             if (icePort > 0) {
                 // Media on its own port, because the signaling port is only free on the TCP side
                 bootstrap.option(NetherChannelOption.NETHER_SERVER_ICE_ADDRESS,
@@ -175,15 +182,11 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     /**
-     * The STUN and TURN servers from the system property, as one entry carrying every URL.
+     * The STUN and TURN servers from the system property, which every connection's peer uses.
      * Credentials belong in the URL, which is the only place they have to go.
      */
-    private static List<IceServerInfo> iceServers() {
-        List<String> urls = NetherNetProperties.ICE_SERVERS;
-        if (urls.isEmpty()) {
-            return List.of();
-        }
-        return List.of(new IceServerInfo.Builder().setUrls(List.copyOf(urls)).build());
+    private static List<URI> iceServers() {
+        return new IceServerInfo.Builder().setUrls(NetherNetProperties.ICE_SERVERS).build().toUris();
     }
 
     /**
@@ -197,7 +200,6 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                 .setTrustedProxies(TrustedProxies.parse(settings.getTrustedProxies()))
                 .setProxyProtocol(settings.isProxyProtocol())
                 .setAdvertisedAddresses(advertisedAddresses(address, settings))
-                .setIceServers(iceServers())
                 // RakNet holds the UDP side of the signaling port, so ICE never uses it
                 .setIceOnLocalPort(false)
                 // A peer may be another proxy signing its own assertion, which no auth service issued

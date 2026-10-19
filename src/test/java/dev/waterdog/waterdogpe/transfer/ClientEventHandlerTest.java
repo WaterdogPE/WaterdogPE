@@ -22,7 +22,7 @@ import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
 import dev.waterdog.waterdogpe.network.serverinfo.ServerInfo;
 import io.netty.channel.embedded.EmbeddedChannel;
-import org.cloudburstmc.netty.channel.raknet.RakDisconnectReason;
+import org.cloudburstmc.netty.channel.TransportDisconnectReason;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -135,7 +135,7 @@ public class ClientEventHandlerTest {
     void rakTimeoutRoutesPendingRecovery() {
         this.harness.setPendingConnection(this.targetConnection);
 
-        channelFor(this.targetConnection).pipeline().fireUserEventTriggered(RakDisconnectReason.TIMED_OUT);
+        channelFor(this.targetConnection).pipeline().fireUserEventTriggered(TransportDisconnectReason.TIMED_OUT);
 
         assertNull(this.harness.player.getPendingConnection());
         assertTrue(this.harness.player.isConnected());
