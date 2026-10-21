@@ -62,6 +62,7 @@ public class InitialHandler extends AbstractDownstreamHandler {
     public PacketSignal handle(DisconnectPacket packet) {
         // Kicked during the initial login: recover through the shared failure path so the
         // kick message is not lost waiting for the channel close.
+        this.logRefused(packet);
         this.player.onDownstreamFailure(this.connection, ReconnectReason.SERVER_KICK, packet.getKickMessage());
         return Signals.CANCEL;
     }

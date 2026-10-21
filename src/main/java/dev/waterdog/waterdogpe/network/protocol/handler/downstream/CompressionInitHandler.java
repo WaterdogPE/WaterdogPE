@@ -49,4 +49,16 @@ public class CompressionInitHandler extends AbstractDownstreamHandler {
         this.connection.sendPacket(this.player.getLoginData().getLoginPacket());
         return Signals.CANCEL;
     }
+
+    // The server checks the protocol on RequestNetworkSettings and refuses before NetworkSettings, so
+    // the refusal goes to the handler that knows whether this is the first join or a transfer
+    @Override
+    public PacketSignal handle(PlayStatusPacket packet) {
+        return this.nextHandler.handle(packet);
+    }
+
+    @Override
+    public PacketSignal handle(DisconnectPacket packet) {
+        return this.nextHandler.handle(packet);
+    }
 }
