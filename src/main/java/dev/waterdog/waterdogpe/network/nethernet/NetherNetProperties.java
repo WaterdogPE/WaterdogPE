@@ -15,7 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.nethernet;
 
-import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
+import dev.waterdog.waterdogpe.utils.config.proxy.SignalingSettings;
 import lombok.extern.log4j.Log4j2;
 
 import java.util.Arrays;
@@ -48,11 +48,12 @@ import java.util.Locale;
  * Cloudflare's and Google's, as either may be blocked where a proxy runs. Unlike
  * {@code waterdog.nethernetIceServers}, they are asked once in the background, not by every
  * peer.</li>
- * <li>{@code waterdog.nethernetAdvertiseAddresses}: overrides {@code nethernet.advertise_addresses},
+ * <li>{@code waterdog.nethernetAdvertiseAddresses}: overrides
+ * {@code nethernet.signaling.advertise_addresses},
  * comma separated. Empty keeps the config's.</li>
- * <li>{@code waterdog.nethernetStunDiscovery}: overrides {@code nethernet.stun_discovery}, true or
- * false.</li>
- * <li>{@code waterdog.nethernetSignalingMode}: overrides {@code nethernet.signaling_mode}, builtin,
+ * <li>{@code waterdog.nethernetStunDiscovery}: overrides {@code nethernet.signaling.stun_discovery},
+ * true or false.</li>
+ * <li>{@code waterdog.nethernetSignalingMode}: overrides {@code nethernet.signaling.mode}, builtin,
  * nxs, hybrid or plugin.</li>
  * </ul>
  */
@@ -82,7 +83,7 @@ public final class NetherNetProperties {
      * Applies the config overrides to a freshly loaded config, in memory only, so the file keeps
      * what it says. A value that is not one keeps the config's, with an error saying so.
      */
-    public static void applyOverrides(NetherNetSettings settings) {
+    public static void applyOverrides(SignalingSettings settings) {
         if (!ADVERTISE_ADDRESSES.isEmpty()) {
             settings.setAdvertiseAddresses(ADVERTISE_ADDRESSES);
             log.info("NetherNet advertise addresses set from system property: {}", String.join(", ", ADVERTISE_ADDRESSES));
@@ -97,8 +98,8 @@ public final class NetherNetProperties {
         }
         if (SIGNALING_MODE != null) {
             try {
-                NetherNetSettings.SignalingMode mode = NetherNetSettings.SignalingMode.valueOf(SIGNALING_MODE.trim().toUpperCase(Locale.ROOT));
-                settings.setSignalingMode(mode);
+                SignalingSettings.SignalingMode mode = SignalingSettings.SignalingMode.valueOf(SIGNALING_MODE.trim().toUpperCase(Locale.ROOT));
+                settings.setMode(mode);
                 log.info("NetherNet signaling mode set from system property: {}", mode.name().toLowerCase(Locale.ROOT));
             } catch (IllegalArgumentException invalid) {
                 log.error("Invalid waterdog.nethernetSignalingMode \"{}\", expected builtin, nxs, hybrid or plugin, keeping the configured mode", SIGNALING_MODE);

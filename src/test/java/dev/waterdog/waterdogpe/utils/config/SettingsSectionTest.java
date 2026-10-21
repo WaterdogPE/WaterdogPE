@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.utils.config;
 import dev.waterdog.waterdogpe.utils.config.proxy.HttpsSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
+import dev.waterdog.waterdogpe.utils.config.proxy.SignalingSettings;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.junit.jupiter.api.Test;
 
@@ -54,49 +55,50 @@ public class SettingsSectionTest {
     @Test
     public void sectionsKeepDeclarationOrder() throws Exception {
         String text = write();
-        assertTrue(text.indexOf("  enabled: true") < text.indexOf("  signaling_mode:"));
-        assertTrue(text.indexOf("  signaling_mode:") < text.indexOf("  udp_port:"));
-        assertTrue(text.indexOf("    certificate:") < text.indexOf("    private_key:"));
-        assertTrue(text.indexOf("    private_key:") < text.indexOf("    password:"));
+        assertTrue(text.indexOf("  enabled: true") < text.indexOf("  webrtc_port:"));
+        assertTrue(text.indexOf("  webrtc_port:") < text.indexOf("  signaling:"));
+        assertTrue(text.indexOf("    mode:") < text.indexOf("    advertise_addresses:"));
+        assertTrue(text.indexOf("        certificate:") < text.indexOf("        private_key:"));
+        assertTrue(text.indexOf("        private_key:") < text.indexOf("        password:"));
     }
 
     @Test
     public void sectionsGainNewOptions() throws Exception {
         File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
         Path path = file.toPath();
-        Files.writeString(path, "nethernet:\n  enabled: false\n  udp_port: 19134\n");
+        Files.writeString(path, "nethernet:\n  enabled: false\n  webrtc_port: 19134\n");
 
         ProxyConfig config = new ProxyConfig(file);
         config.init();
 
         // A section already in the file is the one place Yamler will not add a key by itself
         String text = Files.readString(path);
-        assertTrue(text.contains("\n  https:"), "an option added since the file was written is missing");
+        assertTrue(text.contains("\n  signaling:"), "an option added since the file was written is missing");
         assertTrue(text.contains("# Serves signaling over HTTPS as well as HTTP, on the same port"));
-        assertEquals(19134, config.getNetherNetSettings().getUdpPort(), "an existing value was overwritten");
+        assertEquals(19134, config.getNetherNetSettings().getWebrtcPort(), "an existing value was overwritten");
         assertFalse(config.getNetherNetSettings().enabled());
     }
 
     @Test
-    public void udpPortZeroTakesThePortAfterTheListenerNoServerUses() throws Exception {
+    public void webrtcPortZeroTakesThePortAfterTheListenerNoServerUses() throws Exception {
         File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
         ProxyConfig config = new ProxyConfig(file);
         config.init();
 
         NetherNetSettings settings = config.getNetherNetSettings();
-        assertTrue(Files.readString(file.toPath()).contains("\n  udp_port: 0\n"), "0 is replaced in the file");
+        assertTrue(Files.readString(file.toPath()).contains("\n  webrtc_port: 0\n"), "0 is replaced in the file");
         // The example server, lobby1, is on 19133, the port after the listener's
-        assertEquals(19134, settings.resolveUdpPort(19132, Set.of(19133)));
+        assertEquals(19134, settings.resolveWebrtcPort(19132, Set.of(19133)));
     }
 
     @Test
-    public void udpPortKeepsAChosenPort() throws Exception {
+    public void webrtcPortKeepsAChosenPort() throws Exception {
         File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
-        Files.writeString(file.toPath(), "nethernet:\n  udp_port: 19140\n");
+        Files.writeString(file.toPath(), "nethernet:\n  webrtc_port: 19140\n");
         ProxyConfig config = new ProxyConfig(file);
         config.init();
 
-        assertEquals(19140, config.getNetherNetSettings().resolveUdpPort(19132, Set.of(19133)));
+        assertEquals(19140, config.getNetherNetSettings().resolveWebrtcPort(19132, Set.of(19133)));
     }
 
     @Test
@@ -106,14 +108,13 @@ public class SettingsSectionTest {
 
         new ProxyConfig(file).save();
         Files.writeString(path, Files.readString(path)
-                .replace("    certificate: ''", "    certificate: 'certs/fullchain.pem'")
-                .replace("    private_key: ''", "    private_key: 'certs/privkey.pem'"));
+                .replace("        certificate: ''", "        certificate: 'certs/fullchain.pem'")
+                .replace("        private_key: ''", "        private_key: 'certs/privkey.pem'"));
 
         ProxyConfig config = new ProxyConfig(file);
         config.init();
 
-        NetherNetSettings settings = config.getNetherNetSettings();
-        HttpsSettings https = settings.getHttps();
+        HttpsSettings https = config.getNetherNetSettings().getSignaling().getBuiltin().getHttps();
         assertEquals("certs/fullchain.pem", https.getCertificate());
         assertEquals("certs/privkey.pem", https.getPrivateKey());
         assertEquals("", https.getPassword());
@@ -126,20 +127,20 @@ public class SettingsSectionTest {
         Path path = file.toPath();
         new ProxyConfig(file).init();
         String text = Files.readString(path);
-        assertTrue(text.contains("\n  signaling_mode: builtin\n"));
+        assertTrue(text.contains("\n    mode: builtin\n"));
 
-        Files.writeString(path, text.replace("signaling_mode: builtin", "signaling_mode: HYBRID"));
+        Files.writeString(path, text.replace("    mode: builtin", "    mode: HYBRID"));
         ProxyConfig config = new ProxyConfig(file);
         config.init();
 
-        assertEquals(NetherNetSettings.SignalingMode.HYBRID, config.getNetherNetSettings().getSignalingMode());
+        assertEquals(SignalingSettings.SignalingMode.HYBRID, config.getNetherNetSettings().getSignaling().getMode());
     }
 
     @Test
     public void unknownEnumValuesFailTheLoad() throws Exception {
         File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
         Path path = file.toPath();
-        Files.writeString(path, "nethernet:\n  signaling_mode: hybird\n");
+        Files.writeString(path, "nethernet:\n  signaling:\n    mode: hybird\n");
         byte[] before = Files.readAllBytes(path);
 
         Throwable failure = assertThrows(InvalidConfigurationException.class, () -> new ProxyConfig(file).init());

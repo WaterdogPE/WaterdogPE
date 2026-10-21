@@ -60,7 +60,7 @@ public class ConfigurationManager {
         File configFile = new File(this.proxy.getDataPath().toString() + "/config.yml");
         ProxyConfig config = new ProxyConfig(configFile);
         config.init();
-        NetherNetProperties.applyOverrides(config.getNetherNetSettings());
+        NetherNetProperties.applyOverrides(config.getNetherNetSettings().getSignaling());
         this.proxyConfig = config;
     }
 

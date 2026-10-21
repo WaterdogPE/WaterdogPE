@@ -63,32 +63,119 @@ public class ProxyConfigTest {
         assertTrue(Files.readString(file.toPath()).contains("\nconfig_version: " + ConfigMigrations.CURRENT + "\n"));
     }
 
-    @Test
-    public void unversionedFilesAreMigrated() throws Exception {
-        File file = newFile();
+    /**
+     * Loads a file of an older layout, then checks that running the migration again on the result
+     * leaves it as it is.
+     */
+    private static ProxyConfig migrate(File file, String text) throws Exception {
         Path path = file.toPath();
-        // The layout before built-in signaling and NXS shared their options
-        Files.writeString(path, """
-                nethernet:
-                  advertise_addresses: ['1.1.1.1', ' play.example.com:19133 ']
-                  nxs:
-                    advertise_addresses: ['play.example.com:19133', '8.8.8.8:19133']
-                    advanced:
-                      stun_discovery: false
-                """);
-
+        Files.writeString(path, text);
         ProxyConfig config = new ProxyConfig(file);
         config.init();
 
-        // One list, each address once, built-in signaling's first
+        String migrated = Files.readString(path);
+        String version = "\nconfig_version: " + ConfigMigrations.CURRENT + "\n";
+        assertTrue(migrated.contains(version));
+        Files.writeString(path, migrated.replace(version, "\nconfig_version: 0\n"));
+        new ProxyConfig(file).init();
+        assertEquals(migrated, Files.readString(path), "a second run changed the file");
+        return config;
+    }
+
+    @Test
+    public void upstreamNetherNetLayoutIsMigrated() throws Exception {
+        // As WaterdogPE wrote it in October 2026, before config_version
+        File file = newFile();
+        ProxyConfig config = migrate(file, """
+                nethernet:
+                  enabled: true
+                  signaling_mode: hybrid
+                  nxs:
+                    token: secret
+                    endpoint: https://nxs.example.com
+                    advertise_addresses: ['play.example.com:19133', '8.8.8.8:19133']
+                    advanced:
+                      assisted_joins: true
+                      connection_checks: true
+                      stun_discovery: false
+                      location: {}
+                      deregister_on_shutdown: false
+                  trusted_proxies: ['10.0.0.0/8']
+                  proxy_protocol: true
+                  advertise_addresses: ['1.1.1.1', ' play.example.com:19133 ']
+                  udp_port: 0
+                  https:
+                    certificate: certs/fullchain.pem
+                    private_key: certs/privkey.pem
+                    password: ''
+                  identity_file: keys/fleet.pem
+                """);
+
         NetherNetSettings settings = config.getNetherNetSettings();
-        assertEquals(List.of("1.1.1.1", "play.example.com:19133", "8.8.8.8:19133"), settings.getAdvertiseAddresses());
-        assertFalse(settings.isStunDiscovery());
-        String text = Files.readString(path);
-        assertFalse(text.contains("    advertise_addresses:"), "the NXS list stays in the file");
-        assertFalse(text.contains("      stun_discovery:"), "the NXS switch stays in the file");
-        assertTrue(text.contains("\n  stun_discovery: false"));
-        assertTrue(text.contains("\nconfig_version: " + ConfigMigrations.CURRENT + "\n"));
+        SignalingSettings signaling = settings.getSignaling();
+        assertEquals(0, settings.getWebrtcPort());
+        assertEquals("keys/fleet.pem", settings.getIdentityFile());
+        assertEquals(SignalingSettings.SignalingMode.HYBRID, signaling.getMode());
+        // One list, each address once, built-in signaling's first
+        assertEquals(List.of("1.1.1.1", "play.example.com:19133", "8.8.8.8:19133"), signaling.getAdvertiseAddresses());
+        assertFalse(signaling.isStunDiscovery());
+        assertEquals(List.of("10.0.0.0/8"), signaling.getTrustedProxies());
+        assertTrue(signaling.isProxyProtocol());
+        assertEquals("certs/fullchain.pem", signaling.getBuiltin().getHttps().getCertificate());
+        assertEquals("secret", signaling.getNxs().getToken());
+        assertEquals("https://nxs.example.com", signaling.getNxs().getEndpoint());
+        assertTrue(signaling.getNxs().getAdvanced().isAssistedJoins());
+
+        String text = Files.readString(file.toPath());
+        for (String moved : List.of("udp_port:", "signaling_mode:", "\n  nxs:", "\n  https:", "\n  advertise_addresses:", "      stun_discovery:")) {
+            assertFalse(text.contains(moved), moved + " stays in the file");
+        }
+    }
+
+    @Test
+    public void unreleasedNetherNetLayoutIsMigrated() throws Exception {
+        // Built-in signaling and NXS already share their options, as on builds after October 18
+        ProxyConfig config = migrate(newFile(), """
+                nethernet:
+                  enabled: true
+                  signaling_mode: nxs
+                  nxs:
+                    token: secret
+                    endpoint: https://nxs.example.com
+                    advanced:
+                      assisted_joins: false
+                      connection_checks: false
+                      location: {country: nl}
+                      deregister_on_shutdown: true
+                  trusted_proxies: []
+                  proxy_protocol: false
+                  advertise_addresses: ['play.example.com']
+                  stun_discovery: false
+                  udp_port: 19140
+                  https:
+                    certificate: ''
+                    private_key: ''
+                    password: ''
+                  identity_file: keys/identity.pem
+                """);
+
+        NetherNetSettings settings = config.getNetherNetSettings();
+        SignalingSettings signaling = settings.getSignaling();
+        assertEquals(19140, settings.getWebrtcPort());
+        assertEquals(SignalingSettings.SignalingMode.NXS, signaling.getMode());
+        assertEquals(List.of("play.example.com"), signaling.getAdvertiseAddresses());
+        assertFalse(signaling.isStunDiscovery());
+        assertFalse(signaling.getNxs().getAdvanced().isConnectionChecks());
+        assertTrue(signaling.getNxs().getAdvanced().isDeregisterOnShutdown());
+        assertEquals("nl", signaling.getNxs().getAdvanced().getLocation().get("country"));
+    }
+
+    @Test
+    public void currentFilesAreLeftAsTheyAre() throws Exception {
+        File file = newFile();
+        new ProxyConfig(file).init();
+
+        migrate(file, Files.readString(file.toPath()));
     }
 
     @Test

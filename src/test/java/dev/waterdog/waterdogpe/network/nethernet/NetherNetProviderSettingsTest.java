@@ -29,12 +29,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class NetherNetProviderSettingsTest {
 
-    private static ProviderRuntimeConfiguration.Settings settings(String nethernet) throws Exception {
+    private static ProviderRuntimeConfiguration.Settings settings(String signaling) throws Exception {
         File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
-        Files.writeString(file.toPath(), "nethernet:\n" + nethernet.indent(2));
+        Files.writeString(file.toPath(), "nethernet:\n  signaling:\n" + signaling.indent(4));
         ProxyConfig config = new ProxyConfig(file);
         config.init();
-        return NetherNetProvider.providerSettings(config.getNetherNetSettings());
+        return NetherNetProvider.providerSettings(config.getNetherNetSettings().getSignaling());
     }
 
     @Test

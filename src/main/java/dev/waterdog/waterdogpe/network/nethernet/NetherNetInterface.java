@@ -36,6 +36,7 @@ import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.utils.config.proxy.HttpsSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
+import dev.waterdog.waterdogpe.utils.config.proxy.SignalingSettings;
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -61,7 +62,7 @@ import java.util.stream.Collectors;
  * Signaling is HTTP on TCP, which does not collide with the RakNet UDP bind, so both transports
  * share one advertised port. Media needs its own UDP port, because RakNet holds the listener port
  * with SO_REUSEPORT, and every peer is multiplexed over it. See
- * {@link NetherNetSettings#getUdpPort()}.
+ * {@link NetherNetSettings#getWebrtcPort()}.
  */
 @Log4j2
 public class NetherNetInterface implements NetworkInterface, SignalingService {
@@ -94,7 +95,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
         int icePort = this.icePort(address, settings);
         if (icePort == address.getPort()) {
-            log.error("nethernet.udp_port {} is the listener port, which RakNet already holds, so NetherNet does "
+            log.error("nethernet.webrtc_port {} is the listener port, which RakNet already holds, so NetherNet does "
                     + "not start and connections will fall back to RakNet", icePort);
             return;
         }
@@ -114,10 +115,11 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         }
 
         InetSocketAddress signalingAddress = this.signalingAddress(address, settings);
+        SignalingSettings.SignalingMode mode = settings.getSignaling().getMode();
 
-        if (settings.getSignalingMode().nxs()) {
-            this.startProvider(settings, address, icePort);
-            if (settings.getSignalingMode() == NetherNetSettings.SignalingMode.NXS) {
+        if (mode.nxs()) {
+            this.startProvider(settings.getSignaling(), address, icePort);
+            if (mode == SignalingSettings.SignalingMode.NXS) {
                 // The provider brings its own endpoint and admits peers onto it
                 this.running = true;
                 return;
@@ -126,7 +128,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
         NetherNetHTTPServerSignaling signaling;
         try {
-            signaling = this.signaling(settings, address, icePort);
+            signaling = this.signaling(settings.getSignaling(), address, icePort);
         } catch (Exception e) {
             log.error("Failed to configure NetherNet signaling, connections will fall back to RakNet", e);
             return;
@@ -162,9 +164,9 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             return;
         }
 
-        if (settings.getSignalingMode().builtin()) {
+        if (mode.builtin()) {
             // TLS is served on the same port as plaintext, so both schemes reach it when configured
-            String scheme = settings.getHttps().enabled() ? "https and http" : "http";
+            String scheme = settings.getSignaling().getBuiltin().getHttps().enabled() ? "https and http" : "http";
             log.info("NetherNet signaling listening on tcp/{} over {}, with WebRTC on udp/{}",
                     signalingAddress.getPort(), scheme, icePort);
         } else {
@@ -176,7 +178,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
      * Registers with the provider, which then admits players onto a port of its own. A provider that
      * cannot be reached leaves the rest of the proxy alone, the same way signaling does.
      */
-    private void startProvider(NetherNetSettings settings, InetSocketAddress address, int icePort) {
+    private void startProvider(SignalingSettings settings, InetSocketAddress address, int icePort) {
         NetherNetProvider provider = new NetherNetProvider(this.proxy);
         try {
             provider.start(settings, address, icePort);
@@ -198,12 +200,12 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     /**
      * Builds the signaling endpoint from the configuration.
      */
-    private NetherNetHTTPServerSignaling signaling(NetherNetSettings settings, InetSocketAddress address, int icePort)
+    private NetherNetHTTPServerSignaling signaling(SignalingSettings settings, InetSocketAddress address, int icePort)
             throws Exception {
         List<String> stunServers = stunServers(settings);
         NetherNetHTTPServerSignaling.Builder builder = new NetherNetHTTPServerSignaling.Builder()
                 .setIdentity(this.identity)
-                .setServeHttp(settings.getSignalingMode().builtin())
+                .setServeHttp(settings.getMode().builtin())
                 .setTrustedProxies(TrustedProxies.parse(settings.getTrustedProxies()))
                 .setProxyProtocol(settings.isProxyProtocol())
                 .setAdvertisedAddresses(advertisedAddresses(address, settings, !stunServers.isEmpty()))
@@ -215,7 +217,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                 .setMotdProvider((host, client, info) -> this.advertisement(client))
                 .setPlayerFilter((host, player) -> this.acceptsConnections());
 
-        HttpsSettings https = settings.getHttps();
+        HttpsSettings https = settings.getBuiltin().getHttps();
         if (https.enabled()) {
             Path certificate = this.proxy.getDataPath().resolve(https.getCertificate());
             String key = https.getPrivateKey();
@@ -234,7 +236,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
      * The STUN servers built-in signaling asks for this proxy's public address, none when configured
      * addresses already say it, which network refuses next to them.
      */
-    private static List<String> stunServers(NetherNetSettings settings) {
+    private static List<String> stunServers(SignalingSettings settings) {
         boolean wanted = settings.isStunDiscovery() && settings.getAdvertiseAddresses().isEmpty();
         if (!wanted) {
             if (NetherNetProperties.STUN_SERVERS != null) {
@@ -290,7 +292,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
      * a proxy bound to one address advertises only that address, unless told otherwise or STUN
      * discovery runs, as network takes no such list next to STUN servers.
      */
-    private static List<String> advertisedAddresses(InetSocketAddress address, NetherNetSettings settings,
+    private static List<String> advertisedAddresses(InetSocketAddress address, SignalingSettings settings,
                                                     boolean stun) {
         if (!settings.getAdvertiseAddresses().isEmpty()) {
             return settings.getAdvertiseAddresses();
@@ -303,13 +305,13 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     /**
-     * The port ICE gathers on, one socket for every peer. See {@link NetherNetSettings#resolveUdpPort}.
+     * The port ICE gathers on, one socket for every peer. See {@link NetherNetSettings#resolveWebrtcPort}.
      */
     private int icePort(InetSocketAddress listener, NetherNetSettings settings) {
         Set<Integer> serverPorts = this.proxy.getConfiguration().getServerList().values().stream()
                 .map(server -> server.getAddress().getPort())
                 .collect(Collectors.toSet());
-        return settings.resolveUdpPort(listener.getPort(), serverPorts);
+        return settings.resolveWebrtcPort(listener.getPort(), serverPorts);
     }
 
     @Override

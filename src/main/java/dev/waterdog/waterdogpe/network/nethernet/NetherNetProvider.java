@@ -18,10 +18,10 @@ package dev.waterdog.waterdogpe.network.nethernet;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.NetherNetServerSessionInitializer;
-import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NxsAdvancedSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NxsSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
+import dev.waterdog.waterdogpe.utils.config.proxy.SignalingSettings;
 import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -81,11 +81,11 @@ public class NetherNetProvider implements AutoCloseable {
     }
 
     /**
-     * @param settings The NetherNet settings, for the provider section and the UDP port
+     * @param settings The signaling settings, for the provider section and the addresses
      * @param address  The address the proxy listens on
      * @param udpPort  The UDP port peers are handed
      */
-    public void start(NetherNetSettings settings, InetSocketAddress address, int udpPort) throws Exception {
+    public void start(SignalingSettings settings, InetSocketAddress address, int udpPort) throws Exception {
         Path dataPath = this.proxy.getDataPath();
 
         ProviderRuntimeConfiguration runtime = ProviderRuntimeConfiguration.resolve(providerSettings(settings), dataPath, address.getAddress().getHostAddress(), udpPort,
@@ -144,14 +144,14 @@ public class NetherNetProvider implements AutoCloseable {
      * What the provider runtime is configured with, named like Geyser's options. The proxy reports
      * game outcomes itself.
      */
-    static ProviderRuntimeConfiguration.Settings providerSettings(NetherNetSettings settings) throws IOException {
+    static ProviderRuntimeConfiguration.Settings providerSettings(SignalingSettings settings) throws IOException {
         NxsSettings nxs = settings.getNxs();
         NxsAdvancedSettings advanced = nxs.getAdvanced();
         ProviderClient.Location location;
         try {
             location = ProviderClient.Location.of(advanced.getLocation());
         } catch (IllegalArgumentException invalid) {
-            throw new IOException("nethernet.nxs.advanced.location needs a two-letter country code, a latitude and longitude pair, or both; city is optional");
+            throw new IOException("nethernet.signaling.nxs.advanced.location needs a two-letter country code, a latitude and longitude pair, or both; city is optional");
         }
         return ProviderRuntimeConfiguration.Settings.builder(nxs.getEndpoint())
                 .token(nxs.getToken())

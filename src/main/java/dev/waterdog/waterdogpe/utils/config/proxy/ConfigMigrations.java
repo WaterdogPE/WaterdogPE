@@ -38,7 +38,7 @@ import java.util.function.Consumer;
 final class ConfigMigrations {
 
     private static final List<Consumer<ConfigSection>> STEPS = List.of(
-            ConfigMigrations::shareNetherNetAddresses
+            ConfigMigrations::netherNetLayout
     );
 
     static final int CURRENT = STEPS.size();
@@ -53,8 +53,22 @@ final class ConfigMigrations {
     }
 
     /**
-     * Step 1: built-in signaling and NXS share one advertise_addresses list, each address once, and the
-     * NXS stun_discovery switch moves next to it.
+     * Step 1: the NetherNet options take Geyser's names and its signaling block.
+     */
+    private static void netherNetLayout(ConfigSection root) {
+        // Merged first, as the shared list then moves into the signaling block
+        shareNetherNetAddresses(root);
+        move(root, "nethernet.udp_port", "nethernet.webrtc_port");
+        move(root, "nethernet.signaling_mode", "nethernet.signaling.mode");
+        for (String key : List.of("advertise_addresses", "stun_discovery", "trusted_proxies", "proxy_protocol", "nxs")) {
+            move(root, "nethernet." + key, "nethernet.signaling." + key);
+        }
+        move(root, "nethernet.https", "nethernet.signaling.builtin.https");
+    }
+
+    /**
+     * Built-in signaling and NXS share one advertise_addresses list, each address once, and the NXS
+     * stun_discovery switch moves next to it.
      */
     private static void shareNetherNetAddresses(ConfigSection root) {
         String nxsAddresses = "nethernet.nxs.advertise_addresses";
@@ -77,5 +91,18 @@ final class ConfigMigrations {
             }
             root.remove(nxsStunDiscovery);
         }
+    }
+
+    /**
+     * Moves an option, keeping the one already at the new path if the file has both.
+     */
+    private static void move(ConfigSection root, String from, String to) {
+        if (!root.has(from)) {
+            return;
+        }
+        if (!root.has(to)) {
+            root.set(to, root.get(from));
+        }
+        root.remove(from);
     }
 }

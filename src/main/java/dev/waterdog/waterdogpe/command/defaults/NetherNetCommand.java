@@ -94,8 +94,8 @@ public class NetherNetCommand extends Command {
         NetherNetSettings settings = proxy.getNetherNetSettings();
         StringBuilder sb = new StringBuilder("§b--- §3NetherNet §b---\n");
         sb.append("§3Running: ").append(yesNo(nethernet.isRunning())).append('\n');
-        sb.append("§3Signaling mode: §b").append(settings.getSignalingMode().name().toLowerCase(Locale.ROOT)).append('\n');
-        sb.append("§3ICE port: §b").append(nethernet.mediaPort() > 0 ? "udp/" + nethernet.mediaPort() : "none").append('\n');
+        sb.append("§3Signaling mode: §b").append(settings.getSignaling().getMode().name().toLowerCase(Locale.ROOT)).append('\n');
+        sb.append("§3WebRTC port: §b").append(nethernet.mediaPort() > 0 ? "udp/" + nethernet.mediaPort() : "none").append('\n');
 
         for (NetherNetInterface.SignalingInfo info : nethernet.signalingInfo()) {
             sb.append("§3Signaling: §b").append(info.bind())
@@ -104,8 +104,8 @@ public class NetherNetCommand extends Command {
         }
 
         NetherNetProvider provider = nethernet.provider();
-        if (settings.getSignalingMode().nxs()) {
-            String host = URI.create(settings.getNxs().getEndpoint()).getHost();
+        if (settings.getSignaling().getMode().nxs()) {
+            String host = URI.create(settings.getSignaling().getNxs().getEndpoint()).getHost();
             sb.append("§3Provider: §b").append(host).append(' ')
                     .append(provider != null && provider.isRunning() ? "§aregistered" : "§cnot registered").append('\n');
         }
@@ -216,7 +216,7 @@ public class NetherNetCommand extends Command {
 
         ProviderClient client = provider == null ? null : provider.client();
         if (client == null) {
-            if (sender.getProxy().getNetherNetSettings().getSignalingMode().nxs()) {
+            if (sender.getProxy().getNetherNetSettings().getSignaling().getMode().nxs()) {
                 sender.sendMessage("Provider is not running.");
             }
             return;
@@ -229,7 +229,7 @@ public class NetherNetCommand extends Command {
     private NetherNetProvider runningProvider(CommandSender sender, NetherNetInterface nethernet) {
         NetherNetProvider provider = nethernet.provider();
         if (provider == null || !provider.isRunning()) {
-            sender.sendMessage(sender.getProxy().getNetherNetSettings().getSignalingMode().nxs()
+            sender.sendMessage(sender.getProxy().getNetherNetSettings().getSignaling().getMode().nxs()
                     ? "Provider is not running."
                     : "No provider is configured, the signaling mode is not nxs or hybrid.");
             return null;
