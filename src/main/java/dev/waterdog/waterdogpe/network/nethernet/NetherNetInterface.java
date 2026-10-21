@@ -83,7 +83,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     private boolean running;
     /** Whether the listener started first, the only one that registers with NXS, has started. */
     private boolean primaryStarted;
-    /** The media port of the primary listener, 0 until NetherNet starts. */
+    /** The media port of the first listener, 0 until NetherNet runs there. */
     private volatile int mediaPort;
 
     public NetherNetInterface(ProxyServer proxy) {
@@ -114,9 +114,6 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                     + "not start on {} and connections will fall back to RakNet", icePort, address);
             return;
         }
-        if (this.mediaPort == 0) {
-            this.mediaPort = icePort;
-        }
 
         try {
             this.init(settings);
@@ -140,6 +137,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             if (mode == SignalingSettings.SignalingMode.NXS) {
                 // The provider brings its own endpoint and admits peers onto it
                 this.running = true;
+                this.mediaPort = icePort;
+                log.info("NetherNet registers with NXS, with WebRTC on udp/{}", icePort);
                 return;
             }
         }
@@ -177,6 +176,9 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
             this.bindings.add(new Binding(signaling, channel, !stunServers.isEmpty(), icePort));
             this.running = true;
+            if (primary) {
+                this.mediaPort = icePort;
+            }
         } catch (Exception e) {
             signaling.close();
             this.fail("Failed to start NetherNet on " + address, e);
@@ -189,7 +191,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             log.info("NetherNet signaling listening on tcp/{} over {}, with WebRTC on udp/{}",
                     signalingAddress.getPort(), scheme, icePort);
         } else {
-            log.info("NetherNet is bound but serves no endpoint, offers must arrive through the signaling API");
+            log.info("NetherNet is bound but serves no endpoint, offers must arrive through the signaling API, "
+                    + "with WebRTC on udp/{}", icePort);
         }
     }
 
