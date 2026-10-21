@@ -131,9 +131,10 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             }
         }
 
+        List<String> stunServers = stunServers(settings.getSignaling());
         NetherNetHTTPServerSignaling signaling;
         try {
-            signaling = this.signaling(settings.getSignaling(), address, icePort);
+            signaling = this.signaling(settings.getSignaling(), address, icePort, stunServers);
         } catch (Exception e) {
             this.fail("Failed to configure NetherNet signaling", e);
             return;
@@ -161,7 +162,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             // The channel binds signaling over TCP here, media is on icePort
             Channel channel = bootstrap.bind(signalingAddress).syncUninterruptibly().channel();
 
-            this.bindings.add(new Binding(signaling, channel));
+            this.bindings.add(new Binding(signaling, channel, !stunServers.isEmpty(), icePort));
             this.running = true;
         } catch (Exception e) {
             signaling.close();
@@ -216,9 +217,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     /**
      * Builds the signaling endpoint from the configuration.
      */
-    private NetherNetHTTPServerSignaling signaling(SignalingSettings settings, InetSocketAddress address, int icePort)
-            throws Exception {
-        List<String> stunServers = stunServers(settings);
+    private NetherNetHTTPServerSignaling signaling(SignalingSettings settings, InetSocketAddress address, int icePort,
+                                                   List<String> stunServers) throws Exception {
         NetherNetHTTPServerSignaling.Builder builder = new NetherNetHTTPServerSignaling.Builder()
                 .setIdentity(this.identity)
                 .setServeHttp(settings.getMode().builtin())
@@ -408,6 +408,22 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     /**
+     * What each signaling endpoint the proxy serves itself tells players to connect to.
+     */
+    public List<Advertised> advertised() {
+        List<Advertised> advertised = new ObjectArrayList<>(this.bindings.size());
+        for (Binding binding : this.bindings) {
+            List<InetSocketAddress> configured = binding.signaling().advertisedAddresses().stream()
+                    // An entry without a port is on the WebRTC port
+                    .map(entry -> entry.getPort() == 0 ? new InetSocketAddress(entry.getAddress(), binding.mediaPort()) : entry)
+                    .toList();
+            advertised.add(new Advertised(binding.channel().localAddress(), configured, binding.stun(),
+                    binding.signaling().discoveredEndpoints()));
+        }
+        return advertised;
+    }
+
+    /**
      * One entry per signaling endpoint the proxy serves itself.
      */
     public List<SignalingInfo> signalingInfo() {
@@ -459,7 +475,20 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         }
     }
 
-    private record Binding(NetherNetHTTPServerSignaling signaling, Channel channel) {
+    /**
+     * @param stun      whether STUN discovery runs for it
+     * @param mediaPort the WebRTC port its media is on
+     */
+    private record Binding(NetherNetHTTPServerSignaling signaling, Channel channel, boolean stun, int mediaPort) {
+    }
+
+    /**
+     * @param configured the advertised addresses. When empty, this proxy's own addresses and {@code discovered}
+     * @param stun       whether STUN discovery runs
+     * @param discovered the public addresses STUN discovery currently finds
+     */
+    public record Advertised(SocketAddress bind, List<InetSocketAddress> configured, boolean stun,
+                             List<InetSocketAddress> discovered) {
     }
 
     /**

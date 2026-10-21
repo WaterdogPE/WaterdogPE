@@ -30,18 +30,23 @@ import dev.waterdog.waterdogpe.network.nethernet.NetherNetProvider;
 import dev.waterdog.waterdogpe.network.nethernet.ProxyIdentity;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
+import dev.waterdog.waterdogpe.utils.config.proxy.SignalingSettings;
 import io.netty.channel.Channel;
+import io.netty.util.NetUtil;
 import org.cloudburstmc.netty.signaling.ProviderClient;
 import org.cloudburstmc.netty.signaling.ServerStatus;
 import org.cloudburstmc.netty.signaling.admission.NativeAdmissionServerChannel;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * Console-only view of the NetherNet transport: what is bound, what the provider is told, and the
@@ -79,10 +84,11 @@ public class NetherNetCommand extends Command {
             return true;
         }
 
-        switch (args[0].toLowerCase()) {
+        switch (args[0].toLowerCase(Locale.ROOT)) {
             case "status" -> this.status(sender, nethernet, args);
             case "action" -> this.action(sender, nethernet);
             case "diagnostics" -> this.diagnostics(sender, nethernet);
+            case "advertised" -> this.advertised(sender, nethernet);
             default -> {
                 return false;
             }
@@ -187,6 +193,63 @@ public class NetherNetCommand extends Command {
                 sender.sendMessage("Could not keep the link in a file: " + e.getMessage());
             }
         });
+    }
+
+    /**
+     * Says what players are told to connect to, by built-in signaling and by NXS.
+     */
+    private void advertised(CommandSender sender, NetherNetInterface nethernet) {
+        SignalingSettings.SignalingMode mode = sender.getProxy().getNetherNetSettings().getSignaling().getMode();
+        List<NetherNetInterface.Advertised> builtin = nethernet.advertised();
+        if (!builtin.isEmpty()) {
+            builtin.forEach(entry -> sender.sendMessage(builtinAdvertised(entry)));
+        } else if (mode.builtin()) {
+            sender.sendMessage("Built-in signaling is not running.");
+        }
+
+        NetherNetProvider provider = nethernet.provider();
+        ProviderClient client = provider == null ? null : provider.client();
+        if (client != null) {
+            sender.sendMessage(nxsPublished(client.publishedEndpoints().orElse(null)));
+        } else if (mode.nxs()) {
+            sender.sendMessage("NXS is not running.");
+        }
+    }
+
+    static String builtinAdvertised(NetherNetInterface.Advertised builtin) {
+        String signaling = "Built-in signaling on " + (builtin.bind() instanceof InetSocketAddress bind
+                ? NetUtil.toSocketAddressString(bind) : String.valueOf(builtin.bind()));
+        if (!builtin.configured().isEmpty()) {
+            return signaling + " advertises " + join(builtin.configured()) + ".";
+        }
+        String own = signaling + " advertises this proxy's own addresses";
+        if (!builtin.stun()) {
+            return own + ". STUN discovery is off.";
+        }
+        return builtin.discovered().isEmpty()
+                ? own + ". STUN discovery has not found a public address yet."
+                : own + ", and " + join(builtin.discovered()) + " found with STUN.";
+    }
+
+    /**
+     * @param published what the service last confirmed, or null while it has confirmed nothing
+     */
+    static String nxsPublished(ProviderClient.PublishedEndpoints published) {
+        if (published == null) {
+            return "NXS has no addresses confirmed by the service right now.";
+        }
+        String message = published.endpoints().isEmpty()
+                ? "NXS publishes no addresses."
+                : "NXS publishes " + join(published.endpoints()) + ".";
+        if (published.assistedFamilies().isEmpty()) {
+            return message;
+        }
+        return message + " Assisted joins are offered over "
+                + published.assistedFamilies().stream().sorted().map(family -> "IPv" + family).collect(Collectors.joining(" and ")) + ".";
+    }
+
+    private static String join(List<InetSocketAddress> addresses) {
+        return addresses.stream().map(NetUtil::toSocketAddressString).collect(Collectors.joining(", "));
     }
 
     private void diagnostics(CommandSender sender, NetherNetInterface nethernet) {
