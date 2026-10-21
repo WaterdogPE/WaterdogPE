@@ -23,6 +23,7 @@ import dev.waterdog.waterdogpe.utils.config.serializer.InetSocketAddressConverte
 import dev.waterdog.waterdogpe.utils.config.serializer.ServerEntryConverter;
 import dev.waterdog.waterdogpe.utils.config.serializer.ServerListConverter;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -213,6 +214,12 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Enables anonymous error reporting using bugsnag. This allows the WaterdogPE team to automatically collect issues occurring on WaterdogPE instances.")
     private boolean enableAnonymousErrorReporting = true;
 
+    @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE)
+    private transient boolean deferWrites;
+    /** The file is behind what was loaded from it and has to be written back. */
+    @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE)
+    private transient boolean outdated;
+
     public ProxyConfig(File file) {
         this.CONFIG_HEADER = new String[]{"Waterdog Main Configuration file", "Configure your desired network settings here."};
         this.CONFIG_FILE = file;
@@ -236,16 +243,26 @@ public class ProxyConfig extends YamlConfig {
 
     @Override
     public void load() throws InvalidConfigurationException {
-        super.load();
-        // Yamler writes the file back only when a key is missing at the root, so a section that
-        // gained an option has to ask for it
-        if (SettingsSection.upgradedSections(this)) {
+        // Yamler writes the file back by itself only when a key is missing at the root, and then
+        // without comments, so its write is held back and done here for sections as well
+        this.deferWrites = true;
+        try {
+            super.load();
+        } finally {
+            this.deferWrites = false;
+        }
+        if (this.outdated || SettingsSection.upgradedSections(this)) {
+            this.outdated = false;
             this.save();
         }
     }
 
     @Override
     protected void saveToYaml() throws InvalidConfigurationException {
+        if (this.deferWrites) {
+            this.outdated = true;
+            return;
+        }
         // The file may come from a read-only mount, such as a Kubernetes ConfigMap. Options it does
         // not carry keep their defaults instead of failing the startup
         if (this.CONFIG_FILE.exists() && !this.CONFIG_FILE.canWrite()) {
