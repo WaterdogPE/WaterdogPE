@@ -15,8 +15,10 @@
 
 package dev.waterdog.waterdogpe.utils.config.proxy;
 
+import dev.waterdog.waterdogpe.utils.config.serializer.LowercaseEnumConverter;
 import net.cubespace.Yamler.Config.Comment;
 import net.cubespace.Yamler.Config.Comments;
+import net.cubespace.Yamler.Config.InvalidConverterException;
 import net.cubespace.Yamler.Config.Path;
 import net.cubespace.Yamler.Config.YamlConfig;
 
@@ -36,6 +38,15 @@ import java.util.Map;
 public abstract class SettingsSection extends YamlConfig {
 
     private transient boolean upgraded;
+
+    protected SettingsSection() {
+        // A section made from its field default never gets the root's converters
+        try {
+            this.addConverter(LowercaseEnumConverter.class);
+        } catch (InvalidConverterException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
     /**
      * Registers the comments of every section held by a config, so they reach the file.

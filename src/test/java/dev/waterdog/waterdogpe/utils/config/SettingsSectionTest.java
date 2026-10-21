@@ -18,6 +18,7 @@ package dev.waterdog.waterdogpe.utils.config;
 import dev.waterdog.waterdogpe.utils.config.proxy.HttpsSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetherNetSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
+import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -25,8 +26,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SettingsSectionTest {
@@ -115,5 +118,36 @@ public class SettingsSectionTest {
         assertEquals("certs/privkey.pem", https.getPrivateKey());
         assertEquals("", https.getPassword());
         assertTrue(https.enabled());
+    }
+
+    @Test
+    public void enumsAreWrittenLowercaseAndReadInAnyCase() throws Exception {
+        File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
+        Path path = file.toPath();
+        new ProxyConfig(file).init();
+        String text = Files.readString(path);
+        assertTrue(text.contains("\n  signaling_mode: builtin\n"));
+
+        Files.writeString(path, text.replace("signaling_mode: builtin", "signaling_mode: HYBRID"));
+        ProxyConfig config = new ProxyConfig(file);
+        config.init();
+
+        assertEquals(NetherNetSettings.SignalingMode.HYBRID, config.getNetherNetSettings().getSignalingMode());
+    }
+
+    @Test
+    public void unknownEnumValuesFailTheLoad() throws Exception {
+        File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
+        Path path = file.toPath();
+        Files.writeString(path, "nethernet:\n  signaling_mode: hybird\n");
+        byte[] before = Files.readAllBytes(path);
+
+        Throwable failure = assertThrows(InvalidConfigurationException.class, () -> new ProxyConfig(file).init());
+        while (failure.getCause() != null) {
+            failure = failure.getCause();
+        }
+        assertEquals("\"hybird\" is not a valid signaling mode, expected one of builtin, nxs, hybrid, plugin",
+                failure.getMessage());
+        assertArrayEquals(before, Files.readAllBytes(path));
     }
 }

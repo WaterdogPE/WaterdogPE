@@ -72,7 +72,7 @@ public class NetherNetSettings extends SettingsSection {
             "plugin: nothing is bound, a plugin feeds offers through the signaling API"
     })
     @Setter
-    private String signalingMode = "builtin";
+    private SignalingMode signalingMode = SignalingMode.BUILTIN;
 
     @Path("nxs")
     @Comment("Settings for the NXS signaling provider. Only used in the nxs and hybrid modes")
@@ -158,13 +158,5 @@ public class NetherNetSettings extends SettingsSection {
             }
         }
         return port;
-    }
-
-    public SignalingMode signalingMode() {
-        try {
-            return SignalingMode.valueOf(this.signalingMode.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return SignalingMode.BUILTIN;
-        }
     }
 }

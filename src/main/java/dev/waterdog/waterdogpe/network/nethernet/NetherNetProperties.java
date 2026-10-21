@@ -98,8 +98,8 @@ public final class NetherNetProperties {
         if (SIGNALING_MODE != null) {
             try {
                 NetherNetSettings.SignalingMode mode = NetherNetSettings.SignalingMode.valueOf(SIGNALING_MODE.trim().toUpperCase(Locale.ROOT));
-                settings.setSignalingMode(mode.name().toLowerCase(Locale.ROOT));
-                log.info("NetherNet signaling mode set from system property: {}", settings.getSignalingMode());
+                settings.setSignalingMode(mode);
+                log.info("NetherNet signaling mode set from system property: {}", mode.name().toLowerCase(Locale.ROOT));
             } catch (IllegalArgumentException invalid) {
                 log.error("Invalid waterdog.nethernetSignalingMode \"{}\", expected builtin, nxs, hybrid or plugin, keeping the configured mode", SIGNALING_MODE);
             }

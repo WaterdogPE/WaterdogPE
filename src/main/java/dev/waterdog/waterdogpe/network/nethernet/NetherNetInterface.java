@@ -115,9 +115,9 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
         InetSocketAddress signalingAddress = this.signalingAddress(address, settings);
 
-        if (settings.signalingMode().nxs()) {
+        if (settings.getSignalingMode().nxs()) {
             this.startProvider(settings, address, icePort);
-            if (settings.signalingMode() == NetherNetSettings.SignalingMode.NXS) {
+            if (settings.getSignalingMode() == NetherNetSettings.SignalingMode.NXS) {
                 // The provider brings its own endpoint and admits peers onto it
                 this.running = true;
                 return;
@@ -162,7 +162,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             return;
         }
 
-        if (settings.signalingMode().builtin()) {
+        if (settings.getSignalingMode().builtin()) {
             // TLS is served on the same port as plaintext, so both schemes reach it when configured
             String scheme = settings.getHttps().enabled() ? "https and http" : "http";
             log.info("NetherNet signaling listening on tcp/{} over {}, with WebRTC on udp/{}",
@@ -203,7 +203,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         List<String> stunServers = stunServers(settings);
         NetherNetHTTPServerSignaling.Builder builder = new NetherNetHTTPServerSignaling.Builder()
                 .setIdentity(this.identity)
-                .setServeHttp(settings.signalingMode().builtin())
+                .setServeHttp(settings.getSignalingMode().builtin())
                 .setTrustedProxies(TrustedProxies.parse(settings.getTrustedProxies()))
                 .setProxyProtocol(settings.isProxyProtocol())
                 .setAdvertisedAddresses(advertisedAddresses(address, settings, !stunServers.isEmpty()))
