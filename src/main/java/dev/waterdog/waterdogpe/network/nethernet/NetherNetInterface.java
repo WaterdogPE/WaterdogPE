@@ -51,10 +51,11 @@ import java.nio.file.Path;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
  * Accepts NetherNet connections, next to {@link dev.waterdog.waterdogpe.network.RakNetInterface} or
@@ -80,6 +81,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     /** Stable for the lifetime of the process, like the BDS advertisement nonce. */
     private OperatorIdentity identity;
     private boolean running;
+    /** Whether the listener started first, the only one that registers with NXS, has started. */
+    private boolean primaryStarted;
     /** The media port of the primary listener, 0 until NetherNet starts. */
     private volatile int mediaPort;
 
@@ -89,15 +92,26 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
     @Override
     public void start(InetSocketAddress address) throws NetworkStartupException {
-        if (!this.proxy.getConfiguration().getTransport().nethernet()) {
+        ProxyConfig config = this.proxy.getConfiguration();
+        if (!config.getTransport().nethernet()) {
             return;
         }
+        // The proxy starts the listener first and listener.additional_ports after it
+        boolean primary = !this.primaryStarted;
+        this.primaryStarted = true;
         NetherNetSettings settings = this.proxy.getNetherNetSettings();
+        SignalingSettings.SignalingMode mode = settings.getSignaling().getMode();
+        if (!primary && mode == SignalingSettings.SignalingMode.NXS) {
+            // The provider registered once, with the first listener
+            return;
+        }
 
-        int icePort = this.icePort(address, settings);
-        if (icePort == address.getPort() && this.proxy.getConfiguration().getTransport().raknet()) {
-            log.error("nethernet.webrtc_port {} is the listener port, which RakNet already holds, so NetherNet does "
-                    + "not start and connections will fall back to RakNet", icePort);
+        List<Integer> mediaPorts = this.bindings.stream().map(Binding::mediaPort).toList();
+        int icePort = settings.resolveWebrtcPort(address.getPort(), config.getTransport().raknet(),
+                takenPorts(config, mediaPorts));
+        if (config.getTransport().raknet() && listenerPorts(config).contains(icePort)) {
+            log.error("nethernet.webrtc_port {} is a listener port, which RakNet already holds, so NetherNet does "
+                    + "not start on {} and connections will fall back to RakNet", icePort, address);
             return;
         }
         if (this.mediaPort == 0) {
@@ -112,9 +126,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         }
 
         InetSocketAddress signalingAddress = this.signalingAddress(address, settings);
-        SignalingSettings.SignalingMode mode = settings.getSignaling().getMode();
 
-        if (mode.nxs()) {
+        if (mode.nxs() && primary) {
             try {
                 this.startProvider(settings.getSignaling(), address, icePort);
             } catch (Throwable t) {
@@ -321,14 +334,23 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     /**
-     * The port ICE gathers on, one socket for every peer. See {@link NetherNetSettings#resolveWebrtcPort}.
+     * The ports a derived WebRTC port keeps clear of: every listener's, every server's in servers, as
+     * one on this machine already holds it, and the media of the listeners started before.
      */
-    private int icePort(InetSocketAddress listener, NetherNetSettings settings) {
-        Set<Integer> serverPorts = this.proxy.getConfiguration().getServerList().values().stream()
-                .map(server -> server.getAddress().getPort())
-                .collect(Collectors.toSet());
-        return settings.resolveWebrtcPort(listener.getPort(), this.proxy.getConfiguration().getTransport().raknet(),
-                serverPorts);
+    static Set<Integer> takenPorts(ProxyConfig config, Collection<Integer> mediaPorts) {
+        Set<Integer> taken = new HashSet<>(listenerPorts(config));
+        config.getServerList().values().forEach(server -> taken.add(server.getAddress().getPort()));
+        taken.addAll(mediaPorts);
+        return taken;
+    }
+
+    /**
+     * The ports RakNet listens on: the listener's and listener.additional_ports.
+     */
+    private static Set<Integer> listenerPorts(ProxyConfig config) {
+        Set<Integer> ports = new HashSet<>(config.getAdditionalPorts());
+        ports.add(config.getBindAddress().getPort());
+        return ports;
     }
 
     @Override
@@ -448,6 +470,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             }
         }
         this.bindings.clear();
+        this.primaryStarted = false;
+        this.mediaPort = 0;
 
         if (this.provider != null) {
             this.provider.close();

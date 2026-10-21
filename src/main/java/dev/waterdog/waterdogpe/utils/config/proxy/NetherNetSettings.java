@@ -32,11 +32,11 @@ public class NetherNetSettings extends SettingsSection {
     @Path("webrtc_port")
     @Comments({
             "Dedicated UDP port for NetherNet media, one socket for every peer, which STUN discovery",
-            "shares. While RakNet runs it must not be the listener port, which RakNet holds. 0 picks the",
+            "shares. While RakNet runs it must not be a listener port, which RakNet holds. 0 picks the",
             "listener port with listener.transport nethernet, otherwise the first port after it that no",
-            "server in servers uses, which the startup log names. Players connect to it directly, so",
-            "forward it like the listener port when behind a router. With NXS signaling and assisted_joins",
-            "off, they cannot connect otherwise."
+            "listener or server in servers uses, which the startup log names. Players connect to it",
+            "directly, so forward it like the listener port when behind a router. With NXS signaling and",
+            "assisted_joins off, they cannot connect otherwise."
     })
     private int webrtcPort = 0;
 
@@ -55,13 +55,12 @@ public class NetherNetSettings extends SettingsSection {
 
     /**
      * The port media binds for a listener: webrtc_port, or for 0 the listener port when RakNet does
-     * not hold it, otherwise the first port after it that no server uses, as a server on this machine
-     * would already hold it.
+     * not hold it, otherwise the first port after it that is not taken.
      *
-     * @param raknet      Whether RakNet runs on the listener port
-     * @param serverPorts The ports of the servers in the server list
+     * @param raknet Whether RakNet runs on the listener port
+     * @param taken  The ports a derived port has to keep clear of
      */
-    public int resolveWebrtcPort(int listenerPort, boolean raknet, Set<Integer> serverPorts) {
+    public int resolveWebrtcPort(int listenerPort, boolean raknet, Set<Integer> taken) {
         if (this.webrtcPort > 0) {
             return this.webrtcPort;
         }
@@ -69,12 +68,12 @@ public class NetherNetSettings extends SettingsSection {
             return listenerPort;
         }
         int port = listenerPort + 1;
-        while (port <= 65535 && serverPorts.contains(port)) {
+        while (port <= 65535 && taken.contains(port)) {
             port++;
         }
         if (port > 65535) {
             port = listenerPort - 1;
-            while (serverPorts.contains(port)) {
+            while (taken.contains(port)) {
                 port--;
             }
         }
