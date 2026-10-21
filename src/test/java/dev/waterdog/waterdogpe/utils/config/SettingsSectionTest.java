@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SettingsSectionTest {
@@ -50,7 +51,7 @@ public class SettingsSectionTest {
     @Test
     public void sectionsKeepDeclarationOrder() throws Exception {
         String text = write();
-        assertTrue(text.indexOf("  enabled: false") < text.indexOf("  signaling_mode:"));
+        assertTrue(text.indexOf("  enabled: true") < text.indexOf("  signaling_mode:"));
         assertTrue(text.indexOf("  signaling_mode:") < text.indexOf("  udp_port:"));
         assertTrue(text.indexOf("    certificate:") < text.indexOf("    private_key:"));
         assertTrue(text.indexOf("    private_key:") < text.indexOf("    password:"));
@@ -60,7 +61,7 @@ public class SettingsSectionTest {
     public void sectionsGainNewOptions() throws Exception {
         File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
         Path path = file.toPath();
-        Files.writeString(path, "nethernet:\n  enabled: true\n  udp_port: 19134\n");
+        Files.writeString(path, "nethernet:\n  enabled: false\n  udp_port: 19134\n");
 
         ProxyConfig config = new ProxyConfig(file);
         config.init();
@@ -70,7 +71,7 @@ public class SettingsSectionTest {
         assertTrue(text.contains("\n  https:"), "an option added since the file was written is missing");
         assertTrue(text.contains("# Serves signaling over HTTPS as well as HTTP, on the same port"));
         assertEquals(19134, config.getNetherNetSettings().getUdpPort(), "an existing value was overwritten");
-        assertTrue(config.getNetherNetSettings().enabled());
+        assertFalse(config.getNetherNetSettings().enabled());
     }
 
     @Test

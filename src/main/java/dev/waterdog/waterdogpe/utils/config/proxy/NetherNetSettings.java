@@ -62,7 +62,7 @@ public class NetherNetSettings extends SettingsSection {
     @Path("enabled")
     @Accessors(fluent = true)
     @Comment("Accept NetherNet connections alongside RakNet")
-    private boolean enabled = false;
+    private boolean enabled = true;
 
     @Path("signaling_mode")
     @Comments({
