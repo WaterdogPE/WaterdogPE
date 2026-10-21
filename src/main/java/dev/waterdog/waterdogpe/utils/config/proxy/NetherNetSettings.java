@@ -51,7 +51,7 @@ public class NetherNetSettings extends SettingsSection {
             "operator; replacing it re-prompts every returning player. An absolute path works,",
             "so it can be mounted from outside the proxy directory."
     })
-    private String identityFile = "keys/identity.pem";
+    private String identityFile = "nethernet/identity.pem";
 
     /**
      * The port media binds for a listener: webrtc_port, or for 0 the listener port when RakNet does

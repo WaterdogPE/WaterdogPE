@@ -36,6 +36,7 @@ import org.cloudburstmc.netty.signaling.ServerStatus;
 import org.cloudburstmc.netty.signaling.provider.NativeProviderHostFactory;
 import org.cloudburstmc.netty.signaling.provider.ProviderRuntimeConfiguration;
 import org.cloudburstmc.netty.signaling.provider.ProviderShutdown;
+import org.cloudburstmc.netty.util.nethernet.SecretValue;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -65,6 +66,8 @@ public class NetherNetProvider implements AutoCloseable {
      * Holds the provider's link for the operator, in {@link #DATA_FOLDER}.
      */
     private static final String OPERATOR_LINK_FILE = "operator-link.txt";
+    /** Where network keeps the registration, inside the folder it is handed. */
+    private static final String STATE_DIRECTORY = "provider-state";
 
     private final ProxyServer proxy;
 
@@ -87,9 +90,11 @@ public class NetherNetProvider implements AutoCloseable {
      */
     public void start(SignalingSettings settings, InetSocketAddress address, int udpPort) throws Exception {
         Path dataPath = this.proxy.getDataPath();
+        Path folder = dataPath.resolve(DATA_FOLDER);
+        moveLegacyState(dataPath);
 
-        ProviderRuntimeConfiguration runtime = ProviderRuntimeConfiguration.resolve(providerSettings(settings), dataPath, address.getAddress().getHostAddress(), udpPort,
-                this.proxy.getConfiguration().getMaxPlayerCount());
+        ProviderRuntimeConfiguration runtime = ProviderRuntimeConfiguration.resolve(providerSettings(settings, dataPath), folder,
+                address.getAddress().getHostAddress(), udpPort, this.proxy.getConfiguration().getMaxPlayerCount());
 
         ProviderStateStore store = new ProviderStateStore(runtime.stateDirectory());
         ProviderTransport transport = null;
@@ -141,10 +146,33 @@ public class NetherNetProvider implements AutoCloseable {
     }
 
     /**
+     * Moves the registration kept next to config.yml before the nethernet folder existed, so the
+     * provider knows this proxy again rather than registering it as a new one.
+     */
+    static void moveLegacyState(Path dataPath) throws IOException {
+        Path legacy = dataPath.resolve(STATE_DIRECTORY);
+        Path state = dataPath.resolve(DATA_FOLDER).resolve(STATE_DIRECTORY);
+        if (Files.exists(legacy) && !Files.exists(state)) {
+            try {
+                Files.createDirectories(state.getParent());
+                Files.move(legacy, state);
+            } catch (IOException e) {
+                // Starting without it would register this proxy as a new one
+                throw new IOException("Could not move the NXS registration from " + legacy + " to " + state
+                        + ", move it there by hand: " + e.getMessage(), e);
+            }
+            log.info("Moved the NXS registration from {} to {}", legacy, state);
+        }
+    }
+
+    /**
      * What the provider runtime is configured with, named like Geyser's options. The proxy reports
      * game outcomes itself.
+     *
+     * @param dataPath The proxy's folder, which a file: token is read relative to like every other
+     *                 secret, where network would read it relative to the nethernet folder
      */
-    static ProviderRuntimeConfiguration.Settings providerSettings(SignalingSettings settings) throws IOException {
+    static ProviderRuntimeConfiguration.Settings providerSettings(SignalingSettings settings, Path dataPath) throws IOException {
         NxsSettings nxs = settings.getNxs();
         NxsAdvancedSettings advanced = nxs.getAdvanced();
         ProviderClient.Location location;
@@ -153,8 +181,14 @@ public class NetherNetProvider implements AutoCloseable {
         } catch (IllegalArgumentException invalid) {
             throw new IOException("nethernet.signaling.nxs.advanced.location needs a two-letter country code, a latitude and longitude pair, or both; city is optional");
         }
+        String token;
+        try {
+            token = SecretValue.resolve(nxs.getToken(), dataPath);
+        } catch (IOException unreadable) {
+            throw new IOException("nethernet.signaling.nxs.token: " + unreadable.getMessage(), unreadable);
+        }
         return ProviderRuntimeConfiguration.Settings.builder(nxs.getEndpoint())
-                .token(nxs.getToken())
+                .token(token)
                 .advertiseAddresses(settings.getAdvertiseAddresses())
                 .assistedJoins(advanced.isAssistedJoins())
                 .connectionChecks(advanced.isConnectionChecks())
