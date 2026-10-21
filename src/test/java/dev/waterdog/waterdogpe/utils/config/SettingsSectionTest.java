@@ -29,7 +29,6 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -46,7 +45,7 @@ public class SettingsSectionTest {
     public void sectionsAreDocumented() throws Exception {
         String text = write();
         // Yamler only reads comments off the root, so a section without help writes none of these
-        assertTrue(text.contains("# Accept NetherNet connections"), "nethernet section is undocumented");
+        assertTrue(text.contains("# How players find this proxy"), "nethernet section is undocumented");
         assertTrue(text.contains("# Serves signaling over HTTPS as well as HTTP, on the same port"));
         assertTrue(text.contains("# PEM private key for the certificate"), "https subsection is undocumented");
         assertTrue(text.contains("# Maximum MTU size of user <-> proxy connection that is allowed"));
@@ -55,8 +54,8 @@ public class SettingsSectionTest {
     @Test
     public void sectionsKeepDeclarationOrder() throws Exception {
         String text = write();
-        assertTrue(text.indexOf("  enabled: true") < text.indexOf("  webrtc_port:"));
         assertTrue(text.indexOf("  webrtc_port:") < text.indexOf("  signaling:"));
+        assertTrue(text.indexOf("  signaling:") < text.indexOf("  identity_file:"));
         assertTrue(text.indexOf("    mode:") < text.indexOf("    advertise_addresses:"));
         assertTrue(text.indexOf("        certificate:") < text.indexOf("        private_key:"));
         assertTrue(text.indexOf("        private_key:") < text.indexOf("        password:"));
@@ -66,7 +65,7 @@ public class SettingsSectionTest {
     public void sectionsGainNewOptions() throws Exception {
         File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
         Path path = file.toPath();
-        Files.writeString(path, "nethernet:\n  enabled: false\n  webrtc_port: 19134\n");
+        Files.writeString(path, "nethernet:\n  webrtc_port: 19134\n");
 
         ProxyConfig config = new ProxyConfig(file);
         config.init();
@@ -76,7 +75,6 @@ public class SettingsSectionTest {
         assertTrue(text.contains("\n  signaling:"), "an option added since the file was written is missing");
         assertTrue(text.contains("# Serves signaling over HTTPS as well as HTTP, on the same port"));
         assertEquals(19134, config.getNetherNetSettings().getWebrtcPort(), "an existing value was overwritten");
-        assertFalse(config.getNetherNetSettings().enabled());
     }
 
     @Test
@@ -88,7 +86,7 @@ public class SettingsSectionTest {
         NetherNetSettings settings = config.getNetherNetSettings();
         assertTrue(Files.readString(file.toPath()).contains("\n  webrtc_port: 0\n"), "0 is replaced in the file");
         // The example server, lobby1, is on 19133, the port after the listener's
-        assertEquals(19134, settings.resolveWebrtcPort(19132, Set.of(19133)));
+        assertEquals(19134, settings.resolveWebrtcPort(19132, true, Set.of(19133)));
     }
 
     @Test
@@ -98,7 +96,7 @@ public class SettingsSectionTest {
         ProxyConfig config = new ProxyConfig(file);
         config.init();
 
-        assertEquals(19140, config.getNetherNetSettings().resolveWebrtcPort(19132, Set.of(19133)));
+        assertEquals(19140, config.getNetherNetSettings().resolveWebrtcPort(19132, true, Set.of(19133)));
     }
 
     @Test

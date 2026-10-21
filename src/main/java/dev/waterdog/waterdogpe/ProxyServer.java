@@ -275,12 +275,16 @@ public class ProxyServer {
         bindAddress = new InetSocketAddress(bindAddress.getHostString(), bindAddress.getPort());
         this.logger.info("Binding to {}", bindAddress);
 
-        if (this.getConfiguration().enableQuery()) {
+        ProxyConfig.Transport transport = this.getConfiguration().getTransport();
+        // Query answers on the RakNet pipeline
+        if (this.getConfiguration().enableQuery() && transport.raknet()) {
             this.queryHandler = new QueryHandler(this);
         }
 
-        this.registerInterface(new RakNetInterface(this));
-        // Registered even when disabled so plugins can see it; start() is a no-op until it is on.
+        if (transport.raknet()) {
+            this.registerInterface(new RakNetInterface(this));
+        }
+        // Registered even without NetherNet so plugins can see it; start() does nothing then.
         this.netherNetInterface = new NetherNetInterface(this);
         this.registerInterface(this.netherNetInterface);
 

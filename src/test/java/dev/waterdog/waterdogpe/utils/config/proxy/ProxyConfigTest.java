@@ -22,6 +22,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -111,6 +112,7 @@ public class ProxyConfigTest {
                   identity_file: keys/fleet.pem
                 """);
 
+        assertEquals(ProxyConfig.Transport.BOTH, config.getTransport());
         NetherNetSettings settings = config.getNetherNetSettings();
         SignalingSettings signaling = settings.getSignaling();
         assertEquals(0, settings.getWebrtcPort());
@@ -127,7 +129,7 @@ public class ProxyConfigTest {
         assertTrue(signaling.getNxs().getAdvanced().isAssistedJoins());
 
         String text = Files.readString(file.toPath());
-        for (String moved : List.of("udp_port:", "signaling_mode:", "\n  nxs:", "\n  https:", "\n  advertise_addresses:", "      stun_discovery:")) {
+        for (String moved : List.of("  enabled:", "udp_port:", "signaling_mode:", "\n  nxs:", "\n  https:", "\n  advertise_addresses:", "      stun_discovery:")) {
             assertFalse(text.contains(moved), moved + " stays in the file");
         }
     }
@@ -137,7 +139,7 @@ public class ProxyConfigTest {
         // Built-in signaling and NXS already share their options, as on builds after October 18
         ProxyConfig config = migrate(newFile(), """
                 nethernet:
-                  enabled: true
+                  enabled: false
                   signaling_mode: nxs
                   nxs:
                     token: secret
@@ -159,6 +161,7 @@ public class ProxyConfigTest {
                   identity_file: keys/identity.pem
                 """);
 
+        assertEquals(ProxyConfig.Transport.RAKNET, config.getTransport());
         NetherNetSettings settings = config.getNetherNetSettings();
         SignalingSettings signaling = settings.getSignaling();
         assertEquals(19140, settings.getWebrtcPort());
@@ -168,6 +171,33 @@ public class ProxyConfigTest {
         assertFalse(signaling.getNxs().getAdvanced().isConnectionChecks());
         assertTrue(signaling.getNxs().getAdvanced().isDeregisterOnShutdown());
         assertEquals("nl", signaling.getNxs().getAdvanced().getLocation().get("country"));
+    }
+
+    @Test
+    public void netherNetAloneTakesTheListenerPort() throws Exception {
+        File file = newFile();
+        Files.writeString(file.toPath(), "listener:\n  transport: nethernet\n");
+        ProxyConfig config = new ProxyConfig(file);
+        config.init();
+
+        // RakNet does not hold it, so media shares the port players already know
+        NetherNetSettings settings = config.getNetherNetSettings();
+        assertEquals(19132, settings.resolveWebrtcPort(19132, config.getTransport().raknet(), Set.of(19133)));
+        String text = Files.readString(file.toPath());
+        assertTrue(text.contains("\n  transport: nethernet\n"));
+        assertTrue(text.contains("\n  webrtc_port: 0\n"), "0 is replaced in the file");
+    }
+
+    @Test
+    public void unknownTransportsFailTheLoad() throws Exception {
+        File file = newFile();
+        Files.writeString(file.toPath(), "listener:\n  transport: nethernt\n");
+
+        Throwable failure = assertThrows(InvalidConfigurationException.class, () -> new ProxyConfig(file).init());
+        while (failure.getCause() != null) {
+            failure = failure.getCause();
+        }
+        assertEquals("\"nethernt\" is not a valid transport, expected one of raknet, nethernet, both", failure.getMessage());
     }
 
     @Test

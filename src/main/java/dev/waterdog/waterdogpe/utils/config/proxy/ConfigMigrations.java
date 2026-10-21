@@ -53,9 +53,19 @@ final class ConfigMigrations {
     }
 
     /**
-     * Step 1: the NetherNet options take Geyser's names and its signaling block.
+     * Step 1: the NetherNet options take Geyser's names and its signaling block, and
+     * nethernet.enabled becomes listener.transport.
      */
     private static void netherNetLayout(ConfigSection root) {
+        String enabled = "nethernet.enabled";
+        if (root.has(enabled)) {
+            // RakNet always ran, with NetherNet next to it or not
+            if (!root.has("listener.transport")) {
+                Object value = root.get(enabled);
+                root.set("listener.transport", Boolean.parseBoolean(String.valueOf(value)) ? "both" : "raknet");
+            }
+            root.remove(enabled);
+        }
         // Merged first, as the shared list then moves into the signaling block
         shareNetherNetAddresses(root);
         move(root, "nethernet.udp_port", "nethernet.webrtc_port");

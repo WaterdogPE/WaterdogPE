@@ -68,8 +68,8 @@ public class NetherNetCommand extends Command {
         }
 
         ProxyServer proxy = sender.getProxy();
-        if (!proxy.getNetherNetSettings().enabled()) {
-            sender.sendMessage("NetherNet is disabled in the configuration.");
+        if (!proxy.getConfiguration().getTransport().nethernet()) {
+            sender.sendMessage("NetherNet is off, as listener.transport is raknet.");
             return true;
         }
 

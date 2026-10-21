@@ -31,6 +31,7 @@ import org.cloudburstmc.netty.util.nethernet.OperatorIdentity;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.ProxyPingEvent;
 import dev.waterdog.waterdogpe.network.NetworkInterface;
+import dev.waterdog.waterdogpe.network.NetworkStartupException;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.NetherNetServerSessionInitializer;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.utils.config.proxy.HttpsSettings;
@@ -56,11 +57,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
- * Accepts NetherNet connections. Runs alongside {@link dev.waterdog.waterdogpe.network.RakNetInterface}
- * rather than replacing it, so a client can reach the proxy over either transport.
+ * Accepts NetherNet connections, next to {@link dev.waterdog.waterdogpe.network.RakNetInterface} or
+ * on its own, as {@link ProxyConfig#getTransport()} says.
  * <p>
  * Signaling is HTTP on TCP, which does not collide with the RakNet UDP bind, so both transports
- * share one advertised port. Media needs its own UDP port, because RakNet holds the listener port
+ * share one advertised port. Media needs its own UDP port while RakNet holds the listener port
  * with SO_REUSEPORT, and every peer is multiplexed over it. See
  * {@link NetherNetSettings#getWebrtcPort()}.
  */
@@ -87,14 +88,14 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     @Override
-    public void start(InetSocketAddress address) {
-        NetherNetSettings settings = this.proxy.getNetherNetSettings();
-        if (!settings.enabled()) {
+    public void start(InetSocketAddress address) throws NetworkStartupException {
+        if (!this.proxy.getConfiguration().getTransport().nethernet()) {
             return;
         }
+        NetherNetSettings settings = this.proxy.getNetherNetSettings();
 
         int icePort = this.icePort(address, settings);
-        if (icePort == address.getPort()) {
+        if (icePort == address.getPort() && this.proxy.getConfiguration().getTransport().raknet()) {
             log.error("nethernet.webrtc_port {} is the listener port, which RakNet already holds, so NetherNet does "
                     + "not start and connections will fall back to RakNet", icePort);
             return;
@@ -106,11 +107,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         try {
             this.init(settings);
         } catch (Throwable t) {
-            // Clients that cannot reach a signaling endpoint fall back to RakNet on their own, so a
-            // NetherNet failure degrades the proxy instead of taking it down. Logged as an error
-            // anyway, because nothing else reports that the transport is missing.
-            log.error("Unable to initialize NetherNet, connections will fall back to RakNet. The native "
-                    + "ICE and DTLS library may be missing for this platform", t);
+            this.fail("Unable to initialize NetherNet. The native ICE and DTLS library may be missing for this platform", t);
             return;
         }
 
@@ -118,7 +115,15 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         SignalingSettings.SignalingMode mode = settings.getSignaling().getMode();
 
         if (mode.nxs()) {
-            this.startProvider(settings.getSignaling(), address, icePort);
+            try {
+                this.startProvider(settings.getSignaling(), address, icePort);
+            } catch (Throwable t) {
+                if (mode == SignalingSettings.SignalingMode.NXS) {
+                    this.fail("Unable to register with the NetherNet provider", t);
+                    return;
+                }
+                log.error("Unable to register with the NetherNet provider, players only arrive through built-in signaling", t);
+            }
             if (mode == SignalingSettings.SignalingMode.NXS) {
                 // The provider brings its own endpoint and admits peers onto it
                 this.running = true;
@@ -130,7 +135,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         try {
             signaling = this.signaling(settings.getSignaling(), address, icePort);
         } catch (Exception e) {
-            log.error("Failed to configure NetherNet signaling, connections will fall back to RakNet", e);
+            this.fail("Failed to configure NetherNet signaling", e);
             return;
         }
 
@@ -149,18 +154,18 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                 bootstrap.option(NetherChannelOption.NETHER_PEER_CONNECTION_CONFIG,
                         PeerConnectionConfiguration.DEFAULT.withIceServers(iceServers));
             }
-            // Media on its own port, because the signaling port is only free on the TCP side
+            // One socket for the media of every peer
             bootstrap.option(NetherChannelOption.NETHER_SERVER_ICE_ADDRESS,
                     new InetSocketAddress(address.getAddress(), icePort));
 
-            // The channel binds signaling over TCP here; RakNet keeps the UDP side of the same port
+            // The channel binds signaling over TCP here, media is on icePort
             Channel channel = bootstrap.bind(signalingAddress).syncUninterruptibly().channel();
 
             this.bindings.add(new Binding(signaling, channel));
             this.running = true;
         } catch (Exception e) {
             signaling.close();
-            log.error("Failed to start NetherNet on {}, connections will fall back to RakNet", address, e);
+            this.fail("Failed to start NetherNet on " + address, e);
             return;
         }
 
@@ -175,18 +180,29 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     }
 
     /**
-     * Registers with the provider, which then admits players onto a port of its own. A provider that
-     * cannot be reached leaves the rest of the proxy alone, the same way signaling does.
+     * Registers with the provider, which then admits players onto a port of its own.
      */
-    private void startProvider(SignalingSettings settings, InetSocketAddress address, int icePort) {
+    private void startProvider(SignalingSettings settings, InetSocketAddress address, int icePort) throws Exception {
         NetherNetProvider provider = new NetherNetProvider(this.proxy);
         try {
             provider.start(settings, address, icePort);
-            this.provider = provider;
         } catch (Throwable t) {
             provider.close();
-            log.error("Unable to register with the NetherNet provider, no players will arrive through it", t);
+            throw t;
         }
+        this.provider = provider;
+    }
+
+    /**
+     * Reports what keeps NetherNet from running. Clients that cannot reach signaling fall back to
+     * RakNet on their own, so with RakNet running the proxy carries on, logging it as nothing else
+     * says the transport is missing. Without RakNet no one could join, so the startup fails.
+     */
+    private void fail(String message, Throwable cause) throws NetworkStartupException {
+        if (!this.proxy.getConfiguration().getTransport().raknet()) {
+            throw new NetworkStartupException(message, cause);
+        }
+        log.error("{}. Connections will fall back to RakNet", message, cause);
     }
 
     /**
@@ -210,7 +226,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                 .setProxyProtocol(settings.isProxyProtocol())
                 .setAdvertisedAddresses(advertisedAddresses(address, settings, !stunServers.isEmpty()))
                 .setStunServers(stunServers)
-                // RakNet holds the UDP side of the signaling port, so ICE never uses it
+                // ICE only runs on webrtc_port, see icePort
                 .setIceOnLocalPort(false)
                 // A peer may be another proxy signing its own assertion, which no auth service issued
                 .setTokenTrust(TokenTrust.ANY)
@@ -311,7 +327,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         Set<Integer> serverPorts = this.proxy.getConfiguration().getServerList().values().stream()
                 .map(server -> server.getAddress().getPort())
                 .collect(Collectors.toSet());
-        return settings.resolveWebrtcPort(listener.getPort(), serverPorts);
+        return settings.resolveWebrtcPort(listener.getPort(), this.proxy.getConfiguration().getTransport().raknet(),
+                serverPorts);
     }
 
     @Override

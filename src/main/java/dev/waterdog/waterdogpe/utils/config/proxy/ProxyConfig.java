@@ -20,6 +20,7 @@ import dev.waterdog.waterdogpe.network.connection.codec.compression.CompressionT
 import dev.waterdog.waterdogpe.utils.config.ServerList;
 import dev.waterdog.waterdogpe.utils.config.serializer.CompressionAlgorithmConverter;
 import dev.waterdog.waterdogpe.utils.config.serializer.InetSocketAddressConverter;
+import dev.waterdog.waterdogpe.utils.config.serializer.LowercaseEnumConverter;
 import dev.waterdog.waterdogpe.utils.config.serializer.ServerEntryConverter;
 import dev.waterdog.waterdogpe.utils.config.serializer.ServerListConverter;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -37,6 +38,23 @@ import java.util.*;
 @Getter @Setter
 @SerializeOptions(skipFailedObjects = true)
 public class ProxyConfig extends YamlConfig {
+
+    /**
+     * How players connect. Named like Geyser's bedrock.transport.
+     */
+    public enum Transport {
+        RAKNET,
+        NETHERNET,
+        BOTH;
+
+        public boolean raknet() {
+            return this == RAKNET || this == BOTH;
+        }
+
+        public boolean nethernet() {
+            return this == NETHERNET || this == BOTH;
+        }
+    }
 
     @Path("listener.motd")
     @Comment("The Motd which will be displayed in the server tab of a player and returned during ping")
@@ -57,6 +75,15 @@ public class ProxyConfig extends YamlConfig {
     @Path("listener.host")
     @Comment("The address to bind the server to")
     private InetSocketAddress bindAddress = new InetSocketAddress("0.0.0.0", 19132);
+
+    @Path("listener.transport")
+    @Comments({
+            "How players connect, which takes a restart to change:",
+            "nethernet: the connection method of current Bedrock Edition, set up in the nethernet section",
+            "raknet: the old method, which Bedrock Edition will stop supporting. Query runs on it",
+            "both: either way, each on its own UDP port, the listener's and nethernet.webrtc_port"
+    })
+    private Transport transport = Transport.BOTH;
 
     @Path("listener.max_players")
     @Comment("The maximum amount of players that can connect to this proxy instance")
@@ -83,7 +110,7 @@ public class ProxyConfig extends YamlConfig {
     private NetworkSettings networkSettings = new NetworkSettings();
 
     @Path("nethernet")
-    @Comment("NetherNet transport settings.")
+    @Comment("NetherNet settings, used when listener.transport is nethernet or both")
     private NetherNetSettings netherNetSettings = new NetherNetSettings();
 
     @Path("permissions")
@@ -233,6 +260,7 @@ public class ProxyConfig extends YamlConfig {
             this.addConverter(ServerEntryConverter.class);
             this.addConverter(ServerListConverter.class);
             this.addConverter(CompressionAlgorithmConverter.class);
+            this.addConverter(LowercaseEnumConverter.class);
         } catch (InvalidConverterException e) {
             ProxyServer.getInstance().getLogger().error("Error while initiating config converters", e);
         }
