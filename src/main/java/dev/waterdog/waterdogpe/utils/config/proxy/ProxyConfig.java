@@ -214,6 +214,11 @@ public class ProxyConfig extends YamlConfig {
     @Comment("Enables anonymous error reporting using bugsnag. This allows the WaterdogPE team to automatically collect issues occurring on WaterdogPE instances.")
     private boolean enableAnonymousErrorReporting = true;
 
+    @Path("config_version")
+    @Comment("The layout of this file, used to upgrade it. Do not change it")
+    @Setter(AccessLevel.NONE)
+    private int configVersion = ConfigMigrations.CURRENT;
+
     @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE)
     private transient boolean deferWrites;
     /** The file is behind what was loaded from it and has to be written back. */
@@ -242,6 +247,27 @@ public class ProxyConfig extends YamlConfig {
     }
 
     @Override
+    protected void loadFromYaml() throws InvalidConfigurationException {
+        super.loadFromYaml();
+        // A file from before config_version existed is 0
+        int version = this.root.get("config_version") instanceof Number number ? number.intValue() : 0;
+        if (version < 0) {
+            throw new InvalidConfigurationException(this.CONFIG_FILE + " has an invalid config_version " + version);
+        }
+        if (version > ConfigMigrations.CURRENT) {
+            throw new InvalidConfigurationException(this.CONFIG_FILE + " is from a newer WaterdogPE and is not compatible "
+                    + "(config_version " + version + ", this version reads up to " + ConfigMigrations.CURRENT
+                    + "). Update WaterdogPE or restore a backup of the file");
+        }
+        if (version < ConfigMigrations.CURRENT) {
+            ConfigMigrations.migrate(this.root, version);
+            // Filled in again from the field, which puts it last like in a new file
+            this.root.remove("config_version");
+            this.outdated = true;
+        }
+    }
+
+    @Override
     public void load() throws InvalidConfigurationException {
         // Yamler writes the file back by itself only when a key is missing at the root, and then
         // without comments, so its write is held back and done here for sections as well
@@ -266,7 +292,8 @@ public class ProxyConfig extends YamlConfig {
         // The file may come from a read-only mount, such as a Kubernetes ConfigMap. Options it does
         // not carry keep their defaults instead of failing the startup
         if (this.CONFIG_FILE.exists() && !this.CONFIG_FILE.canWrite()) {
-            ProxyServer.getInstance().getLogger().warning("Config file " + this.CONFIG_FILE + " is not writable, options missing from it keep their defaults");
+            ProxyServer.getInstance().getLogger().warning("Config file " + this.CONFIG_FILE + " is not writable, so it is not brought up to date: options "
+                    + "missing from it keep their defaults, and an older layout is migrated again on every start");
             return;
         }
         super.saveToYaml();

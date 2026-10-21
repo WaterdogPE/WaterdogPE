@@ -15,13 +15,16 @@
 
 package dev.waterdog.waterdogpe.utils.config.proxy;
 
+import net.cubespace.Yamler.Config.InvalidConfigurationException;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ProxyConfigTest {
@@ -48,5 +51,41 @@ public class ProxyConfigTest {
         String text = Files.readString(path);
         assertTrue(text.contains("\nforce_disable_vibrant_visuals: false"));
         assertEquals(comments(written), comments(text));
+    }
+
+    @Test
+    public void newFilesCarryTheCurrentVersion() throws Exception {
+        File file = newFile();
+        new ProxyConfig(file).init();
+
+        assertTrue(Files.readString(file.toPath()).contains("\nconfig_version: " + ConfigMigrations.CURRENT + "\n"));
+    }
+
+    @Test
+    public void negativeVersionsAreRefused() throws Exception {
+        File file = newFile();
+        Files.writeString(file.toPath(), "config_version: -1\n");
+
+        InvalidConfigurationException e = assertThrows(InvalidConfigurationException.class,
+                () -> new ProxyConfig(file).init());
+        assertTrue(e.getMessage().contains("invalid config_version -1"), e.getMessage());
+    }
+
+    @Test
+    public void newerFilesAreRefusedUntouched() throws Exception {
+        File file = newFile();
+        Path path = file.toPath();
+        new ProxyConfig(file).init();
+        int newer = ConfigMigrations.CURRENT + 1;
+        // Drops an option too, which an older proxy would otherwise write back
+        Files.writeString(path, Files.readString(path)
+                .replace("\nconfig_version: " + ConfigMigrations.CURRENT + "\n", "\nconfig_version: " + newer + "\n")
+                .replaceAll("(?m)^force_disable_vibrant_visuals:.*\\n", ""));
+        byte[] before = Files.readAllBytes(path);
+
+        InvalidConfigurationException e = assertThrows(InvalidConfigurationException.class,
+                () -> new ProxyConfig(file).init());
+        assertTrue(e.getMessage().contains("newer WaterdogPE"), e.getMessage());
+        assertArrayEquals(before, Files.readAllBytes(path));
     }
 }
