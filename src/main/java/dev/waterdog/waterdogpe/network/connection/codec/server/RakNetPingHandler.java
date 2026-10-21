@@ -18,7 +18,6 @@ package dev.waterdog.waterdogpe.network.connection.codec.server;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.event.defaults.ProxyPingEvent;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
-import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -41,19 +40,7 @@ public class RakNetPingHandler extends SimpleChannelInboundHandler<RakPing> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, RakPing rakPing) {
-        ProxyConfig config = this.proxy.getConfiguration();
-
-        ProxyPingEvent event = new ProxyPingEvent(
-                config.getMotd(),
-                config.getSubMotd(),
-                "Survival",
-                "MCPE",
-                ProtocolVersion.latest().getMinecraftVersion(),
-                this.proxy.getPlayerManager().getPlayers().values(),
-                config.getMaxPlayerCount(),
-                rakPing.getSender()
-        );
-        this.proxy.getEventManager().callEvent(event);
+        ProxyPingEvent event = this.proxy.callPingEvent(rakPing.getSender());
 
         long guid = ctx.channel().config().getOption(RakChannelOption.RAK_GUID);
 

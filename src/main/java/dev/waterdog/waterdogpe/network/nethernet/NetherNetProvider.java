@@ -17,10 +17,10 @@ package dev.waterdog.waterdogpe.network.nethernet;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.WaterdogPE;
+import dev.waterdog.waterdogpe.event.defaults.ProxyPingEvent;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.NetherNetServerSessionInitializer;
 import dev.waterdog.waterdogpe.utils.config.proxy.NxsAdvancedSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NxsSettings;
-import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import dev.waterdog.waterdogpe.utils.config.proxy.SignalingSettings;
 import dev.waterdog.waterdogpe.utils.ThreadFactoryBuilder;
 import io.netty.bootstrap.ServerBootstrap;
@@ -94,7 +94,7 @@ public class NetherNetProvider implements AutoCloseable {
         moveLegacyState(dataPath);
 
         ProviderRuntimeConfiguration runtime = ProviderRuntimeConfiguration.resolve(providerSettings(settings, dataPath), folder,
-                address.getAddress().getHostAddress(), udpPort, this.proxy.getConfiguration().getMaxPlayerCount());
+                address.getAddress().getHostAddress(), udpPort, bounded(this.proxy.callPingEvent(null).getMaximumPlayerCount()));
 
         ProviderStateStore store = new ProviderStateStore(runtime.stateDirectory());
         ProviderTransport transport = null;
@@ -114,7 +114,7 @@ public class NetherNetProvider implements AutoCloseable {
 
             this.client = new ProviderClient(runtime.clientConfiguration(), store, transport,
                     () -> this.statusSupplier.get(),
-                    () -> this.health(runtime.capacity()),
+                    this::health,
                     NetherNetProvider::log);
             // The client owns the store and the transport from here
             store = null;
@@ -243,10 +243,18 @@ public class NetherNetProvider implements AutoCloseable {
         return value.text() + " The link is in " + file + ".";
     }
 
-    private ProviderClient.Health health(int capacity) {
-        return new ProviderClient.Health(this.accepting(), capacity,
-                new ProviderClient.Software("WaterdogPE", WaterdogPE.version().baseVersion()),
-                new ProviderClient.ConnectedPlayers(this.players(), System.currentTimeMillis()));
+    private ProviderClient.Health health() {
+        return health(this.proxy.callPingEvent(null), this.proxy.getNetherNetInterface().isFull(),
+                new ProviderClient.Software("WaterdogPE", WaterdogPE.version().baseVersion()));
+    }
+
+    /**
+     * The counts a RakNet ping shows, which the provider lists. Like built-in signaling, only an
+     * explicit limit turns players away, see {@link NetherNetInterface#isFull()}.
+     */
+    static ProviderClient.Health health(ProxyPingEvent ping, boolean full, ProviderClient.Software software) {
+        return new ProviderClient.Health(!full, bounded(ping.getMaximumPlayerCount()), software,
+                new ProviderClient.ConnectedPlayers(bounded(ping.getPlayerCount()), System.currentTimeMillis()));
     }
 
     private static void log(ProviderDiagnostic diagnostic) {
@@ -363,21 +371,24 @@ public class NetherNetProvider implements AutoCloseable {
     }
 
     /**
-     * What the provider shows for this proxy, which is the same thing a player sees in the list.
+     * Asked again on every check, so what plugins change in the ping reaches the provider.
      */
     private ServerStatus collectStatus() {
-        ProxyConfig config = this.proxy.getConfiguration();
-        return new ServerStatus(config.getMotd(), config.getSubMotd(), config.getMaxPlayerCount(), 0);
-    }
-
-    private int players() {
-        return this.proxy.getPlayerManager().getPlayers().size();
+        return status(this.proxy.callPingEvent(null));
     }
 
     /**
-     * Whether the proxy has room for more players.
+     * What the provider lists for this proxy, the same thing a RakNet ping shows.
      */
-    private boolean accepting() {
-        return this.players() < this.proxy.getConfiguration().getMaxPlayerCount();
+    static ServerStatus status(ProxyPingEvent ping) {
+        return new ServerStatus(ping.getMotd(), ping.getSubMotd(), bounded(ping.getMaximumPlayerCount()),
+                NetherNetInterface.gameType(ping.getGameType()));
+    }
+
+    /**
+     * Keeps a count within what the provider takes.
+     */
+    private static int bounded(int count) {
+        return Math.max(0, Math.min(count, 1_000_000));
     }
 }

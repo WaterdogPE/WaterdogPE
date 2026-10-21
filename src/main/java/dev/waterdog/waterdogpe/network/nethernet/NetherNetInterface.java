@@ -358,21 +358,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
     @Override
     public PongData advertisement(InetSocketAddress client) {
-        ProxyConfig config = this.proxy.getConfiguration();
-
-        // Reusing the ping event means plugins that already adjust the MOTD and player counts keep
-        // working on NetherNet.
-        ProxyPingEvent ping = new ProxyPingEvent(
-                config.getMotd(),
-                config.getSubMotd(),
-                "Survival",
-                "MCPE",
-                ProtocolVersion.latest().getMinecraftVersion(),
-                this.proxy.getPlayerManager().getPlayers().values(),
-                config.getMaxPlayerCount(),
-                client);
-        this.proxy.getEventManager().callEvent(ping);
-
+        ProxyPingEvent ping = this.proxy.callPingEvent(client);
         return new PongData.Builder()
                 .setServerName(ping.getMotd())
                 .setProtocol(ProtocolVersion.latest().getProtocol())
@@ -382,11 +368,11 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                 .setMaxPlayerCount(ping.getMaximumPlayerCount())
                 .setGameType(gameType(ping.getGameType()))
                 // Offline mode means the proxy signs its own chains rather than the auth service
-                .setSelfSignedAuth(!config.isOnlineMode())
+                .setSelfSignedAuth(!this.proxy.getConfiguration().isOnlineMode())
                 .build();
     }
 
-    private static int gameType(String name) {
+    static int gameType(String name) {
         if (name == null) {
             return GAME_TYPE_SURVIVAL;
         }

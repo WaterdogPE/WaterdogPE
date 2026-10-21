@@ -19,17 +19,22 @@ import dev.waterdog.waterdogpe.event.Event;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
 
 /**
- * This event is called when the Proxy receives a ping packet from a client.
- * It can be used to modify data, for example, to combine proxy player counts.
+ * This event is called when the Proxy receives a ping packet from a client, and whenever the NXS
+ * listing is refreshed. It can be used to modify data, for example, to combine proxy player counts.
  */
 public class ProxyPingEvent extends Event {
 
+    /**
+     * The client that pinged, or null for the NXS listing, which no client asked for.
+     */
     @Getter
+    @Nullable
     private final InetSocketAddress address;
     @Getter
     @Setter
@@ -55,7 +60,7 @@ public class ProxyPingEvent extends Event {
     @Getter
     private int maximumPlayerCount;
 
-    public ProxyPingEvent(String motd, String subMotd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, InetSocketAddress address) {
+    public  ProxyPingEvent(String motd, String subMotd, String gameType, String edition, String version, Collection<ProxiedPlayer> players, int maximumPlayerCount, @Nullable InetSocketAddress address) {
         this.motd = motd;
         this.subMotd = subMotd;
         this.gameType = gameType;
