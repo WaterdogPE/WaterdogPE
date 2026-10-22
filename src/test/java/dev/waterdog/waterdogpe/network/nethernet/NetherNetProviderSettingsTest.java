@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.network.nethernet;
 
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import org.cloudburstmc.netty.signaling.ProviderClient;
 import org.cloudburstmc.netty.signaling.provider.ProviderRuntimeConfiguration;
@@ -98,6 +99,22 @@ public class NetherNetProviderSettingsTest {
         assertNull(settings.location());
         assertTrue(settings.gameOutcomes(), "The proxy reports game outcomes itself");
         assertNull(settings.label(), "The provider names the instance after the host");
+    }
+
+    @Test
+    public void reportsExactlyTheProtocolsALoginIsAcceptedWith() throws Exception {
+        var protocols = settings("nxs:\n  token: secret\n").bedrockProtocols();
+        List<Integer> accepted = protocols.accepted();
+        for (int i = 1; i < accepted.size(); i++) {
+            assertTrue(accepted.get(i - 1) < accepted.get(i), "ascending and unique");
+        }
+        for (ProtocolVersion version : ProtocolVersion.values()) {
+            assertTrue(accepted.contains(version.getProtocol()), version.name());
+        }
+        accepted.forEach(protocol -> assertNotNull(ProtocolVersion.get(protocol), "accepted at login"));
+        assertEquals(ProtocolVersion.latest().getProtocol(), accepted.get(accepted.size() - 1));
+        List<String> names = ProtocolVersion.latest().getDisplayNames();
+        assertEquals(names.get(names.size() - 1), protocols.version());
     }
 
     @Test

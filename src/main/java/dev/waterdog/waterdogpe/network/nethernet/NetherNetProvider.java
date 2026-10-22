@@ -19,6 +19,7 @@ import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.event.defaults.ProxyPingEvent;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.NetherNetServerSessionInitializer;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.utils.config.proxy.NxsAdvancedSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.NxsSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.SignalingSettings;
@@ -44,6 +45,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
@@ -195,8 +198,20 @@ public class NetherNetProvider implements AutoCloseable {
                 .stunDiscovery(settings.isStunDiscovery())
                 .deregisterOnShutdown(advanced.isDeregisterOnShutdown())
                 .location(location)
+                .bedrockProtocols(bedrockProtocols())
                 .gameOutcomes(true)
                 .build();
+    }
+
+    /**
+     * Every protocol a login is accepted with, which is every {@link ProtocolVersion}, and the
+     * newest display version.
+     */
+    static ProviderClient.BedrockProtocols bedrockProtocols() {
+        List<Integer> accepted = Arrays.stream(ProtocolVersion.values()).map(ProtocolVersion::getProtocol)
+                .distinct().sorted().toList();
+        List<String> names = ProtocolVersion.latest().getDisplayNames();
+        return new ProviderClient.BedrockProtocols(accepted, names.get(names.size() - 1));
     }
 
     private void announceOperatorAction(Optional<ProviderClient.OperatorAction> action) {
