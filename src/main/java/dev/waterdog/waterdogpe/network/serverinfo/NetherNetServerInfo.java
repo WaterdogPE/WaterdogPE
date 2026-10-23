@@ -60,10 +60,9 @@ public class NetherNetServerInfo extends ServerInfo {
 
         int timeout = player.getProxy().getNetworkSettings().getConnectTimeout() * 1000;
 
-        // Derived per connection: the token names the player and expires
         OperatorIdentity identity;
         try {
-            identity = ProxyIdentity.identity(player.getProxy()).forPlayer(player.getXuid(), player.getName());
+            identity = ProxyIdentity.forPlayer(player);
         } catch (Exception e) {
             promise.tryFailure(e);
             return promise;

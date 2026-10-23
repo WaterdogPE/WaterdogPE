@@ -17,17 +17,17 @@ package dev.waterdog.waterdogpe.network.nethernet;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.logger.Color;
+import dev.waterdog.waterdogpe.player.ProxiedPlayer;
 import org.cloudburstmc.netty.util.nethernet.OperatorIdentity;
+import org.jose4j.lang.JoseException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.KeyPair;
 
 /**
- * The proxy's NetherNet identity, used both to identify it to connecting clients and to sign the
- * assertions it presents to downstream servers.
- * <p>
- * Loaded once and lazily, because the downstream leg needs it even when the proxy accepts no
- * NetherNet connections of its own.
+ * The proxy's NetherNet identity, which identifies it to connecting clients, loaded once and lazily.
+ * A connection to a downstream server presents one per player instead, see {@link #forPlayer}.
  */
 public final class ProxyIdentity {
 
@@ -73,5 +73,19 @@ public final class ProxyIdentity {
      */
     public static String domain(ProxyServer proxy) {
         return Color.clean(proxy.getConfiguration().getName());
+    }
+
+    /**
+     * The identity a connection to a downstream server presents for {@code player}, under this proxy's name. It
+     * carries the key their downstream login is signed with, as BDS refuses a login whose key the connection does
+     * not present. The token names the player and expires, so derive one per connection.
+     */
+    public static OperatorIdentity forPlayer(ProxiedPlayer player) throws JoseException {
+        return forPlayer(player.getLoginData().getKeyPair(), domain(player.getProxy()), player.getXuid(),
+                player.getName());
+    }
+
+    static OperatorIdentity forPlayer(KeyPair loginKey, String domain, String xuid, String name) throws JoseException {
+        return new OperatorIdentity(loginKey.getPrivate(), loginKey.getPublic(), null, domain).forPlayer(xuid, name);
     }
 }
