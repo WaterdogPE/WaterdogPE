@@ -1,5 +1,5 @@
 [versions]
-protocol = "3.0.0.Beta14-20261022.191835-11"
+protocol = "3.0.0.Beta15-20261026.210753-2"
 log4j = "2.25.4"
 jline = "3.30.6"
 netty = "4.1.135.Final"
