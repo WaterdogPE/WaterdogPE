@@ -15,6 +15,7 @@
 
 package dev.waterdog.waterdogpe.utils.config.proxy;
 
+import lombok.extern.log4j.Log4j2;
 import net.cubespace.Yamler.Config.ConfigSection;
 
 import java.util.ArrayList;
@@ -35,10 +36,12 @@ import java.util.function.Consumer;
  * Note {@link ConfigSection#get} and {@link ConfigSection#set} create every section on the way, so a
  * path is checked with {@link ConfigSection#has} first.
  */
+@Log4j2
 final class ConfigMigrations {
 
     private static final List<Consumer<ConfigSection>> STEPS = List.of(
-            ConfigMigrations::netherNetLayout
+            ConfigMigrations::netherNetLayout,
+            ConfigMigrations::proxyProtocolWhitelist
     );
 
     static final int CURRENT = STEPS.size();
@@ -61,8 +64,7 @@ final class ConfigMigrations {
         if (root.has(enabled)) {
             // RakNet always ran, with NetherNet next to it or not
             if (!root.has("listener.transport")) {
-                Object value = root.get(enabled);
-                root.set("listener.transport", Boolean.parseBoolean(String.valueOf(value)) ? "both" : "raknet");
+                root.set("listener.transport", isTrue(root, enabled) ? "both" : "raknet");
             }
             root.remove(enabled);
         }
@@ -74,6 +76,47 @@ final class ConfigMigrations {
             move(root, "nethernet." + key, "nethernet.signaling." + key);
         }
         move(root, "nethernet.https", "nethernet.signaling.builtin.https");
+    }
+
+    /**
+     * Step 2: nethernet.signaling.trusted_proxies is X-Forwarded-For only, and PROXY headers are read from
+     * network_settings.proxy_protocol_whitelisted_ips, as in Geyser. With proxy_protocol on, the trusted
+     * proxies were read for both, so they go in both lists. The whitelist also routes NetherNet gameplay
+     * traffic through its proxies, which the old layout never did, so the operator is told.
+     */
+    private static void proxyProtocolWhitelist(ConfigSection root) {
+        String switchPath = "nethernet.signaling.proxy_protocol";
+        if (!root.has(switchPath)) {
+            return;
+        }
+        boolean proxyProtocol = isTrue(root, switchPath);
+        root.remove(switchPath);
+        if (!proxyProtocol) {
+            return;
+        }
+
+        String whitelistPath = "network_settings.proxy_protocol_whitelisted_ips";
+        Set<String> whitelist = new LinkedHashSet<>();
+        for (String path : List.of(whitelistPath, "nethernet.signaling.trusted_proxies")) {
+            if (root.has(path) && root.get(path) instanceof List<?> entries) {
+                entries.forEach(entry -> whitelist.add(String.valueOf(entry).trim()));
+            }
+        }
+        whitelist.remove("");
+        root.set(whitelistPath, new ArrayList<>(whitelist));
+
+        String enabledPath = "network_settings.enable_proxy_protocol";
+        if (!root.has(enabledPath) || !isTrue(root, enabledPath)) {
+            log.warn("nethernet.signaling.proxy_protocol is gone, so signaling connections that carry a PROXY header "
+                    + "fail until network_settings.enable_proxy_protocol is on, which makes RakNet require them and "
+                    + "routes NetherNet gameplay traffic through network_settings.proxy_protocol_whitelisted_ips too");
+        } else if (!whitelist.isEmpty()) {
+            log.warn("RakNet and NetherNet gameplay traffic now only come through "
+                    + "network_settings.proxy_protocol_whitelisted_ips, which this update filled from "
+                    + "nethernet.signaling.trusted_proxies: add RakNet's proxies if they differ, forward webrtc_port "
+                    + "through them with PROXY v2 headers, and name them in nethernet.signaling.advertise_addresses, "
+                    + "without which NetherNet does not start");
+        }
     }
 
     /**
@@ -101,6 +144,11 @@ final class ConfigMigrations {
             }
             root.remove(nxsStunDiscovery);
         }
+    }
+
+    private static boolean isTrue(ConfigSection root, String path) {
+        Object value = root.get(path);
+        return Boolean.parseBoolean(String.valueOf(value));
     }
 
     /**

@@ -83,6 +83,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 import net.cubespace.Yamler.Config.InvalidConfigurationException;
+import org.cloudburstmc.netty.util.nethernet.IpRangeSet;
+import org.cloudburstmc.netty.util.nethernet.TrustedProxies;
 import org.cloudburstmc.protocol.common.util.Preconditions;
 
 public class ProxyServer {
@@ -117,6 +119,7 @@ public class ProxyServer {
 
     private final List<NetworkInterface> interfaces = new ObjectArrayList<>();
     private NetherNetInterface netherNetInterface;
+    private IpRangeSet proxyProtocolProxies;
 
     @Getter
     private QueryHandler queryHandler;
@@ -466,6 +469,19 @@ public class ProxyServer {
 
     public NetworkSettings getNetworkSettings() {
         return this.configurationManager.getProxyConfig().getNetworkSettings();
+    }
+
+    /**
+     * The proxies PROXY protocol headers are taken from: network_settings.proxy_protocol_whitelisted_ips, or none
+     * while PROXY protocol is off. Parsed once, as an entry may be a URL.
+     */
+    public synchronized IpRangeSet getProxyProtocolProxies() {
+        if (this.proxyProtocolProxies == null) {
+            NetworkSettings network = this.getNetworkSettings();
+            this.proxyProtocolProxies = network.enableProxyProtocol()
+                    ? TrustedProxies.parse(network.getProxyProtocolWhitelistedIps()) : IpRangeSet.empty();
+        }
+        return this.proxyProtocolProxies;
     }
 
     public NetherNetSettings getNetherNetSettings() {

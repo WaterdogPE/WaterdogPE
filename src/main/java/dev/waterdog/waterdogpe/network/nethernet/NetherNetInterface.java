@@ -170,6 +170,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             // One socket for the media of every peer
             bootstrap.option(NetherChannelOption.NETHER_SERVER_ICE_ADDRESS,
                     new InetSocketAddress(address.getAddress(), icePort));
+            bootstrap.option(NetherChannelOption.NETHER_SERVER_PROXY_PROTOCOL, this.proxy.getProxyProtocolProxies());
 
             // The channel binds signaling over TCP here, media is on icePort
             Channel channel = bootstrap.bind(signalingAddress).syncUninterruptibly().channel();
@@ -202,7 +203,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     private void startProvider(SignalingSettings settings, InetSocketAddress address, int icePort) throws Exception {
         NetherNetProvider provider = new NetherNetProvider(this.proxy);
         try {
-            provider.start(settings, address, icePort);
+            provider.start(settings, address, icePort, this.proxy.getProxyProtocolProxies());
         } catch (Throwable t) {
             provider.close();
             throw t;
@@ -238,9 +239,11 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
         NetherNetHTTPServerSignaling.Builder builder = new NetherNetHTTPServerSignaling.Builder()
                 .setIdentity(this.identity)
                 .setServeHttp(settings.getMode().builtin())
-                .setTrustedProxies(TrustedProxies.parse(settings.getTrustedProxies()))
-                .setProxyProtocol(settings.isProxyProtocol())
-                .setAdvertisedAddresses(advertisedAddresses(address, settings, !stunServers.isEmpty()))
+                .setForwardedForProxies(TrustedProxies.parse(settings.getTrustedProxies()))
+                // Unlike RakNet, an empty list reads none
+                .setProxyProtocolProxies(this.proxy.getProxyProtocolProxies())
+                .setAdvertisedAddresses(advertisedAddresses(address, settings, !stunServers.isEmpty(),
+                        !this.proxy.getProxyProtocolProxies().isEmpty()))
                 .setStunServers(stunServers)
                 // ICE only runs on webrtc_port, see icePort
                 .setIceOnLocalPort(false)
@@ -322,15 +325,16 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
      * the container and overlay addresses of the machine. Those are unreachable from the internet
      * and every one of them costs the client a round of connectivity checks before it gives up, so
      * a proxy bound to one address advertises only that address, unless told otherwise or STUN
-     * discovery runs, as network takes no such list next to STUN servers.
+     * discovery runs, as network takes no such list next to STUN servers. Behind relays the bound
+     * address names none of them, so network refuses the empty list instead.
      */
-    private static List<String> advertisedAddresses(InetSocketAddress address, SignalingSettings settings,
-                                                    boolean stun) {
+    static List<String> advertisedAddresses(InetSocketAddress address, SignalingSettings settings, boolean stun,
+                                            boolean relayed) {
         if (!settings.getAdvertiseAddresses().isEmpty()) {
             return settings.getAdvertiseAddresses();
         }
         InetAddress bound = address.getAddress();
-        if (stun || bound == null || bound.isAnyLocalAddress()) {
+        if (stun || relayed || bound == null || bound.isAnyLocalAddress()) {
             return List.of();
         }
         return List.of(bound.getHostAddress());

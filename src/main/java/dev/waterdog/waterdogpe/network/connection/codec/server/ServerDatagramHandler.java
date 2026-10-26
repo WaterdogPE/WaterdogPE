@@ -17,11 +17,11 @@ package dev.waterdog.waterdogpe.network.connection.codec.server;
 
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.NetworkMetrics;
-import dev.waterdog.waterdogpe.security.SecurityManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.DatagramPacket;
 import org.cloudburstmc.netty.channel.raknet.RakServerChannel;
+import org.cloudburstmc.netty.util.nethernet.IpRangeSet;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -29,16 +29,22 @@ import java.net.InetSocketAddress;
 public class ServerDatagramHandler extends ChannelInboundHandlerAdapter {
     public static final String NAME = "server-datagram-handler";
 
-    private final SecurityManager manager;
+    private final ProxyServer proxy;
+    private final IpRangeSet proxies;
 
-    public ServerDatagramHandler(SecurityManager securityManager) {
-        this.manager = securityManager;
+    /**
+     * @param proxies The PROXY protocol proxies datagrams are accepted from, or empty to accept them from anywhere
+     */
+    public ServerDatagramHandler(ProxyServer proxy, IpRangeSet proxies) {
+        this.proxy = proxy;
+        this.proxies = proxies;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof DatagramPacket packet && this.manager.isAddressBlocked(this.resolveSource(ctx, packet.sender()))) {
-            NetworkMetrics metrics = ProxyServer.getInstance().getNetworkMetrics();
+        if (msg instanceof DatagramPacket packet && (!this.isFromAllowedProxy(packet.sender())
+                || this.proxy.getSecurityManager().isAddressBlocked(this.resolveSource(ctx, packet.sender())))) {
+            NetworkMetrics metrics = this.proxy.getNetworkMetrics();
             if (metrics != null) {
                 metrics.droppedBytes(packet.content().readableBytes());
             }
@@ -46,6 +52,11 @@ public class ServerDatagramHandler extends ChannelInboundHandlerAdapter {
             return; // drop any incoming messages
         }
         ctx.fireChannelRead(msg);
+    }
+
+    /** A PROXY header from anywhere else could claim any client address. */
+    private boolean isFromAllowedProxy(InetSocketAddress sender) {
+        return this.proxies.isEmpty() || this.proxies.contains(sender);
     }
 
     /**

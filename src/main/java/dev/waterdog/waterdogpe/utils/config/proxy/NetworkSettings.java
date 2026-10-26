@@ -18,8 +18,12 @@ package dev.waterdog.waterdogpe.utils.config.proxy;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.cubespace.Yamler.Config.Comment;
+import net.cubespace.Yamler.Config.Comments;
 import net.cubespace.Yamler.Config.Path;
 import org.cloudburstmc.netty.channel.raknet.RakConstants;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class NetworkSettings extends SettingsSection {
@@ -60,8 +64,23 @@ public class NetworkSettings extends SettingsSection {
 
     @Path("enable_proxy_protocol")
     @Accessors(fluent = true)
-    @Comment("Enable HAProxy PROXY protocol (v1/v2) so the proxy can read the real client address when running behind a load balancer (e.g. HAProxy/UDP forwarder)")
+    @Comments({
+            "Enable HAProxy PROXY protocol (v1/v2) so the proxy can read the real client address when running behind a load balancer (e.g. HAProxy/UDP forwarder)",
+            "RakNet: clients that do not send a PROXY header are ignored.",
+            "NetherNet: signaling connections without a PROXY header are still accepted. Gameplay traffic only comes through the proxies in",
+            "proxy_protocol_whitelisted_ips once it lists any, and nethernet.signaling.advertise_addresses then has to name them."
+    })
     private boolean enableProxyProtocol = false;
+
+    @Path("proxy_protocol_whitelisted_ips")
+    @Comments({
+            "Proxies allowed to send PROXY headers, as hosts or CIDR ranges such as 10.0.0.0/8. Only used when enable_proxy_protocol is on.",
+            "An http or https entry is fetched and read as one address per line.",
+            "RakNet ignores anything from outside this list, and accepts headers from anywhere while it is empty.",
+            "NetherNet signaling only reads headers from proxies in this list, and gameplay traffic only comes through them once it lists any, so NetherNet reads none while it is empty.",
+            "Proxies in this list are also not affected by built-in signaling's per-address connection limit."
+    })
+    private List<String> proxyProtocolWhitelistedIps = new ArrayList<>();
 
     @Path("error_timeout")
     @Accessors(fluent = true)

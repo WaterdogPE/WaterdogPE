@@ -121,8 +121,9 @@ public class ProxyConfigTest {
         // One list, each address once, built-in signaling's first
         assertEquals(List.of("1.1.1.1", "play.example.com:19133", "8.8.8.8:19133"), signaling.getAdvertiseAddresses());
         assertFalse(signaling.isStunDiscovery());
+        // With proxy_protocol on, the trusted proxies were read for both headers
         assertEquals(List.of("10.0.0.0/8"), signaling.getTrustedProxies());
-        assertTrue(signaling.isProxyProtocol());
+        assertEquals(List.of("10.0.0.0/8"), config.getNetworkSettings().getProxyProtocolWhitelistedIps());
         assertEquals("certs/fullchain.pem", signaling.getBuiltin().getHttps().getCertificate());
         assertEquals("secret", signaling.getNxs().getToken());
         assertEquals("https://nxs.example.com", signaling.getNxs().getEndpoint());
@@ -171,6 +172,60 @@ public class ProxyConfigTest {
         assertFalse(signaling.getNxs().getAdvanced().isConnectionChecks());
         assertTrue(signaling.getNxs().getAdvanced().isDeregisterOnShutdown());
         assertEquals("nl", signaling.getNxs().getAdvanced().getLocation().get("country"));
+    }
+
+    @Test
+    public void proxyProtocolSwitchMovesToTheWhitelist() throws Exception {
+        // The step 1 layout, with signaling's own PROXY protocol switch
+        File file = newFile();
+        ProxyConfig config = migrate(file, """
+                network_settings:
+                  enable_proxy_protocol: true
+                  proxy_protocol_whitelisted_ips: ['192.168.1.1']
+                nethernet:
+                  signaling:
+                    trusted_proxies: ['10.0.0.0/8', '192.168.1.1']
+                    proxy_protocol: true
+                config_version: 1
+                """);
+
+        assertEquals(List.of("10.0.0.0/8", "192.168.1.1"), config.getNetherNetSettings().getSignaling().getTrustedProxies());
+        assertEquals(List.of("192.168.1.1", "10.0.0.0/8"), config.getNetworkSettings().getProxyProtocolWhitelistedIps());
+        assertFalse(Files.readString(file.toPath()).contains("  proxy_protocol:"));
+    }
+
+    @Test
+    public void forwardedForProxiesStayOutOfTheWhitelist() throws Exception {
+        ProxyConfig config = migrate(newFile(), """
+                network_settings:
+                  enable_proxy_protocol: true
+                nethernet:
+                  signaling:
+                    trusted_proxies: ['10.0.0.0/8']
+                    proxy_protocol: false
+                config_version: 1
+                """);
+
+        assertEquals(List.of("10.0.0.0/8"), config.getNetherNetSettings().getSignaling().getTrustedProxies());
+        assertEquals(List.of(), config.getNetworkSettings().getProxyProtocolWhitelistedIps());
+    }
+
+    @Test
+    public void signalingProxyProtocolDoesNotTurnOnTheRakNetSwitch() throws Exception {
+        // The proxies are kept for when the switch goes on, which the operator is warned about
+        ProxyConfig config = migrate(newFile(), """
+                network_settings:
+                  enable_proxy_protocol: false
+                nethernet:
+                  signaling:
+                    trusted_proxies: ['10.0.0.0/8']
+                    proxy_protocol: true
+                config_version: 1
+                """);
+
+        assertFalse(config.getNetworkSettings().enableProxyProtocol());
+        assertEquals(List.of("10.0.0.0/8"), config.getNetherNetSettings().getSignaling().getTrustedProxies());
+        assertEquals(List.of("10.0.0.0/8"), config.getNetworkSettings().getProxyProtocolWhitelistedIps());
     }
 
     @Test

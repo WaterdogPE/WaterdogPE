@@ -1,10 +1,10 @@
 [versions]
-protocol = "3.0.0.Beta14-20261019.150006-9"
+protocol = "3.0.0.Beta14-20261022.191835-11"
 log4j = "2.25.4"
 jline = "3.30.6"
 netty = "4.1.135.Final"
-network = "2.0.0.CR6-20261022.185249-9"
-libdatachannel = "0.24.6.0-20261022.190039-8"
+network = "2.0.0.CR6-20261026.130552-16"
+libdatachannel = "0.24.6.0-20261023.142230-9"
 lombok = "1.18.30"
 
 [libraries]

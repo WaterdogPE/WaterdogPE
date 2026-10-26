@@ -87,25 +87,20 @@ public class SignalingSettings extends SettingsSection {
     @Path("stun_discovery")
     @Comments({
             "Finds this proxy's public address through STUN when advertise_addresses is empty. Built-in",
-            "signaling asks public STUN servers from webrtc_port, NXS the signaling service's own"
+            "signaling asks public STUN servers from webrtc_port, NXS the signaling service's own. Off behind",
+            "PROXY protocol relays, which players reach instead of this proxy's own addresses"
     })
     @Setter
     private boolean stunDiscovery = true;
 
     @Path("trusted_proxies")
     @Comments({
-            "Addresses allowed to set X-Forwarded-For on signaling requests, as hosts or CIDR ranges",
-            "such as 10.0.0.0/8. An http or https entry is fetched and read as one address per line.",
-            "Needed when a reverse proxy fronts the signaling port, so the real client address survives."
+            "Reverse proxies, such as an HTTP load balancer, whose X-Forwarded-For header built-in signaling",
+            "trusts for the player's address, as hosts or CIDR ranges such as 10.0.0.0/8. An http or https",
+            "entry is fetched and read as one address per line. Built-in signaling also lifts its per-address",
+            "connection limit for them. PROXY protocol proxies go in network_settings.proxy_protocol_whitelisted_ips."
     })
     private List<String> trustedProxies = new ArrayList<>();
-
-    @Path("proxy_protocol")
-    @Comments({
-            "Read a HAProxy PROXY header, v1 or v2, on signaling connections from a trusted_proxies",
-            "address. Connections without one are still served and fall back to X-Forwarded-For."
-    })
-    private boolean proxyProtocol = false;
 
     @Path("builtin")
     @Comment("Settings for built-in signaling. Only used in the builtin and hybrid modes")

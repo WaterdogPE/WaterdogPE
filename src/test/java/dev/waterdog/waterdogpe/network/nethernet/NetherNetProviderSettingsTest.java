@@ -19,10 +19,12 @@ import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import org.cloudburstmc.netty.signaling.ProviderClient;
 import org.cloudburstmc.netty.signaling.provider.ProviderRuntimeConfiguration;
+import org.cloudburstmc.netty.util.nethernet.IpRangeSet;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -36,11 +38,15 @@ public class NetherNetProviderSettingsTest {
     }
 
     private static ProviderRuntimeConfiguration.Settings settings(Path dir, String signaling) throws Exception {
+        return settings(dir, signaling, IpRangeSet.empty());
+    }
+
+    private static ProviderRuntimeConfiguration.Settings settings(Path dir, String signaling, IpRangeSet relays) throws Exception {
         File file = dir.resolve("config.yml").toFile();
         Files.writeString(file.toPath(), "nethernet:\n  signaling:\n" + signaling.indent(4));
         ProxyConfig config = new ProxyConfig(file);
         config.init();
-        return NetherNetProvider.providerSettings(config.getNetherNetSettings().getSignaling(), dir);
+        return NetherNetProvider.providerSettings(config.getNetherNetSettings().getSignaling(), dir, relays);
     }
 
     @Test
@@ -139,6 +145,13 @@ public class NetherNetProviderSettingsTest {
     public void takesTheAddressesBuiltInSignalingAdvertises() throws Exception {
         var settings = settings("advertise_addresses: ['1.1.1.1:19133', 'play.example.com']\n");
         assertEquals(List.of("1.1.1.1:19133", "play.example.com"), settings.advertiseAddresses());
+    }
+
+    @Test
+    public void handsTheRelaysToTheProviderHost() throws Exception {
+        var settings = settings(Files.createTempDirectory("waterdog-config"), "{}\n",
+                IpRangeSet.parse(List.of("10.0.0.0/8")));
+        assertTrue(settings.proxyProtocolRelays().contains(InetAddress.getByName("10.1.2.3")));
     }
 
     @Test
