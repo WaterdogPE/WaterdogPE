@@ -202,13 +202,10 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             // Without Bedrock encryption nothing else proves the sender holds the chain's key, so
             // the transport identity has to. See TransportIdentityBinding.
             if (!this.session.getPeer().getTransportProfile().supportsEncryption()) {
-                Channel channel = this.session.getPeer().getChannel();
-                // Offline mode has already given up on proving who this is, so there is no key worth
-                // comparing. The binding is still spent, or an external admission would expire under
-                // a session that is already playing.
-                String refusal = strictAuth
-                        ? TransportIdentityBinding.mismatch(channel, handshakeEntry.getIdentityPublicKey())
-                        : TransportIdentityBinding.acceptForwardedIdentity(channel);
+                // Offline mode too: a captured signed chain would otherwise pass as authenticated over
+                // a transport its holder never opened, and BDS refuses that in offline mode as well.
+                String refusal = TransportIdentityBinding.mismatch(this.session.getPeer().getChannel(),
+                        handshakeEntry.getIdentityPublicKey());
                 if (refusal != null) {
                     this.onLoginFailed(handshakeEntry, null, "disconnectionScreen.notAuthenticated");
                     this.proxy.getLogger().info("[{}|{}] <-> Upstream has disconnected, {}", this.session.getSocketAddress(), handshakeEntry.getDisplayName(), refusal);
