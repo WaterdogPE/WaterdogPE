@@ -30,17 +30,19 @@ public class VersionInfo {
 
     private final String branchName;
     private final String commitId;
+    private final String projectVersion;
     private boolean debug;
 
-    public VersionInfo(String branchName, String commitId, boolean debug) {
+    public VersionInfo(String branchName, String commitId, String projectVersion, boolean debug) {
         this.branchName = branchName;
         this.commitId = commitId;
+        this.projectVersion = projectVersion != null ? projectVersion : this.baseVersion;
         this.debug = debug;
         this.latestProtocolVersion = ProtocolVersion.latest().getProtocol();
     }
 
     public static VersionInfo unknown() {
-        return new VersionInfo("unknown", "unknown", DEFAULT_DEBUG);
+        return new VersionInfo("unknown", "unknown", null, DEFAULT_DEBUG);
     }
 
     public String baseVersion() {
@@ -65,6 +67,17 @@ public class VersionInfo {
 
     public String commitId() {
         return this.commitId;
+    }
+
+    /**
+     * The Gradle project version with the git branch and commit, as
+     * "2.0.4-SNAPSHOT (git-master-05ec4eb)", or just the base version when the build carries no git info.
+     */
+    public String fullVersion() {
+        if (this.commitId.equals("unknown")) {
+            return this.baseVersion;
+        }
+        return this.projectVersion + " (git-" + this.branchName + "-" + this.commitId + ")";
     }
 
     public void debug(boolean debug) {

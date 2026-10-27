@@ -16,6 +16,7 @@
 package dev.waterdog.waterdogpe.network.nethernet;
 
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.VersionInfo;
 import dev.waterdog.waterdogpe.WaterdogPE;
 import dev.waterdog.waterdogpe.event.defaults.ProxyPingEvent;
 import dev.waterdog.waterdogpe.network.connection.codec.initializer.NetherNetServerSessionInitializer;
@@ -264,8 +265,14 @@ public class NetherNetProvider implements AutoCloseable {
     }
 
     private ProviderClient.Health health() {
+        VersionInfo info = WaterdogPE.version();
+        String version = info.fullVersion();
+        // NXS refuses versions over 128 characters, which a long branch name can reach
+        if (version.length() > 128) {
+            version = info.baseVersion();
+        }
         return health(this.proxy.callPingEvent(null), this.proxy.getNetherNetInterface().isFull(),
-                new ProviderClient.Software("WaterdogPE", WaterdogPE.version().baseVersion()));
+                new ProviderClient.Software("WaterdogPE", version));
     }
 
     /**

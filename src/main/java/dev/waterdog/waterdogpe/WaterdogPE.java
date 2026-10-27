@@ -104,8 +104,9 @@ public class WaterdogPE {
 
         String branchName = properties.getProperty("git.branch", "unknown");
         String commitId = properties.getProperty("git.commit.id.abbrev", "unknown");
+        String projectVersion = properties.getProperty("git.build.version");
         boolean debug = branchName.equals("release") ? false : VersionInfo.DEFAULT_DEBUG;
-        return new VersionInfo(branchName, commitId, debug);
+        return new VersionInfo(branchName, commitId, projectVersion, debug);
     }
 
     public static void setLoggerLevel(Level level) {
