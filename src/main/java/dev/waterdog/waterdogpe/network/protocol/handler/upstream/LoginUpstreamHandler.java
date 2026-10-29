@@ -79,7 +79,7 @@ public class LoginUpstreamHandler implements BedrockPacketHandler {
             this.proxy.getLogger().warning("[{}] <-> Disconnecting: login handshake not completed within {}s", this.session.getSocketAddress(), timeout);
             this.session.disconnect("Login timeout");
             // Treat a stalled handshake like any other protocol violation so the source IP is throttled/blocked
-            this.proxy.getSecurityManager().onConnectionError(this.session.getSocketAddress(), null);
+            this.proxy.getSecurityManager().onLoginTimeout(this.session.getSocketAddress());
         }, timeout, TimeUnit.SECONDS);
 
         // Cancel the task if the connection closes for any other reason before it fires

@@ -130,4 +130,53 @@ public interface NetworkMetrics {
      */
     default void droppedBytes(int count) {
     }
+
+    /**
+     * Why a client was turned away before it became a player.
+     */
+    enum LoginFailure {
+        /** The connection throttle refused a new session from the address. */
+        CONNECTION_THROTTLED,
+        /** The login throttle refused a login from the address. */
+        LOGIN_THROTTLED,
+        /** A {@link dev.waterdog.waterdogpe.security.SecurityListener} refused the session or the login. */
+        LISTENER,
+        /** The auth service did not sign the chain, which only online mode refuses. */
+        XBOX_AUTH,
+        /** The chain names a key the transport identity does not hold. */
+        IDENTITY_KEY,
+        /** Processing the login threw. */
+        ERROR
+    }
+
+    /**
+     * Called when a client is turned away before it becomes a player.
+     * @param reason why
+     */
+    default void loginFailed(LoginFailure reason) {
+    }
+
+    /**
+     * What closed a connection on an error. The address is then blocked for network_settings.error_timeout
+     * seconds, unless that is 0.
+     */
+    enum ConnectionError {
+        /** The login handshake did not complete in time. */
+        TIMEOUT,
+        /** A protocol violation that threw nothing, such as login packets out of order. */
+        PROTOCOL,
+        /** A decoder refused the input, such as a batch over its limits. */
+        DECODE,
+        /** The transport failed. */
+        IO,
+        /** Any other exception, such as one thrown while handling a packet. */
+        OTHER
+    }
+
+    /**
+     * Called when a connection is closed on an error.
+     * @param kind what went wrong
+     */
+    default void connectionError(ConnectionError kind) {
+    }
 }

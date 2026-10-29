@@ -16,12 +16,17 @@
 package dev.waterdog.waterdogpe.security;
 
 import dev.waterdog.waterdogpe.ProxyServer;
+import dev.waterdog.waterdogpe.network.NetworkMetrics;
+import dev.waterdog.waterdogpe.network.NetworkMetrics.ConnectionError;
+import dev.waterdog.waterdogpe.network.NetworkMetrics.LoginFailure;
 import dev.waterdog.waterdogpe.network.protocol.user.HandshakeEntry;
 import dev.waterdog.waterdogpe.utils.config.proxy.NetworkSettings;
+import io.netty.handler.codec.DecoderException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -29,6 +34,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 @Log4j2
 public class SecurityManager {
@@ -88,36 +94,39 @@ public class SecurityManager {
     }
 
     public boolean onConnectionCreated(SocketAddress address) {
-        boolean success = true;
-        if (this.connectionThrottle != null && address instanceof InetSocketAddress addr) {
-            success = this.connectionThrottle.throttle(addr.getAddress());
-            if (!success && this.listener != null) {
-                this.listener.onThrottleReached(addr.getAddress(), this.connectionThrottle);
-            }
-        }
-
-        if (this.listener != null && !this.listener.onConnectionCreated(address)) {
-            success = false;
-        }
-        return success;
+        return this.admit(address, this.connectionThrottle, LoginFailure.CONNECTION_THROTTLED,
+                listener -> listener.onConnectionCreated(address));
     }
 
     public boolean onLoginAttempt(SocketAddress address) {
+        return this.admit(address, this.loginThrottle, LoginFailure.LOGIN_THROTTLED,
+                listener -> listener.onLoginAttempt(address));
+    }
+
+    private boolean admit(SocketAddress address, ConnectionThrottle throttle, LoginFailure throttled,
+                          Predicate<SecurityListener> allowed) {
         boolean success = true;
-        if (this.loginThrottle != null && address instanceof InetSocketAddress addr) {
-            success = this.loginThrottle.throttle(addr.getAddress());
-            if (!success && this.listener != null) {
-                this.listener.onThrottleReached(addr.getAddress(), this.loginThrottle);
+        if (throttle != null && address instanceof InetSocketAddress addr) {
+            success = throttle.throttle(addr.getAddress());
+            if (!success) {
+                this.loginFailed(throttled);
+                if (this.listener != null) {
+                    this.listener.onThrottleReached(addr.getAddress(), throttle);
+                }
             }
         }
 
-        if (this.listener != null && !this.listener.onLoginAttempt(address)) {
+        if (this.listener != null && !allowed.test(this.listener)) {
+            if (success) {
+                this.loginFailed(LoginFailure.LISTENER);
+            }
             success = false;
         }
         return success;
     }
 
     public String onLoginFailed(SocketAddress address, HandshakeEntry handshakeEntry, Throwable throwable, String reason) {
+        this.loginFailed(this.loginFailure(handshakeEntry, throwable));
         if (this.listener != null) {
             return this.listener.onLoginFailed(address, handshakeEntry, throwable, reason);
         }
@@ -125,9 +134,56 @@ public class SecurityManager {
         return reason;
     }
 
+    /**
+     * LoginUpstreamHandler fails a login that threw, one whose chain the auth service did not sign, which
+     * only online mode refuses, and otherwise one whose key the transport identity does not hold.
+     */
+    private LoginFailure loginFailure(HandshakeEntry entry, Throwable throwable) {
+        if (throwable != null || entry == null) {
+            return LoginFailure.ERROR;
+        }
+        if (!entry.isXboxAuthed() && this.proxy.getConfiguration().isOnlineMode()) {
+            return LoginFailure.XBOX_AUTH;
+        }
+        return LoginFailure.IDENTITY_KEY;
+    }
+
+    private void loginFailed(LoginFailure reason) {
+        NetworkMetrics metrics = this.proxy.getNetworkMetrics();
+        if (metrics != null) {
+            metrics.loginFailed(reason);
+        }
+    }
+
+    /**
+     * Called when a client did not complete the login handshake in time.
+     */
+    public void onLoginTimeout(SocketAddress address) {
+        this.onConnectionError(address, null, ConnectionError.TIMEOUT);
+    }
+
     public void onConnectionError(SocketAddress address, Throwable cause) {
+        this.onConnectionError(address, cause, connectionError(cause));
+    }
+
+    private static ConnectionError connectionError(Throwable cause) {
+        if (cause == null) {
+            return ConnectionError.PROTOCOL;
+        }
+        if (cause instanceof DecoderException) {
+            return ConnectionError.DECODE;
+        }
+        return cause instanceof IOException ? ConnectionError.IO : ConnectionError.OTHER;
+    }
+
+    private void onConnectionError(SocketAddress address, Throwable cause, ConnectionError kind) {
         if (cause != null) {
             log.error("{} Exception caught in bedrock connection", address, cause);
+        }
+
+        NetworkMetrics metrics = this.proxy.getNetworkMetrics();
+        if (metrics != null) {
+            metrics.connectionError(kind);
         }
 
         int timeout = this.proxy.getNetworkSettings().errorTimeout();
