@@ -121,9 +121,9 @@ public class ProxyConfigTest {
         // One list, each address once, built-in signaling's first
         assertEquals(List.of("1.1.1.1", "play.example.com:19133", "8.8.8.8:19133"), signaling.getAdvertiseAddresses());
         assertFalse(signaling.isStunDiscovery());
-        // With proxy_protocol on, the trusted proxies were read for both headers
+        // RakNet's PROXY protocol was off, which listing the trusted proxies would turn on
         assertEquals(List.of("10.0.0.0/8"), signaling.getTrustedProxies());
-        assertEquals(List.of("10.0.0.0/8"), config.getNetworkSettings().getProxyProtocolWhitelistedIps());
+        assertEquals(List.of(), config.getNetworkSettings().getProxyProtocolWhitelistedIps());
         assertEquals("certs/fullchain.pem", signaling.getBuiltin().getHttps().getCertificate());
         assertEquals("secret", signaling.getNxs().getToken());
         assertEquals("https://nxs.example.com", signaling.getNxs().getEndpoint());
@@ -191,7 +191,11 @@ public class ProxyConfigTest {
 
         assertEquals(List.of("10.0.0.0/8", "192.168.1.1"), config.getNetherNetSettings().getSignaling().getTrustedProxies());
         assertEquals(List.of("192.168.1.1", "10.0.0.0/8"), config.getNetworkSettings().getProxyProtocolWhitelistedIps());
-        assertFalse(Files.readString(file.toPath()).contains("  proxy_protocol:"));
+        // Step 2 read the whitelist for webrtc_port too
+        assertEquals(List.of("192.168.1.1", "10.0.0.0/8"), config.getNetworkSettings().getWebrtcProxyProtocolRelays());
+        String text = Files.readString(file.toPath());
+        assertFalse(text.contains("  proxy_protocol:"));
+        assertFalse(text.contains("enable_proxy_protocol:"));
     }
 
     @Test
@@ -211,8 +215,8 @@ public class ProxyConfigTest {
     }
 
     @Test
-    public void signalingProxyProtocolDoesNotTurnOnTheRakNetSwitch() throws Exception {
-        // The proxies are kept for when the switch goes on, which the operator is warned about
+    public void signalingProxyProtocolLeavesRakNetOff() throws Exception {
+        // Listing the proxies would make RakNet require PROXY headers, which the operator is warned about
         ProxyConfig config = migrate(newFile(), """
                 network_settings:
                   enable_proxy_protocol: false
@@ -223,9 +227,54 @@ public class ProxyConfigTest {
                 config_version: 1
                 """);
 
-        assertFalse(config.getNetworkSettings().enableProxyProtocol());
+        assertFalse(config.getNetworkSettings().proxyProtocol());
         assertEquals(List.of("10.0.0.0/8"), config.getNetherNetSettings().getSignaling().getTrustedProxies());
+        assertEquals(List.of(), config.getNetworkSettings().getProxyProtocolWhitelistedIps());
+    }
+
+    @Test
+    public void proxyProtocolSwitchOffEmptiesTheList() throws Exception {
+        // Ignored while the switch was off, and would turn PROXY protocol on now
+        File file = newFile();
+        ProxyConfig config = migrate(file, """
+                network_settings:
+                  enable_proxy_protocol: false
+                  proxy_protocol_whitelisted_ips: ['10.0.0.0/8']
+                config_version: 2
+                """);
+
+        assertFalse(config.getNetworkSettings().proxyProtocol());
+        assertEquals(List.of(), config.getNetworkSettings().getProxyProtocolWhitelistedIps());
+        assertEquals(List.of(), config.getNetworkSettings().getWebrtcProxyProtocolRelays());
+        assertFalse(Files.readString(file.toPath()).contains("enable_proxy_protocol:"));
+    }
+
+    @Test
+    public void proxyProtocolSwitchOnWithAnEmptyListEndsOff() throws Exception {
+        // It took a PROXY header from any address on RakNet, which no longer exists
+        ProxyConfig config = migrate(newFile(), """
+                network_settings:
+                  enable_proxy_protocol: true
+                  proxy_protocol_whitelisted_ips: []
+                config_version: 2
+                """);
+
+        assertFalse(config.getNetworkSettings().proxyProtocol());
+        assertEquals(List.of(), config.getNetworkSettings().getWebrtcProxyProtocolRelays());
+    }
+
+    @Test
+    public void proxyProtocolSwitchOnKeepsTheListForWebrtcRelaysToo() throws Exception {
+        ProxyConfig config = migrate(newFile(), """
+                network_settings:
+                  enable_proxy_protocol: true
+                  proxy_protocol_whitelisted_ips: ['10.0.0.0/8']
+                config_version: 2
+                """);
+
+        assertTrue(config.getNetworkSettings().proxyProtocol());
         assertEquals(List.of("10.0.0.0/8"), config.getNetworkSettings().getProxyProtocolWhitelistedIps());
+        assertEquals(List.of("10.0.0.0/8"), config.getNetworkSettings().getWebrtcProxyProtocolRelays());
     }
 
     @Test

@@ -31,8 +31,8 @@ public class NxsAdvancedSettings extends SettingsSection {
     @Path("assisted_joins")
     @Comments({
             "Lets the signaling service help players connect when they cannot reach this proxy directly,",
-            "for example behind a NAT without port forwarding. Off while network_settings.proxy_protocol_whitelisted_ips",
-            "lists proxies and enable_proxy_protocol is on"
+            "for example behind a NAT without port forwarding. Off while network_settings.webrtc_proxy_protocol_relays",
+            "lists relays"
     })
     private boolean assistedJoins = false;
 

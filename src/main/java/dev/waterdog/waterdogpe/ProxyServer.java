@@ -120,6 +120,7 @@ public class ProxyServer {
     private final List<NetworkInterface> interfaces = new ObjectArrayList<>();
     private NetherNetInterface netherNetInterface;
     private IpRangeSet proxyProtocolProxies;
+    private IpRangeSet webrtcProxyProtocolRelays;
 
     @Getter
     private QueryHandler queryHandler;
@@ -315,7 +316,8 @@ public class ProxyServer {
         this.logger.debug("Downstream <-> Proxy compression level " + this.getConfiguration().getDownstreamCompression());
         this.logger.debug("MTU Settings: max_user=" + this.getNetworkSettings().getMaximumMtu() + " max_server=" + this.getNetworkSettings().getMaximumDownstreamMtu());
         this.logger.debug("RakNet Cookies: enabled=" + this.getNetworkSettings().enableCookies());
-        this.logger.debug("PROXY protocol: enabled=" + this.getNetworkSettings().enableProxyProtocol());
+        this.logger.debug("PROXY protocol: enabled=" + this.getNetworkSettings().proxyProtocol()
+                + " webrtc_relays=" + !this.getWebrtcProxyProtocolRelays().isEmpty());
 
         ProxiedSessionInitializer.ZLIB_RAW_STRATEGY.getDefaultCompression().setLevel(this.getConfiguration().getUpstreamCompression());
         ProxiedSessionInitializer.ZLIB_STRATEGY.getDefaultCompression().setLevel(this.getConfiguration().getUpstreamCompression());
@@ -472,16 +474,25 @@ public class ProxyServer {
     }
 
     /**
-     * The proxies PROXY protocol headers are taken from: network_settings.proxy_protocol_whitelisted_ips, or none
-     * while PROXY protocol is off. Parsed once, as an entry may be a URL.
+     * The proxies RakNet and NetherNet signaling take PROXY protocol headers from:
+     * network_settings.proxy_protocol_whitelisted_ips. Parsed once, as an entry may be a URL.
      */
     public synchronized IpRangeSet getProxyProtocolProxies() {
         if (this.proxyProtocolProxies == null) {
-            NetworkSettings network = this.getNetworkSettings();
-            this.proxyProtocolProxies = network.enableProxyProtocol()
-                    ? TrustedProxies.parse(network.getProxyProtocolWhitelistedIps()) : IpRangeSet.empty();
+            this.proxyProtocolProxies = TrustedProxies.parse(this.getNetworkSettings().getProxyProtocolWhitelistedIps());
         }
         return this.proxyProtocolProxies;
+    }
+
+    /**
+     * The relays in front of the NetherNet media port that send PROXY protocol headers:
+     * network_settings.webrtc_proxy_protocol_relays. Parsed once, as an entry may be a URL.
+     */
+    public synchronized IpRangeSet getWebrtcProxyProtocolRelays() {
+        if (this.webrtcProxyProtocolRelays == null) {
+            this.webrtcProxyProtocolRelays = TrustedProxies.parse(this.getNetworkSettings().getWebrtcProxyProtocolRelays());
+        }
+        return this.webrtcProxyProtocolRelays;
     }
 
     public NetherNetSettings getNetherNetSettings() {

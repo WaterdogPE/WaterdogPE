@@ -170,7 +170,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             // One socket for the media of every peer
             bootstrap.option(NetherChannelOption.NETHER_SERVER_ICE_ADDRESS,
                     new InetSocketAddress(address.getAddress(), icePort));
-            bootstrap.option(NetherChannelOption.NETHER_SERVER_PROXY_PROTOCOL, this.proxy.getProxyProtocolProxies());
+            bootstrap.option(NetherChannelOption.NETHER_SERVER_PROXY_PROTOCOL, this.proxy.getWebrtcProxyProtocolRelays());
 
             // The channel binds signaling over TCP here, media is on icePort
             Channel channel = bootstrap.bind(signalingAddress).syncUninterruptibly().channel();
@@ -203,7 +203,7 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
     private void startProvider(SignalingSettings settings, InetSocketAddress address, int icePort) throws Exception {
         NetherNetProvider provider = new NetherNetProvider(this.proxy);
         try {
-            provider.start(settings, address, icePort, this.proxy.getProxyProtocolProxies());
+            provider.start(settings, address, icePort, this.proxy.getWebrtcProxyProtocolRelays());
         } catch (Throwable t) {
             provider.close();
             throw t;
@@ -240,10 +240,9 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
                 .setIdentity(this.identity)
                 .setServeHttp(settings.getMode().builtin())
                 .setForwardedForProxies(TrustedProxies.parse(settings.getTrustedProxies()))
-                // Unlike RakNet, an empty list reads none
                 .setProxyProtocolProxies(this.proxy.getProxyProtocolProxies())
                 .setAdvertisedAddresses(advertisedAddresses(address, settings, !stunServers.isEmpty(),
-                        !this.proxy.getProxyProtocolProxies().isEmpty()))
+                        !this.proxy.getWebrtcProxyProtocolRelays().isEmpty()))
                 .setStunServers(stunServers)
                 // ICE only runs on webrtc_port, see icePort
                 .setIceOnLocalPort(false)

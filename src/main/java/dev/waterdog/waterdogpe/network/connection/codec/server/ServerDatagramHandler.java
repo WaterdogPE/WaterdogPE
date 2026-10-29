@@ -30,13 +30,16 @@ public class ServerDatagramHandler extends ChannelInboundHandlerAdapter {
     public static final String NAME = "server-datagram-handler";
 
     private final ProxyServer proxy;
+    private final boolean proxied;
     private final IpRangeSet proxies;
 
     /**
-     * @param proxies The PROXY protocol proxies datagrams are accepted from, or empty to accept them from anywhere
+     * @param proxied Whether PROXY protocol is on, which accepts datagrams from the listed proxies alone
+     * @param proxies The PROXY protocol proxies datagrams are accepted from
      */
-    public ServerDatagramHandler(ProxyServer proxy, IpRangeSet proxies) {
+    public ServerDatagramHandler(ProxyServer proxy, boolean proxied, IpRangeSet proxies) {
         this.proxy = proxy;
+        this.proxied = proxied;
         this.proxies = proxies;
     }
 
@@ -56,7 +59,7 @@ public class ServerDatagramHandler extends ChannelInboundHandlerAdapter {
 
     /** A PROXY header from anywhere else could claim any client address. */
     private boolean isFromAllowedProxy(InetSocketAddress sender) {
-        return this.proxies.isEmpty() || this.proxies.contains(sender);
+        return !this.proxied || this.proxies.contains(sender);
     }
 
     /**

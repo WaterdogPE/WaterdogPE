@@ -41,7 +41,8 @@ final class ConfigMigrations {
 
     private static final List<Consumer<ConfigSection>> STEPS = List.of(
             ConfigMigrations::netherNetLayout,
-            ConfigMigrations::proxyProtocolWhitelist
+            ConfigMigrations::proxyProtocolWhitelist,
+            ConfigMigrations::proxyProtocolSwitch
     );
 
     static final int CURRENT = STEPS.size();
@@ -81,8 +82,8 @@ final class ConfigMigrations {
     /**
      * Step 2: nethernet.signaling.trusted_proxies is X-Forwarded-For only, and PROXY headers are read from
      * network_settings.proxy_protocol_whitelisted_ips, as in Geyser. With proxy_protocol on, the trusted
-     * proxies were read for both, so they go in both lists. The whitelist also routes NetherNet gameplay
-     * traffic through its proxies, which the old layout never did, so the operator is told.
+     * proxies were read for both, so they go in both lists, but only while RakNet's switch is on: since
+     * step 3, which always follows, a listed proxy turns it on. Its warnings describe the layout after step 3.
      */
     private static void proxyProtocolWhitelist(ConfigSection root) {
         String switchPath = "nethernet.signaling.proxy_protocol";
@@ -95,27 +96,58 @@ final class ConfigMigrations {
             return;
         }
 
-        String whitelistPath = "network_settings.proxy_protocol_whitelisted_ips";
-        Set<String> whitelist = new LinkedHashSet<>();
-        for (String path : List.of(whitelistPath, "nethernet.signaling.trusted_proxies")) {
-            if (root.has(path) && root.get(path) instanceof List<?> entries) {
-                entries.forEach(entry -> whitelist.add(String.valueOf(entry).trim()));
-            }
-        }
-        whitelist.remove("");
-        root.set(whitelistPath, new ArrayList<>(whitelist));
-
         String enabledPath = "network_settings.enable_proxy_protocol";
         if (!root.has(enabledPath) || !isTrue(root, enabledPath)) {
             log.warn("nethernet.signaling.proxy_protocol is gone, so signaling connections that carry a PROXY header "
-                    + "fail until network_settings.enable_proxy_protocol is on, which makes RakNet require them and "
-                    + "routes NetherNet gameplay traffic through network_settings.proxy_protocol_whitelisted_ips too");
-        } else if (!whitelist.isEmpty()) {
-            log.warn("RakNet and NetherNet gameplay traffic now only come through "
-                    + "network_settings.proxy_protocol_whitelisted_ips, which this update filled from "
-                    + "nethernet.signaling.trusted_proxies: add RakNet's proxies if they differ, forward webrtc_port "
-                    + "through them with PROXY v2 headers, and name them in nethernet.signaling.advertise_addresses, "
-                    + "without which NetherNet does not start");
+                    + "fail until their proxies are listed in network_settings.proxy_protocol_whitelisted_ips, "
+                    + "which makes RakNet require PROXY headers from them too");
+            return;
+        }
+        String whitelistPath = "network_settings.proxy_protocol_whitelisted_ips";
+        List<String> whitelist = entries(root, whitelistPath, "nethernet.signaling.trusted_proxies");
+        root.set(whitelistPath, whitelist);
+        if (!whitelist.isEmpty()) {
+            log.warn("RakNet now only takes connections from network_settings.proxy_protocol_whitelisted_ips, which "
+                    + "this update filled from nethernet.signaling.trusted_proxies: add RakNet's proxies if they differ");
+        }
+    }
+
+    /**
+     * Step 3: listing proxies in network_settings.proxy_protocol_whitelisted_ips turns PROXY protocol on, as in
+     * Geyser, so enable_proxy_protocol goes. The list no longer covers webrtc_port, whose relays get
+     * network_settings.webrtc_proxy_protocol_relays, filled from it, as it was read for both.
+     */
+    private static void proxyProtocolSwitch(ConfigSection root) {
+        String switchPath = "network_settings.enable_proxy_protocol";
+        if (!root.has(switchPath)) {
+            return;
+        }
+        boolean enabled = isTrue(root, switchPath);
+        root.remove(switchPath);
+
+        String listPath = "network_settings.proxy_protocol_whitelisted_ips";
+        if (!enabled) {
+            // Ignored while the switch was off, and would turn it on now
+            if (root.has(listPath)) {
+                root.set(listPath, new ArrayList<>());
+            }
+            return;
+        }
+        List<String> proxies = entries(root, listPath);
+        if (proxies.isEmpty()) {
+            log.warn("network_settings.enable_proxy_protocol is gone: listing proxies in "
+                    + "network_settings.proxy_protocol_whitelisted_ips now turns PROXY protocol on. Yours was on with an "
+                    + "empty list, which took a PROXY header from any address on RakNet, so it is off until you list "
+                    + "your proxies there");
+            return;
+        }
+        String relaysPath = "network_settings.webrtc_proxy_protocol_relays";
+        if (!root.has(relaysPath)) {
+            root.set(relaysPath, proxies);
+            log.warn("NetherNet gameplay traffic only comes through network_settings.webrtc_proxy_protocol_relays, which "
+                    + "this update filled from network_settings.proxy_protocol_whitelisted_ips: forward webrtc_port "
+                    + "through them with PROXY v2 headers and name them in nethernet.signaling.advertise_addresses, or "
+                    + "empty it if players reach webrtc_port directly");
         }
     }
 
@@ -126,14 +158,7 @@ final class ConfigMigrations {
     private static void shareNetherNetAddresses(ConfigSection root) {
         String nxsAddresses = "nethernet.nxs.advertise_addresses";
         if (root.has(nxsAddresses)) {
-            Set<String> merged = new LinkedHashSet<>();
-            for (String path : List.of("nethernet.advertise_addresses", nxsAddresses)) {
-                if (root.get(path) instanceof List<?> addresses) {
-                    addresses.forEach(address -> merged.add(String.valueOf(address).trim()));
-                }
-            }
-            merged.remove("");
-            root.set("nethernet.advertise_addresses", new ArrayList<>(merged));
+            root.set("nethernet.advertise_addresses", entries(root, "nethernet.advertise_addresses", nxsAddresses));
             root.remove(nxsAddresses);
         }
 
@@ -144,6 +169,20 @@ final class ConfigMigrations {
             }
             root.remove(nxsStunDiscovery);
         }
+    }
+
+    /**
+     * The entries of the lists at these paths, trimmed, each once, in order.
+     */
+    private static List<String> entries(ConfigSection root, String... paths) {
+        Set<String> entries = new LinkedHashSet<>();
+        for (String path : paths) {
+            if (root.has(path) && root.get(path) instanceof List<?> list) {
+                list.forEach(entry -> entries.add(String.valueOf(entry).trim()));
+            }
+        }
+        entries.remove("");
+        return new ArrayList<>(entries);
     }
 
     private static boolean isTrue(ConfigSection root, String path) {

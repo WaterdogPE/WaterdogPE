@@ -50,6 +50,10 @@ public class RakNetInterface implements NetworkInterface {
     public RakNetInterface(ProxyServer server) {
         this.server = server;
         this.serverId = createRandomGUID();
+        if (server.getNetworkSettings().proxyProtocol() && server.getProxyProtocolProxies().isEmpty()) {
+            server.getLogger().warning("None of the proxies in network_settings.proxy_protocol_whitelisted_ips could be read, "
+                    + "so every RakNet connection is refused until the list is fixed");
+        }
     }
 
     @Override
@@ -71,7 +75,7 @@ public class RakNetInterface implements NetworkInterface {
                         .option(RakChannelOption.RAK_MAX_MTU, this.server.getNetworkSettings().getMaximumMtu())
                         .option(RakChannelOption.RAK_SERVER_COOKIE_MODE, this.server.getNetworkSettings().enableCookies() ?
                                 RakServerCookieMode.ACTIVE : RakServerCookieMode.INVALID)
-                        .option(RakChannelOption.RAK_PROXY_PROTOCOL, this.server.getNetworkSettings().enableProxyProtocol())
+                        .option(RakChannelOption.RAK_PROXY_PROTOCOL, this.server.getNetworkSettings().proxyProtocol())
                         .childOption(RakChannelOption.RAK_SESSION_TIMEOUT, 10000L)
                         .childOption(RakChannelOption.RAK_ORDERING_CHANNELS, 1)
                         .handler(new OfflineServerChannelInitializer(this.server))

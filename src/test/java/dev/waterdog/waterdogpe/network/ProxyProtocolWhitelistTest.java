@@ -18,7 +18,6 @@ package dev.waterdog.waterdogpe.network;
 import dev.waterdog.waterdogpe.ProxyServer;
 import dev.waterdog.waterdogpe.network.connection.codec.server.ServerDatagramHandler;
 import dev.waterdog.waterdogpe.security.SecurityManager;
-import dev.waterdog.waterdogpe.utils.config.proxy.NetworkSettings;
 import dev.waterdog.waterdogpe.utils.config.proxy.ProxyConfig;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -42,8 +41,8 @@ import static org.mockito.Mockito.when;
 
 public class ProxyProtocolWhitelistTest {
 
-    /** The proxies a proxy server reads from these network settings. */
-    private static IpRangeSet proxies(String settings) throws Exception {
+    /** A proxy server reading these network settings. */
+    private static ProxyServer proxy(String settings) throws Exception {
         File file = Files.createTempDirectory("waterdog-config").resolve("config.yml").toFile();
         Files.writeString(file.toPath(), "network_settings:\n" + settings.indent(2));
         ProxyConfig config = new ProxyConfig(file);
@@ -52,33 +51,57 @@ public class ProxyProtocolWhitelistTest {
         ProxyServer proxy = mock(ProxyServer.class);
         when(proxy.getNetworkSettings()).thenReturn(config.getNetworkSettings());
         when(proxy.getProxyProtocolProxies()).thenCallRealMethod();
-        return proxy.getProxyProtocolProxies();
+        when(proxy.getWebrtcProxyProtocolRelays()).thenCallRealMethod();
+        return proxy;
     }
 
     @Test
-    public void readsOnlyWhitelistedProxiesWhileEnabled() throws Exception {
-        var proxies = proxies("""
-                enable_proxy_protocol: true
+    public void listingProxiesTurnsProxyProtocolOn() throws Exception {
+        ProxyServer proxy = proxy("""
                 proxy_protocol_whitelisted_ips: ['10.0.0.0/8']
                 """);
 
-        assertTrue(proxies.contains(InetAddress.getByName("10.1.2.3")));
-        assertFalse(proxies.contains(InetAddress.getByName("192.168.1.1")));
+        assertTrue(proxy.getNetworkSettings().proxyProtocol());
+        assertTrue(proxy.getProxyProtocolProxies().contains(InetAddress.getByName("10.1.2.3")));
+        assertFalse(proxy.getProxyProtocolProxies().contains(InetAddress.getByName("192.168.1.1")));
     }
 
     @Test
-    public void readsNoneWhileDisabled() throws Exception {
-        var proxies = proxies("""
-                enable_proxy_protocol: false
-                proxy_protocol_whitelisted_ips: ['10.0.0.0/8']
+    public void anEmptyListLeavesProxyProtocolOff() throws Exception {
+        ProxyServer proxy = proxy("""
+                proxy_protocol_whitelisted_ips: [' ']
                 """);
 
-        assertTrue(proxies.isEmpty());
+        assertFalse(proxy.getNetworkSettings().proxyProtocol());
+        assertTrue(proxy.getProxyProtocolProxies().isEmpty());
+    }
+
+    @Test
+    public void webrtcRelaysAreTheirOwnList() throws Exception {
+        ProxyServer proxy = proxy("""
+                proxy_protocol_whitelisted_ips: ['10.0.0.0/8']
+                webrtc_proxy_protocol_relays: ['192.0.2.0/24']
+                """);
+
+        assertTrue(proxy.getWebrtcProxyProtocolRelays().contains(InetAddress.getByName("192.0.2.1")));
+        assertFalse(proxy.getWebrtcProxyProtocolRelays().contains(InetAddress.getByName("10.1.2.3")));
+        assertFalse(proxy.getProxyProtocolProxies().contains(InetAddress.getByName("192.0.2.1")));
+    }
+
+    @Test
+    public void aListThatParsedToNothingStillTurnsProxyProtocolOn() throws Exception {
+        // An invalid prefix is skipped without a DNS lookup
+        ProxyServer proxy = proxy("""
+                proxy_protocol_whitelisted_ips: ['10.0.0.0/99']
+                """);
+
+        assertTrue(proxy.getNetworkSettings().proxyProtocol());
+        assertTrue(proxy.getProxyProtocolProxies().isEmpty());
     }
 
     @Test
     public void rakNetDropsDatagramsFromOutsideTheList() throws Exception {
-        EmbeddedChannel channel = rakNet(IpRangeSet.parse(List.of("10.0.0.0/8")));
+        EmbeddedChannel channel = rakNet(true, IpRangeSet.parse(List.of("10.0.0.0/8")));
 
         DatagramPacket listed = datagram("10.1.2.3");
         channel.writeInbound(listed);
@@ -92,8 +115,8 @@ public class ProxyProtocolWhitelistTest {
     }
 
     @Test
-    public void rakNetTakesAnySenderWhileTheListIsEmpty() throws Exception {
-        EmbeddedChannel channel = rakNet(IpRangeSet.empty());
+    public void rakNetTakesAnySenderWhileNoProxyIsListed() throws Exception {
+        EmbeddedChannel channel = rakNet(false, IpRangeSet.empty());
 
         DatagramPacket packet = datagram("192.168.1.1");
         channel.writeInbound(packet);
@@ -101,10 +124,20 @@ public class ProxyProtocolWhitelistTest {
         packet.release();
     }
 
-    private static EmbeddedChannel rakNet(IpRangeSet proxies) {
+    @Test
+    public void rakNetRefusesEveryoneWhenNoListedProxyCouldBeRead() throws Exception {
+        EmbeddedChannel channel = rakNet(true, IpRangeSet.empty());
+
+        DatagramPacket packet = datagram("10.1.2.3");
+        channel.writeInbound(packet);
+        assertNull(channel.readInbound());
+        assertEquals(0, packet.refCnt());
+    }
+
+    private static EmbeddedChannel rakNet(boolean proxied, IpRangeSet proxies) {
         ProxyServer proxy = mock(ProxyServer.class);
         when(proxy.getSecurityManager()).thenReturn(mock(SecurityManager.class));
-        return new EmbeddedChannel(new ServerDatagramHandler(proxy, proxies));
+        return new EmbeddedChannel(new ServerDatagramHandler(proxy, proxied, proxies));
     }
 
     private static DatagramPacket datagram(String sender) throws Exception {

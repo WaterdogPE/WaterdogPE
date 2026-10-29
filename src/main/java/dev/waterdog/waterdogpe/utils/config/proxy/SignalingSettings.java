@@ -78,8 +78,9 @@ public class SignalingSettings extends SettingsSection {
             "port uses webrtc_port. A host name is looked up when signaling starts, which fails if it",
             "does not resolve. An address this machine does not hold is announced as the public side of",
             "a NAT forwarding that port here. Media bypasses a signaling reverse proxy, so its address",
-            "only belongs here if it forwards the media port too. Empty derives them from the listener",
-            "bind address, or from this host's addresses and what stun_discovery finds."
+            "only belongs here if it forwards the media port too. With network_settings.webrtc_proxy_protocol_relays",
+            "set, name the relays here. Empty derives them from the listener bind address, or from this",
+            "host's addresses and what stun_discovery finds."
     })
     @Setter
     private List<String> advertiseAddresses = new ArrayList<>();
