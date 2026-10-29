@@ -99,7 +99,9 @@ public class SignalingSettings extends SettingsSection {
             "Reverse proxies, such as an HTTP load balancer, whose X-Forwarded-For header built-in signaling",
             "trusts for the player's address, as hosts or CIDR ranges such as 10.0.0.0/8. An http or https",
             "entry is fetched and read as one address per line. Built-in signaling also lifts its per-address",
-            "connection limit for them. PROXY protocol proxies go in network_settings.proxy_protocol_whitelisted_ips."
+            "connection limit for them. PROXY protocol proxies go in network_settings.proxy_protocol_whitelisted_ips.",
+            "With more than one proxy in front of signaling, such as a CDN in front of nginx, list every one of",
+            "them, or have the last one send only the player's address in X-Forwarded-For."
     })
     private List<String> trustedProxies = new ArrayList<>();
 
