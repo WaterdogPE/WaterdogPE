@@ -79,7 +79,8 @@ public class NetworkSettings extends SettingsSection {
             "UDP relays in front of nethernet.webrtc_port that send a PROXY protocol v2 header with each player's address,",
             "as hosts or CIDR ranges. Leave this empty unless you run such a relay.",
             "While set, players can only reach webrtc_port through these relays, so nethernet.signaling.advertise_addresses",
-            "has to name the relays, or NetherNet does not start.",
+            "should name the relays. Without any, NXS does not start, and built-in signaling only works if something",
+            "in front of it rewrites its answers to name the relays.",
             "This is separate from proxy_protocol_whitelisted_ips and nethernet.signaling.trusted_proxies, which only cover",
             "RakNet and signaling. An http or https entry is fetched and read as one address per line.",
             "IF YOU DON'T KNOW WHAT THIS IS, DON'T TOUCH IT!"

@@ -33,8 +33,14 @@ public class NetherNetAdvertisedAddressesTest {
 
     @Test
     public void behindRelaysTheBoundAddressIsNoStandIn() {
-        // Network then refuses to bind without addresses naming the relays
+        // Network then warns, as only a front rewriting the answers can name the relays
         assertEquals(List.of(), NetherNetInterface.advertisedAddresses(BOUND, new SignalingSettings(), false, true));
+    }
+
+    @Test
+    public void behindRelaysStunDiscoveryIsOff() {
+        // It would find this host, and network refuses it there
+        assertEquals(List.of(), NetherNetInterface.stunServers(new SignalingSettings(), true));
     }
 
     @Test

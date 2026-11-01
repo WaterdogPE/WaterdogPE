@@ -143,7 +143,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
             }
         }
 
-        List<String> stunServers = stunServers(settings.getSignaling());
+        List<String> stunServers = stunServers(settings.getSignaling(),
+                !this.proxy.getWebrtcProxyProtocolRelays().isEmpty());
         NetherNetHTTPServerSignaling signaling;
         try {
             signaling = this.signaling(settings.getSignaling(), address, icePort, stunServers);
@@ -268,14 +269,16 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
 
     /**
      * The STUN servers built-in signaling asks for this proxy's public address, none when configured
-     * addresses already say it, which network refuses next to them.
+     * addresses already say it, which network refuses next to them, or behind relays, where it would
+     * find this host, which players cannot reach.
      */
-    private static List<String> stunServers(SignalingSettings settings) {
-        boolean wanted = settings.isStunDiscovery() && settings.getAdvertiseAddresses().isEmpty();
+    static List<String> stunServers(SignalingSettings settings, boolean relayed) {
+        boolean wanted = settings.isStunDiscovery() && settings.getAdvertiseAddresses().isEmpty() && !relayed;
         if (!wanted) {
             if (NetherNetProperties.STUN_SERVERS != null) {
-                log.warn("waterdog.nethernetStunServers is ignored, as {}",
-                        settings.isStunDiscovery() ? "advertise_addresses is set" : "stun_discovery is off");
+                log.warn("waterdog.nethernetStunServers is ignored, as {}", !settings.isStunDiscovery()
+                        ? "stun_discovery is off" : !settings.getAdvertiseAddresses().isEmpty()
+                        ? "advertise_addresses is set" : "network_settings.webrtc_proxy_protocol_relays is set");
             }
             return List.of();
         }
@@ -325,7 +328,8 @@ public class NetherNetInterface implements NetworkInterface, SignalingService {
      * and every one of them costs the client a round of connectivity checks before it gives up, so
      * a proxy bound to one address advertises only that address, unless told otherwise or STUN
      * discovery runs, as network takes no such list next to STUN servers. Behind relays the bound
-     * address names none of them, so network refuses the empty list instead.
+     * address names none of them, so none is advertised, and network warns that only a front
+     * rewriting the answers to name the relays lets players connect.
      */
     static List<String> advertisedAddresses(InetSocketAddress address, SignalingSettings settings, boolean stun,
                                             boolean relayed) {
