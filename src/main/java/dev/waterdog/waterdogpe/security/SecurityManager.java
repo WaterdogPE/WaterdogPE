@@ -60,7 +60,7 @@ public class SecurityManager {
         }
 
         this.connectionThrottle = settings.getConnectionThrottle() > 0 ? new ConnectionThrottle(settings.getConnectionThrottle(), time) : null;
-        this.loginThrottle = settings.getConnectionThrottle() > 0 ? new ConnectionThrottle(settings.getLoginThrottle(), time) : null;
+        this.loginThrottle = settings.getLoginThrottle() > 0 ?new ConnectionThrottle(settings.getLoginThrottle(), time) : null;
         proxy.getScheduler().scheduleRepeating(this::onBlockedTick, 1);
     }
 
