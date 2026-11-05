@@ -380,6 +380,9 @@ public class EntityMap implements BedrockPacketHandler {
     public PacketSignal handle(DebugDrawerPacket packet) {
         PacketSignal signal = PacketSignal.UNHANDLED;
         for (DebugShape shape : packet.getShapes()) {
+            if (shape.getType() != null) {
+                data.getDebugShapes().put(shape.getId(), shape);
+            }
             Long attachedEntityId = shape.getAttachedToEntityId();
             if (attachedEntityId != null) {
                 PacketSignal returnedSignal = data.rewriteUniqueEntityId(attachedEntityId, shape::setAttachedToEntityId);
