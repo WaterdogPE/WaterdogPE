@@ -46,6 +46,10 @@ public class YamlConfig extends Configuration {
         super(saveFile);
     }
 
+    public YamlConfig(InputStream inputStream) {
+        super(inputStream);
+    }
+
     public YamlConfig(File saveFile, InputStream inputStream) {
         super(saveFile, inputStream);
     }
