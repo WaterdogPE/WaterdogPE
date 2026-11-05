@@ -123,6 +123,8 @@ public class ProxiedPlayer implements CommandSender {
     @Getter
     private final Int2IntMap volumeEntities = Int2IntMaps.synchronize(new Int2IntOpenHashMap()); // id -> dimension
     @Getter
+    private final Long2IntMap debugShapes = Long2IntMaps.synchronize(new Long2IntOpenHashMap()); // id -> dimension
+    @Getter
     private final Set<HudElement> hiddenHudElements = ObjectSets.synchronize(new ObjectOpenHashSet<>());
     @Getter @Setter
     private volatile boolean fogApplied;

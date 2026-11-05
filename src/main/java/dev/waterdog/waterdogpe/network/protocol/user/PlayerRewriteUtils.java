@@ -20,6 +20,7 @@ import dev.waterdog.waterdogpe.network.connection.codec.batch.BatchFlags;
 import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -27,6 +28,7 @@ import org.cloudburstmc.math.vector.Vector2f;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.*;
+import org.cloudburstmc.protocol.bedrock.data.debugshape.DebugShape;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataMap;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataTypes;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityEventType;
@@ -209,6 +211,17 @@ public class PlayerRewriteUtils {
         RemoveVolumeEntityPacket packet = new RemoveVolumeEntityPacket();
         packet.setId(id);
         packet.setDimension(dimension);
+        session.sendPacket(packet);
+    }
+
+    public static void injectRemoveDebugShapes(ProxiedConnection session, Long2IntMap shapes) {
+        if (session == null || !session.isConnected() || shapes.isEmpty()) {
+            return;
+        }
+        DebugDrawerPacket packet = new DebugDrawerPacket();
+        for (Long2IntMap.Entry entry : shapes.long2IntEntrySet()) {
+            packet.getShapes().add(new DebugShape(entry.getLongKey(), entry.getIntValue()));
+        }
         session.sendPacket(packet);
     }
 
