@@ -15,8 +15,10 @@
 
 package dev.waterdog.waterdogpe.network.protocol.rewrite;
 import dev.waterdog.waterdogpe.network.protocol.PacketUtils;
+import dev.waterdog.waterdogpe.network.protocol.ProtocolVersion;
 import org.cloudburstmc.protocol.bedrock.data.HudVisibility;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
+import org.cloudburstmc.protocol.bedrock.data.debugshape.DebugShape;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityLinkData;
 import org.cloudburstmc.protocol.bedrock.packet.*;
 import dev.waterdog.waterdogpe.player.ProxiedPlayer;
@@ -180,6 +182,22 @@ public class EntityTracker implements BedrockPacketHandler {
                 } else {
                     this.player.getScoreInfos().put(info.getScoreboardId(), info);
                 }
+            }
+        }
+        return PacketSignal.UNHANDLED;
+    }
+
+    @Override
+    public PacketSignal handle(DebugDrawerPacket packet) {
+        // Removals can not be encoded before 1.21.120, so there is nothing to clear on switch for older clients
+        if (this.player.getProtocol().isBefore(ProtocolVersion.MINECRAFT_PE_1_21_120)) {
+            return PacketSignal.UNHANDLED;
+        }
+        for (DebugShape shape : packet.getShapes()) {
+            if (shape.getType() == null) {
+                this.player.getDebugShapes().remove(shape.getId());
+            } else {
+                this.player.getDebugShapes().put(shape.getId(), shape.getDimension());
             }
         }
         return PacketSignal.UNHANDLED;

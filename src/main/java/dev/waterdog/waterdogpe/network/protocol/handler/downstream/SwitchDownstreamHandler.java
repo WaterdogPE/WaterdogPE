@@ -19,6 +19,7 @@ import com.nimbusds.jwt.SignedJWT;
 import dev.waterdog.waterdogpe.network.connection.client.ClientConnection;
 import dev.waterdog.waterdogpe.network.connection.handler.ReconnectReason;
 import dev.waterdog.waterdogpe.network.protocol.handler.TransferCallback;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import lombok.extern.log4j.Log4j2;
 import org.cloudburstmc.math.vector.Vector3f;
@@ -234,6 +235,10 @@ public class SwitchDownstreamHandler extends AbstractDownstreamHandler {
             injectRemoveVolumeEntity(this.player.getConnection(), entry.getIntKey(), entry.getIntValue());
         }
         volumeEntities.clear();
+
+        Long2IntMap debugShapes = this.player.getDebugShapes();
+        injectRemoveDebugShapes(this.player.getConnection(), debugShapes);
+        debugShapes.clear();
 
         if (this.player.isFogApplied()) {
             injectClearFog(this.player.getConnection());
