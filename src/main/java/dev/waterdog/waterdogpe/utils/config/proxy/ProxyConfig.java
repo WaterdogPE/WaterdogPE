@@ -136,6 +136,14 @@ public class ProxyConfig extends YamlConfig {
     @Comment("If enabled, only players which are authenticated with XBOX Live can join. If disabled, anyone can connect *with any name*")
     private boolean onlineMode = true;
 
+    @Path("stabilize_offline_identity")
+    @Comments({
+            "Give authenticated players a stable SelfSignedId in proxy-signed downstream logins.",
+            "This lets offline-mode BDS keep inventory and position even though it does not trust the forwarded XUID.",
+            "Existing non-empty SelfSignedId values are preserved. Default: false."
+    })
+    private boolean stabilizeOfflineIdentity;
+
     @Path("listener.additional_ports")
     @Comment("Additional ports to listen to")
     private List<Integer> additionalPorts = new ArrayList<>();

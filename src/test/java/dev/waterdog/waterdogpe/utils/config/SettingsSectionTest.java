@@ -49,6 +49,7 @@ public class SettingsSectionTest {
         assertTrue(text.contains("# Serves signaling over HTTPS as well as HTTP, on the same port"));
         assertTrue(text.contains("# PEM private key for the certificate"), "https subsection is undocumented");
         assertTrue(text.contains("# Maximum MTU size of user <-> proxy connection that is allowed"));
+        assertTrue(text.contains("stabilize_offline_identity: false"));
     }
 
     @Test

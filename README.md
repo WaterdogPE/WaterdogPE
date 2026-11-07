@@ -30,6 +30,20 @@ You can find list of currently supported/unsupported software [here](https://doc
 
 To compile WaterdogPE please visit our [COMPILING.md](COMPILING.md) guide.
 
+## Stable offline BDS identity
+
+Modern BDS does not trust the XUID in a proxy-signed offline login. When the
+client also leaves `SelfSignedId` blank, BDS has no stable key for player data
+and treats every connection as a new player. This fork can derive a stable
+fallback from the XUID that WaterdogPE already authenticated:
+
+```yaml
+stabilize_offline_identity: true
+```
+
+This does not make BDS trust or expose the XUID, so XUID-based operator records
+still do not apply. It only keeps BDS's offline player-data identity stable.
+Existing non-empty client `SelfSignedId` values are left unchanged.
 ## Maven usage
 
 ```xml
